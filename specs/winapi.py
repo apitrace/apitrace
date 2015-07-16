@@ -36,6 +36,7 @@ UINT = Alias("UINT", UInt)
 LONG = Alias("LONG", Long)
 ULONG = Alias("ULONG", ULong)
 LONGLONG = Alias("LONGLONG", LongLong)
+ULONGLONG = Alias("ULONGLONG", ULongLong)
 FLOAT = Alias("FLOAT", Float)
 
 INT8 = Alias("INT8", Int8)

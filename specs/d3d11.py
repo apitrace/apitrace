@@ -275,6 +275,8 @@ D3D11_BIND_FLAG = Flags(UINT, [
     "D3D11_BIND_RENDER_TARGET",
     "D3D11_BIND_DEPTH_STENCIL",
     "D3D11_BIND_UNORDERED_ACCESS",
+    "D3D11_BIND_DECODER",
+    "D3D11_BIND_VIDEO_ENCODER",
 ])
 
 D3D11_CPU_ACCESS_FLAG = Flags(UINT, [
@@ -826,6 +828,24 @@ D3D11_FILTER = Enum("D3D11_FILTER", [
     "D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT",
     "D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR",
     "D3D11_FILTER_COMPARISON_ANISOTROPIC",
+    "D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT",
+    "D3D11_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR",
+    "D3D11_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT",
+    "D3D11_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR",
+    "D3D11_FILTER_MINIMUM_MIN_LINEAR_MAG_MIP_POINT",
+    "D3D11_FILTER_MINIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR",
+    "D3D11_FILTER_MINIMUM_MIN_MAG_LINEAR_MIP_POINT",
+    "D3D11_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR",
+    "D3D11_FILTER_MINIMUM_ANISOTROPIC",
+    "D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_POINT",
+    "D3D11_FILTER_MAXIMUM_MIN_MAG_POINT_MIP_LINEAR",
+    "D3D11_FILTER_MAXIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT",
+    "D3D11_FILTER_MAXIMUM_MIN_POINT_MAG_MIP_LINEAR",
+    "D3D11_FILTER_MAXIMUM_MIN_LINEAR_MAG_MIP_POINT",
+    "D3D11_FILTER_MAXIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR",
+    "D3D11_FILTER_MAXIMUM_MIN_MAG_LINEAR_MIP_POINT",
+    "D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR",
+    "D3D11_FILTER_MAXIMUM_ANISOTROPIC",
 ])
 
 D3D11_FILTER_TYPE = Enum("D3D11_FILTER_TYPE", [
@@ -886,6 +906,10 @@ D3D11_FORMAT_SUPPORT = Flags(UINT, [
     "D3D11_FORMAT_SUPPORT_BACK_BUFFER_CAST",
     "D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW",
     "D3D11_FORMAT_SUPPORT_SHADER_GATHER_COMPARISON",
+    "D3D11_FORMAT_SUPPORT_DECODER_OUTPUT",
+    "D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT",
+    "D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_INPUT",
+    "D3D11_FORMAT_SUPPORT_VIDEO_ENCODER",
 ])
 
 D3D11_FORMAT_SUPPORT2 = Enum("D3D11_FORMAT_SUPPORT2", [
@@ -897,6 +921,9 @@ D3D11_FORMAT_SUPPORT2 = Enum("D3D11_FORMAT_SUPPORT2", [
     "D3D11_FORMAT_SUPPORT2_UAV_ATOMIC_UNSIGNED_MIN_OR_MAX",
     "D3D11_FORMAT_SUPPORT2_UAV_TYPED_LOAD",
     "D3D11_FORMAT_SUPPORT2_UAV_TYPED_STORE",
+    "D3D11_FORMAT_SUPPORT2_OUTPUT_MERGER_LOGIC_OP",
+    "D3D11_FORMAT_SUPPORT2_TILED",
+    "D3D11_FORMAT_SUPPORT2_SHAREABLE",
 ])
 
 ID3D11Asynchronous.methods += [
@@ -1330,6 +1357,748 @@ d3d11.addInterfaces([
     ID3D11Debug,
     ID3D11InfoQueue,
     ID3D11SwitchToRef,
+])
+
+
+#
+# D3D11 Video
+#
+
+D3D11_VIDEO_DECODER_DESC = Struct("D3D11_VIDEO_DECODER_DESC", [
+    (GUID, "Guid"),
+    (UINT, "SampleWidth"),
+    (UINT, "SampleHeight"),
+    (DXGI_FORMAT, "OutputFormat"),
+])
+
+D3D11_VIDEO_DECODER_CONFIG = Struct("D3D11_VIDEO_DECODER_CONFIG", [
+    (GUID, "guidConfigBitstreamEncryption"),
+    (GUID, "guidConfigMBcontrolEncryption"),
+    (GUID, "guidConfigResidDiffEncryption"),
+    (UINT, "ConfigBitstreamRaw"),
+    (UINT, "ConfigMBcontrolRasterOrder"),
+    (UINT, "ConfigResidDiffHost"),
+    (UINT, "ConfigSpatialResid8"),
+    (UINT, "ConfigResid8Subtraction"),
+    (UINT, "ConfigSpatialHost8or9Clipping"),
+    (UINT, "ConfigSpatialResidInterleaved"),
+    (UINT, "ConfigIntraResidUnsigned"),
+    (UINT, "ConfigResidDiffAccelerator"),
+    (UINT, "ConfigHostInverseScan"),
+    (UINT, "ConfigSpecificIDCT"),
+    (UINT, "Config4GroupedCoefs"),
+    (USHORT, "ConfigMinRenderTargetBuffCount"),
+    (USHORT, "ConfigDecoderSpecific"),
+])
+
+D3D11_VIDEO_DECODER_BUFFER_TYPE = Enum("D3D11_VIDEO_DECODER_BUFFER_TYPE", [
+    "D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS",
+    "D3D11_VIDEO_DECODER_BUFFER_MACROBLOCK_CONTROL",
+    "D3D11_VIDEO_DECODER_BUFFER_RESIDUAL_DIFFERENCE",
+    "D3D11_VIDEO_DECODER_BUFFER_DEBLOCKING_CONTROL",
+    "D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX",
+    "D3D11_VIDEO_DECODER_BUFFER_SLICE_CONTROL",
+    "D3D11_VIDEO_DECODER_BUFFER_BITSTREAM",
+    "D3D11_VIDEO_DECODER_BUFFER_MOTION_VECTOR",
+    "D3D11_VIDEO_DECODER_BUFFER_FILM_GRAIN",
+])
+
+D3D11_AES_CTR_IV = Struct("D3D11_AES_CTR_IV", [
+    (UINT64, "IV"),
+    (UINT64, "Count"),
+])
+
+D3D11_ENCRYPTED_BLOCK_INFO = Struct("D3D11_ENCRYPTED_BLOCK_INFO", [
+    (UINT, "NumEncryptedBytesAtBeginning"),
+    (UINT, "NumBytesInSkipPattern"),
+    (UINT, "NumBytesInEncryptPattern"),
+])
+
+D3D11_VIDEO_DECODER_BUFFER_DESC = Struct("D3D11_VIDEO_DECODER_BUFFER_DESC", [
+    (D3D11_VIDEO_DECODER_BUFFER_TYPE, "BufferType"),
+    (UINT, "BufferIndex"),
+    (UINT, "DataOffset"),
+    (UINT, "DataSize"),
+    (UINT, "FirstMBaddress"),
+    (UINT, "NumMBsInBuffer"),
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (UINT, "Stride"),
+    (UINT, "ReservedBits"),
+    (Blob(Void, "{self}.IVSize"), "pIV"),
+    (UINT, "IVSize"),
+    (BOOL, "PartialEncryption"),
+    (D3D11_ENCRYPTED_BLOCK_INFO, "EncryptedBlockInfo"),
+])
+
+D3D11_VIDEO_DECODER_EXTENSION = Struct("D3D11_VIDEO_DECODER_EXTENSION", [
+    (UINT, "Function"),
+    (Blob(Void, "{self}.PrivateInputDataSize"), "pPrivateInputData"),
+    (UINT, "PrivateInputDataSize"),
+    (Blob(Void, "{self}.PrivateOutputDataSize"), "pPrivateOutputData"),
+    (UINT, "PrivateOutputDataSize"),
+    (UINT, "ResourceCount"),
+    (Array(ObjPointer(ID3D11Resource), "{self}.ResourceCount"), "ppResourceList"),
+])
+
+ID3D11VideoDecoder = Interface("ID3D11VideoDecoder", ID3D11DeviceChild)
+ID3D11VideoDecoder.methods += [
+    StdMethod(HRESULT, "GetCreationParameters", [Out(Pointer(D3D11_VIDEO_DECODER_DESC), "pVideoDesc"), Out(Pointer(D3D11_VIDEO_DECODER_CONFIG), "pConfig")], sideeffects=False),
+    StdMethod(HRESULT, "GetDriverHandle", [Out(Pointer(HANDLE), "pDriverHandle")]),
+]
+
+D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT",
+    "D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT",
+])
+
+D3D11_VIDEO_PROCESSOR_DEVICE_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_DEVICE_CAPS_LINEAR_SPACE",
+    "D3D11_VIDEO_PROCESSOR_DEVICE_CAPS_xvYCC",
+    "D3D11_VIDEO_PROCESSOR_DEVICE_CAPS_RGB_RANGE_CONVERSION",
+    "D3D11_VIDEO_PROCESSOR_DEVICE_CAPS_YCbCr_MATRIX_CONVERSION",
+    "D3D11_VIDEO_PROCESSOR_DEVICE_CAPS_NOMINAL_RANGE",
+])
+
+D3D11_VIDEO_PROCESSOR_FEATURE_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ALPHA_FILL",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_CONSTRICTION",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_LUMA_KEY",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ALPHA_PALETTE",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_LEGACY",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_STEREO",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ROTATION",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ALPHA_STREAM",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_PIXEL_ASPECT_RATIO",
+])
+
+D3D11_VIDEO_PROCESSOR_FILTER_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_BRIGHTNESS",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_CONTRAST",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_HUE",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_SATURATION",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_NOISE_REDUCTION",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_EDGE_ENHANCEMENT",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_ANAMORPHIC_SCALING",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CAPS_STEREO_ADJUSTMENT",
+])
+
+D3D11_VIDEO_PROCESSOR_FORMAT_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_FORMAT_CAPS_RGB_INTERLACED",
+    "D3D11_VIDEO_PROCESSOR_FORMAT_CAPS_RGB_PROCAMP",
+    "D3D11_VIDEO_PROCESSOR_FORMAT_CAPS_RGB_LUMA_KEY",
+    "D3D11_VIDEO_PROCESSOR_FORMAT_CAPS_PALETTE_INTERLACED",
+])
+
+D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_DENOISE",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_DERINGING",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_EDGE_ENHANCEMENT",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_COLOR_CORRECTION",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_FLESH_TONE_MAPPING",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_IMAGE_STABILIZATION",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_SUPER_RESOLUTION",
+    "D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_ANAMORPHIC_SCALING",
+])
+
+D3D11_VIDEO_PROCESSOR_STEREO_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_STEREO_CAPS_MONO_OFFSET",
+    "D3D11_VIDEO_PROCESSOR_STEREO_CAPS_ROW_INTERLEAVED",
+    "D3D11_VIDEO_PROCESSOR_STEREO_CAPS_COLUMN_INTERLEAVED",
+    "D3D11_VIDEO_PROCESSOR_STEREO_CAPS_CHECKERBOARD",
+    "D3D11_VIDEO_PROCESSOR_STEREO_CAPS_FLIP_MODE",
+])
+
+D3D11_VIDEO_PROCESSOR_CAPS = Struct("D3D11_VIDEO_PROCESSOR_CAPS", [
+    (D3D11_VIDEO_PROCESSOR_DEVICE_CAPS, "DeviceCaps"),
+    (D3D11_VIDEO_PROCESSOR_FEATURE_CAPS, "FeatureCaps"),
+    (D3D11_VIDEO_PROCESSOR_FILTER_CAPS, "FilterCaps"),
+    (D3D11_VIDEO_PROCESSOR_FORMAT_CAPS, "InputFormatCaps"),
+    (D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS, "AutoStreamCaps"),
+    (D3D11_VIDEO_PROCESSOR_STEREO_CAPS, "StereoCaps"),
+    (UINT, "RateConversionCapsCount"),
+    (UINT, "MaxInputStreams"),
+    (UINT, "MaxStreamStates"),
+])
+
+D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_BLEND",
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_BOB",
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_ADAPTIVE",
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_MOTION_COMPENSATION",
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_INVERSE_TELECINE",
+    "D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_FRAME_RATE_CONVERSION",
+])
+
+D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS = Flags(UINT, [
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_32",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_22",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_2224",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_2332",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_32322",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_55",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_64",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_87",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_222222222223",
+    "D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS_OTHER",
+])
+
+D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS = Struct("D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS", [
+    (UINT, "PastFrames"),
+    (UINT, "FutureFrames"),
+    (D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS, "ProcessorCaps"),
+    (D3D11_VIDEO_PROCESSOR_ITELECINE_CAPS, "ITelecineCaps"),
+    (UINT, "CustomRateCount"),
+])
+
+D3D11_CONTENT_PROTECTION_CAPS = Flags(UINT, [
+    "D3D11_CONTENT_PROTECTION_CAPS_SOFTWARE",
+    "D3D11_CONTENT_PROTECTION_CAPS_HARDWARE",
+    "D3D11_CONTENT_PROTECTION_CAPS_PROTECTION_ALWAYS_ON",
+    "D3D11_CONTENT_PROTECTION_CAPS_PARTIAL_DECRYPTION",
+    "D3D11_CONTENT_PROTECTION_CAPS_CONTENT_KEY",
+    "D3D11_CONTENT_PROTECTION_CAPS_FRESHEN_SESSION_KEY",
+    "D3D11_CONTENT_PROTECTION_CAPS_ENCRYPTED_READ_BACK",
+    "D3D11_CONTENT_PROTECTION_CAPS_ENCRYPTED_READ_BACK_KEY",
+    "D3D11_CONTENT_PROTECTION_CAPS_SEQUENTIAL_CTR_IV",
+    "D3D11_CONTENT_PROTECTION_CAPS_ENCRYPT_SLICEDATA_ONLY",
+    "D3D11_CONTENT_PROTECTION_CAPS_DECRYPTION_BLT",
+])
+
+D3D11_VIDEO_CONTENT_PROTECTION_CAPS = Struct("D3D11_VIDEO_CONTENT_PROTECTION_CAPS", [
+    (D3D11_CONTENT_PROTECTION_CAPS, "Caps"),
+    (UINT, "KeyExchangeTypeCount"),
+    (UINT, "BlockAlignmentSize"),
+    (ULONGLONG, "ProtectedMemorySize"),
+])
+
+D3D11_VIDEO_PROCESSOR_CUSTOM_RATE = Struct("D3D11_VIDEO_PROCESSOR_CUSTOM_RATE", [
+    (DXGI_RATIONAL, "CustomRate"),
+    (UINT, "OutputFrames"),
+    (BOOL, "InputInterlaced"),
+    (UINT, "InputFramesOrFields"),
+])
+
+D3D11_VIDEO_PROCESSOR_FILTER = Enum("D3D11_VIDEO_PROCESSOR_FILTER", [
+    "D3D11_VIDEO_PROCESSOR_FILTER_BRIGHTNESS",
+    "D3D11_VIDEO_PROCESSOR_FILTER_CONTRAST",
+    "D3D11_VIDEO_PROCESSOR_FILTER_HUE",
+    "D3D11_VIDEO_PROCESSOR_FILTER_SATURATION",
+    "D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION",
+    "D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT",
+    "D3D11_VIDEO_PROCESSOR_FILTER_ANAMORPHIC_SCALING",
+    "D3D11_VIDEO_PROCESSOR_FILTER_STEREO_ADJUSTMENT",
+])
+
+D3D11_VIDEO_PROCESSOR_FILTER_RANGE = Struct("D3D11_VIDEO_PROCESSOR_FILTER_RANGE", [
+    (Int, "Minimum"),
+    (Int, "Maximum"),
+    (Int, "Default"),
+    (Float, "Multiplier"),
+])
+
+D3D11_VIDEO_FRAME_FORMAT = Enum("D3D11_VIDEO_FRAME_FORMAT", [
+    "D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE",
+    "D3D11_VIDEO_FRAME_FORMAT_INTERLACED_TOP_FIELD_FIRST",
+    "D3D11_VIDEO_FRAME_FORMAT_INTERLACED_BOTTOM_FIELD_FIRST",
+])
+
+D3D11_VIDEO_USAGE = Enum("D3D11_VIDEO_USAGE", [
+    "D3D11_VIDEO_USAGE_PLAYBACK_NORMAL",
+    "D3D11_VIDEO_USAGE_OPTIMAL_SPEED",
+    "D3D11_VIDEO_USAGE_OPTIMAL_QUALITY",
+])
+
+D3D11_VIDEO_PROCESSOR_CONTENT_DESC = Struct("D3D11_VIDEO_PROCESSOR_CONTENT_DESC", [
+    (D3D11_VIDEO_FRAME_FORMAT, "InputFrameFormat"),
+    (DXGI_RATIONAL, "InputFrameRate"),
+    (UINT, "InputWidth"),
+    (UINT, "InputHeight"),
+    (DXGI_RATIONAL, "OutputFrameRate"),
+    (UINT, "OutputWidth"),
+    (UINT, "OutputHeight"),
+    (D3D11_VIDEO_USAGE, "Usage"),
+])
+
+ID3D11VideoProcessorEnumerator = Interface("ID3D11VideoProcessorEnumerator", ID3D11DeviceChild)
+ID3D11VideoProcessorEnumerator.methods += [
+    StdMethod(HRESULT, "GetVideoProcessorContentDesc", [Out(Pointer(D3D11_VIDEO_PROCESSOR_CONTENT_DESC), "pContentDesc")], sideeffects=False),
+    StdMethod(HRESULT, "CheckVideoProcessorFormat", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT), "pFlags")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorCaps", [Out(Pointer(D3D11_VIDEO_PROCESSOR_CAPS), "pCaps")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorRateConversionCaps", [(UINT, "TypeIndex"), Out(Pointer(D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS), "pCaps")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorCustomRate", [(UINT, "TypeIndex"), (UINT, "CustomRateIndex"), Out(Pointer(D3D11_VIDEO_PROCESSOR_CUSTOM_RATE), "pRate")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorFilterRange", [(D3D11_VIDEO_PROCESSOR_FILTER, "Filter"), Out(Pointer(D3D11_VIDEO_PROCESSOR_FILTER_RANGE), "pRange")], sideeffects=False),
+]
+
+D3D11_VIDEO_COLOR_RGBA = Struct("D3D11_VIDEO_COLOR_RGBA", [
+    (Float, "R"),
+    (Float, "G"),
+    (Float, "B"),
+    (Float, "A"),
+])
+
+D3D11_VIDEO_COLOR_YCbCrA = Struct("D3D11_VIDEO_COLOR_YCbCrA", [
+    (Float, "Y"),
+    (Float, "Cb"),
+    (Float, "Cr"),
+    (Float, "A"),
+])
+
+D3D11_VIDEO_COLOR = Struct("D3D11_VIDEO_COLOR", [
+    (D3D11_VIDEO_COLOR_YCbCrA, "YCbCr"),
+    #(D3D11_VIDEO_COLOR_RGBA, "RGBA"),
+])
+
+D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE = FakeEnum(UINT, [
+    "D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_UNDEFINED",
+    "D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235",
+    "D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255",
+])
+
+D3D11_VIDEO_PROCESSOR_COLOR_SPACE = Struct("D3D11_VIDEO_PROCESSOR_COLOR_SPACE", [
+    (UINT, "Usage"),
+    (UINT, "RGB_Range"),
+    (UINT, "YCbCr_Matrix"),
+    (UINT, "YCbCr_xvYCC"),
+    (D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE, "Nominal_Range"),
+    (UINT, "Reserved"),
+])
+
+D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE = Enum("D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE", [
+    "D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE_OPAQUE",
+    "D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE_BACKGROUND",
+    "D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE_DESTINATION",
+    "D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE_SOURCE_STREAM",
+])
+
+D3D11_VIDEO_PROCESSOR_OUTPUT_RATE = Enum("D3D11_VIDEO_PROCESSOR_OUTPUT_RATE", [
+    "D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL",
+    "D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_HALF",
+    "D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_CUSTOM",
+])
+
+D3D11_VIDEO_PROCESSOR_STEREO_FORMAT = Enum("D3D11_VIDEO_PROCESSOR_STEREO_FORMAT", [
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_MONO",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_HORIZONTAL",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_VERTICAL",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_SEPARATE",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_MONO_OFFSET",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_ROW_INTERLEAVED",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_COLUMN_INTERLEAVED",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FORMAT_CHECKERBOARD",
+])
+
+D3D11_VIDEO_PROCESSOR_STEREO_FLIP_MODE = Enum("D3D11_VIDEO_PROCESSOR_STEREO_FLIP_MODE", [
+    "D3D11_VIDEO_PROCESSOR_STEREO_FLIP_NONE",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FLIP_FRAME0",
+    "D3D11_VIDEO_PROCESSOR_STEREO_FLIP_FRAME1",
+])
+
+D3D11_VIDEO_PROCESSOR_ROTATION = Enum("D3D11_VIDEO_PROCESSOR_ROTATION", [
+    "D3D11_VIDEO_PROCESSOR_ROTATION_IDENTITY",
+    "D3D11_VIDEO_PROCESSOR_ROTATION_90",
+    "D3D11_VIDEO_PROCESSOR_ROTATION_180",
+    "D3D11_VIDEO_PROCESSOR_ROTATION_270",
+])
+
+ID3D11VideoProcessorInputView = Interface("ID3D11VideoProcessorInputView", ID3D11View)
+
+D3D11_VIDEO_PROCESSOR_STREAM = Struct("D3D11_VIDEO_PROCESSOR_STREAM", [
+    (BOOL, "Enable"),
+    (UINT, "OutputIndex"),
+    (UINT, "InputFrameOrField"),
+    (UINT, "PastFrames"),
+    (UINT, "FutureFrames"),
+    (Array(ObjPointer(ID3D11VideoProcessorInputView), "{self}.PastFrames"), "ppPastSurfaces"),
+    (ObjPointer(ID3D11VideoProcessorInputView), "pInputSurface"),
+    (Array(ObjPointer(ID3D11VideoProcessorInputView), "{self}.FutureFrames"), "ppFutureSurfaces"),
+    (Array(ObjPointer(ID3D11VideoProcessorInputView), "{self}.PastFrames"), "ppPastSurfacesRight"),
+    (ObjPointer(ID3D11VideoProcessorInputView), "pInputSurfaceRight"),
+    (Array(ObjPointer(ID3D11VideoProcessorInputView), "{self}.FutureFrames"), "ppFutureSurfacesRight"),
+])
+
+ID3D11VideoProcessor = Interface("ID3D11VideoProcessor", ID3D11DeviceChild)
+ID3D11VideoProcessor.methods += [
+    StdMethod(Void, "GetContentDesc", [Out(Pointer(D3D11_VIDEO_PROCESSOR_CONTENT_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetRateConversionCaps", [Out(Pointer(D3D11_VIDEO_PROCESSOR_RATE_CONVERSION_CAPS), "pCaps")], sideeffects=False),
+]
+
+D3D11_OMAC = Struct("D3D11_OMAC", [
+    (Array(BYTE, 16), "Omac"),
+])
+
+D3D11_AUTHENTICATED_CHANNEL_TYPE = Enum("D3D11_AUTHENTICATED_CHANNEL_TYPE", [
+    "D3D11_AUTHENTICATED_CHANNEL_D3D11",
+    "D3D11_AUTHENTICATED_CHANNEL_DRIVER_SOFTWARE",
+    "D3D11_AUTHENTICATED_CHANNEL_DRIVER_HARDWARE",
+])
+
+ID3D11AuthenticatedChannel = Interface("ID3D11AuthenticatedChannel", ID3D11DeviceChild)
+ID3D11AuthenticatedChannel.methods += [
+    StdMethod(HRESULT, "GetCertificateSize", [Out(Pointer(UINT), "pCertificateSize")], sideeffects=False),
+    StdMethod(HRESULT, "GetCertificate", [(UINT, "CertificateSize"), Out(Array(BYTE, "CertificateSize"), "pCertificate")], sideeffects=False),
+    StdMethod(Void, "GetChannelHandle", [Out(Pointer(HANDLE), "pChannelHandle")]),
+]
+
+D3D11_AUTHENTICATED_QUERY_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_INPUT", [
+    (GUID, "QueryType"),
+    (HANDLE, "hChannel"),
+    (UINT, "SequenceNumber"),
+])
+
+D3D11_AUTHENTICATED_QUERY_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_OUTPUT", [
+    (D3D11_OMAC, "omac"),
+    (GUID, "QueryType"),
+    (HANDLE, "hChannel"),
+    (UINT, "SequenceNumber"),
+    (HRESULT, "ReturnCode"),
+])
+
+D3D11_AUTHENTICATED_PROTECTION_FLAGS = Struct("D3D11_AUTHENTICATED_PROTECTION_FLAGS", [
+    (UINT, "ProtectionEnabled"),
+    (UINT, "OverlayOrFullscreenRequired"),
+    (UINT, "Reserved"),
+])
+
+D3D11_AUTHENTICATED_QUERY_PROTECTION_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_PROTECTION_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (D3D11_AUTHENTICATED_PROTECTION_FLAGS, "ProtectionFlags"),
+])
+
+D3D11_AUTHENTICATED_QUERY_CHANNEL_TYPE_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_CHANNEL_TYPE_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (D3D11_AUTHENTICATED_CHANNEL_TYPE, "ChannelType"),
+])
+
+D3D11_AUTHENTICATED_QUERY_DEVICE_HANDLE_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_DEVICE_HANDLE_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (HANDLE, "DeviceHandle"),
+])
+
+D3D11_AUTHENTICATED_QUERY_CRYPTO_SESSION_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_CRYPTO_SESSION_INPUT", [
+    (D3D11_AUTHENTICATED_QUERY_INPUT, "Input"),
+    (HANDLE, "DecoderHandle"),
+])
+
+D3D11_AUTHENTICATED_QUERY_CRYPTO_SESSION_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_CRYPTO_SESSION_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (HANDLE, "DecoderHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+    (HANDLE, "DeviceHandle"),
+])
+
+D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_COUNT_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_COUNT_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (UINT, "RestrictedSharedResourceProcessCount"),
+])
+
+D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_INPUT", [
+    (D3D11_AUTHENTICATED_QUERY_INPUT, "Input"),
+    (UINT, "ProcessIndex"),
+])
+
+D3D11_AUTHENTICATED_PROCESS_IDENTIFIER_TYPE = Enum("D3D11_AUTHENTICATED_PROCESS_IDENTIFIER_TYPE", [
+    "D3D11_PROCESSIDTYPE_UNKNOWN",
+    "D3D11_PROCESSIDTYPE_DWM",
+    "D3D11_PROCESSIDTYPE_HANDLE",
+])
+
+D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (UINT, "ProcessIndex"),
+    (D3D11_AUTHENTICATED_PROCESS_IDENTIFIER_TYPE, "ProcessIdentifier"),
+    (HANDLE, "ProcessHandle"),
+])
+
+D3D11_AUTHENTICATED_QUERY_UNRESTRICTED_PROTECTED_SHARED_RESOURCE_COUNT_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_UNRESTRICTED_PROTECTED_SHARED_RESOURCE_COUNT_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (UINT, "UnrestrictedProtectedSharedResourceCount"),
+])
+
+D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_COUNT_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_COUNT_INPUT", [
+    (D3D11_AUTHENTICATED_QUERY_INPUT, "Input"),
+    (HANDLE, "DeviceHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+])
+
+D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_COUNT_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_COUNT_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (HANDLE, "DeviceHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+    (UINT, "OutputIDCount"),
+])
+
+D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_INPUT", [
+    (D3D11_AUTHENTICATED_QUERY_INPUT, "Input"),
+    (HANDLE, "DeviceHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+    (UINT, "OutputIDIndex"),
+])
+
+D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_OUTPUT_ID_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (HANDLE, "DeviceHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+    (UINT, "OutputIDIndex"),
+    (UINT64, "OutputID"),
+])
+
+D3D11_BUS_TYPE = Enum("D3D11_BUS_TYPE", [
+    "D3D11_BUS_TYPE_OTHER",
+    "D3D11_BUS_TYPE_PCI",
+    "D3D11_BUS_TYPE_PCIX",
+    "D3D11_BUS_TYPE_AGP",
+    "D3D11_BUS_TYPE_PCIEXPRESS",
+    # XXX: Flags
+    "D3D11_BUS_IMPL_MODIFIER_INSIDE_OF_CHIPSET",
+    "D3D11_BUS_IMPL_MODIFIER_TRACKS_ON_MOTHER_BOARD_TO_CHIP",
+    "D3D11_BUS_IMPL_MODIFIER_TRACKS_ON_MOTHER_BOARD_TO_SOCKET",
+    "D3D11_BUS_IMPL_MODIFIER_DAUGHTER_BOARD_CONNECTOR",
+    "D3D11_BUS_IMPL_MODIFIER_DAUGHTER_BOARD_CONNECTOR_INSIDE_OF_NUAE",
+    "D3D11_BUS_IMPL_MODIFIER_NON_STANDARD",
+])
+
+D3D11_AUTHENTICATED_QUERY_ACESSIBILITY_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_ACESSIBILITY_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (D3D11_BUS_TYPE, "BusType"),
+    (BOOL, "AccessibleInContiguousBlocks"),
+    (BOOL, "AccessibleInNonContiguousBlocks"),
+])
+
+D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_COUNT_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_COUNT_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (UINT, "EncryptionGuidCount"),
+])
+
+D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_INPUT = Struct("D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_INPUT", [
+    (D3D11_AUTHENTICATED_QUERY_INPUT, "Input"),
+    (UINT, "EncryptionGuidIndex"),
+])
+
+D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_ACCESSIBILITY_ENCRYPTION_GUID_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (UINT, "EncryptionGuidIndex"),
+    (GUID, "EncryptionGuid"),
+])
+
+D3D11_AUTHENTICATED_QUERY_CURRENT_ACCESSIBILITY_ENCRYPTION_OUTPUT = Struct("D3D11_AUTHENTICATED_QUERY_CURRENT_ACCESSIBILITY_ENCRYPTION_OUTPUT", [
+    (D3D11_AUTHENTICATED_QUERY_OUTPUT, "Output"),
+    (GUID, "EncryptionGuid"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_INPUT", [
+    (D3D11_OMAC, "omac"),
+    (GUID, "ConfigureType"),
+    (HANDLE, "hChannel"),
+    (UINT, "SequenceNumber"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_OUTPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_OUTPUT", [
+    (D3D11_OMAC, "omac"),
+    (GUID, "ConfigureType"),
+    (HANDLE, "hChannel"),
+    (UINT, "SequenceNumber"),
+    (HRESULT, "ReturnCode"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_INITIALIZE_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_INITIALIZE_INPUT", [
+    (D3D11_AUTHENTICATED_CONFIGURE_INPUT, "Parameters"),
+    (UINT, "StartSequenceQuery"),
+    (UINT, "StartSequenceConfigure"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_PROTECTION_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_PROTECTION_INPUT", [
+    (D3D11_AUTHENTICATED_CONFIGURE_INPUT, "Parameters"),
+    (D3D11_AUTHENTICATED_PROTECTION_FLAGS, "Protections"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_CRYPTO_SESSION_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_CRYPTO_SESSION_INPUT", [
+    (D3D11_AUTHENTICATED_CONFIGURE_INPUT, "Parameters"),
+    (HANDLE, "DecoderHandle"),
+    (HANDLE, "CryptoSessionHandle"),
+    (HANDLE, "DeviceHandle"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_SHARED_RESOURCE_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_SHARED_RESOURCE_INPUT", [
+    (D3D11_AUTHENTICATED_CONFIGURE_INPUT, "Parameters"),
+    (D3D11_AUTHENTICATED_PROCESS_IDENTIFIER_TYPE, "ProcessType"),
+    (HANDLE, "ProcessHandle"),
+    (BOOL, "AllowAccess"),
+])
+
+D3D11_AUTHENTICATED_CONFIGURE_ACCESSIBLE_ENCRYPTION_INPUT = Struct("D3D11_AUTHENTICATED_CONFIGURE_ACCESSIBLE_ENCRYPTION_INPUT", [
+    (D3D11_AUTHENTICATED_CONFIGURE_INPUT, "Parameters"),
+    (GUID, "EncryptionGuid"),
+])
+
+ID3D11CryptoSession = Interface("ID3D11CryptoSession", ID3D11DeviceChild)
+ID3D11CryptoSession.methods += [
+    StdMethod(Void, "GetCryptoType", [Out(Pointer(GUID), "pCryptoType")], sideeffects=False),
+    StdMethod(Void, "GetDecoderProfile", [Out(Pointer(GUID), "pDecoderProfile")], sideeffects=False),
+    StdMethod(HRESULT, "GetCertificateSize", [Out(Pointer(UINT), "pCertificateSize")], sideeffects=False),
+    StdMethod(HRESULT, "GetCertificate", [(UINT, "CertificateSize"), Out(Pointer(BYTE), "pCertificate")], sideeffects=False),
+    StdMethod(Void, "GetCryptoSessionHandle", [Out(Pointer(HANDLE), "pCryptoSessionHandle")]),
+]
+
+D3D11_VDOV_DIMENSION = Enum("D3D11_VDOV_DIMENSION", [
+    "D3D11_VDOV_DIMENSION_UNKNOWN",
+    "D3D11_VDOV_DIMENSION_TEXTURE2D",
+])
+
+D3D11_TEX2D_VDOV = Struct("D3D11_TEX2D_VDOV", [
+    (UINT, "ArraySlice"),
+])
+
+D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC = Struct("D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC", [
+    (GUID, "DecodeProfile"),
+    (D3D11_VDOV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_VDOV_DIMENSION_TEXTURE2D", D3D11_TEX2D_VDOV, "Texture2D"),
+    ]), None),
+])
+
+ID3D11VideoDecoderOutputView = Interface("ID3D11VideoDecoderOutputView", ID3D11View)
+ID3D11VideoDecoderOutputView.methods += [
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC), "pDesc")], sideeffects=None),
+]
+
+D3D11_VPIV_DIMENSION = Enum("D3D11_VPIV_DIMENSION", [
+    "D3D11_VPIV_DIMENSION_UNKNOWN",
+    "D3D11_VPIV_DIMENSION_TEXTURE2D",
+])
+
+D3D11_TEX2D_VPIV = Struct("D3D11_TEX2D_VPIV", [
+    (UINT, "MipSlice"),
+    (UINT, "ArraySlice"),
+])
+
+D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC = Struct("D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC", [
+    (UINT, "FourCC"),
+    (D3D11_VPIV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_VPIV_DIMENSION_TEXTURE2D", D3D11_TEX2D_VPIV, "Texture2D"),
+    ]), None),
+])
+
+ID3D11VideoProcessorInputView.methods += [
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC), "pDesc")], sideeffects=None),
+]
+
+D3D11_VPOV_DIMENSION = Enum("D3D11_VPOV_DIMENSION", [
+    "D3D11_VPOV_DIMENSION_UNKNOWN",
+    "D3D11_VPOV_DIMENSION_TEXTURE2D",
+    "D3D11_VPOV_DIMENSION_TEXTURE2DARRAY",
+])
+
+D3D11_TEX2D_VPOV = Struct("D3D11_TEX2D_VPOV", [
+    (UINT, "MipSlice"),
+])
+
+D3D11_TEX2D_ARRAY_VPOV = Struct("D3D11_TEX2D_ARRAY_VPOV", [
+    (UINT, "MipSlice"),
+    (UINT, "FirstArraySlice"),
+    (UINT, "ArraySize"),
+])
+
+D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC = Struct("D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC", [
+    (D3D11_VPOV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_VPOV_DIMENSION_TEXTURE2D", D3D11_TEX2D_VPOV, "Texture2D"),
+        ("D3D11_VPOV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_VPOV, "Texture2DArray"),
+    ]), None),
+])
+
+ID3D11VideoProcessorOutputView = Interface("ID3D11VideoProcessorOutputView", ID3D11View)
+ID3D11VideoProcessorOutputView.methods += [
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC), "pDesc")], sideeffects=None),
+]
+
+ID3D11VideoContext = Interface("ID3D11VideoContext", ID3D11DeviceChild)
+ID3D11VideoContext.methods += [
+    StdMethod(HRESULT, "GetDecoderBuffer", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (D3D11_VIDEO_DECODER_BUFFER_TYPE, "Type"), Out(Pointer(UINT), "pBufferSize"), Out(Pointer(OpaqueBlob(Void, "*pBufferSize")), "ppBuffer")]),
+    StdMethod(HRESULT, "ReleaseDecoderBuffer", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (D3D11_VIDEO_DECODER_BUFFER_TYPE, "Type")]),
+    StdMethod(HRESULT, "DecoderBeginFrame", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (ObjPointer(ID3D11VideoDecoderOutputView), "pView"), (UINT, "ContentKeySize"), (Blob(Const(Void), "ContentKeySize"), "pContentKey")]),
+    StdMethod(HRESULT, "DecoderEndFrame", [(ObjPointer(ID3D11VideoDecoder), "pDecoder")]),
+    StdMethod(HRESULT, "SubmitDecoderBuffers", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (UINT, "NumBuffers"), (Pointer(Const(D3D11_VIDEO_DECODER_BUFFER_DESC)), "pBufferDesc")]),
+    StdMethod(HRESULT, "DecoderExtension", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (Pointer(Const(D3D11_VIDEO_DECODER_EXTENSION)), "pExtensionData")]),
+    StdMethod(Void, "VideoProcessorSetOutputTargetRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "Enable"), (Pointer(Const(RECT)), "pRect")]),
+    StdMethod(Void, "VideoProcessorSetOutputBackgroundColor", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "YCbCr"), (Pointer(Const(D3D11_VIDEO_COLOR)), "pColor")]),
+    StdMethod(Void, "VideoProcessorSetOutputColorSpace", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_COLOR_SPACE)), "pColorSpace")]),
+    StdMethod(Void, "VideoProcessorSetOutputAlphaFillMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE, "AlphaFillMode"), (UINT, "StreamIndex")]),
+    StdMethod(Void, "VideoProcessorSetOutputConstriction", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "Enable"), (SIZE, "Size")]),
+    StdMethod(Void, "VideoProcessorSetOutputStereoMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "Enable")]),
+    StdMethod(HRESULT, "VideoProcessorSetOutputExtension", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (Pointer(Const(GUID)), "pExtensionGuid"), (UINT, "DataSize"), (Blob(Void, "DataSize"), "pData")]),
+    StdMethod(Void, "VideoProcessorGetOutputTargetRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(BOOL), "Enabled"), Out(Pointer(RECT), "pRect")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetOutputBackgroundColor", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(BOOL), "pYCbCr"), Out(Pointer(D3D11_VIDEO_COLOR), "pColor")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetOutputColorSpace", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(D3D11_VIDEO_PROCESSOR_COLOR_SPACE), "pColorSpace")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetOutputAlphaFillMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(D3D11_VIDEO_PROCESSOR_ALPHA_FILL_MODE), "pAlphaFillMode"), Out(Pointer(UINT), "pStreamIndex")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetOutputConstriction", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(SIZE), "pSize")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetOutputStereoMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), Out(Pointer(BOOL), "pEnabled")], sideeffects=False),
+    StdMethod(HRESULT, "VideoProcessorGetOutputExtension", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (Pointer(Const(GUID)), "pExtensionGuid"), (UINT, "DataSize"), Out(OpaqueBlob(Void, "DataSize"), "pData")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorSetStreamFrameFormat", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (D3D11_VIDEO_FRAME_FORMAT, "FrameFormat")]),
+    StdMethod(Void, "VideoProcessorSetStreamColorSpace", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_COLOR_SPACE)), "pColorSpace")]),
+    StdMethod(Void, "VideoProcessorSetStreamOutputRate", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (D3D11_VIDEO_PROCESSOR_OUTPUT_RATE, "OutputRate"), (BOOL, "RepeatFrame"), (Pointer(Const(DXGI_RATIONAL)), "pCustomRate")]),
+    StdMethod(Void, "VideoProcessorSetStreamSourceRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (Pointer(Const(RECT)), "pRect")]),
+    StdMethod(Void, "VideoProcessorSetStreamDestRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (Pointer(Const(RECT)), "pRect")]),
+    StdMethod(Void, "VideoProcessorSetStreamAlpha", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (FLOAT, "Alpha")]),
+    StdMethod(Void, "VideoProcessorSetStreamPalette", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (UINT, "Count"), (Pointer(Const(UINT)), "pEntries")]),
+    StdMethod(Void, "VideoProcessorSetStreamPixelAspectRatio", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (Pointer(Const(DXGI_RATIONAL)), "pSourceAspectRatio"), (Pointer(Const(DXGI_RATIONAL)), "pDestinationAspectRatio")]),
+    StdMethod(Void, "VideoProcessorSetStreamLumaKey", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (FLOAT, "Lower"), (FLOAT, "Upper")]),
+    StdMethod(Void, "VideoProcessorSetStreamStereoFormat", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (D3D11_VIDEO_PROCESSOR_STEREO_FORMAT, "Format"), (BOOL, "LeftViewFrame0"), (BOOL, "BaseViewFrame0"), (D3D11_VIDEO_PROCESSOR_STEREO_FLIP_MODE, "FlipMode"), (Int, "MonoOffset")]),
+    StdMethod(Void, "VideoProcessorSetStreamAutoProcessingMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable")]),
+    StdMethod(Void, "VideoProcessorSetStreamFilter", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (D3D11_VIDEO_PROCESSOR_FILTER, "Filter"), (BOOL, "Enable"), (Int, "Level")]),
+    StdMethod(HRESULT, "VideoProcessorSetStreamExtension", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (Pointer(Const(GUID)), "pExtensionGuid"), (UINT, "DataSize"), (Blob(Void, "DataSize"), "pData")]),
+    StdMethod(Void, "VideoProcessorGetStreamFrameFormat", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(D3D11_VIDEO_FRAME_FORMAT), "pFrameFormat")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamColorSpace", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(D3D11_VIDEO_PROCESSOR_COLOR_SPACE), "pColorSpace")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamOutputRate", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(D3D11_VIDEO_PROCESSOR_OUTPUT_RATE), "pOutputRate"), Out(Pointer(BOOL), "pRepeatFrame"), Out(Pointer(DXGI_RATIONAL), "pCustomRate")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamSourceRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(RECT), "pRect")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamDestRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(RECT), "pRect")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamAlpha", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(FLOAT), "pAlpha")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamPalette", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (UINT, "Count"), Out(Array(UINT, "Count"), "pEntries")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamPixelAspectRatio", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(DXGI_RATIONAL), "pSourceAspectRatio"), Out(Pointer(DXGI_RATIONAL), "pDestinationAspectRatio")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamLumaKey", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(FLOAT), "pLower"), Out(Pointer(FLOAT), "pUpper")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamStereoFormat", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnable"), Out(Pointer(D3D11_VIDEO_PROCESSOR_STEREO_FORMAT), "pFormat"), Out(Pointer(BOOL), "pLeftViewFrame0"), Out(Pointer(BOOL), "pBaseViewFrame0"), Out(Pointer(D3D11_VIDEO_PROCESSOR_STEREO_FLIP_MODE), "pFlipMode"), Out(Pointer(Int), "MonoOffset")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamAutoProcessingMode", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnabled")], sideeffects=False),
+    StdMethod(Void, "VideoProcessorGetStreamFilter", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (D3D11_VIDEO_PROCESSOR_FILTER, "Filter"), Out(Pointer(BOOL), "pEnabled"), Out(Pointer(Int), "pLevel")], sideeffects=False),
+    StdMethod(HRESULT, "VideoProcessorGetStreamExtension", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (Pointer(Const(GUID)), "pExtensionGuid"), (UINT, "DataSize"), Out(OpaqueBlob(Void, "DataSize"), "pData")], sideeffects=False), # FIXME
+    StdMethod(HRESULT, "VideoProcessorBlt", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (ObjPointer(ID3D11VideoProcessorOutputView), "pView"), (UINT, "OutputFrame"), (UINT, "StreamCount"), (Array(Const(D3D11_VIDEO_PROCESSOR_STREAM), "StreamCount"), "pStreams")]),
+    StdMethod(HRESULT, "NegotiateCryptoSessionKeyExchange", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession"), (UINT, "DataSize"), Out(OpaqueBlob(Void, "DataSize"), "pData")], sideeffects=False), # FIXME
+    StdMethod(Void, "EncryptionBlt", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession"), (ObjPointer(ID3D11Texture2D), "pSrcSurface"), (ObjPointer(ID3D11Texture2D), "pDstSurface"), (UINT, "IVSize"), Out(OpaqueBlob(Void, "IVSize"), "pIV")], sideeffects=False), # FIXME
+    StdMethod(Void, "DecryptionBlt", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession"), (ObjPointer(ID3D11Texture2D), "pSrcSurface"), (ObjPointer(ID3D11Texture2D), "pDstSurface"), (Pointer(D3D11_ENCRYPTED_BLOCK_INFO), "pEncryptedBlockInfo"), (UINT, "ContentKeySize"), (Blob(Const(Void), "ContentKeySize"), "pContentKey"), (UINT, "IVSize"), Out(OpaqueBlob(Void, "IVSize"), "pIV")], sideeffects=False), # FIXME
+    StdMethod(Void, "StartSessionKeyRefresh", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession"), (UINT, "RandomNumberSize"), Out(OpaqueBlob(Void, "RandomNumberSize"), "pRandomNumber")], sideeffects=False), # FIXME
+    StdMethod(Void, "FinishSessionKeyRefresh", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession")]),
+    StdMethod(HRESULT, "GetEncryptionBltKey", [(ObjPointer(ID3D11CryptoSession), "pCryptoSession"), (UINT, "KeySize"), Out(OpaqueBlob(Void, "KeySize"), "pReadbackKey")], sideeffects=False), # FIXME
+    StdMethod(HRESULT, "NegotiateAuthenticatedChannelKeyExchange", [(ObjPointer(ID3D11AuthenticatedChannel), "pChannel"), (UINT, "DataSize"), Out(OpaqueBlob(Void, "DataSize"), "pData")], sideeffects=False), # FIXME
+    StdMethod(HRESULT, "QueryAuthenticatedChannel", [(ObjPointer(ID3D11AuthenticatedChannel), "pChannel"), (UINT, "InputSize"), (Blob(Const(Void), "InputSize"), "pInput"), (UINT, "OutputSize"), Out(OpaqueBlob(Void, "OutputSize"), "pOutput")], sideeffects=False), # FIXME
+    StdMethod(HRESULT, "ConfigureAuthenticatedChannel", [(ObjPointer(ID3D11AuthenticatedChannel), "pChannel"), (UINT, "InputSize"), (Blob(Const(Void), "InputSize"), "pInput"), Out(Pointer(D3D11_AUTHENTICATED_CONFIGURE_OUTPUT), "pOutput")]),
+    StdMethod(Void, "VideoProcessorSetStreamRotation", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), (BOOL, "Enable"), (D3D11_VIDEO_PROCESSOR_ROTATION, "Rotation")]),
+    StdMethod(Void, "VideoProcessorGetStreamRotation", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (UINT, "StreamIndex"), Out(Pointer(BOOL), "pEnable"), Out(Pointer(D3D11_VIDEO_PROCESSOR_ROTATION), "pRotation")], sideeffects=False),
+]
+
+ID3D11VideoDevice = Interface("ID3D11VideoDevice", IUnknown)
+ID3D11VideoDevice.methods += [
+    StdMethod(HRESULT, "CreateVideoDecoder", [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), "pVideoDesc"), (Pointer(Const(D3D11_VIDEO_DECODER_CONFIG)), "pConfig"), Out(Pointer(ObjPointer(ID3D11VideoDecoder)), "ppDecoder")]),
+    StdMethod(HRESULT, "CreateVideoProcessor", [(ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (UINT, "RateConversionIndex"), Out(Pointer(ObjPointer(ID3D11VideoProcessor)), "ppVideoProcessor")]),
+    StdMethod(HRESULT, "CreateAuthenticatedChannel", [(D3D11_AUTHENTICATED_CHANNEL_TYPE, "ChannelType"), Out(Pointer(ObjPointer(ID3D11AuthenticatedChannel)), "ppAuthenticatedChannel")]),
+    StdMethod(HRESULT, "CreateCryptoSession", [(Pointer(Const(GUID)), "pCryptoType"), (Pointer(Const(GUID)), "pDecoderProfile"), (Pointer(Const(GUID)), "pKeyExchangeType"), (Pointer(ObjPointer(ID3D11CryptoSession)), "ppCryptoSession")]),
+    StdMethod(HRESULT, "CreateVideoDecoderOutputView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoDecoderOutputView)), "ppVDOVView")]),
+    StdMethod(HRESULT, "CreateVideoProcessorInputView", [(ObjPointer(ID3D11Resource), "pResource"), (ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoProcessorInputView)), "ppVPIView")]),
+    StdMethod(HRESULT, "CreateVideoProcessorOutputView", [(ObjPointer(ID3D11Resource), "pResource"), (ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoProcessorOutputView)), "ppVPOView")]),
+    StdMethod(HRESULT, "CreateVideoProcessorEnumerator", [(Pointer(Const(D3D11_VIDEO_PROCESSOR_CONTENT_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoProcessorEnumerator)), "ppEnum")]),
+    StdMethod(UINT, "GetVideoDecoderProfileCount", [], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoDecoderProfile", [(UINT, "Index"), Out(Pointer(GUID), "pDecoderProfile")], sideeffects=False),
+    StdMethod(HRESULT, "CheckVideoDecoderFormat", [(Pointer(Const(GUID)), "pDecoderProfile"), (DXGI_FORMAT, "Format"), Out(Pointer(BOOL), "pSupported")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoDecoderConfigCount", [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), "pDesc"), Out(Pointer(UINT), "pCount")]),
+    StdMethod(HRESULT, "GetVideoDecoderConfig", [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), "pDesc"), (UINT, "Index"), Out(Pointer(D3D11_VIDEO_DECODER_CONFIG), "pConfig")], sideeffects=False),
+    StdMethod(HRESULT, "GetContentProtectionCaps", [(Pointer(Const(GUID)), "pCryptoType"), (Pointer(Const(GUID)), "pDecoderProfile"), Out(Pointer(D3D11_VIDEO_CONTENT_PROTECTION_CAPS), "pCaps")], sideeffects=False),
+    StdMethod(HRESULT, "CheckCryptoKeyExchange", [(Pointer(Const(GUID)), "pCryptoType"), (Pointer(Const(GUID)), "pDecoderProfile"), (UINT, "Index"), Out(Pointer(GUID), "pKeyExchangeType")]),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
+]
+
+d3d11.addInterfaces([
+    ID3D11VideoContext,
+    ID3D11VideoDevice,
 ])
 
 
