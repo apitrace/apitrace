@@ -127,20 +127,23 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         tmp = '_a_' + array.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    if (%s) {' % (lvalue,)
-        print '        const trace::Array *%s = (%s).toArray();' % (tmp, rvalue)
+        print '    const trace::Array *%s = (%s).toArray();' % (tmp, rvalue)
+        print '    if (%s) {' % (tmp,)
 
+        length = '%s->values.size()' % (tmp,)
         if self.insideStruct:
             if isinstance(array.length, int):
                 # Member is an array
                 print r'    static_assert( std::is_array< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be an array" );' % lvalue
                 print r'    static_assert( std::extent< std::remove_reference< decltype( %s ) >::type >::value == %s, "array size mismatch" );' % (lvalue, array.length)
+                print r'    assert( %s );' % (tmp,)
+                print r'    assert( %s->size() == %s );' % (tmp, array.length)
+                length = str(array.length)
             else:
                 # Member is a pointer to an array, hence must be allocated
                 print r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue
                 print r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue)
 
-        length = '%s->values.size()' % (tmp,)
         index = '_j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
