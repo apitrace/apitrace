@@ -358,6 +358,11 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
+        if method.name in ('AcquireSync', 'ReleaseSync'):
+            print r'    if (SUCCEEDED(_result) && _result != S_OK) {'
+            print r'        retrace::warning(call) << " returned " << _result << "\n";'
+            print r'    }'
+
         # process events after presents
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'

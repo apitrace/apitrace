@@ -171,6 +171,9 @@ HRESULT = MAKE_HRESULT([
     "DXGI_ERROR_NOT_CURRENTLY_AVAILABLE",
     "DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED",
     "DXGI_ERROR_REMOTE_OUTOFMEMORY",
+    # IDXGIKeyedMutex::AcquireSync
+    "WAIT_ABANDONED",
+    "WAIT_TIMEOUT",
 ])
 
 
@@ -379,9 +382,13 @@ IDXGIResource.methods += [
     StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
 ]
 
+DWORD_TIMEOUT = FakeEnum(DWORD, [
+    "INFINITE",
+])
+
 IDXGIKeyedMutex.methods += [
-    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")], sideeffects=False),
-    StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")], sideeffects=False),
+    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD_TIMEOUT, "dwMilliseconds")]),
+    StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")]),
 ]
 
 DXGI_MAP = Flags(UINT, [
