@@ -15,12 +15,6 @@ if (DirectX_D3D11_INCLUDE_FOUND)
     endif ()
 
     if (MINGW)
-        # Older versions of MinGW do not include the sal.h header.  Use our own.
-        check_include_file_cxx (sal.h HAVE_SAL_H)
-        if (NOT HAVE_SAL_H)
-            include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/sal)
-        endif ()
-
         # MinGW wincodec.h is incomplete.  Use our own.
         include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec)
 
