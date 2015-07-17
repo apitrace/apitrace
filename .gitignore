@@ -27,6 +27,7 @@
 *.so
 *.trace
 *.zip
+*.ubj
 _CPack_Packages
 CMakeCache.txt
 CMakeFiles
