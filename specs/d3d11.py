@@ -1383,7 +1383,7 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CreatePredicate", [(Pointer(Const(D3D11_QUERY_DESC)), "pPredicateDesc"), Out(Pointer(ObjPointer(ID3D11Predicate)), "ppPredicate")]),
     StdMethod(HRESULT, "CreateCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D11Counter)), "ppCounter")]),
     StdMethod(HRESULT, "CreateDeferredContext", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppDeferredContext")]),
-    StdMethod(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "OpenSharedResource", [(RAW_HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
     StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_FORMAT_SUPPORT), "pFormatSupport")], sideeffects=False),
     StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
     StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")], sideeffects=False),

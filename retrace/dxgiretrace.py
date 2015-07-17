@@ -258,6 +258,19 @@ class D3DRetracer(Retracer):
             print r'    _result = d3dretrace::createSharedResource(_this, ReturnedInterface, ppResource);'
             self.checkResult(interface, method)
             return
+        if interface.name.startswith('ID3D11Device') and method.name == 'OpenSharedResource':
+            # Some applications (e.g., video playing in IE11) create shared resources within the same process.
+            # TODO: Generalize to other OpenSharedResource variants
+            print r'    retrace::map<HANDLE>::const_iterator it = _shared_handle_map.find(hResource);'
+            print r'    if (it == _shared_handle_map.end()) {'
+            print r'        retrace::warning(call) << "replacing shared resource with checker pattern\n";'
+            print r'        _result = d3dretrace::createSharedResource(_this, ReturnedInterface, ppResource);'
+            self.checkResult(interface, method)
+            print r'    } else {'
+            print r'        hResource = it->second;'
+            Retracer.invokeInterfaceMethod(self, interface, method)
+            print r'    }'
+            return
         if interface.name.startswith('ID3D11Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
             print r'    _result = d3dretrace::createSharedResource(_this, ReturnedInterface, ppResource);'

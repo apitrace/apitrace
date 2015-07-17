@@ -55,6 +55,15 @@ private:
     base_type base;
 
 public:
+    typedef typename base_type::const_iterator const_iterator;
+
+    const_iterator end(void) const {
+        return base.end();
+    }
+
+    const_iterator find(const T & key) const {
+        return base.find(key);
+    }
 
     T & operator[] (const T &key) {
         typename base_type::iterator it;

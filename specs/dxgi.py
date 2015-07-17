@@ -375,8 +375,10 @@ IDXGIDeviceSubObject.methods += [
     StdMethod(HRESULT, "GetDevice", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppDevice")]),
 ]
 
+SHARED_HANDLE = Handle("shared_handle", RAW_HANDLE)
+
 IDXGIResource.methods += [
-    StdMethod(HRESULT, "GetSharedHandle", [Out(Pointer(HANDLE), "pSharedHandle")]),
+    StdMethod(HRESULT, "GetSharedHandle", [Out(Pointer(SHARED_HANDLE), "pSharedHandle")]),
     StdMethod(HRESULT, "GetUsage", [Out(Pointer(DXGI_USAGE), "pUsage")], sideeffects=False),
     StdMethod(HRESULT, "SetEvictionPriority", [(DXGI_RESOURCE_PRIORITY, "EvictionPriority")]),
     StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
