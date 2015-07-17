@@ -41,6 +41,10 @@
  */
 
 
+struct ID3D10Device;
+struct ID3D11Device;
+
+
 namespace d3dretrace {
 
 
@@ -62,6 +66,13 @@ createWindowForSwapChain(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 
 BOOL
 overrideQueryInterface(IUnknown *pThis, REFIID riid, void **ppvObj, HRESULT *pResult);
+
+
+HRESULT
+createSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void **ppResource);
+
+HRESULT
+createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppResource);
 
 
 

@@ -255,79 +255,17 @@ class D3DRetracer(Retracer):
 
         if interface.name.startswith('ID3D10Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
-            print r'    D3D10_TEXTURE2D_DESC Desc;'
-            print r'    memset(&Desc, 0, sizeof Desc);'
-            print r'    Desc.Width = 8;'
-            print r'    Desc.Height = 8;'
-            print r'    Desc.MipLevels = 1;'
-            print r'    Desc.ArraySize = 1;'
-            print r'    Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;'
-            print r'    Desc.SampleDesc.Count = 1;'
-            print r'    Desc.SampleDesc.Quality = 0;'
-            print r'    Desc.Usage = D3D10_USAGE_DEFAULT;'
-            print r'    Desc.BindFlags = D3D10_BIND_SHADER_RESOURCE | D3D10_BIND_RENDER_TARGET;'
-            print r'    Desc.CPUAccessFlags = 0x0;'
-            print r'    Desc.MiscFlags = 0 /* D3D10_RESOURCE_MISC_SHARED */;'
-            print r'    Desc.MiscFlags |= D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;'
-            print r'''
-            static const DWORD Checker[8][8] = {
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U }
-            };
-            static const D3D10_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
-            '''
-            print r'    com_ptr<ID3D10Texture2D> pResource;'
-            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, &pResource);'
-            print r'    if (SUCCEEDED(_result)) {'
-            print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
-            print r'    }'
+            print r'    _result = d3dretrace::createSharedResource(_this, ReturnedInterface, ppResource);'
             self.checkResult(interface, method)
             return
         if interface.name.startswith('ID3D11Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
-            print
+            print r'    _result = d3dretrace::createSharedResource(_this, ReturnedInterface, ppResource);'
             if method.name == 'OpenSharedResourceByName':
                 print r'    (void)lpName;'
                 print r'    (void)dwDesiredAccess;'
-                print
-            print r'    D3D11_TEXTURE2D_DESC Desc;'
-            print r'    memset(&Desc, 0, sizeof Desc);'
-            print r'    Desc.Width = 8;'
-            print r'    Desc.Height = 8;'
-            print r'    Desc.MipLevels = 1;'
-            print r'    Desc.ArraySize = 1;'
-            print r'    Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;'
-            print r'    Desc.SampleDesc.Count = 1;'
-            print r'    Desc.SampleDesc.Quality = 0;'
-            print r'    Desc.Usage = D3D11_USAGE_DEFAULT;'
-            print r'    Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;'
-            print r'    Desc.CPUAccessFlags = 0x0;'
-            print r'    Desc.MiscFlags = 0 /* D3D11_RESOURCE_MISC_SHARED */;'
-            print r'    Desc.MiscFlags |= D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;'
-            print r'''
-            static const DWORD Checker[8][8] = {
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
-               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
-               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U }
-            };
-            static const D3D11_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
-            '''
-            print r'    com_ptr<ID3D11Texture2D> pResource;'
-            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, &pResource);'
-            print r'    if (SUCCEEDED(_result)) {'
-            print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
-            print r'    }'
+            else:
+                print r'    (void)hResource;'
             self.checkResult(interface, method)
             return
 
