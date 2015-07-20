@@ -67,10 +67,16 @@ public:
      * Allocate an array with the same dimensions as the specified value.
      */
     inline void *
-    allocArray(const trace::Value *value, size_t size) {
+    allocArray(const trace::Value *value, size_t elemSize) {
         const trace::Array *array = value->toArray();
         if (array) {
-            return ::ScopedAllocator::alloc(array->size() * size);
+            size_t numElems = array->size();
+            size_t size = numElems * elemSize;
+            void *ptr = ::ScopedAllocator::alloc(size);
+            if (ptr) {
+                memset(ptr, 0, size);
+            }
+            return ptr;
         }
         const trace::Null *null = value->toNull();
         if (null) {
