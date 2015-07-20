@@ -38,6 +38,9 @@
 #pragma once
 
 
+#include <windows.h>
+
+
 #ifndef _FACD3D
 #define _FACD3D 0x876
 #endif

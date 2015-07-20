@@ -20,7 +20,6 @@
 
 #ifdef __MINGW32__
 #include "compat.h"
-#include "d3derr.hpp"
 #endif
 
 #ifdef HAVE_DDRAW
@@ -52,6 +51,10 @@
 #include <wincodec.h>
 #include <d2derr.h>
 #include <dwrite.h>
+#endif
+
+#ifdef __MINGW32__
+#include "d3derr.hpp"
 #endif
 
 #define XAUDIO2_E_INVALID_CALL          0x88960001
