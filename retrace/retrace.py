@@ -560,7 +560,9 @@ class Retracer:
                 for memberIndex in range(len(struct.members)):
                     memberType, memberName = struct.members[memberIndex]
                     if memberName.endswith('Pitch'):
-                        print r'                retrace::checkMismatch(call, "%s", _struct->members[%u], %s->%s);' % (memberName, memberIndex, outArg.name, memberName)
+                        print r'                if (%s->%s) {' % (outArg.name, memberName)
+                        print r'                    retrace::checkMismatch(call, "%s", _struct->members[%u], %s->%s);' % (memberName, memberIndex, outArg.name, memberName)
+                        print r'                }'
                 print r'            }'
                 print r'        }'
 

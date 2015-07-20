@@ -203,6 +203,30 @@ _getMapDesc(ID3D11DeviceContext* pContext, ID3D11Resource * pResource, UINT Subr
 }
 
 
+static inline void
+_normalizeMap(ID3D11Resource * pResource, D3D11_MAPPED_SUBRESOURCE * pMappedResource)
+{
+    D3D11_RESOURCE_DIMENSION Type = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+    pResource->GetType(&Type);
+
+    switch (Type) {
+    default:
+    case D3D11_RESOURCE_DIMENSION_UNKNOWN:
+        assert(0);
+        /* fall-through */
+    case D3D11_RESOURCE_DIMENSION_BUFFER:
+    case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        pMappedResource->RowPitch = 0;
+        /* fall-through */
+    case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        pMappedResource->DepthPitch = 0;
+        break;
+    case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        break;
+    }
+}
+
+
 static inline D3D11_QUERY
 _getQueryType(ID3D11Query *pQuery)
 {
