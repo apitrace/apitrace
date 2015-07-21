@@ -35,6 +35,7 @@
 #include "dxgistate.hpp"
 #include "d3d10state.hpp"
 #include "d3d11state.hpp"
+#include "d3d11imports.hpp"
 
 #ifdef __MINGW32__
 #define nullptr NULL
@@ -331,6 +332,54 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
      * We must figure out
      * the appropriate D3D10/D3D11 interfaces, and use them instead.
      */
+
+    com_ptr<ID3D11Device1> pD3D11Device1;
+    hr = pSwapChain->GetDevice(IID_ID3D11Device1, (void **)&pD3D11Device1);
+    if (SUCCEEDED(hr)) {
+        /*
+         * With D3D11.1 runtime (that comes with Windows 8 and Windows 7
+         * Platform Update), we can no longer guess the device interface based
+         * on the success of GetDevice, since it will always succeed regardless
+         * the requested device interface, but the returned device maight be
+         * inactive/lockedout, and attempt to use it will cause the call to be
+         * ignored, though a debug runtime will issue a
+         * DEVICE_LOCKEDOUT_INTERFACE warning.
+         *
+         * See also:
+         * - https://msdn.microsoft.com/en-us/library/windows/desktop/hh404583.aspx
+         * - https://social.msdn.microsoft.com/Forums/en-US/c482bcec-b094-4df0-9253-9c496b115beb/d3d11-runtime-assertion-when-using-graphics-debugger-and-other-applications-may-be-intercepting?forum=wingameswithdirectx
+         */
+        com_ptr<ID3D11Resource> pD3D11Resource;
+        hr = pSwapChain->GetBuffer(0, IID_ID3D11Resource, (void **)&pD3D11Resource);
+        assert(SUCCEEDED(hr));
+        if (FAILED(hr)) {
+            return NULL;
+        }
+
+        com_ptr<ID3D11DeviceContext1> pD3D11DeviceContext;
+        pD3D11Device1->GetImmediateContext1(&pD3D11DeviceContext);
+
+        UINT Flags = 0;
+        UINT DeviceFlags = pD3D11Device1->GetCreationFlags();
+        if (DeviceFlags & D3D11_CREATE_DEVICE_SINGLETHREADED) {
+            Flags |= D3D11_1_CREATE_DEVICE_CONTEXT_STATE_SINGLETHREADED;
+        }
+        D3D_FEATURE_LEVEL FeatureLevel = pD3D11Device1->GetFeatureLevel();
+
+        com_ptr<ID3DDeviceContextState> pState;
+        hr = pD3D11Device1->CreateDeviceContextState(Flags, &FeatureLevel, 1, D3D11_SDK_VERSION, IID_ID3D11Device1, NULL, &pState);
+        if (SUCCEEDED(hr)) {
+            com_ptr<ID3DDeviceContextState> pPreviousState;
+            pD3D11DeviceContext->SwapDeviceContextState(pState, &pPreviousState);
+
+            image::Image *image;
+            image = getSubResourceImage(pD3D11DeviceContext, pD3D11Resource, Format, 0, 0);
+
+            pD3D11DeviceContext->SwapDeviceContextState(pPreviousState, NULL);
+
+            return image;
+        }
+    }
 
     com_ptr<ID3D11Device> pD3D11Device;
     hr = pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pD3D11Device);
