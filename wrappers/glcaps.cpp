@@ -205,10 +205,12 @@ getInteger(const configuration *config,
     switch (pname) {
     case GL_NUM_PROGRAM_BINARY_FORMATS:
         if (params) {
-            if (params[0] > 0) {
+            GLint numProgramBinaryFormats = 0;
+            _glGetIntegerv(pname, &numProgramBinaryFormats);
+            if (numProgramBinaryFormats > 0) {
                 os::log("apitrace: warning: hiding program binary formats (https://github.com/apitrace/apitrace/issues/316)\n");
-                params[0] = 0;
             }
+            params[0] = 0;
         }
         return;
     case GL_PROGRAM_BINARY_FORMATS:
