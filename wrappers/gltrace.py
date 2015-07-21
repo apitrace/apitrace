@@ -254,6 +254,8 @@ class GlTracer(Tracer):
         print '_gl_param_size(GLenum pname) {'
         print '    switch (pname) {'
         for function, type, count, name in glparams.parameters:
+            if name == 'GL_PROGRAM_BINARY_FORMATS':
+                count = 0
             if type is not None:
                 print '    case %s: return %s;' % (name, count)
         print '    default:'
