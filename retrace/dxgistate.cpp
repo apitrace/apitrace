@@ -335,7 +335,7 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
     com_ptr<ID3D11Device> pD3D11Device;
     hr = pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pD3D11Device);
     if (SUCCEEDED(hr)) {
-        ID3D11Resource *pD3D11Resource = NULL;
+        com_ptr<ID3D11Resource> pD3D11Resource;
         hr = pSwapChain->GetBuffer(0, IID_ID3D11Resource, (void **)&pD3D11Resource);
         assert(SUCCEEDED(hr));
         if (FAILED(hr)) {
@@ -351,7 +351,7 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
     com_ptr<ID3D10Device> pD3D10Device;
     hr = pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pD3D10Device);
     if (SUCCEEDED(hr)) {
-        ID3D10Resource *pD3D10Resource = NULL;
+        com_ptr<ID3D10Resource> pD3D10Resource;
         hr = pSwapChain->GetBuffer(0, IID_ID3D10Resource, (void **)&pD3D10Resource);
         assert(SUCCEEDED(hr));
         if (FAILED(hr)) {
