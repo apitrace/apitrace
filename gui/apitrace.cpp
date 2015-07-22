@@ -279,18 +279,19 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
 
     if (!m_queuedErrors.isEmpty()) {
         QList< QPair<ApiTraceFrame*, ApiTraceError> >::iterator itr;
-        for (itr = m_queuedErrors.begin(); itr != m_queuedErrors.end();
-             ++itr) {
+        itr = m_queuedErrors.begin();
+        while (itr != m_queuedErrors.end()) {
             const ApiTraceError &error = (*itr).second;
             if ((*itr).first == frame) {
                 ApiTraceCall *call = frame->callWithIndex(error.callIndex);
 
                 if (!call) {
+                    ++itr;
                     continue;
                 }
 
                 call->setError(error.message);
-                m_queuedErrors.erase(itr);
+                itr = m_queuedErrors.erase(itr);
 
                 if (call->hasError()) {
                     m_errors.insert(call);
@@ -298,6 +299,8 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
                     m_errors.remove(call);
                 }
                 emit changed(call);
+            } else {
+                ++itr;
             }
         }
     }
