@@ -339,6 +339,11 @@ DXVA2_ConfigPictureDecode = Struct("DXVA2_ConfigPictureDecode", [
     (USHORT, "ConfigDecoderSpecific"),
 ])
 
+DXVA2_AES_CTR_IV = Struct("DXVA2_AES_CTR_IV", [
+    (UINT64, "IV"),
+    (UINT64, "Count"),
+])
+
 DXVA2_DecodeBufferDesc = Struct("DXVA2_DecodeBufferDesc", [
     (DXVA2_BufferType, "CompressedBufferType"),
     (UINT, "BufferIndex"),
@@ -350,19 +355,14 @@ DXVA2_DecodeBufferDesc = Struct("DXVA2_DecodeBufferDesc", [
     (UINT, "Height"),
     (UINT, "Stride"),
     (UINT, "ReservedBits"),
-    (PVOID, "pvPVPState"),
-])
-
-DXVA2_AES_CTR_IV = Struct("DXVA2_AES_CTR_IV", [
-    (UINT64, "IV"),
-    (UINT64, "Count"),
+    (Blob(VOID, "sizeof(DXVA2_AES_CTR_IV)"), "pvPVPState"),
 ])
 
 DXVA2_DecodeExtensionData = Struct("DXVA2_DecodeExtensionData", [
     (UINT, "Function"),
-    (PVOID, "pPrivateInputData"),
+    (Blob(Void, "{self}.PrivateInputDataSize"), "pPrivateInputData"),
     (UINT, "PrivateInputDataSize"),
-    (PVOID, "pPrivateOutputData"),
+    (Blob(Void, "{self}.PrivateOutputDataSize"), "pPrivateOutputData"),
     (UINT, "PrivateOutputDataSize"),
 ])
 
@@ -392,14 +392,14 @@ IDirect3DDeviceManager9.methods += [
 ]
 
 IDirectXVideoAccelerationService.methods += [
-    StdMethod(HRESULT, "CreateSurface", [(UINT, "Width"), (UINT, "Height"), (UINT, "BackBuffers"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (D3DUSAGE, "Usage"), (DXVA2_Type, "DxvaType"), Out(Pointer(ObjPointer(IDirect3DSurface9)), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle")]),
+    StdMethod(HRESULT, "CreateSurface", [(UINT, "Width"), (UINT, "Height"), (UINT, "BackBuffers"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (D3DUSAGE, "Usage"), (DXVA2_Type, "DxvaType"), Out(Array(ObjPointer(IDirect3DSurface9), "1 + BackBuffers"), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle")]),
 ]
 
 IDirectXVideoDecoderService.methods += [
     StdMethod(HRESULT, "GetDecoderDeviceGuids", [Out(Pointer(UINT), "pCount"), Out(Pointer(Array(GUID, "pCount ? *pCount : 0")), "pGuids")], sideeffects=False),
     StdMethod(HRESULT, "GetDecoderRenderTargets", [(REFGUID, "Guid"), Out(Pointer(UINT), "pCount"), Out(Pointer(Array(D3DFORMAT, "pCount ? *pCount : 0")), "pFormats")], sideeffects=False),
     StdMethod(HRESULT, "GetDecoderConfigurations", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (OpaquePointer(Void), "pReserved"), Out(Pointer(UINT), "pCount"), Out(Pointer(Array(DXVA2_ConfigPictureDecode, "pCount ? *pCount : 0")), "ppConfigs")], sideeffects=False),
-    StdMethod(HRESULT, "CreateVideoDecoder", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (Pointer(Const(DXVA2_ConfigPictureDecode)), "pConfig"), Out(Array(ObjPointer(IDirect3DSurface9), "NumRenderTargets"), "ppDecoderRenderTargets"), (UINT, "NumRenderTargets"), Out(Pointer(ObjPointer(IDirectXVideoDecoder)), "ppDecode")]),
+    StdMethod(HRESULT, "CreateVideoDecoder", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (Pointer(Const(DXVA2_ConfigPictureDecode)), "pConfig"), (Array(ObjPointer(IDirect3DSurface9), "NumRenderTargets"), "ppDecoderRenderTargets"), (UINT, "NumRenderTargets"), Out(Pointer(ObjPointer(IDirectXVideoDecoder)), "ppDecode")]),
 ]
 
 IDirectXVideoProcessorService.methods += [
@@ -416,9 +416,9 @@ IDirectXVideoProcessorService.methods += [
 IDirectXVideoDecoder.methods += [
     StdMethod(HRESULT, "GetVideoDecoderService", [Out(Pointer(ObjPointer(IDirectXVideoDecoderService)), "ppService")]),
     StdMethod(HRESULT, "GetCreationParameters", [Out(Pointer(GUID), "pDeviceGuid"), Out(Pointer(DXVA2_VideoDesc), "pVideoDesc"), Out(Pointer(DXVA2_ConfigPictureDecode), "pConfig"), Out(Pointer(Pointer(ObjPointer(IDirect3DSurface9))), "pDecoderRenderTargets"), Out(Pointer(UINT), "pNumSurfaces")]),
-    StdMethod(HRESULT, "GetBuffer", [(DXVA2_BufferType, "BufferType"), Out(Pointer(OpaqueBlob(Void, "*pBufferSize")), "ppBuffer"), Out(Pointer(UINT), "pBufferSize")]),
-    StdMethod(HRESULT, "ReleaseBuffer", [(UINT, "BufferType")]),
-    StdMethod(HRESULT, "BeginFrame", [(ObjPointer(IDirect3DSurface9), "pRenderTarget"), (OpaquePointer(Void), "pvPVPData")]),
+    StdMethod(HRESULT, "GetBuffer", [(DXVA2_BufferType, "BufferType"), Out(Pointer(LinearPointer(Void, "*pBufferSize")), "ppBuffer"), Out(Pointer(UINT), "pBufferSize")]),
+    StdMethod(HRESULT, "ReleaseBuffer", [(DXVA2_BufferType, "BufferType")]),
+    StdMethod(HRESULT, "BeginFrame", [(ObjPointer(IDirect3DSurface9), "pRenderTarget"), (Blob(Void, 16), "pvPVPData")]),
     StdMethod(HRESULT, "EndFrame", [Out(Pointer(HANDLE), "pHandleComplete")]),
     StdMethod(HRESULT, "Execute", [(Pointer(Const(DXVA2_DecodeExecuteParams)), "pExecuteParams")]),
 ]
