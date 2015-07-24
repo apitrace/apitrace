@@ -28,31 +28,45 @@
 
 #include <assert.h>
 
+#include <windows.h>
+
 
 /**
  * Simple smart pointer template for COM interfaces.
+ *
+ * - https://msdn.microsoft.com/en-us/magazine/dn904668.aspx
+ * - https://msdn.microsoft.com/en-us/library/417w8b3b.aspx
+ * - https://msdn.microsoft.com/en-us/library/ezzw7k98.aspx
  */
-template< class T >
+template< typename T >
 class com_ptr
 {
 private:
     T *p;
 
 public:
-    com_ptr(void) {
-        p = NULL;
+    com_ptr(void) :
+        p(nullptr)
+    {
+    }
+
+    com_ptr(T *_p) :
+        p(_p)
+    {
     }
 
     ~com_ptr() {
-        if (p) {
-            p->Release();
+        T *temp = p;
+        p = nullptr;
+        if (temp) {
+            temp->Release();
         }
     }
 
     // Used when initializing
     T **
     operator & () {
-        assert(p == NULL);
+        assert(p == nullptr);
         return &p;
     }
 
@@ -61,26 +75,37 @@ public:
         return p;
     }
 
+    struct no_ref_count : public T
+    {
+    private:
+        ULONG STDMETHODCALLTYPE AddRef(void);
+        ULONG STDMETHODCALLTYPE Release(void);
+    };
+
     // Methods
-    T *
+    no_ref_count *
     operator -> () const {
-        return p;
+        assert(p != nullptr);
+        return static_cast< no_ref_count *>(p);
     }
 
-    T *
+    com_ptr &
     operator = (T *q) {
-        if (p) {
-            p->Release();
+        if (p != q) {
+            T *temp = p;
+            p = q;
+            if (temp) {
+                temp->Release();
+            }
+            if (q) {
+                q->AddRef();
+            }
         }
-        if (q) {
-            q->AddRef();
-        }
-        return p = q;
+        return *this;
     }
 
-private:
-    com_ptr(const com_ptr &);
-    com_ptr & operator= (const com_ptr &);
+    com_ptr(const com_ptr &) = delete;
+    com_ptr & operator= (const com_ptr &) = delete;
 };
 
 
