@@ -29,12 +29,11 @@
  */
 
 
-#include <process.h>
-
 #include <iostream>
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "ws_win32.hpp"
 
 
 namespace glws {
@@ -62,134 +61,6 @@ static PFN_WGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
 static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
-static LRESULT CALLBACK
-WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    MINMAXINFO *pMMI;
-    switch (uMsg) {
-    case WM_KEYDOWN:
-        switch (wParam) {
-        case VK_ESCAPE:
-            PostMessage(hWnd, WM_CLOSE, 0, 0);
-            break;
-        }
-        break;
-    case WM_GETMINMAXINFO:
-        // Allow to create a window bigger than the desktop
-        pMMI = (MINMAXINFO *)lParam;
-        pMMI->ptMaxSize.x = 60000;
-        pMMI->ptMaxSize.y = 60000;
-        pMMI->ptMaxTrackSize.x = 60000;
-        pMMI->ptMaxTrackSize.y = 60000;
-        break;
-    case WM_CLOSE:
-        exit(0);
-        break;
-    default:
-        break;
-    }
-
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
-
-static const DWORD dwExStyle = 0;
-static const DWORD dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-
-
-struct WindowThreadParam
-{
-    int nWidth;
-    int nHeight;
-
-    HANDLE hEvent;
-
-    HWND hWnd;
-};
-
-
-static unsigned __stdcall
-windowThreadFunction( LPVOID _lpParam )
-{
-    WindowThreadParam *lpParam = (WindowThreadParam *)_lpParam;
-
-    // Actually create the window
-    lpParam->hWnd = CreateWindowEx(dwExStyle,
-                                   "glretrace", /* wc.lpszClassName */
-                                   NULL,
-                                   dwStyle,
-                                   0, /* x */
-                                   0, /* y */
-                                   lpParam->nWidth,
-                                   lpParam->nHeight,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL);
-
-    // Notify parent thread that window has been created
-    SetEvent(lpParam->hEvent);
-
-    BOOL bRet;
-    MSG msg;
-    while ((bRet = GetMessage(&msg, NULL, 0, 0 )) != FALSE) {
-        if (bRet == -1) {
-            // handle the error and possibly exit
-        } else {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-
-    // Return the exit code
-    return msg.wParam;
-}
-
-
-/**
- * Create a window on a separate thread.
- *
- * Each window is associated with one thread, which must process its events,
- * and certain operations like SetWindowPos will block until the message is
- * process, so the only way to guarantee that the window messages are processed
- * timely is by dedicating a thread to processing window events.
- *
- * TODO: Handle multiple windows on a single thread, instead of creating one
- * thread per each window.
- */
-static HWND
-createWindow(int nWidth, int nHeight)
-{
-    // Create window class
-    static bool first = TRUE;
-    if (first) {
-        WNDCLASS wc;
-        ZeroMemory(&wc, sizeof wc);
-        wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
-        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-        wc.lpfnWndProc = WndProc;
-        wc.lpszClassName = "glretrace";
-        wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-        RegisterClass(&wc);
-        first = FALSE;
-    }
-
-    // Spawn window thread
-    WindowThreadParam param;
-    param.nWidth = nWidth;
-    param.nHeight = nHeight;
-    param.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    _beginthreadex(NULL, 0, &windowThreadFunction, (LPVOID)&param, 0, NULL);
-
-    // Wait for window creation event
-    WaitForSingleObject(param.hEvent, INFINITE);
-    CloseHandle(param.hEvent);
-
-    return param.hWnd;
-}
-
-
 class WglDrawable : public Drawable
 {
 public:
@@ -201,19 +72,9 @@ public:
     WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
         Drawable(vis, width, height, pbuffer)
     {
-        int x = 0, y = 0;
-        RECT rect;
         BOOL bRet;
 
-        rect.left = x;
-        rect.top = y;
-        rect.right = rect.left + width;
-        rect.bottom = rect.top + height;
-
-        AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
-
-        hWnd = createWindow(rect.right  - rect.left,
-                            rect.bottom - rect.top);
+        hWnd = ws::createWindow("glretrace", width, height);
 
         hDC = GetDC(hWnd);
    
@@ -268,18 +129,7 @@ public:
 
         Drawable::resize(w, h);
 
-        RECT rClient, rWindow;
-        GetClientRect(hWnd, &rClient);
-        GetWindowRect(hWnd, &rWindow);
-        w += (rWindow.right  - rWindow.left) - rClient.right;
-        h += (rWindow.bottom - rWindow.top)  - rClient.bottom;
-
-        UINT uFlags = SWP_NOMOVE
-                    | SWP_NOZORDER
-                    | SWP_NOACTIVATE
-                    | SWP_NOOWNERZORDER;
-
-        SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, uFlags);
+        ws::resizeWindow(hWnd, w, h);
     }
 
     void show(void) {
@@ -543,19 +393,9 @@ makeCurrentInternal(Drawable *drawable, Context *context)
 }
 
 bool
-processEvents(void) {
-    MSG uMsg;
-    while (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) {
-        if (uMsg.message == WM_QUIT) {
-            return false;
-        }
-
-        if (!TranslateAccelerator(uMsg.hwnd, NULL, &uMsg)) {
-            TranslateMessage(&uMsg);
-            DispatchMessage(&uMsg);
-        }
-    }
-    return true;
+processEvents(void)
+{
+    return ws::processEvents();
 }
 
 

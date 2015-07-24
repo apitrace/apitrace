@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2012 Jose Fonseca
+ * Copyright 2015 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,41 +24,23 @@
  **************************************************************************/
 
 
-#include <assert.h>
-
-#include "d3dretrace.hpp"
-
-#include "ws_win32.hpp"
+#pragma once
 
 
-namespace d3dretrace {
+#include <windows.h>
+
+
+namespace ws {
 
 
 HWND
-createWindow(int width, int height)
-{
-    HWND hWnd;
-
-    hWnd = ws::createWindow("d3dretrace", width, height);
-
-    ShowWindow(hWnd, SW_SHOW);
-
-    return hWnd;
-}
-
+createWindow(LPCSTR lpszWindowName, int nWidth, int nHeight);
 
 void
-resizeWindow(HWND hWnd, int width, int height)
-{
-    ws::resizeWindow(hWnd, width, height);
-}
-
+resizeWindow(HWND hWnd, int width, int height);
 
 bool
-processEvents(void)
-{
-    return ws::processEvents();
-}
+processEvents(void);
 
 
-} /* namespace d3dretrace */
+} // namespace ws

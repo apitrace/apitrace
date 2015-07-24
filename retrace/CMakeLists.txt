@@ -33,6 +33,10 @@ add_custom_command (
         ${CMAKE_SOURCE_DIR}/specs/stdapi.py
 )
 
+if (WIN32)
+    set (ws_os ws_win32.cpp)
+endif ()
+
 add_library (retrace_common STATIC
     retrace.cpp
     retrace_main.cpp
@@ -42,6 +46,7 @@ add_library (retrace_common STATIC
     state_writer.cpp
     state_writer_json.cpp
     state_writer_ubjson.cpp
+    ${ws_os}
 )
 target_link_libraries (retrace_common
     image
