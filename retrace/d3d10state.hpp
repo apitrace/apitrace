@@ -26,6 +26,8 @@
 #pragma once
 
 
+#include <assert.h>
+
 #include <windows.h>
 
 #include <vector>
@@ -53,16 +55,17 @@ getPrivateData(T *pObject, REFGUID guid)
     }
 
     UINT DataLength = 0;
-    char dummy;
     HRESULT hr;
-    hr = pObject->GetPrivateData(guid, &DataLength, &dummy);
-    if (hr != DXGI_ERROR_MORE_DATA) {
+    hr = pObject->GetPrivateData(guid, &DataLength, NULL);
+    if (hr != S_OK) {
+        assert(hr == DXGI_ERROR_NOT_FOUND);
         return Data;
     }
 
     Data.resize(DataLength);
 
     hr = pObject->GetPrivateData(guid, &DataLength, &Data[0]);
+    assert(hr == S_OK);
     if (FAILED(hr)) {
         Data.clear();
     }
