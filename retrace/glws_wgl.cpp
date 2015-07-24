@@ -137,7 +137,7 @@ public:
             return;
         }
 
-        ShowWindow(hWnd, SW_SHOW);
+        ws::showWindow(hWnd);
 
         Drawable::show();
     }

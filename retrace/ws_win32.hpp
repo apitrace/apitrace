@@ -33,8 +33,15 @@
 namespace ws {
 
 
+extern bool
+headless;
+
+
 HWND
 createWindow(LPCSTR lpszWindowName, int nWidth, int nHeight);
+
+void
+showWindow(HWND hWnd);
 
 void
 resizeWindow(HWND hWnd, int width, int height);

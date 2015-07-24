@@ -41,7 +41,7 @@ createWindow(int width, int height)
 
     hWnd = ws::createWindow("d3dretrace", width, height);
 
-    ShowWindow(hWnd, SW_SHOW);
+    ws::showWindow(hWnd);
 
     return hWnd;
 }

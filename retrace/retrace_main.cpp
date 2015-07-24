@@ -45,6 +45,10 @@
 #include "retrace.hpp"
 #include "state_writer.hpp"
 
+#ifdef _WIN32
+#include "ws_win32.hpp"
+#endif
+
 
 static bool waitOnFinish = false;
 static int loopCount = 0;
@@ -634,6 +638,7 @@ usage(const char *argv0) {
         "      --samples=N         use GL_ARB_multisample (default is 1)\n"
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --fullscreen        allow fullscreen\n"
+        "      --headless          don't show windows\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
@@ -654,6 +659,7 @@ enum {
     SAMPLES_OPT,
     DRIVER_OPT,
     FULLSCREEN_OPT,
+    HEADLESS_OPT,
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
@@ -681,6 +687,7 @@ longOptions[] = {
     {"dump-state", required_argument, 0, 'D'},
     {"dump-format", required_argument, 0, DUMP_FORMAT_OPT},
     {"fullscreen", no_argument, 0, FULLSCREEN_OPT},
+    {"headless", no_argument, 0, HEADLESS_OPT},
     {"help", no_argument, 0, 'h'},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
@@ -772,6 +779,13 @@ int main(int argc, char **argv)
             break;
         case FULLSCREEN_OPT:
             retrace::forceWindowed = false;
+            break;
+        case HEADLESS_OPT:
+#ifdef _WIN32
+            ws::headless = true;
+#else
+            std::cerr << "warning: headless only implemented on Windows\n";
+#endif
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;

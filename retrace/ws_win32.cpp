@@ -33,6 +33,10 @@
 namespace ws {
 
 
+bool
+headless = false;
+
+
 static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -174,6 +178,15 @@ createWindow(LPCSTR lpszWindowName, int nWidth, int nHeight)
     assert(rClient.bottom - rClient.top  >= nHeight);
 
     return param.hWnd;
+}
+
+
+void
+showWindow(HWND hWnd)
+{
+    if (!headless) {
+        ShowWindow(hWnd, SW_SHOW);
+    }
 }
 
 
