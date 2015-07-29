@@ -367,7 +367,9 @@ command(int argc, char *argv[])
                 api = trace::API_GL;
             } else if (strcmp(optarg, "egl") == 0) {
                 api = trace::API_EGL;
-            } else if (strcmp(optarg, "d3d7") == 0) {
+            } else if (strcmp(optarg, "ddraw") == 0 ||
+                       strcmp(optarg, "d3d6") == 0 ||
+                       strcmp(optarg, "d3d7") == 0) {
                 api = trace::API_D3D7;
             } else if (strcmp(optarg, "d3d8") == 0) {
                 api = trace::API_D3D8;
