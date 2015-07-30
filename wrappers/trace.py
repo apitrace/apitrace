@@ -817,6 +817,7 @@ class Tracer:
         print r'        *ppObj = pWrapper->m_pInstance;'
         print r'    } else {'
         print r'        os::log("apitrace: warning: %%s: unexpected %%s pointer %%p\n", entryName, "%s", *ppObj);' % iface.name
+        print r'        trace::localWriter.flush();'
         print r'    }'
         print r'}'
         print
