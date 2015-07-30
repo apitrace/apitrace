@@ -350,7 +350,7 @@ class WrapDecider(stdapi.Traverser):
     def visitLinearPointer(self, void):
         pass
 
-    def visitInterface(self, interface):
+    def visitObjPointer(self, interface):
         self.needsWrapping = True
 
 
@@ -385,7 +385,8 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
         elif isinstance(elem_type, stdapi.Alias) and isinstance(elem_type.type, stdapi.Interface):
             self.visitInterfacePointer(elem_type.type, instance)
         else:
-            self.visitPointer(pointer, instance)
+            # All interfaces should at least implement IUnknown
+            print "    WrapIUnknown::_wrap(__FUNCTION__, (IUnknown **) &%s);" % (instance,)
     
     def visitInterface(self, interface, instance):
         raise NotImplementedError
