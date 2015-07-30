@@ -2984,12 +2984,12 @@ ID3D11PartnerDevice.methods += [
         (UINT, "Height"),
         (DXGI_FORMAT, "Format"),
         (D3D11_USAGE, "Usage"), # ??
-        (D3D11_BIND_FLAG, "BindFlags"),
+        (D3D11_BIND_FLAG, "BindFlags"), # ??
         (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
-        (REFIID, "EmulatedInterface"),
-        Out(Pointer(ObjPointer(Void)), "ppArg8"),
+        (REFIID, "ReturnedInterface"),
+        Out(Pointer(HANDLE), "ppArg8"),
         Out(Pointer(ObjPointer(Void)), "ppArg9")]),
-    StdMethod(HRESULT, "PresentCompositionBuffers", [(OpaquePointer(Void), "Arg1"), (Array(Const(ObjPointer(IUnknown)), "Arg3"), "Arg2"), (UINT, "Arg3")]),
+    StdMethod(HRESULT, "PresentCompositionBuffers", [(HANDLE, "Arg1"), (Array(Const(ObjPointer(IUnknown)), "Arg3"), "Arg2"), (UINT, "Arg3")], sideeffects=False),
     StdMethod(HRESULT, "GetGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D"), Out(Pointer(BOOL), "pEmpty"), Out(Pointer(RECT), "pRect")], sideeffects=False),
 ]
 

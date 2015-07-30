@@ -1237,10 +1237,6 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
          * - http://msdn.microsoft.com/en-us/library/ms682583
          */
 
-#if METRO
-        szNewDllName = "dxgitrace.dll";
-        SetEnvironmentVariableA("TRACE_FILE", "C:\\apitrace\\injectee.trace");
-#else
         if (!USE_SHARED_MEM) {
             szNewDllName = getenv("INJECT_DLL");
             if (!szNewDllName) {
@@ -1262,6 +1258,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             szNewDllName = szSharedMemCopy;
         }
+
+#if METRO
+        szNewDllName = "dxgitrace.dll";
+        SetEnvironmentVariableA("TRACE_FILE", "C:\\apitrace\\injectee.trace");
 #endif
 
         if (VERBOSITY > 0) {

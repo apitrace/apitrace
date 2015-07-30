@@ -203,8 +203,8 @@ struct ID3D11PartnerDevice: public IUnknown
     virtual HRESULT STDMETHODCALLTYPE OfferResourcesInternal(UINT NumResources, IDXGIResource * const * ppResources, DXGI_OFFER_RESOURCE_PRIORITY Priority) = 0;
     virtual HRESULT STDMETHODCALLTYPE ReclaimResourcesInternal(UINT NumResources, IDXGIResource * const * ppResources, BOOL *pDiscarded) = 0;
     virtual UINT STDMETHODCALLTYPE GetPartnerCaps(void) = 0;
-    virtual HRESULT STDMETHODCALLTYPE CreateCompositionBuffer(UINT, UINT, DXGI_FORMAT, D3D11_USAGE, UINT, UINT, REFIID, void * *, void * *) = 0;
-    virtual HRESULT STDMETHODCALLTYPE PresentCompositionBuffers(void *, IUnknown * const *, UINT) = 0;
+    virtual HRESULT STDMETHODCALLTYPE CreateCompositionBuffer(UINT, UINT, DXGI_FORMAT, D3D11_USAGE, UINT, UINT, REFIID, HANDLE *, void * *) = 0;
+    virtual HRESULT STDMETHODCALLTYPE PresentCompositionBuffers(HANDLE, IUnknown * const *, UINT) = 0;
     virtual HRESULT STDMETHODCALLTYPE GetGuardRect(ID3D11Texture2D *pTexture2D, BOOL *pEmpty, RECT *pRect) = 0;
 };
 

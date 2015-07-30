@@ -860,7 +860,8 @@ class Tracer:
         print(r'    } else {')
         print(r'        os::log("apitrace: warning: %%s: unexpected %%s pointer %%p\n", entryName, "%s", *ppObj);' % iface.name)
         if iface.name == 'ID3D11Resource':
-            print(r'    createID3D11Resource(*ppObj);')
+            print(r'        os::log("apitrace: warning: faking ID3D11Resource for %p\n", *ppObj);')
+            print(r'        createID3D11Resource(*ppObj);')
         print(r'        trace::localWriter.flush();')
         print(r'    }')
         print(r'}')

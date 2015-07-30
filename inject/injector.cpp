@@ -490,6 +490,10 @@ main(int argc, char *argv[])
     DWORD dwThreadId = 0;
     char cVerbosity = 0;
 
+#if METRO
+    debugPrintf("injector: %s\n", GetCommandLineA());
+#endif
+
     const char *szDllName = "injectee_iat.dll";
     const char *szDll = nullptr;
 
@@ -718,14 +722,15 @@ main(int argc, char *argv[])
         Sleep(1000);
     }
 
-#if METRO
-    const char *szDllPath = szDllName;
-#else
     char szDllPath[MAX_PATH];
+#if METRO
+    GetSystemDirectoryA(szDllPath, _countof(szDllPath));
+    strncat(szDllPath, "\\", sizeof szDllPath - strlen("\\") - 1);
+#else
     GetModuleFileNameA(NULL, szDllPath, sizeof szDllPath);
     getDirName(szDllPath);
-    strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 #endif
+    strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
     if (bDebug) {
         if (!attachDebugger(GetProcessId(hProcess))) {
@@ -748,15 +753,6 @@ main(int argc, char *argv[])
     DWORD exitCode;
 
     if (bAttach) {
-        if (bAttachDwm) {
-            restartDwmComposition(hProcess);
-        } else {
-            fprintf(stderr, "Press any key when finished tracing\n");
-            getchar();
-
-            ejectDll(hProcess, szDllPath);
-        }
-
         if (dwThreadId) {
             HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, TRUE, dwThreadId);
             if (hThread) {
@@ -767,6 +763,15 @@ main(int argc, char *argv[])
                 debugPrintf("inject: failed to open thread %lu\n", dwThreadId);
             }
             return 0;
+        }
+
+        if (bAttachDwm) {
+            restartDwmComposition(hProcess);
+        } else {
+            fprintf(stderr, "Press any key when finished tracing\n");
+            getchar();
+
+            ejectDll(hProcess, szDllPath);
         }
 
         exitCode = 0;
