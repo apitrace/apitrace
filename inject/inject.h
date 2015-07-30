@@ -244,7 +244,8 @@ injectDll(HANDLE hProcess, const char *szDllPath)
 
     GetExitCodeThread(hThread, &hModule);
     if (!hModule) {
-        debugPrintf("inject: error: failed to load %s into the remote process\n", szDllPath);
+        debugPrintf("inject: error: failed to load %s into the remote process %lu\n",
+                    szDllPath, GetProcessId(hProcess));
     } else {
         bRet = TRUE;
     }
