@@ -203,6 +203,37 @@ CloseSharedMem(void) {
 }
 
 
+/*
+ * XXX: Mixed architecture don't quite work.  See also
+ * http://www.corsix.org/content/dll-injection-and-wow64
+ */
+static BOOL
+isDifferentArch(HANDLE hProcess)
+{
+    typedef BOOL (WINAPI *PFNISWOW64PROCESS)(HANDLE, PBOOL);
+    PFNISWOW64PROCESS pfnIsWow64Process;
+    pfnIsWow64Process = (PFNISWOW64PROCESS)
+        GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
+    if (!pfnIsWow64Process) {
+        return FALSE;
+    }
+
+#ifdef _WIN64
+    BOOL isThisWow64 = FALSE;
+#else
+    BOOL isThisWow64 = TRUE;
+#endif
+
+    BOOL isOtherWow64 = FALSE;
+    if (!pfnIsWow64Process(hProcess, &isOtherWow64)) {
+        logLastError("IsWow64Process failed");
+        return FALSE;
+    }
+
+    return bool(isThisWow64) != bool(isOtherWow64);
+}
+
+
 static BOOL
 injectDll(HANDLE hProcess, const char *szDllPath)
 {

@@ -118,16 +118,23 @@ MyCreateProcessCommon(BOOL bRet,
                       LPPROCESS_INFORMATION lpProcessInformation)
 {
     if (!bRet) {
+        debugPrintf("inject: warning: failed to create child process\n");
         return;
     }
 
     DWORD dwLastError = GetLastError();
 
-    char szDllPath[MAX_PATH];
-    GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
+    if (isDifferentArch(lpProcessInformation->hProcess)) {
+        debugPrintf("inject: error: child process %lu has different architecture\n",
+                    GetProcessId(lpProcessInformation->hProcess));
+    } else {
+        char szDllPath[MAX_PATH];
+        GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
 
-    if (!injectDll(lpProcessInformation->hProcess, szDllPath)) {
-        debugPrintf("inject: warning: failed to inject child process\n");
+        if (!injectDll(lpProcessInformation->hProcess, szDllPath)) {
+            debugPrintf("inject: warning: failed to inject into child process %lu\n",
+                        GetProcessId(lpProcessInformation->hProcess));
+        }
     }
 
     if (!(dwCreationFlags & CREATE_SUSPENDED)) {
