@@ -237,7 +237,9 @@ resizeWindow(Window window, int w, int h)
 void
 showWindow(Window window)
 {
-    if (!ws::headless) {
+    // FIXME: This works for DRI drivers, but not NVIDIA proprietary drivers,
+    // for which the only solution seems to be to use Pbuffers.
+    if (true || !ws::headless) {
         XMapWindow(display, window);
         waitForEvent(window, MapNotify);
     }
