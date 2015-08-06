@@ -31,6 +31,7 @@
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "ws.hpp"
 
 
 namespace glws {
@@ -236,9 +237,10 @@ resizeWindow(Window window, int w, int h)
 void
 showWindow(Window window)
 {
-    XMapWindow(display, window);
-
-    waitForEvent(window, MapNotify);
+    if (!ws::headless) {
+        XMapWindow(display, window);
+        waitForEvent(window, MapNotify);
+    }
 }
 
 

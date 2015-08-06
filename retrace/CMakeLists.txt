@@ -46,6 +46,7 @@ add_library (retrace_common STATIC
     state_writer.cpp
     state_writer_json.cpp
     state_writer_ubjson.cpp
+    ws.cpp
     ${ws_os}
 )
 target_link_libraries (retrace_common

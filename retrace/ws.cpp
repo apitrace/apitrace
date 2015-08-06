@@ -24,26 +24,15 @@
  **************************************************************************/
 
 
-#pragma once
-
-
-#include <windows.h>
+#include "ws.hpp"
 
 
 namespace ws {
 
 
-HWND
-createWindow(LPCSTR lpszWindowName, int nWidth, int nHeight);
-
-void
-showWindow(HWND hWnd);
-
-void
-resizeWindow(HWND hWnd, int width, int height);
-
 bool
-processEvents(void);
+headless = false;
 
 
 } // namespace ws
+

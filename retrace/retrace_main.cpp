@@ -44,10 +44,7 @@
 #include "trace_option.hpp"
 #include "retrace.hpp"
 #include "state_writer.hpp"
-
-#ifdef _WIN32
-#include "ws_win32.hpp"
-#endif
+#include "ws.hpp"
 
 
 static bool waitOnFinish = false;
@@ -781,11 +778,7 @@ int main(int argc, char **argv)
             retrace::forceWindowed = false;
             break;
         case HEADLESS_OPT:
-#ifdef _WIN32
             ws::headless = true;
-#else
-            std::cerr << "warning: headless only implemented on Windows\n";
-#endif
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;
