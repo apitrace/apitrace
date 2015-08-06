@@ -29,6 +29,8 @@
 #include <assert.h>
 #include <process.h>
 
+#include "ws.hpp"
+
 
 namespace ws {
 
