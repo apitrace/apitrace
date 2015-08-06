@@ -446,15 +446,14 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
     GLvoid * pixels = NULL;
 
-    if (glretrace::getCurrentContext() != context) {
-        if (retrace::debug) {
-            retrace::warning(call) << "current context mismatch\n";
-        }
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (retrace::debug && currentContext != context) {
+        retrace::warning(call) << "current context mismatch\n";
     }
 
     glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 
-    if (retrace::debug && !glretrace::insideGlBeginEnd) {
+    if (retrace::debug && currentContext && !currentContext->insideBeginEnd) {
         glretrace::checkGlError(call);
     }
 }

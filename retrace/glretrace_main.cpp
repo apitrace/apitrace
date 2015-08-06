@@ -49,8 +49,6 @@ namespace glretrace {
 
 glprofile::Profile defaultProfile(glprofile::API_GL, 1, 0);
 
-bool insideList = false;
-bool insideGlBeginEnd = false;
 bool supportsARBShaderObjects = false;
 
 enum {
@@ -610,8 +608,8 @@ public:
     bool
     canDump(void) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
-        if (glretrace::insideGlBeginEnd ||
-            !currentContext) {
+        if (!currentContext ||
+            currentContext->insideBeginEnd) {
             return false;
         }
 

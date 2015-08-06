@@ -48,6 +48,9 @@ struct Context {
     glws::Drawable *drawable;
 
     GLuint activeProgram;
+    bool insideBeginEnd = false;
+    bool insideList = false;
+
     bool used;
 
     inline glprofile::Profile
@@ -63,8 +66,6 @@ struct Context {
 
 extern glprofile::Profile defaultProfile;
 
-extern bool insideList;
-extern bool insideGlBeginEnd;
 extern bool supportsARBShaderObjects;
 
 Context *
