@@ -61,19 +61,29 @@ void *_libGlHandle = NULL;
  * (extensions) entry-points.  Core entry-points should be taken directly from
  * the API specific libraries.
  *
- * We cannot tell here which API a symbol is meant for here (as some are
- * exported by many).  So this code assumes that the appropriate shared
- * libraries have been loaded previously (either dlopened with RTLD_GLOBAL, or
- * as part of the executable dependencies), and that their symbols available
- * for quering via dlsym(RTLD_NEXT, ...).
  */
 void *
 _getPublicProcAddress(const char *procName)
 {
-#if defined(ANDROID)
+    void *proc;
+
     /*
-     * Android does not support LD_PRELOAD.  It is assumed that applications
-     * are explicitely loading egltrace.so.
+     * We rely on dlsym(RTLD_NEXT, ...) whenever we can, because certain gl*
+     * symbols are exported by multiple APIs/SOs, and it's not trivial to
+     * determine which API/SO we should get the current symbol from.
+     */
+    proc = dlsym(RTLD_NEXT, procName);
+    if (proc) {
+        return proc;
+    }
+
+    /*
+     * dlsym(RTLD_NEXT, ...) will fail when the SO containing the symbol was
+     * loaded with RTLD_LOCAL.  We try to override RTLD_LOCAL with RTLD_GLOBAL
+     * when tracing but this doesn't always work.  So we try to guess and load
+     * the shared object directly.
+     *
+     * See https://github.com/apitrace/apitrace/issues/349#issuecomment-113316990
      */
 
     if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
@@ -87,19 +97,48 @@ _getPublicProcAddress(const char *procName)
         return dlsym(libEGL, procName);
     }
 
+    /*
+     * This might happen when:
+     *
+     * - the application is querying non-extensions functions via
+     *   eglGetProcAddress (either because EGL_KHR_get_all_proc_addresses
+     *   is advertised, or merely because the EGL implementation supports
+     *   it regardless, like Mesa does)
+     *
+     * - libGLES*.so nor libGL*.so was ever loaded.
+     *
+     * - we need to resolve entrypoints that application never asked (e.g.,
+     *   glGetIntegerv), for internal purposes
+     *
+     * Therefore, we try to fallback to eglGetProcAddress.
+     *
+     * See https://github.com/apitrace/apitrace/issues/301#issuecomment-68532248
+     */
+    if (strcmp(procName, "eglGetProcAddress") != 0) {
+        proc = (void *) _eglGetProcAddress(procName);
+        if (proc) {
+            return proc;
+        }
+    }
+
+    /*
+     * TODO: We could futher mitigate against using the wrong SO by:
+     * - using RTLD_NOLOAD to ensure we only use an existing SO
+     * - the determine the right SO via eglQueryAPI and glGetString(GL_VERSION)
+     */
+
     if (procName[0] == 'g' && procName[1] == 'l') {
         /* TODO: Use GLESv1/GLESv2 on a per-context basis. */
-        static void *sym = NULL;
 
         static void *libGLESv2 = NULL;
         if (!libGLESv2) {
             libGLESv2 = _dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv2) {
-            sym = dlsym(libGLESv2, procName);
+            proc = dlsym(libGLESv2, procName);
         }
-        if (sym) {
-            return sym;
+        if (proc) {
+            return proc;
         }
 
         static void *libGLESv1 = NULL;
@@ -107,42 +146,14 @@ _getPublicProcAddress(const char *procName)
             libGLESv1 = _dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv1) {
-            sym = dlsym(libGLESv1, procName);
+            proc = dlsym(libGLESv1, procName);
         }
-        if (sym) {
-            return sym;
+        if (proc) {
+            return proc;
         }
     }
 
     return NULL;
-#else
-    void *proc;
-    proc = dlsym(RTLD_NEXT, procName);
-    if (!proc &&
-        strcmp(procName, "eglGetProcAddress") != 0) {
-        /*
-         * This might happen when:
-         *
-         * - the application is querying non-extensions functions via
-         *   eglGetProcAddress (either because EGL_KHR_get_all_proc_addresses
-         *   is advertised, or merely because the EGL implementation supports
-         *   it regardless, like Mesa does)
-         *
-         * - libGLES*.so nor libGL*.so was ever loaded.
-         *
-         * - we need to resolve entrypoints that application never asked (e.g.,
-         *   glGetIntegerv), for internal purposes
-         *
-         * Therefore, we try to fallback to eglGetProcAddress.
-         *
-         * Another alternative would be to dlopen libGL/libGLES ourselves.
-         *
-         * See https://github.com/apitrace/apitrace/issues/301#issuecomment-68532248
-         */
-        proc = (void *) _eglGetProcAddress(procName);
-    }
-    return proc;
-#endif
 }
 
 /*
