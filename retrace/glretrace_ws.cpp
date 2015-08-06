@@ -140,7 +140,7 @@ Context::~Context()
 }
 
 
-static OS_THREAD_SPECIFIC_PTR(Context)
+OS_THREAD_SPECIFIC_PTR(Context)
 currentContextPtr;
 
 
@@ -182,12 +182,6 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
     }
 
     return true;
-}
-
-
-Context *
-getCurrentContext(void) {
-    return currentContextPtr;
 }
 
 

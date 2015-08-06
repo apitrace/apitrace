@@ -28,6 +28,8 @@
 #include "glws.hpp"
 #include "retrace.hpp"
 
+#include "os_thread.hpp"
+
 
 namespace glretrace {
 
@@ -68,8 +70,14 @@ extern glprofile::Profile defaultProfile;
 
 extern bool supportsARBShaderObjects;
 
-Context *
-getCurrentContext(void);
+extern OS_THREAD_SPECIFIC_PTR(Context)
+currentContextPtr;
+
+
+static inline Context *
+getCurrentContext(void) {
+    return currentContextPtr;
+}
 
 
 int
