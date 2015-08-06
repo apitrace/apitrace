@@ -25,7 +25,7 @@
 
 #include <sstream>
 
-#include "trace_analyzer.hpp"
+#include "cli_trim_auto_analyzer.hpp"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define STRNCMP_LITERAL(var, literal) strncmp((var), (literal), sizeof (literal) -1)

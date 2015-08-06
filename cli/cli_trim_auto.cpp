@@ -35,10 +35,11 @@
 
 #include "os_string.hpp"
 
-#include "trace_analyzer.hpp"
 #include "trace_callset.hpp"
 #include "trace_parser.hpp"
 #include "trace_writer.hpp"
+
+#include "cli_trim_auto_analyzer.hpp"
 
 static const char *synopsis = "Create a new trace by automatically trimming unecessary calls from an existing trace.";
 

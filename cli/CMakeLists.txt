@@ -29,8 +29,8 @@ add_executable (apitrace
     cli_trace.cpp
     cli_trim.cpp
     cli_trim_auto.cpp
+    cli_trim_auto_analyzer.cpp
     cli_resources.cpp
-    trace_analyzer.cpp
 )
 
 target_link_libraries (apitrace
