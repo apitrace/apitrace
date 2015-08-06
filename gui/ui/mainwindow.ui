@@ -634,7 +634,7 @@
   </action>
   <action name="actionTrim">
    <property name="text">
-    <string>Tr&amp;im</string>
+    <string>Tr&amp;im (experimental)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
