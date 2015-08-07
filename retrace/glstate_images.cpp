@@ -705,7 +705,7 @@ getDrawableBounds(GLint *width, GLint *height) {
     *height = rect.size.height;
     return true;
 
-#elif defined(HAVE_X11)
+#elif 0 // defined(HAVE_X11)
 
     Display *display;
     Drawable drawable;
