@@ -55,6 +55,7 @@
 
 #define _Always_(annos)
 #define _Analysis_noreturn_
+#define _Analysis_assume_(expr)
 #define _At_(target, annos)
 #define _At_buffer_(target, iter, bound, annos)
 #define _COM_Outptr_

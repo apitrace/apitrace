@@ -48,7 +48,7 @@ static inline float _EvaluateColor( _In_ FXMVECTOR val, _In_ DWORD flags )
     }
 }
 
-static void _EvaluateRow( _In_count_(width) const XMVECTOR* pSource, _Out_cap_(width+2) float* pDest,
+static void _EvaluateRow( _In_reads_(width) const XMVECTOR* pSource, _Out_writes_(width+2) float* pDest,
                           _In_ size_t width, _In_ DWORD flags )
 {
     assert( pSource && pDest );
@@ -79,14 +79,12 @@ static HRESULT _ComputeNMap( _In_ const Image& srcImage, _In_ DWORD flags, _In_ 
     if ( !srcImage.pixels || !normalMap.pixels )
         return E_INVALIDARG;
 
-    assert( !IsCompressed(format) && !IsTypeless( format ) );
-
     const DWORD convFlags = _GetConvertFlags( format );
     if ( !convFlags )
         return E_FAIL;
 
     if ( !( convFlags & (CONVF_UNORM | CONVF_SNORM | CONVF_FLOAT) ) )
-        HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
+        return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     const size_t width = srcImage.width;
     const size_t height = srcImage.height;
@@ -253,10 +251,11 @@ static HRESULT _ComputeNMap( _In_ const Image& srcImage, _In_ DWORD flags, _In_ 
 //-------------------------------------------------------------------------------------
 // Generates a normal map from a height-map
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT ComputeNormalMap( const Image& srcImage, DWORD flags, float amplitude,
                           DXGI_FORMAT format, ScratchImage& normalMap )
 {
-    if ( !srcImage.pixels || !IsValid(format) || IsCompressed( format ) || IsTypeless( format ) )
+    if ( !srcImage.pixels || !IsValid(format) )
         return E_INVALIDARG;
 
     static_assert( CNMAP_CHANNEL_RED == 0x1, "CNMAP_CHANNEL_ flag values don't match mask" );
@@ -274,7 +273,10 @@ HRESULT ComputeNormalMap( const Image& srcImage, DWORD flags, float amplitude,
         return E_INVALIDARG;
     }
 
-    if ( IsCompressed( srcImage.format ) || IsTypeless( srcImage.format ) )
+    if ( IsCompressed(format) || IsCompressed(srcImage.format)
+         || IsTypeless(format) || IsTypeless(srcImage.format) 
+         || IsPlanar(format) || IsPlanar(srcImage.format) 
+         || IsPalettized(format) || IsPalettized(srcImage.format) )
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     // Setup target image
@@ -301,14 +303,18 @@ HRESULT ComputeNormalMap( const Image& srcImage, DWORD flags, float amplitude,
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT ComputeNormalMap( const Image* srcImages, size_t nimages, const TexMetadata& metadata,
                           DWORD flags, float amplitude, DXGI_FORMAT format, ScratchImage& normalMaps )
 {
-    if ( !srcImages || !nimages )
+    if ( !srcImages || !nimages || !IsValid(format) )
         return E_INVALIDARG;
 
-    if ( !IsValid(format) || IsCompressed(format) || IsTypeless(format) )
-        return E_INVALIDARG;
+    if ( IsCompressed(format) || IsCompressed(metadata.format)
+         || IsTypeless(format) || IsTypeless(metadata.format) 
+         || IsPlanar(format) || IsPlanar(metadata.format) 
+         || IsPalettized(format) || IsPalettized(metadata.format) )
+        return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     static_assert( CNMAP_CHANNEL_RED == 0x1, "CNMAP_CHANNEL_ flag values don't match mask" );
     switch( flags & 0xf )

@@ -15,8 +15,11 @@ if (DirectX_D3D11_INCLUDE_FOUND)
     endif ()
 
     if (MINGW)
-        # MinGW wincodec.h is incomplete.  Use our own.
-        include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec)
+        # Several MinGW headers are lacking.  Use our own.
+        include_directories (BEFORE
+            ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec
+            ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wrl
+        )
 
         include_directories (BEFORE
             ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
@@ -61,8 +64,8 @@ if (DirectX_D3D11_INCLUDE_FOUND)
     )
 
     install (
-        FILES "Microsoft Public License.rtf"
+        FILES MIT.txt
         DESTINATION ${DOC_INSTALL_DIR}
-        RENAME LICENSE-directxtex.rtf
+        RENAME LICENSE-directxtex.txt
     )
 endif ()

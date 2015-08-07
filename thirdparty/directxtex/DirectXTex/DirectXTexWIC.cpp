@@ -15,6 +15,58 @@
 
 #include "DirectXTexP.h"
 
+using Microsoft::WRL::ComPtr;
+
+//-------------------------------------------------------------------------------------
+// IStream support for WIC Memory routines
+//-------------------------------------------------------------------------------------
+
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP) && (WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP)
+
+    #include <shcore.h>
+    #pragma comment(lib,"shcore.lib")
+
+#ifdef __cplusplus_winrt
+
+    static inline HRESULT CreateMemoryStream( _Outptr_ IStream** stream )
+    {
+        auto randomAccessStream = ref new ::Windows::Storage::Streams::InMemoryRandomAccessStream();
+        return CreateStreamOverRandomAccessStream( randomAccessStream, IID_PPV_ARGS( stream ) );
+    }
+
+#else
+
+    #include <wrl/client.h>
+    #include <wrl/wrappers/corewrappers.h>
+    #include <windows.storage.streams.h>
+
+    static inline HRESULT CreateMemoryStream( _Outptr_ IStream** stream )
+    {
+        Microsoft::WRL::ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStream> abiStream;
+        HRESULT hr = Windows::Foundation::ActivateInstance(
+            Microsoft::WRL::Wrappers::HStringReference( RuntimeClass_Windows_Storage_Streams_InMemoryRandomAccessStream ).Get(),
+            abiStream.GetAddressOf() );
+
+        if (SUCCEEDED(hr))
+        {
+            hr = CreateStreamOverRandomAccessStream( abiStream.Get(), IID_PPV_ARGS( stream ) );
+        }
+        return hr;
+    }
+
+#endif // __cplusplus_winrt
+
+#else
+
+    #pragma prefast(suppress:28196, "a simple wrapper around an existing annotated function" );
+    static inline HRESULT CreateMemoryStream( _Outptr_ IStream** stream )
+    {
+        return CreateStreamOnHGlobal( 0, TRUE, stream );
+    }
+
+#endif
+
+
 //-------------------------------------------------------------------------------------
 // WIC Pixel Format nearest conversion table
 //-------------------------------------------------------------------------------------
@@ -67,13 +119,14 @@ static WICConvert g_WICConvert[] =
     { GUID_WICPixelFormat128bppRGBFloat,        GUID_WICPixelFormat128bppRGBAFloat }, // DXGI_FORMAT_R32G32B32A32_FLOAT 
     { GUID_WICPixelFormat128bppRGBAFixedPoint,  GUID_WICPixelFormat128bppRGBAFloat }, // DXGI_FORMAT_R32G32B32A32_FLOAT 
     { GUID_WICPixelFormat128bppRGBFixedPoint,   GUID_WICPixelFormat128bppRGBAFloat }, // DXGI_FORMAT_R32G32B32A32_FLOAT 
+    { GUID_WICPixelFormat32bppRGBE,             GUID_WICPixelFormat128bppRGBAFloat }, // DXGI_FORMAT_R32G32B32A32_FLOAT 
 
     { GUID_WICPixelFormat32bppCMYK,             GUID_WICPixelFormat32bppRGBA }, // DXGI_FORMAT_R8G8B8A8_UNORM 
     { GUID_WICPixelFormat64bppCMYK,             GUID_WICPixelFormat64bppRGBA }, // DXGI_FORMAT_R16G16B16A16_UNORM
     { GUID_WICPixelFormat40bppCMYKAlpha,        GUID_WICPixelFormat64bppRGBA }, // DXGI_FORMAT_R16G16B16A16_UNORM
     { GUID_WICPixelFormat80bppCMYKAlpha,        GUID_WICPixelFormat64bppRGBA }, // DXGI_FORMAT_R16G16B16A16_UNORM
 
-#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/) || defined(_WIN7_PLATFORM_UPDATE)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
     { GUID_WICPixelFormat32bppRGB,              GUID_WICPixelFormat32bppRGBA }, // DXGI_FORMAT_R8G8B8A8_UNORM
     { GUID_WICPixelFormat64bppRGB,              GUID_WICPixelFormat64bppRGBA }, // DXGI_FORMAT_R16G16B16A16_UNORM
     { GUID_WICPixelFormat64bppPRGBAHalf,        GUID_WICPixelFormat64bppRGBAHalf }, // DXGI_FORMAT_R16G16B16A16_FLOAT 
@@ -100,7 +153,7 @@ static DXGI_FORMAT _DetermineFormat( _In_ const WICPixelFormatGUID& pixelFormat,
     {
         if ( memcmp( &GUID_WICPixelFormat96bppRGBFixedPoint, &pixelFormat, sizeof(WICPixelFormatGUID) ) == 0 )
         {
-#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/) || defined(_WIN7_PLATFORM_UPDATE)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
             if ( _IsWIC2() )
             {
                 if ( pConvert )
@@ -222,7 +275,66 @@ static HRESULT _DecodeMetadata( _In_ DWORD flags,
     if ( metadata.format == DXGI_FORMAT_UNKNOWN )
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
-    return S_OK;
+    if ( !( flags & WIC_FLAGS_IGNORE_SRGB ) )
+    {
+        GUID containerFormat;
+        hr = decoder->GetContainerFormat( &containerFormat );
+        if ( FAILED(hr) )
+            return hr;
+
+        ComPtr<IWICMetadataQueryReader> metareader;
+        hr = frame->GetMetadataQueryReader( metareader.GetAddressOf() );
+        if ( SUCCEEDED(hr) )
+        {
+            // Check for sRGB colorspace metadata
+            bool sRGB = false;
+
+            PROPVARIANT value;
+            PropVariantInit( &value );
+
+            if ( memcmp( &containerFormat, &GUID_ContainerFormatPng, sizeof(GUID) ) == 0 )
+            {
+                // Check for sRGB chunk
+                if ( SUCCEEDED( metareader->GetMetadataByName( L"/sRGB/RenderingIntent", &value ) ) && value.vt == VT_UI1 )
+                {
+                    sRGB = true;
+                }
+            }
+#if defined(_XBOX_ONE) && defined(_TITLE)
+            else if ( memcmp( &containerFormat, &GUID_ContainerFormatJpeg, sizeof(GUID) ) == 0 )
+            {
+                if ( SUCCEEDED( metareader->GetMetadataByName( L"/app1/ifd/exif/{ushort=40961}", &value ) ) && value.vt == VT_UI2 && value.uiVal == 1 )
+                {
+                    sRGB = true;
+                }
+            }
+            else if ( memcmp( &containerFormat, &GUID_ContainerFormatTiff, sizeof(GUID) ) == 0 )
+            {
+                if ( SUCCEEDED( metareader->GetMetadataByName( L"/ifd/exif/{ushort=40961}", &value ) ) && value.vt == VT_UI2 && value.uiVal == 1 )
+                {
+                    sRGB = true;
+                }
+            }
+#else
+            else if ( SUCCEEDED( metareader->GetMetadataByName( L"System.Image.ColorSpace", &value ) ) && value.vt == VT_UI2 && value.uiVal == 1 )
+            {
+                sRGB = true;
+            }
+#endif
+
+            PropVariantClear( &value );
+
+            if ( sRGB )
+                metadata.format = MakeSRGB( metadata.format );
+        }
+        else if ( hr == WINCODEC_ERR_UNSUPPORTEDOPERATION )
+        {
+            // Some formats just don't support metadata (BMP, ICO, etc.), so ignore this failure
+            hr = S_OK;
+        }
+    }
+
+    return hr;
 }
 
 
@@ -255,10 +367,22 @@ static HRESULT _DecodeSingleFrame( _In_ DWORD flags, _In_ const TexMetadata& met
     }
     else
     {
-        ScopedObject<IWICFormatConverter> FC;
-        hr = pWIC->CreateFormatConverter( &FC );
+        ComPtr<IWICFormatConverter> FC;
+        hr = pWIC->CreateFormatConverter( FC.GetAddressOf() );
         if ( FAILED(hr) )
             return hr;
+
+        WICPixelFormatGUID pixelFormat;
+        hr = frame->GetPixelFormat( &pixelFormat );
+        if ( FAILED(hr) )
+            return hr;
+
+        BOOL canConvert = FALSE;
+        hr = FC->CanConvert( pixelFormat, convertGUID, &canConvert );
+        if ( FAILED(hr) || !canConvert )
+        {
+            return E_UNEXPECTED;
+        }
 
         hr = FC->Initialize( frame, convertGUID, _GetWICDither( flags ), 0, 0, WICBitmapPaletteTypeCustom );
         if ( FAILED(hr) )
@@ -300,8 +424,8 @@ static HRESULT _DecodeMultiframe( _In_ DWORD flags, _In_ const TexMetadata& meta
         if ( !img )
             return E_POINTER;
 
-        ScopedObject<IWICBitmapFrameDecode> frame;
-        hr = decoder->GetFrame( static_cast<UINT>( index ), &frame );
+        ComPtr<IWICBitmapFrameDecode> frame;
+        hr = decoder->GetFrame( static_cast<UINT>( index ), frame.GetAddressOf() );
         if ( FAILED(hr) )
             return hr;
 
@@ -315,64 +439,82 @@ static HRESULT _DecodeMultiframe( _In_ DWORD flags, _In_ const TexMetadata& meta
         if ( FAILED(hr) )
             return hr;
 
-        if ( memcmp( &pfGuid, &sourceGUID, sizeof(WICPixelFormatGUID) ) == 0 )
+        if ( w == metadata.width && h == metadata.height )
         {
-            if ( w == metadata.width && h == metadata.height )
+            // This frame does not need resized
+            if ( memcmp( &pfGuid, &sourceGUID, sizeof(WICPixelFormatGUID) ) == 0 )
             {
-                // This frame does not need resized or format converted, just copy...
                 hr = frame->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );  
                 if ( FAILED(hr) )
                     return hr;
             }
             else
             {
-                // This frame needs resizing, but not format converted
-                ScopedObject<IWICBitmapScaler> scaler;
-                hr = pWIC->CreateBitmapScaler( &scaler );
+                ComPtr<IWICFormatConverter> FC;
+                hr = pWIC->CreateFormatConverter( FC.GetAddressOf() );
                 if ( FAILED(hr) )
                     return hr;
 
-                hr = scaler->Initialize( frame.Get(), static_cast<UINT>( metadata.width ), static_cast<UINT>( metadata.height ), _GetWICInterp( flags ) );
+                BOOL canConvert = FALSE;
+                hr = FC->CanConvert( pfGuid, sourceGUID, &canConvert );
+                if ( FAILED(hr) || !canConvert )
+                {
+                    return E_UNEXPECTED;
+                }
+
+                hr = FC->Initialize( frame.Get(), sourceGUID, _GetWICDither( flags ), 0, 0, WICBitmapPaletteTypeCustom );
                 if ( FAILED(hr) )
                     return hr;
-
-                hr = scaler->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );
+            
+                hr = FC->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );  
                 if ( FAILED(hr) )
                     return hr;
             }
         }
         else
         {
-            // This frame required format conversion
-            ScopedObject<IWICFormatConverter> FC;
-            hr = pWIC->CreateFormatConverter( &FC );
+            // This frame needs resizing
+            ComPtr<IWICBitmapScaler> scaler;
+            hr = pWIC->CreateBitmapScaler( scaler.GetAddressOf() );
             if ( FAILED(hr) )
                 return hr;
 
-            hr = FC->Initialize( frame.Get(), pfGuid, _GetWICDither( flags ), 0, 0, WICBitmapPaletteTypeCustom );
+            hr = scaler->Initialize( frame.Get(), static_cast<UINT>( metadata.width ), static_cast<UINT>( metadata.height ), _GetWICInterp( flags ) );
             if ( FAILED(hr) )
                 return hr;
-            
-            if ( w == metadata.width && h == metadata.height )
+
+            WICPixelFormatGUID pfScaler;
+            hr = scaler->GetPixelFormat( &pfScaler );
+            if ( FAILED(hr) )
+                return hr;
+
+            if ( memcmp( &pfScaler, &sourceGUID, sizeof(WICPixelFormatGUID) ) == 0 )
             {
-                // This frame is the same size, no need to scale
-                hr = FC->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );  
+                hr = scaler->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );
                 if ( FAILED(hr) )
                     return hr;
             }
             else
             {
-                // This frame needs resizing and format converted
-                ScopedObject<IWICBitmapScaler> scaler;
-                hr = pWIC->CreateBitmapScaler( &scaler );
+                // The WIC bitmap scaler is free to return a different pixel format than the source image, so here we
+                // convert it to our desired format
+                ComPtr<IWICFormatConverter> FC;
+                hr = pWIC->CreateFormatConverter( FC.GetAddressOf() );
                 if ( FAILED(hr) )
                     return hr;
 
-                hr = scaler->Initialize( FC.Get(), static_cast<UINT>( metadata.width ), static_cast<UINT>( metadata.height ), _GetWICInterp( flags ) );
+                BOOL canConvert = FALSE;
+                hr = FC->CanConvert( pfScaler, sourceGUID, &canConvert );
+                if ( FAILED(hr) || !canConvert )
+                {
+                    return E_UNEXPECTED;
+                }
+
+                hr = FC->Initialize( scaler.Get(), sourceGUID, _GetWICDither( flags ), 0, 0, WICBitmapPaletteTypeCustom );
                 if ( FAILED(hr) )
                     return hr;
 
-                hr = scaler->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );
+                hr = FC->CopyPixels( 0, static_cast<UINT>( img->rowPitch ), static_cast<UINT>( img->slicePitch ), img->pixels );  
                 if ( FAILED(hr) )
                     return hr;
             }
@@ -384,9 +526,96 @@ static HRESULT _DecodeMultiframe( _In_ DWORD flags, _In_ const TexMetadata& meta
 
 
 //-------------------------------------------------------------------------------------
+// Encodes image metadata
+//-------------------------------------------------------------------------------------
+static HRESULT _EncodeMetadata( _In_ IWICBitmapFrameEncode* frame, _In_ const GUID& containerFormat, _In_ DXGI_FORMAT format )
+{
+    if ( !frame )
+        return E_POINTER;
+
+    ComPtr<IWICMetadataQueryWriter> metawriter;
+    HRESULT hr = frame->GetMetadataQueryWriter( metawriter.GetAddressOf() );
+    if ( SUCCEEDED( hr ) )
+    {
+        PROPVARIANT value;
+        PropVariantInit( &value );
+
+        bool sRGB = IsSRGB( format );
+
+        value.vt = VT_LPSTR;
+        value.pszVal = "DirectXTex";
+
+        if ( memcmp( &containerFormat, &GUID_ContainerFormatPng, sizeof(GUID) ) == 0 )
+        {
+            // Set Software name
+            (void)metawriter->SetMetadataByName( L"/tEXt/{str=Software}", &value );
+
+            // Set sRGB chunk
+            if ( sRGB )
+            {
+                value.vt = VT_UI1;
+                value.bVal = 0;
+                (void)metawriter->SetMetadataByName( L"/sRGB/RenderingIntent", &value );
+            }
+        }
+#if defined(_XBOX_ONE) && defined(_TITLE)
+        else if ( memcmp( &containerFormat, &GUID_ContainerFormatJpeg, sizeof(GUID) ) == 0 )
+        {
+            // Set Software name
+            (void)metawriter->SetMetadataByName( L"/app1/ifd/{ushort=305}", &value );
+
+            if ( sRGB )
+            {
+                // Set EXIF Colorspace of sRGB
+                value.vt = VT_UI2;
+                value.uiVal = 1;
+                (void)metawriter->SetMetadataByName( L"/app1/ifd/exif/{ushort=40961}", &value );
+            }
+        }
+        else if ( memcmp( &containerFormat, &GUID_ContainerFormatTiff, sizeof(GUID) ) == 0 )
+        {
+            // Set Software name
+            (void)metawriter->SetMetadataByName( L"/ifd/{ushort=305}", &value );
+
+            if ( sRGB )
+            {
+                // Set EXIF Colorspace of sRGB
+                value.vt = VT_UI2;
+                value.uiVal = 1;
+                (void)metawriter->SetMetadataByName( L"/ifd/exif/{ushort=40961}", &value );
+            }
+        }
+#else
+        else
+        {
+            // Set Software name
+            (void)metawriter->SetMetadataByName( L"System.ApplicationName", &value );
+
+            if ( sRGB )
+            {
+                // Set EXIF Colorspace of sRGB
+                value.vt = VT_UI2;
+                value.uiVal = 1;
+                (void)metawriter->SetMetadataByName( L"System.Image.ColorSpace", &value );
+            }
+        }
+#endif
+    }
+    else if ( hr == WINCODEC_ERR_UNSUPPORTEDOPERATION )
+    {
+        // Some formats just don't support metadata (BMP, ICO, etc.), so ignore this failure
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+
+//-------------------------------------------------------------------------------------
 // Encodes a single frame
 //-------------------------------------------------------------------------------------
-static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ IWICBitmapFrameEncode* frame, _In_opt_ IPropertyBag2* props, _In_opt_ const GUID* targetFormat )
+static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ REFGUID containerFormat,
+                             _In_ IWICBitmapFrameEncode* frame, _In_opt_ IPropertyBag2* props, _In_opt_ const GUID* targetFormat )
 {
     if ( !frame )
         return E_INVALIDARG;
@@ -402,7 +631,7 @@ static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ IWI
     if ( FAILED(hr) )
         return hr;
 
-#ifdef _AMD64_
+#ifdef _M_X64
     if ( (image.width > 0xFFFFFFFF) || (image.height > 0xFFFFFFFF) )
         return E_INVALIDARG;
 #endif
@@ -420,6 +649,16 @@ static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ IWI
     if ( FAILED(hr) )
         return hr;
 
+    if ( targetFormat && memcmp( targetFormat, &targetGuid, sizeof(WICPixelFormatGUID) ) != 0 )
+    {
+        // Requested output pixel format is not supported by the WIC codec
+        return E_FAIL;
+    }
+
+    hr = _EncodeMetadata( frame, containerFormat, image.format );
+    if ( FAILED(hr) )
+        return hr;
+
     if ( memcmp( &targetGuid, &pfGuid, sizeof(WICPixelFormatGUID) ) != 0 )
     {
         // Conversion required to write
@@ -427,23 +666,30 @@ static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ IWI
         if ( !pWIC )
             return E_NOINTERFACE;
 
-        ScopedObject<IWICBitmap> source;
+        ComPtr<IWICBitmap> source;
         hr = pWIC->CreateBitmapFromMemory( static_cast<UINT>( image.width ), static_cast<UINT>( image.height ), pfGuid,
                                            static_cast<UINT>( image.rowPitch ), static_cast<UINT>( image.slicePitch ),
-                                           image.pixels, &source );
+                                           image.pixels, source.GetAddressOf() );
         if ( FAILED(hr) )
             return hr;
 
-        ScopedObject<IWICFormatConverter> FC;
-        hr = pWIC->CreateFormatConverter( &FC );
+        ComPtr<IWICFormatConverter> FC;
+        hr = pWIC->CreateFormatConverter( FC.GetAddressOf() );
         if ( FAILED(hr) )
             return hr;
+
+        BOOL canConvert = FALSE;
+        hr = FC->CanConvert( pfGuid, targetGuid, &canConvert );
+        if ( FAILED(hr) || !canConvert )
+        {
+            return E_UNEXPECTED;
+        }
 
         hr = FC->Initialize( source.Get(), targetGuid, _GetWICDither( flags ), 0, 0, WICBitmapPaletteTypeCustom );
         if ( FAILED(hr) )
             return hr;
 
-        WICRect rect = { 0, 0, static_cast<UINT>( image.width ), static_cast<UINT>( image.height ) };
+        WICRect rect = { 0, 0, static_cast<INT>( image.width ), static_cast<INT>( image.height ) };
         hr = frame->WriteSource( FC.Get(), &rect );
         if ( FAILED(hr) )
             return hr;
@@ -465,7 +711,8 @@ static HRESULT _EncodeImage( _In_ const Image& image, _In_ DWORD flags, _In_ IWI
 }
 
 static HRESULT _EncodeSingleFrame( _In_ const Image& image, _In_ DWORD flags,
-                                   _In_ REFGUID guidContainerFormat, _Inout_ IStream* stream, _In_opt_ const GUID* targetFormat )
+                                   _In_ REFGUID containerFormat, _Inout_ IStream* stream,
+                                   _In_opt_ const GUID* targetFormat, _In_opt_ std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !stream )
         return E_INVALIDARG;
@@ -475,8 +722,8 @@ static HRESULT _EncodeSingleFrame( _In_ const Image& image, _In_ DWORD flags,
     if ( !pWIC )
         return E_NOINTERFACE;
 
-    ScopedObject<IWICBitmapEncoder> encoder;
-    HRESULT hr = pWIC->CreateEncoder( guidContainerFormat, 0, &encoder );
+    ComPtr<IWICBitmapEncoder> encoder;
+    HRESULT hr = pWIC->CreateEncoder( containerFormat, 0, encoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -484,30 +731,30 @@ static HRESULT _EncodeSingleFrame( _In_ const Image& image, _In_ DWORD flags,
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapFrameEncode> frame;
-    ScopedObject<IPropertyBag2> props;
-    hr = encoder->CreateNewFrame( &frame, &props );
+    ComPtr<IWICBitmapFrameEncode> frame;
+    ComPtr<IPropertyBag2> props;
+    hr = encoder->CreateNewFrame( frame.GetAddressOf(), props.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    if ( memcmp( &guidContainerFormat, &GUID_ContainerFormatBmp, sizeof(WICPixelFormatGUID) ) == 0  )
+    if ( memcmp( &containerFormat, &GUID_ContainerFormatBmp, sizeof(WICPixelFormatGUID) ) == 0 && _IsWIC2() )
     {
-        // Opt-in to the Windows 8 support for writing 32-bit Windows BMP files with an alpha channel if supported
+        // Opt-in to the WIC2 support for writing 32-bit Windows BMP files with an alpha channel
         PROPBAG2 option = { 0 };
         option.pstrName = L"EnableV5Header32bppBGRA";
 
         VARIANT varValue;    
         varValue.vt = VT_BOOL;
         varValue.boolVal = VARIANT_TRUE;      
-        hr = props->Write( 1, &option, &varValue ); 
-        if ( FAILED(hr) )
-        {
-            // Fails on older versions of WIC, so we default to the null property bag
-            props.Reset();
-        }
+        (void)props->Write( 1, &option, &varValue ); 
     }
 
-    hr = _EncodeImage( image, flags, frame.Get(), props.Get(), targetFormat );
+    if ( setCustomProps )
+    {
+        setCustomProps( props.Get() );
+    }
+
+    hr = _EncodeImage( image, flags, containerFormat, frame.Get(), props.Get(), targetFormat );
     if ( FAILED(hr) )
         return hr;
 
@@ -522,8 +769,9 @@ static HRESULT _EncodeSingleFrame( _In_ const Image& image, _In_ DWORD flags,
 //-------------------------------------------------------------------------------------
 // Encodes an image array
 //-------------------------------------------------------------------------------------
-static HRESULT _EncodeMultiframe( _In_count_(nimages) const Image* images, _In_ size_t nimages, _In_ DWORD flags,
-                                  _In_ REFGUID guidContainerFormat, _Inout_ IStream* stream, _In_opt_ const GUID* targetFormat )
+static HRESULT _EncodeMultiframe( _In_reads_(nimages) const Image* images, _In_ size_t nimages, _In_ DWORD flags,
+                                  _In_ REFGUID containerFormat, _Inout_ IStream* stream,
+                                  _In_opt_ const GUID* targetFormat, _In_opt_ std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !stream || nimages < 2 )
         return E_INVALIDARG;
@@ -536,13 +784,13 @@ static HRESULT _EncodeMultiframe( _In_count_(nimages) const Image* images, _In_ 
     if ( !pWIC )
         return E_NOINTERFACE;
 
-    ScopedObject<IWICBitmapEncoder> encoder;
-    HRESULT hr = pWIC->CreateEncoder( guidContainerFormat, 0, &encoder );
+    ComPtr<IWICBitmapEncoder> encoder;
+    HRESULT hr = pWIC->CreateEncoder( containerFormat, 0, encoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapEncoderInfo> einfo;
-    hr = encoder->GetEncoderInfo( &einfo );
+    ComPtr<IWICBitmapEncoderInfo> einfo;
+    hr = encoder->GetEncoderInfo( einfo.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -560,12 +808,18 @@ static HRESULT _EncodeMultiframe( _In_count_(nimages) const Image* images, _In_ 
 
     for( size_t index=0; index < nimages; ++index )
     {
-        ScopedObject<IWICBitmapFrameEncode> frame;
-        hr = encoder->CreateNewFrame( &frame, nullptr );
+        ComPtr<IWICBitmapFrameEncode> frame;
+        ComPtr<IPropertyBag2> props;
+        hr = encoder->CreateNewFrame( frame.GetAddressOf(), props.GetAddressOf() );
         if ( FAILED(hr) )
             return hr;
 
-        hr = _EncodeImage( images[index], flags, frame.Get(), nullptr, targetFormat );
+        if ( setCustomProps )
+        {
+            setCustomProps( props.Get() );
+        }
+
+        hr = _EncodeImage( images[index], flags, containerFormat, frame.Get(), props.Get(), targetFormat );
         if ( FAILED(hr) )
             return hr;
     }
@@ -585,12 +839,13 @@ static HRESULT _EncodeMultiframe( _In_count_(nimages) const Image* images, _In_ 
 //-------------------------------------------------------------------------------------
 // Obtain metadata from WIC-supported file in memory
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT GetMetadataFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, TexMetadata& metadata )
 {
     if ( !pSource || size == 0 )
         return E_INVALIDARG;
 
-#ifdef _AMD64_
+#ifdef _M_X64
     if ( size > 0xFFFFFFFF )
         return HRESULT_FROM_WIN32( ERROR_FILE_TOO_LARGE );
 #endif
@@ -600,8 +855,8 @@ HRESULT GetMetadataFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, Tex
         return E_NOINTERFACE;
 
     // Create input stream for memory
-    ScopedObject<IWICStream> stream;
-    HRESULT hr = pWIC->CreateStream( &stream );
+    ComPtr<IWICStream> stream;
+    HRESULT hr = pWIC->CreateStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -611,13 +866,13 @@ HRESULT GetMetadataFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, Tex
         return hr;
 
     // Initialize WIC
-    ScopedObject<IWICBitmapDecoder> decoder;
-    hr = pWIC->CreateDecoderFromStream( stream.Get(), 0, WICDecodeMetadataCacheOnDemand, &decoder );
+    ComPtr<IWICBitmapDecoder> decoder;
+    hr = pWIC->CreateDecoderFromStream( stream.Get(), 0, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapFrameDecode> frame;
-    hr = decoder->GetFrame( 0, &frame );
+    ComPtr<IWICBitmapFrameDecode> frame;
+    hr = decoder->GetFrame( 0, frame.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -633,6 +888,7 @@ HRESULT GetMetadataFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, Tex
 //-------------------------------------------------------------------------------------
 // Obtain metadata from WIC-supported file on disk
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT GetMetadataFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata& metadata )
 {
     if ( !szFile )
@@ -643,13 +899,13 @@ HRESULT GetMetadataFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata& metada
         return E_NOINTERFACE;
     
     // Initialize WIC
-    ScopedObject<IWICBitmapDecoder> decoder;
-    HRESULT hr = pWIC->CreateDecoderFromFilename( szFile, 0, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &decoder );
+    ComPtr<IWICBitmapDecoder> decoder;
+    HRESULT hr = pWIC->CreateDecoderFromFilename( szFile, 0, GENERIC_READ, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapFrameDecode> frame;
-    hr = decoder->GetFrame( 0, &frame );
+    ComPtr<IWICBitmapFrameDecode> frame;
+    hr = decoder->GetFrame( 0, frame.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -665,12 +921,13 @@ HRESULT GetMetadataFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata& metada
 //-------------------------------------------------------------------------------------
 // Load a WIC-supported file in memory
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT LoadFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, TexMetadata* metadata, ScratchImage& image )
 {
     if ( !pSource || size == 0 )
         return E_INVALIDARG;
 
-#ifdef _AMD64_
+#ifdef _M_X64
     if ( size > 0xFFFFFFFF )
         return HRESULT_FROM_WIN32( ERROR_FILE_TOO_LARGE );
 #endif
@@ -682,8 +939,8 @@ HRESULT LoadFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, TexMetadat
     image.Release();
 
     // Create input stream for memory
-    ScopedObject<IWICStream> stream;
-    HRESULT hr = pWIC->CreateStream( &stream );
+    ComPtr<IWICStream> stream;
+    HRESULT hr = pWIC->CreateStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -692,13 +949,13 @@ HRESULT LoadFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, TexMetadat
         return hr;
 
     // Initialize WIC
-    ScopedObject<IWICBitmapDecoder> decoder;
-    hr = pWIC->CreateDecoderFromStream( stream.Get(), 0, WICDecodeMetadataCacheOnDemand, &decoder );
+    ComPtr<IWICBitmapDecoder> decoder;
+    hr = pWIC->CreateDecoderFromStream( stream.Get(), 0, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapFrameDecode> frame;
-    hr = decoder->GetFrame( 0, &frame );
+    ComPtr<IWICBitmapFrameDecode> frame;
+    hr = decoder->GetFrame( 0, frame.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -734,6 +991,7 @@ HRESULT LoadFromWICMemory( LPCVOID pSource, size_t size, DWORD flags, TexMetadat
 //-------------------------------------------------------------------------------------
 // Load a WIC-supported file from disk
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT LoadFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata* metadata, ScratchImage& image )
 {
     if ( !szFile )
@@ -746,13 +1004,13 @@ HRESULT LoadFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata* metadata, Scr
     image.Release();
 
     // Initialize WIC
-    ScopedObject<IWICBitmapDecoder> decoder;
-    HRESULT hr = pWIC->CreateDecoderFromFilename( szFile, 0, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &decoder );
+    ComPtr<IWICBitmapDecoder> decoder;
+    HRESULT hr = pWIC->CreateDecoderFromFilename( szFile, 0, GENERIC_READ, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    ScopedObject<IWICBitmapFrameDecode> frame;
-    hr = decoder->GetFrame( 0, &frame );
+    ComPtr<IWICBitmapFrameDecode> frame;
+    hr = decoder->GetFrame( 0, frame.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -788,19 +1046,21 @@ HRESULT LoadFromWICFile( LPCWSTR szFile, DWORD flags, TexMetadata* metadata, Scr
 //-------------------------------------------------------------------------------------
 // Save a WIC-supported file to memory
 //-------------------------------------------------------------------------------------
-HRESULT SaveToWICMemory( const Image& image, DWORD flags, REFGUID guidContainerFormat, Blob& blob, const GUID* targetFormat )
+_Use_decl_annotations_
+HRESULT SaveToWICMemory( const Image& image, DWORD flags, REFGUID containerFormat, Blob& blob,
+                         const GUID* targetFormat, std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !image.pixels )
         return E_POINTER;
 
     blob.Release();
 
-    ScopedObject<IStream> stream;
-    HRESULT hr = CreateStreamOnHGlobal( 0, TRUE, &stream );
+    ComPtr<IStream> stream;
+    HRESULT hr = CreateMemoryStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
-    hr = _EncodeSingleFrame( image, flags, guidContainerFormat, stream.Get(), targetFormat );
+    hr = _EncodeSingleFrame( image, flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
     if ( FAILED(hr) )
         return hr;
 
@@ -833,22 +1093,24 @@ HRESULT SaveToWICMemory( const Image& image, DWORD flags, REFGUID guidContainerF
     return S_OK;
 }
 
-HRESULT SaveToWICMemory( const Image* images, size_t nimages, DWORD flags, REFGUID guidContainerFormat, Blob& blob, const GUID* targetFormat )
+_Use_decl_annotations_
+HRESULT SaveToWICMemory( const Image* images, size_t nimages, DWORD flags, REFGUID containerFormat, Blob& blob,
+                         const GUID* targetFormat, std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !images || nimages == 0 )
         return E_INVALIDARG;
 
     blob.Release();
 
-    ScopedObject<IStream> stream;
-    HRESULT hr = CreateStreamOnHGlobal( 0, TRUE, &stream );
+    ComPtr<IStream> stream;
+    HRESULT hr = CreateMemoryStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
     if ( nimages > 1 )
-        hr = _EncodeMultiframe( images, nimages, flags, guidContainerFormat, stream.Get(), targetFormat );
+        hr = _EncodeMultiframe( images, nimages, flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
     else
-        hr = _EncodeSingleFrame( images[0], flags, guidContainerFormat, stream.Get(), targetFormat );
+        hr = _EncodeSingleFrame( images[0], flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
 
     if ( FAILED(hr) )
         return hr;
@@ -886,7 +1148,9 @@ HRESULT SaveToWICMemory( const Image* images, size_t nimages, DWORD flags, REFGU
 //-------------------------------------------------------------------------------------
 // Save a WIC-supported file to disk
 //-------------------------------------------------------------------------------------
-HRESULT SaveToWICFile( const Image& image, DWORD flags, REFGUID guidContainerFormat, LPCWSTR szFile, const GUID* targetFormat )
+_Use_decl_annotations_
+HRESULT SaveToWICFile( const Image& image, DWORD flags, REFGUID containerFormat, LPCWSTR szFile,
+                       const GUID* targetFormat, std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !szFile )
         return E_INVALIDARG;
@@ -898,8 +1162,8 @@ HRESULT SaveToWICFile( const Image& image, DWORD flags, REFGUID guidContainerFor
     if ( !pWIC )
         return E_NOINTERFACE;
 
-    ScopedObject<IWICStream> stream;
-    HRESULT hr = pWIC->CreateStream( &stream );
+    ComPtr<IWICStream> stream;
+    HRESULT hr = pWIC->CreateStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -907,14 +1171,16 @@ HRESULT SaveToWICFile( const Image& image, DWORD flags, REFGUID guidContainerFor
     if ( FAILED(hr) )
         return hr;
 
-    hr = _EncodeSingleFrame( image, flags, guidContainerFormat, stream.Get(), targetFormat );
+    hr = _EncodeSingleFrame( image, flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
     if ( FAILED(hr) )
         return hr;
 
     return S_OK;
 }
 
-HRESULT SaveToWICFile( const Image* images, size_t nimages, DWORD flags, REFGUID guidContainerFormat, LPCWSTR szFile, const GUID* targetFormat )
+_Use_decl_annotations_
+HRESULT SaveToWICFile( const Image* images, size_t nimages, DWORD flags, REFGUID containerFormat, LPCWSTR szFile, const GUID* targetFormat,
+                       std::function<void(IPropertyBag2*)> setCustomProps )
 {
     if ( !szFile || !images || nimages == 0 )
         return E_INVALIDARG;
@@ -923,8 +1189,8 @@ HRESULT SaveToWICFile( const Image* images, size_t nimages, DWORD flags, REFGUID
     if ( !pWIC )
         return E_NOINTERFACE;
 
-    ScopedObject<IWICStream> stream;
-    HRESULT hr = pWIC->CreateStream( &stream );
+    ComPtr<IWICStream> stream;
+    HRESULT hr = pWIC->CreateStream( stream.GetAddressOf() );
     if ( FAILED(hr) )
         return hr;
 
@@ -933,9 +1199,9 @@ HRESULT SaveToWICFile( const Image* images, size_t nimages, DWORD flags, REFGUID
         return hr;
 
     if ( nimages > 1 )
-        hr = _EncodeMultiframe( images, nimages, flags, guidContainerFormat, stream.Get(), targetFormat );
+        hr = _EncodeMultiframe( images, nimages, flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
     else
-        hr = _EncodeSingleFrame( images[0], flags, guidContainerFormat, stream.Get(), targetFormat );
+        hr = _EncodeSingleFrame( images[0], flags, containerFormat, stream.Get(), targetFormat, setCustomProps );
 
     if ( FAILED(hr) )
         return hr;
