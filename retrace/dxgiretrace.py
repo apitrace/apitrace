@@ -174,7 +174,7 @@ class D3DRetracer(Retracer):
                 print r'    }'
             else:
                 print r'    d3d10Dumper.bindDevice(_this);'
-        if interface.name in ('ID3D11DeviceContext', 'ID3D11DeviceContext1'):
+        if interface.name.startswith('ID3D11DeviceContext'):
             if method.name == 'Release':
                 print r'    if (call.ret->toUInt() == 0) {'
                 print r'        d3d11Dumper.unbindDevice(_this);'
