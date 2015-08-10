@@ -194,6 +194,12 @@ class D3DRetracer(Retracer):
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
             print r'    d3dretrace::createWindowForSwapChain(pDesc);'
+        if method.name == 'CreateSwapChainForHwnd':
+            print r'    WindowHandle = d3dretrace::createWindow(pDesc->Width, pDesc->Height);'
+            print r'    // DXGI_SCALING_NONE is only supported on Win8 and beyond'
+            print r'    if (pDesc->Scaling == DXGI_SCALING_NONE && !IsWindows8OrGreater()) {'
+            print r'        pDesc->Scaling = DXGI_SCALING_STRETCH;'
+            print r'    }'
         if method.name == 'CreateSwapChainForComposition':
             print r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);'
             print r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);'
