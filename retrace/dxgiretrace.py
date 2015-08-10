@@ -213,8 +213,8 @@ class D3DRetracer(Retracer):
             print r'    }'
 
         # notify frame has been completed
-        if method.name == 'Present':
-            if interface.name == 'IDXGISwapChainDWM':
+        if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
+            if interface.name.startswith('IDXGISwapChainDWM'):
                 print r'    com_ptr<IDXGISwapChain> pSwapChain;'
                 print r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, (void **) &pSwapChain))) {'
                 print r'        dxgiDumper.bindDevice(pSwapChain);'
@@ -321,7 +321,7 @@ class D3DRetracer(Retracer):
             print r'    }'
 
         # process events after presents
-        if method.name == 'Present':
+        if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print r'    d3dretrace::processEvents();'
 
         if method.name in ('Map', 'Unmap'):
