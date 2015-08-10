@@ -122,6 +122,14 @@ if (ENABLE_GUI)
     find_package (Qt5WebKitWidgets ${REQUIRE_GUI})
 endif ()
 
+if (MSVC)
+    if (${MSVC_VERSION} LESS 1800)
+        message (FATAL_ERROR "Visual Studio 2013 or later required")
+    endif ()
+
+    include (Windows10SDK)
+endif ()
+
 if (WIN32)
     find_package (DirectX)
     set (ENABLE_EGL false)
@@ -186,10 +194,6 @@ else (WIN32)
 endif ()
 
 if (MSVC)
-    if (${MSVC_VERSION} LESS 1800)
-        message (FATAL_ERROR "Visual Studio 2013 or later required")
-    endif ()
-
     # No RTTI required
     string (REGEX REPLACE "/GR *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
