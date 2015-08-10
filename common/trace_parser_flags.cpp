@@ -29,8 +29,13 @@
  */
 
 
-#include "trace_lookup.hpp"
 #include "trace_parser.hpp"
+
+#include <assert.h>
+
+#include <regex>
+
+#include "trace_lookup.hpp"
 
 
 using namespace trace;
@@ -60,51 +65,9 @@ callFlagTable[] = {
     { "D3DPERF_BeginEvent",                            /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_PUSH },
     { "D3DPERF_EndEvent",                              /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_POP },
     { "D3DPERF_SetMarker",                             /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER },
-    { "ID3D10Device1::CheckMultisampleQualityLevels",  CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
-    { "ID3D10Device1::Draw",                           CALL_FLAG_RENDER },
-    { "ID3D10Device1::DrawAuto",                       CALL_FLAG_RENDER },
-    { "ID3D10Device1::DrawIndexed",                    CALL_FLAG_RENDER },
-    { "ID3D10Device1::DrawIndexedInstanced",           CALL_FLAG_RENDER },
-    { "ID3D10Device1::DrawInstanced",                  CALL_FLAG_RENDER },
-    { "ID3D10Device1::OMSetRenderTargets",             CALL_FLAG_SWAP_RENDERTARGET },
-    { "ID3D10Device::CheckMultisampleQualityLevels",   CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
-    { "ID3D10Device::Draw",                            CALL_FLAG_RENDER },
-    { "ID3D10Device::DrawAuto",                        CALL_FLAG_RENDER },
-    { "ID3D10Device::DrawIndexed",                     CALL_FLAG_RENDER },
-    { "ID3D10Device::DrawIndexedInstanced",            CALL_FLAG_RENDER },
-    { "ID3D10Device::DrawInstanced",                   CALL_FLAG_RENDER },
-    { "ID3D10Device::OMSetRenderTargets",              CALL_FLAG_SWAP_RENDERTARGET },
-    { "ID3D11Device::CheckMultisampleQualityLevels",   CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
-    { "ID3D11DeviceContext1::Draw",                          CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawAuto",                      CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawIndexed",                   CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawIndexedInstanced",          CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawIndexedInstancedIndirect",  CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawInstanced",                 CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::DrawInstancedIndirect",         CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::ExecuteCommandList",            CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext1::OMSetRenderTargets",       CALL_FLAG_SWAP_RENDERTARGET },
-    { "ID3D11DeviceContext1::OMSetRenderTargetsAndUnorderedAccessViews", CALL_FLAG_SWAP_RENDERTARGET },
-    { "ID3D11DeviceContext::Draw",                          CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawAuto",                      CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawIndexed",                   CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawIndexedInstanced",          CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawIndexedInstancedIndirect",  CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawInstanced",                 CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::DrawInstancedIndirect",         CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::ExecuteCommandList",            CALL_FLAG_RENDER },
-    { "ID3D11DeviceContext::OMSetRenderTargets",       CALL_FLAG_SWAP_RENDERTARGET },
-    { "ID3D11DeviceContext::OMSetRenderTargetsAndUnorderedAccessViews", CALL_FLAG_SWAP_RENDERTARGET },
     { "ID3DUserDefinedAnnotation::BeginEvent",         /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_PUSH },
     { "ID3DUserDefinedAnnotation::EndEvent",           /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_POP },
     { "ID3DUserDefinedAnnotation::SetMarker",          /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER },
-    { "IDXGIDecodeSwapChain::PresentBuffer",           CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChain1::Present",                      CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChain1::Present1",                     CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChain2::Present",                      CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChain2::Present1",                     CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChain::Present",                       CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
-    { "IDXGISwapChainDWM::Present",                    CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
     { "IDirect3D8::CheckDeviceFormat",                 CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D8::EnumAdapterModes",                  CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D8::GetAdapterModeCount",               CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
@@ -642,10 +605,38 @@ callFlagTable[] = {
 };
 
 
+static std::regex reDXGIPresent("^IDXGI(Decode)?SwapChain\\w*::Present\\w*$");
+static std::regex reDXGIDraw("^ID3D1(0Device|1DeviceContext)\\d*::(Draw\\w*|ExecuteCommandList)$");
+static std::regex reDXGISRT("^ID3D1(0Device|1DeviceContext)\\d*::OMSetRenderTargets\\w*$");
+static std::regex reDXGICMQL("^ID3D1[01]Device\\d*::CheckMultisampleQualityLevels$");
+
+
 /**
  * Lookup call flags by name.
  */
 CallFlags
-Parser::lookupCallFlags(const char *name) {
+Parser::lookupCallFlags(const char *name)
+{
+
+    static bool checked = false;
+    if (!checked) {
+        assert(std::regex_match("IDXGISwapChain::Present", reDXGIPresent));
+        assert(std::regex_match("IDXGIDecodeSwapChain::PresentBuffer", reDXGIPresent));
+
+        assert(std::regex_match("ID3D11DeviceContext2::DrawIndexed", reDXGIDraw));
+        assert(std::regex_match("ID3D11DeviceContext2::Draw", reDXGIDraw));
+        assert(std::regex_match("ID3D11DeviceContext::DrawIndexed", reDXGIDraw));
+        assert(std::regex_match("ID3D11DeviceContext::ExecuteCommandList", reDXGIDraw));
+
+        checked = true;
+    }
+
+    if (name[0] == 'I') {
+        if (std::regex_match(name, reDXGIDraw)) return CALL_FLAG_RENDER;
+        if (std::regex_match(name, reDXGISRT)) return CALL_FLAG_SWAP_RENDERTARGET;
+        if (std::regex_match(name, reDXGIPresent)) return CALL_FLAG_END_FRAME /* | CALL_FLAG_SWAPBUFFERS */;
+        if (std::regex_match(name, reDXGICMQL)) return CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE;
+    }
+
     return entryLookup(name, callFlagTable, defaultCallFlags);
 }
