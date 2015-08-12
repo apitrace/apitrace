@@ -793,16 +793,12 @@ class Tracer:
         print r'            return;'
         print r'        }'
         print r'    }'
-        else_ = ''
         for childIface in getInterfaceHierarchy(ifaces, iface):
-            print r'    %sif (hasChildInterface(IID_%s, pObj)) {' % (else_, childIface.name)
-            print r'        pObj = Wrap%s::_create(entryName, static_cast<%s *>(pObj));' % (childIface.name, childIface.name)
+            print r'    if (hasChildInterface(IID_%s, pObj)) {' % (childIface.name,)
+            print r'        *ppObj = Wrap%s::_create(entryName, static_cast<%s *>(pObj));' % (childIface.name, childIface.name)
+            print r'        return;'
             print r'    }'
-            else_ = 'else '
-        print r'    %s{' % else_
-        print r'        pObj = Wrap%s::_create(entryName, pObj);' % iface.name
-        print r'    }'
-        print r'    *ppObj = pObj;'
+        print r'    *ppObj = Wrap%s::_create(entryName, pObj);' % iface.name
         print r'}'
         print
 
@@ -919,15 +915,12 @@ class Tracer:
         print r'    if (!ppvObj || !*ppvObj) {'
         print r'        return;'
         print r'    }'
-        else_ = ''
         for iface in ifaces:
-            print r'    %sif (riid == IID_%s) {' % (else_, iface.name)
+            print r'    if (riid == IID_%s) {' % (iface.name,)
             print r'        Wrap%s::_wrap(entryName, (%s **) ppvObj);' % (iface.name, iface.name)
+            print r'        return;'
             print r'    }'
-            else_ = 'else '
-        print r'    %s{' % else_
-        print r'        warnIID(entryName, riid, *ppvObj, "unknown");'
-        print r'    }'
+        print r'    warnIID(entryName, riid, *ppvObj, "unknown");'
         print r'}'
         print
 
