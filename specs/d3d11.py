@@ -345,6 +345,7 @@ D3D11_RESOURCE_MISC_FLAG = Flags(UINT, [
     "D3D11_RESOURCE_MISC_GUARDED",
     "D3D11_RESOURCE_MISC_TILE_POOL",
     "D3D11_RESOURCE_MISC_TILED",
+    "D3D11_RESOURCE_MISC_HW_PROTECTED",
 ])
 
 D3D11_MAP = Enum("D3D11_MAP", [
@@ -672,7 +673,7 @@ D3D11_SHADER_RESOURCE_VIEW_DESC = Struct("D3D11_SHADER_RESOURCE_VIEW_DESC", [
         ("D3D11_SRV_DIMENSION_BUFFER", D3D11_BUFFER_SRV, "Buffer"),
         ("D3D11_SRV_DIMENSION_TEXTURE1D", D3D11_TEX1D_SRV, "Texture1D"),
         ("D3D11_SRV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
-        ("D3D11_SRV_DIMENSION_TEXTURE2D", D3D11_TEX2D_SRV, "Texture2D"), 
+        ("D3D11_SRV_DIMENSION_TEXTURE2D", D3D11_TEX2D_SRV, "Texture2D"),
         ("D3D11_SRV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_SRV, "Texture2DArray"),
         ("D3D11_SRV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_SRV, "Texture2DMS"),
         ("D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
@@ -1207,6 +1208,33 @@ D3D11_FEATURE_DATA_D3D9_OPTIONS1 = Struct("D3D11_FEATURE_DATA_D3D9_OPTIONS1", [
     (BOOL, "TextureCubeFaceRenderTargetWithNonCubeDepthStencilSupported"),
 ])
 
+D3D11_CONSERVATIVE_RASTERIZATION_TIER = Enum("D3D11_CONSERVATIVE_RASTERIZATION_TIER", [
+    "D3D11_CONSERVATIVE_RASTERIZATION_NOT_SUPPORTED",
+    "D3D11_CONSERVATIVE_RASTERIZATION_TIER_1",
+    "D3D11_CONSERVATIVE_RASTERIZATION_TIER_2",
+    "D3D11_CONSERVATIVE_RASTERIZATION_TIER_3",
+])
+
+D3D11_FEATURE_DATA_D3D11_OPTIONS2 = Struct("D3D11_FEATURE_DATA_D3D11_OPTIONS2", [
+    (BOOL, "PSSpecifiedStencilRefSupported"),
+    (BOOL, "TypedUAVLoadAdditionalFormats"),
+    (BOOL, "ROVsSupported"),
+    (D3D11_CONSERVATIVE_RASTERIZATION_TIER, "ConservativeRasterizationTier"),
+    (D3D11_TILED_RESOURCES_TIER, "TiledResourcesTier"),
+    (BOOL, "MapOnDefaultTextures"),
+    (BOOL, "StandardSwizzle"),
+    (BOOL, "UnifiedMemoryArchitecture"),
+])
+
+D3D11_FEATURE_DATA_D3D11_OPTIONS3 = Struct("D3D11_FEATURE_DATA_D3D11_OPTIONS3", [
+    (BOOL, "VPAndRTArrayIndexFromAnyShaderFeedingRasterizer"),
+])
+
+D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT = Struct("D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT", [
+    (UINT, "MaxGPUVirtualAddressBitsPerResource"),
+    (UINT, "MaxGPUVirtualAddressBitsPerProcess"),
+])
+
 D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", [
     ("D3D11_FEATURE_THREADING", Pointer(D3D11_FEATURE_DATA_THREADING)),
     ("D3D11_FEATURE_DOUBLES", Pointer(D3D11_FEATURE_DATA_DOUBLES)),
@@ -1222,6 +1250,9 @@ D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", 
     ("D3D11_FEATURE_D3D9_SIMPLE_INSTANCING_SUPPORT", Pointer(D3D11_FEATURE_DATA_D3D9_SIMPLE_INSTANCING_SUPPORT)),
     ("D3D11_FEATURE_MARKER_SUPPORT", Pointer(D3D11_FEATURE_DATA_MARKER_SUPPORT)),
     ("D3D11_FEATURE_D3D9_OPTIONS1", Pointer(D3D11_FEATURE_DATA_D3D9_OPTIONS1)),
+    ("D3D11_FEATURE_D3D11_OPTIONS2", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS2)),
+    ("D3D11_FEATURE_D3D11_OPTIONS3", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS3)),
+    ("D3D11_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT", Pointer(D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT)),
 ], Blob(Void, "FeatureSupportDataSize"), False)
 
 ID3D11DeviceContext.methods += [
@@ -1535,6 +1566,8 @@ D3D11_VIDEO_PROCESSOR_FEATURE_CAPS = Flags(UINT, [
     "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ROTATION",
     "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ALPHA_STREAM",
     "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_PIXEL_ASPECT_RATIO",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_MIRROR",
+    "D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_SHADER_USAGE",
 ])
 
 D3D11_VIDEO_PROCESSOR_FILTER_CAPS = Flags(UINT, [
@@ -1628,6 +1661,10 @@ D3D11_CONTENT_PROTECTION_CAPS = Flags(UINT, [
     "D3D11_CONTENT_PROTECTION_CAPS_SEQUENTIAL_CTR_IV",
     "D3D11_CONTENT_PROTECTION_CAPS_ENCRYPT_SLICEDATA_ONLY",
     "D3D11_CONTENT_PROTECTION_CAPS_DECRYPTION_BLT",
+    "D3D11_CONTENT_PROTECTION_CAPS_HARDWARE_PROTECT_UNCOMPRESSED",
+    "D3D11_CONTENT_PROTECTION_CAPS_HARDWARE_PROTECTED_MEMORY_PAGEABLE",
+    "D3D11_CONTENT_PROTECTION_CAPS_HARDWARE_TEARDOWN",
+    "D3D11_CONTENT_PROTECTION_CAPS_HARDWARE_DRM_COMMUNICATION",
 ])
 
 D3D11_VIDEO_CONTENT_PROTECTION_CAPS = Struct("D3D11_VIDEO_CONTENT_PROTECTION_CAPS", [
@@ -2393,4 +2430,223 @@ ID3D11Device2.methods += [
 d3d11.addInterfaces([
     ID3D11Device2,
     ID3D11DeviceContext2,
+])
+
+
+
+#
+# D3D11.3
+#
+
+D3D11_CONTEXT_TYPE = Enum("D3D11_CONTEXT_TYPE", [
+    "D3D11_CONTEXT_TYPE_ALL",
+    "D3D11_CONTEXT_TYPE_3D",
+    "D3D11_CONTEXT_TYPE_COMPUTE",
+    "D3D11_CONTEXT_TYPE_COPY",
+    "D3D11_CONTEXT_TYPE_VIDEO",
+])
+
+D3D11_TEXTURE_LAYOUT = Enum("D3D11_TEXTURE_LAYOUT", [
+    "D3D11_TEXTURE_LAYOUT_UNDEFINED",
+    "D3D11_TEXTURE_LAYOUT_ROW_MAJOR",
+    "D3D11_TEXTURE_LAYOUT_64K_STANDARD_SWIZZLE",
+])
+
+D3D11_TEXTURE2D_DESC1 = Struct("D3D11_TEXTURE2D_DESC1", [
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (UINT, "MipLevels"),
+    (UINT, "ArraySize"),
+    (DXGI_FORMAT, "Format"),
+    (DXGI_SAMPLE_DESC, "SampleDesc"),
+    (D3D11_USAGE, "Usage"),
+    (UINT, "BindFlags"),
+    (UINT, "CPUAccessFlags"),
+    (UINT, "MiscFlags"),
+    (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
+])
+
+ID3D11Texture2D1 = Interface("ID3D11Texture2D1", ID3D11Texture2D)
+ID3D11Texture2D1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_TEXTURE2D_DESC1), "pDesc")], sideeffects=False),
+]
+D3D11_TEXTURE3D_DESC1 = Struct("D3D11_TEXTURE3D_DESC1", [
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (UINT, "Depth"),
+    (UINT, "MipLevels"),
+    (DXGI_FORMAT, "Format"),
+    (D3D11_USAGE, "Usage"),
+    (UINT, "BindFlags"),
+    (UINT, "CPUAccessFlags"),
+    (UINT, "MiscFlags"),
+    (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
+])
+
+ID3D11Texture3D1 = Interface("ID3D11Texture3D1", ID3D11Texture3D)
+ID3D11Texture3D1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_TEXTURE3D_DESC1), "pDesc")], sideeffects=False),
+]
+
+D3D11_CONSERVATIVE_RASTERIZATION_MODE = Enum("D3D11_CONSERVATIVE_RASTERIZATION_MODE", [
+    "D3D11_CONSERVATIVE_RASTERIZATION_MODE_OFF",
+    "D3D11_CONSERVATIVE_RASTERIZATION_MODE_ON",
+])
+
+D3D11_RASTERIZER_DESC2 = Struct("D3D11_RASTERIZER_DESC2", [
+    (D3D11_FILL_MODE, "FillMode"),
+    (D3D11_CULL_MODE, "CullMode"),
+    (BOOL, "FrontCounterClockwise"),
+    (INT, "DepthBias"),
+    (FLOAT, "DepthBiasClamp"),
+    (FLOAT, "SlopeScaledDepthBias"),
+    (BOOL, "DepthClipEnable"),
+    (BOOL, "ScissorEnable"),
+    (BOOL, "MultisampleEnable"),
+    (BOOL, "AntialiasedLineEnable"),
+    (UINT, "ForcedSampleCount"),
+    (D3D11_CONSERVATIVE_RASTERIZATION_MODE, "ConservativeRaster"),
+])
+
+ID3D11RasterizerState2 = Interface("ID3D11RasterizerState2", ID3D11RasterizerState1)
+ID3D11RasterizerState2.methods += [
+    StdMethod(Void, "GetDesc2", [Out(Pointer(D3D11_RASTERIZER_DESC2), "pDesc")], sideeffects=False),
+]
+
+D3D11_TEX2D_SRV1 = Struct("D3D11_TEX2D_SRV1", [
+    (UINT, "MostDetailedMip"),
+    (UINT, "MipLevels"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_TEX2D_ARRAY_SRV1 = Struct("D3D11_TEX2D_ARRAY_SRV1", [
+    (UINT, "MostDetailedMip"),
+    (UINT, "MipLevels"),
+    (UINT, "FirstArraySlice"),
+    (UINT, "ArraySize"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_SHADER_RESOURCE_VIEW_DESC1 = Struct("D3D11_SHADER_RESOURCE_VIEW_DESC1", [
+    (DXGI_FORMAT, "Format"),
+    (D3D11_SRV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_SRV_DIMENSION_BUFFER", D3D11_BUFFER_SRV, "Buffer"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1D", D3D11_TEX1D_SRV, "Texture1D"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2D", D3D11_TEX2D_SRV1, "Texture2D"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_SRV1, "Texture2DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_SRV, "Texture2DMS"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE3D", D3D11_TEX3D_SRV, "Texture3D"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBE", D3D11_TEXCUBE_SRV, "TextureCube"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBEARRAY", D3D11_TEXCUBE_ARRAY_SRV, "TextureCubeArray"),
+        ("D3D11_SRV_DIMENSION_BUFFEREX", D3D11_BUFFEREX_SRV, "BufferEx"),
+    ]), None),
+])
+
+
+ID3D11ShaderResourceView1 = Interface("ID3D11ShaderResourceView1", ID3D11ShaderResourceView)
+ID3D11ShaderResourceView1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_SHADER_RESOURCE_VIEW_DESC1), "pDesc1")], sideeffects=False),
+]
+
+D3D11_TEX2D_RTV1 = Struct("D3D11_TEX2D_RTV1", [
+    (UINT, "MipSlice"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_TEX2D_ARRAY_RTV1 = Struct("D3D11_TEX2D_ARRAY_RTV1", [
+    (UINT, "MipSlice"),
+    (UINT, "FirstArraySlice"),
+    (UINT, "ArraySize"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_RENDER_TARGET_VIEW_DESC1 = Struct("D3D11_RENDER_TARGET_VIEW_DESC1", [
+    (DXGI_FORMAT, "Format"),
+    (D3D11_RTV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_RTV_DIMENSION_BUFFER", D3D11_BUFFER_RTV, "Buffer"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1D", D3D11_TEX1D_RTV, "Texture1D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_RTV, "Texture1DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2D", D3D11_TEX2D_RTV1, "Texture2D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_RTV1, "Texture2DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_RTV, "Texture2DMS"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE3D", D3D11_TEX3D_RTV, "Texture3D"),
+    ]), None),
+])
+
+ID3D11RenderTargetView1 = Interface("ID3D11RenderTargetView1", ID3D11RenderTargetView)
+ID3D11RenderTargetView1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_RENDER_TARGET_VIEW_DESC1), "pDesc1")], sideeffects=False),
+]
+
+D3D11_TEX2D_UAV1 = Struct("D3D11_TEX2D_UAV1", [
+    (UINT, "MipSlice"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_TEX2D_ARRAY_UAV1 = Struct("D3D11_TEX2D_ARRAY_UAV1", [
+    (UINT, "MipSlice"),
+    (UINT, "FirstArraySlice"),
+    (UINT, "ArraySize"),
+    (UINT, "PlaneSlice"),
+])
+
+D3D11_UNORDERED_ACCESS_VIEW_DESC1 = Struct("D3D11_UNORDERED_ACCESS_VIEW_DESC1", [
+    (DXGI_FORMAT, "Format"),
+    (D3D11_UAV_DIMENSION, "ViewDimension"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_UAV_DIMENSION_BUFFER", D3D11_BUFFER_UAV, "Buffer"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1D", D3D11_TEX1D_UAV, "Texture1D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_UAV, "Texture1DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2D", D3D11_TEX2D_UAV1, "Texture2D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_UAV1, "Texture2DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE3D", D3D11_TEX3D_UAV, "Texture3D"),
+    ]), None),
+])
+
+ID3D11UnorderedAccessView1 = Interface("ID3D11UnorderedAccessView1", ID3D11UnorderedAccessView)
+ID3D11UnorderedAccessView1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_UNORDERED_ACCESS_VIEW_DESC1), "pDesc1")], sideeffects=False),
+]
+
+D3D11_QUERY_DESC1 = Struct("D3D11_QUERY_DESC1", [
+    (D3D11_QUERY, "Query"),
+    (D3D11_QUERY_MISC_FLAG, "MiscFlags"),
+    (D3D11_CONTEXT_TYPE, "ContextType"),
+])
+
+ID3D11Query1 = Interface("ID3D11Query1", ID3D11Query)
+ID3D11Query1.methods += [
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_QUERY_DESC1), "pDesc1")], sideeffects=False),
+]
+
+ID3D11DeviceContext3 = Interface("ID3D11DeviceContext3", ID3D11DeviceContext2)
+ID3D11DeviceContext3.methods += [
+    StdMethod(Void, "Flush1", [(D3D11_CONTEXT_TYPE, "ContextType"), (HANDLE, "hEvent")]),
+    StdMethod(Void, "SetHardwareProtectionState", [(BOOL, "HwProtectionEnable")]),
+    StdMethod(Void, "GetHardwareProtectionState", [Out(Pointer(BOOL), "pHwProtectionEnable")], sideeffects=False),
+]
+
+ID3D11Device3 = Interface("ID3D11Device3", ID3D11Device2)
+ID3D11Device3.methods += [
+    StdMethod(HRESULT, "CreateTexture2D1", [(Pointer(Const(D3D11_TEXTURE2D_DESC1)), "pDesc1"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc1)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D1)), "ppTexture2D")]),
+    StdMethod(HRESULT, "CreateTexture3D1", [(Pointer(Const(D3D11_TEXTURE3D_DESC1)), "pDesc1"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc1)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D1)), "ppTexture3D")]),
+    StdMethod(HRESULT, "CreateRasterizerState2", [(Pointer(Const(D3D11_RASTERIZER_DESC2)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState2)), "ppRasterizerState")]),
+    StdMethod(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_SHADER_RESOURCE_VIEW_DESC1)), "pDesc1"), Out(Pointer(ObjPointer(ID3D11ShaderResourceView1)), "ppSRView1")]),
+    StdMethod(HRESULT, "CreateUnorderedAccessView1", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_UNORDERED_ACCESS_VIEW_DESC1)), "pDesc1"), Out(Pointer(ObjPointer(ID3D11UnorderedAccessView1)), "ppUAView1")]),
+    StdMethod(HRESULT, "CreateRenderTargetView1", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_RENDER_TARGET_VIEW_DESC1)), "pDesc1"), Out(Pointer(ObjPointer(ID3D11RenderTargetView1)), "ppRTView1")]),
+    StdMethod(HRESULT, "CreateQuery1", [(Pointer(Const(D3D11_QUERY_DESC1)), "pQueryDesc1"), Out(Pointer(ObjPointer(ID3D11Query1)), "ppQuery1")]),
+    StdMethod(Void, "GetImmediateContext3", [Out(Pointer(ObjPointer(ID3D11DeviceContext3)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "CreateDeferredContext3", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext3)), "ppDeferredContext")]),
+    StdMethod(Void, "WriteToSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]), # FIXME
+    StdMethod(Void, "ReadFromSubresource", [Out(OpaquePointer(Void), "pDstData"), (UINT, "DstRowPitch"), (UINT, "DstDepthPitch"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox")], sideeffects=False), # FIXME
+]
+
+d3d11.addInterfaces([
+    ID3D11Device3,
+    ID3D11DeviceContext3,
 ])

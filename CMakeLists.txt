@@ -132,6 +132,11 @@ endif ()
 
 if (WIN32)
     find_package (DirectX)
+
+    if (DEFINED MSVC_VERSION AND NOT DirectX_D3D11_3_INCLUDE_FOUND AND NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+        message (WARNING "Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk) is required for D3D11.3 support")
+    endif ()
+
     set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)

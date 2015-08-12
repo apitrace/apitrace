@@ -107,6 +107,11 @@ class D3DCommonTracer(DllTracer):
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        if method.getArgByName('pInitialData'):
+            pDesc1 = method.getArgByName('pDesc1')
+            if pDesc1 is not None:
+                print r'    %s pDesc = pDesc1;' % (pDesc1.type,)
+
         if method.name in ('Map', 'Unmap'):
             # On D3D11 Map/Unmap is not a resource method, but a context method instead.
             resourceArg = method.getArgByName('pResource')
