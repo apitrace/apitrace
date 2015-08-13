@@ -992,6 +992,9 @@ glapi.addFunctions([
     # GL_ARB_ES3_1_compatibility
     GlFunction(Void, "glMemoryBarrierByRegion", [(GLbitfield, "barriers")]),
 
+    # GL_ARB_ES3_2_compatibility
+    GlFunction(Void, "glPrimitiveBoundingBoxARB", [(GLfloat, "minX"), (GLfloat, "minY"), (GLfloat, "minZ"), (GLfloat, "minW"), (GLfloat, "maxX"), (GLfloat, "maxY"), (GLfloat, "maxZ"), (GLfloat, "maxW")]),
+
     # GL_ARB_base_instance
     GlFunction(Void, "glDrawArraysInstancedBaseInstance", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
     GlFunction(Void, "glDrawElementsInstancedBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
@@ -1241,6 +1244,44 @@ glapi.addFunctions([
     GlFunction(Void, "glUniformMatrix4x3dv", [(GLlocation, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Array(Const(GLdouble), "count*4*3"), "value")]),
     GlFunction(Void, "glGetUniformdv", [(GLprogram, "program"), (GLlocation, "location"), Out(OpaqueArray(GLdouble, "_glGetUniformdv_size(location)"), "params")], sideeffects=False),
 
+    # GL_ARB_gpu_shader_int64
+    GlFunction(Void, "glUniform1i64ARB", [(GLlocation, "location"), (GLint64, "x")]),
+    GlFunction(Void, "glUniform2i64ARB", [(GLlocation, "location"), (GLint64, "x"), (GLint64, "y")]),
+    GlFunction(Void, "glUniform3i64ARB", [(GLlocation, "location"), (GLint64, "x"), (GLint64, "y"), (GLint64, "z")]),
+    GlFunction(Void, "glUniform4i64ARB", [(GLlocation, "location"), (GLint64, "x"), (GLint64, "y"), (GLint64, "z"), (GLint64, "w")]),
+    GlFunction(Void, "glUniform1i64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*1"), "value")]),
+    GlFunction(Void, "glUniform2i64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*2"), "value")]),
+    GlFunction(Void, "glUniform3i64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*3"), "value")]),
+    GlFunction(Void, "glUniform4i64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*4"), "value")]),
+    GlFunction(Void, "glUniform1ui64ARB", [(GLlocation, "location"), (GLuint64, "x")]),
+    GlFunction(Void, "glUniform2ui64ARB", [(GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y")]),
+    GlFunction(Void, "glUniform3ui64ARB", [(GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y"), (GLuint64, "z")]),
+    GlFunction(Void, "glUniform4ui64ARB", [(GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y"), (GLuint64, "z"), (GLuint64, "w")]),
+    GlFunction(Void, "glUniform1ui64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*1"), "value")]),
+    GlFunction(Void, "glUniform2ui64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*2"), "value")]),
+    GlFunction(Void, "glUniform3ui64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*3"), "value")]),
+    GlFunction(Void, "glUniform4ui64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*4"), "value")]),
+    GlFunction(Void, "glGetUniformi64vARB", [(GLprogram, "program"), (GLlocation, "location"), (OpaqueArray(GLint64, "COMPSIZE(program,location)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetUniformui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (OpaqueArray(GLuint64, "COMPSIZE(program,location)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformi64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), (Array(GLint64, "bufSize"), "params")]),
+    GlFunction(Void, "glGetnUniformui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), (Array(GLuint64, "bufSize"), "params")]),
+    GlFunction(Void, "glProgramUniform1i64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLint64, "x")]),
+    GlFunction(Void, "glProgramUniform2i64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLint64, "x"), (GLint64, "y")]),
+    GlFunction(Void, "glProgramUniform3i64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLint64, "x"), (GLint64, "y"), (GLint64, "z")]),
+    GlFunction(Void, "glProgramUniform4i64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLint64, "x"), (GLint64, "y"), (GLint64, "z"), (GLint64, "w")]),
+    GlFunction(Void, "glProgramUniform1i64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count"), "value")]),
+    GlFunction(Void, "glProgramUniform2i64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*2"), "value")]),
+    GlFunction(Void, "glProgramUniform3i64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*3"), "value")]),
+    GlFunction(Void, "glProgramUniform4i64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLint64), "count*4"), "value")]),
+    GlFunction(Void, "glProgramUniform1ui64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLuint64, "x")]),
+    GlFunction(Void, "glProgramUniform2ui64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y")]),
+    GlFunction(Void, "glProgramUniform3ui64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y"), (GLuint64, "z")]),
+    GlFunction(Void, "glProgramUniform4ui64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLuint64, "x"), (GLuint64, "y"), (GLuint64, "z"), (GLuint64, "w")]),
+    GlFunction(Void, "glProgramUniform1ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count"), "value")]),
+    GlFunction(Void, "glProgramUniform2ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*2"), "value")]),
+    GlFunction(Void, "glProgramUniform3ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*3"), "value")]),
+    GlFunction(Void, "glProgramUniform4ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*4"), "value")]),
+
     # GL_ARB_indirect_parameters
     GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
     GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
@@ -1334,6 +1375,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetQueryObjectivARB", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetQueryObjectuivARB", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
+    # GL_ARB_parallel_shader_compile
+    GlFunction(Void, "glMaxShaderCompilerThreadsARB", [(GLuint, "count")]),
+
     # GL_ARB_point_parameters
     GlFunction(Void, "glPointParameterfARB", [(GLenum, "pname"), (GLfloat, "param")]),
     GlFunction(Void, "glPointParameterfvARB", [(GLenum, "pname"), (Array(Const(GLfloat), "_gl_param_size(pname)"), "params")]),
@@ -1370,6 +1414,11 @@ glapi.addFunctions([
     GlFunction(Void, "glGetnUniformivARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformuivARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformdvARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "params")], sideeffects=False),
+
+    # GL_ARB_sample_locations
+    GlFunction(Void, "glFramebufferSampleLocationsfvARB", [(GLenum, "target"), (GLuint, "start"), (GLsizei, "count"), (Array(Const(GLfloat), "count*2"), "v")]),
+    GlFunction(Void, "glNamedFramebufferSampleLocationsfvARB", [(GLframebuffer, "framebuffer"), (GLuint, "start"), (GLsizei, "count"), (Array(Const(GLfloat), "count*2"), "v")]),
+    GlFunction(Void, "glEvaluateDepthValuesARB", []),
 
     # GL_ARB_sample_shading
     GlFunction(Void, "glMinSampleShadingARB", [(GLfloat, "value")]),
@@ -1563,7 +1612,7 @@ glapi.addFunctions([
     # GL_ARB_texture_multisample
     GlFunction(Void, "glTexImage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
     GlFunction(Void, "glTexImage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
-    GlFunction(Void, "glGetMultisamplefv", [(GLenum, "pname"), (GLuint, "index"), Out(Array(GLfloat, "_gl_param_size(pname)"), "val")], sideeffects=False),
+    GlFunction(Void, "glGetMultisamplefv", [(GLenum, "pname"), (GLuint, "index"), Out(Array(GLfloat, 2), "val")], sideeffects=False),
     GlFunction(Void, "glSampleMaski", [(GLuint, "index"), (GLbitfield, "mask")]),
 
     # GL_ARB_texture_storage
