@@ -53,6 +53,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
+    ${CMAKE_SOURCE_DIR}/guids
 )
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -62,6 +63,7 @@ add_convenience_library (trace
 )
 target_link_libraries (trace
     common
+    guids
     ${SNAPPY_LIBRARIES}
 )
 

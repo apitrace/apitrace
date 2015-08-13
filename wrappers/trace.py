@@ -659,6 +659,9 @@ class Tracer:
         if not interfaces:
             return
 
+        print r'#include "guids.hpp"'
+        print
+
         map(self.declareWrapperInterface, interfaces)
 
         # Helper functions to wrap/unwrap interface pointers
@@ -888,10 +891,9 @@ class Tracer:
 
         print r'static void'
         print r'warnIID(const char *entryName, REFIID riid, void *pvObj, const char *reason) {'
-        print r'    os::log("apitrace: warning: %s: %s IID %08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",'
+        print r'    os::log("apitrace: warning: %s: %s IID %s\n",'
         print r'            entryName, reason,'
-        print r'            riid.Data1, riid.Data2, riid.Data3,'
-        print r'            riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7]);'
+        print r'            getGuidName(riid));'
         print r'    void * pVtbl = *(void **)pvObj;'
         print r'    HMODULE hModule = 0;'
         print r'    BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |'
@@ -920,7 +922,7 @@ class Tracer:
             print r'        Wrap%s::_wrap(entryName, (%s **) ppvObj);' % (iface.name, iface.name)
             print r'        return;'
             print r'    }'
-        print r'    warnIID(entryName, riid, *ppvObj, "unknown");'
+        print r'    warnIID(entryName, riid, *ppvObj, "unsupported");'
         print r'}'
         print
 
