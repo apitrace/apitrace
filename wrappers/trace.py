@@ -67,7 +67,8 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         self.visit(const.type)
 
     def visitStruct(self, struct):
-        print 'static const char * _struct%s_members[%u] = {' % (struct.tag, len(struct.members))
+        # Ensure member array has nonzero length to avoid MSVC error C2466
+        print 'static const char * _struct%s_members[%u] = {' % (struct.tag, max(len(struct.members), 1))
         for type, name,  in struct.members:
             if name is None:
                 print '    "",'
