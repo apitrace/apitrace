@@ -289,6 +289,8 @@ dumpAttrib(StateWriter &writer,
                 const GLdouble *dvalue;
                 const GLint *ivalue;
                 const GLuint *uivalue;
+                const GLint64 *i64value;
+                const GLuint64 *ui64value;
             } u;
 
             u.rawvalue = data + row*desc.rowStride + col*desc.colStride;
@@ -305,6 +307,12 @@ dumpAttrib(StateWriter &writer,
                 break;
             case GL_UNSIGNED_INT:
                 writer.writeInt(*u.uivalue);
+                break;
+            case GL_INT64_ARB:
+                writer.writeInt(*u.i64value);
+                break;
+            case GL_UNSIGNED_INT64_ARB:
+                writer.writeInt(*u.ui64value);
                 break;
             case GL_BOOL:
                 writer.writeBool(*u.uivalue);
@@ -435,6 +443,8 @@ dumpUniform(StateWriter &writer,
         GLdouble dvalues[4*4];
         GLint ivalues[4*4];
         GLuint uivalues[4*4];
+        GLint64 i64values[4*4];
+        GLuint64 ui64values[4*4];
         GLbyte data[4*4*4];
     } u;
 
@@ -473,6 +483,12 @@ dumpUniform(StateWriter &writer,
             break;
         case GL_UNSIGNED_INT:
             glGetUniformuiv(program, location, u.uivalues);
+            break;
+        case GL_INT64_ARB:
+            glGetUniformi64vARB(program, location, u.i64values);
+            break;
+        case GL_UNSIGNED_INT64_ARB:
+            glGetUniformui64vARB(program, location, u.ui64values);
             break;
         case GL_BOOL:
             glGetUniformiv(program, location, u.ivalues);

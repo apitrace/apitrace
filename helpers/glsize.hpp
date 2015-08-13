@@ -146,6 +146,36 @@ _gl_uniform_size(GLenum type, GLenum &elemType, GLint &numCols, GLint &numRows) 
         elemType = GL_UNSIGNED_INT;
         numCols = 4;
         break;
+    case GL_INT64_ARB:
+        elemType = GL_INT64_ARB;
+        break;
+    case GL_INT64_VEC2_ARB:
+        elemType = GL_INT64_ARB;
+        numCols = 2;
+        break;
+    case GL_INT64_VEC3_ARB:
+        elemType = GL_INT64_ARB;
+        numCols = 3;
+        break;
+    case GL_INT64_VEC4_ARB:
+        elemType = GL_INT64_ARB;
+        numCols = 4;
+        break;
+    case GL_UNSIGNED_INT64_ARB:
+        elemType = GL_UNSIGNED_INT64_ARB;
+        break;
+    case GL_UNSIGNED_INT64_VEC2_ARB:
+        elemType = GL_UNSIGNED_INT64_ARB;
+        numCols = 2;
+        break;
+    case GL_UNSIGNED_INT64_VEC3_ARB:
+        elemType = GL_UNSIGNED_INT64_ARB;
+        numCols = 3;
+        break;
+    case GL_UNSIGNED_INT64_VEC4_ARB:
+        elemType = GL_UNSIGNED_INT64_ARB;
+        numCols = 4;
+        break;
     case GL_BOOL:
         elemType = GL_BOOL;
         break;
