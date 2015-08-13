@@ -870,15 +870,32 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
                 logGetProcAddress(hModule, lpProcName);
             }
 
-            if (HIWORD(lpProcName) == 0) {
-                debugPrintf("inject: ignoring %s!@%u\n", szBaseName, LOWORD(lpProcName));
-                return GetProcAddress(hModule, lpProcName);
-            }
-
             const Module & module = modIt->second;
             const FunctionMap & functionMap = module.functionMap;
-
             FunctionMap::const_iterator fnIt;
+
+            if (HIWORD(lpProcName) == 0) {
+                FARPROC proc = GetProcAddress(hModule, lpProcName);
+                if (!proc) {
+                    return proc;
+                }
+
+                for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
+                    FARPROC pRealProc = GetProcAddress(hModule, fnIt->first);
+                    if (proc == pRealProc) {
+                        if (VERBOSITY > 0) {
+                            debugPrintf("inject: replacing %s!%s\n", szBaseName, lpProcName);
+                        }
+                        return (FARPROC)fnIt->second;
+                    }
+
+                }
+                
+                debugPrintf("inject: ignoring %s!@%u\n", szBaseName, LOWORD(lpProcName));
+
+                return proc;
+            }
+
             fnIt = functionMap.find(lpProcName);
 
             if (fnIt != functionMap.end()) {
