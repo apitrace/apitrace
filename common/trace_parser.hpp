@@ -138,9 +138,11 @@ protected:
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
     
+public:
     static CallFlags
     lookupCallFlags(const char *name);
 
+protected:
     Call *parse_Call(Mode mode);
 
     void parse_enter(Mode mode);

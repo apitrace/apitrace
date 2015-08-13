@@ -46,3 +46,6 @@ if (ANDROID)
         log
     )
 endif ()
+
+add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
+target_link_libraries (trace_parser_flags_test common)
