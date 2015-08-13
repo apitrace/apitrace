@@ -221,9 +221,6 @@ if (WIN32)
                 d2d1trace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/specs/d2d1.py
-                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
-                ${CMAKE_SOURCE_DIR}/specs/d2dbasetypes.py
-                ${CMAKE_SOURCE_DIR}/specs/d2derr.py
                 ${CMAKE_SOURCE_DIR}/specs/dwrite.py
                 ${CMAKE_SOURCE_DIR}/specs/dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py

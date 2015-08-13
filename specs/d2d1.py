@@ -26,10 +26,104 @@
 
 from winapi import *
 from dxgi import DXGI_FORMAT, IDXGISurface
-from d2derr import *
-from d2dbasetypes import *
 from dwrite import *
 
+
+
+#
+# D2D
+#
+
+HRESULT = MAKE_HRESULT(errors = [
+    "D2DERR_UNSUPPORTED_PIXEL_FORMAT",
+    "D2DERR_INSUFFICIENT_BUFFER",
+    "D2DERR_WRONG_STATE",
+    "D2DERR_NOT_INITIALIZED",
+    "D2DERR_UNSUPPORTED_OPERATION",
+    "D2DERR_SCANNER_FAILED",
+    "D2DERR_SCREEN_ACCESS_DENIED",
+    "D2DERR_DISPLAY_STATE_INVALID",
+    "D2DERR_ZERO_VECTOR",
+    "D2DERR_INTERNAL_ERROR",
+    "D2DERR_DISPLAY_FORMAT_NOT_SUPPORTED",
+    "D2DERR_INVALID_CALL",
+    "D2DERR_NO_HARDWARE_DEVICE",
+    "D2DERR_RECREATE_TARGET",
+    "D2DERR_TOO_MANY_SHADER_ELEMENTS",
+    "D2DERR_SHADER_COMPILE_FAILED",
+    "D2DERR_MAX_TEXTURE_SIZE_EXCEEDED",
+    "D2DERR_UNSUPPORTED_VERSION",
+    "D2DERR_BAD_NUMBER",
+    "D2DERR_WRONG_FACTORY",
+    "D2DERR_LAYER_ALREADY_IN_USE",
+    "D2DERR_POP_CALL_DID_NOT_MATCH_PUSH",
+    "D2DERR_WRONG_RESOURCE_DOMAIN",
+    "D2DERR_PUSH_POP_UNBALANCED",
+    "D2DERR_RENDER_TARGET_HAS_LAYER_OR_CLIPRECT",
+    "D2DERR_INCOMPATIBLE_BRUSH_TYPES",
+    "D2DERR_WIN32_ERROR",
+    "D2DERR_TARGET_NOT_GDI_COMPATIBLE",
+    "D2DERR_TEXT_EFFECT_IS_WRONG_TYPE",
+    "D2DERR_TEXT_RENDERER_NOT_RELEASED",
+    "D2DERR_EXCEEDS_MAX_BITMAP_SIZE",
+])
+
+D3DCOLORVALUE = Struct("D3DCOLORVALUE", [
+    (FLOAT, "r"),
+    (FLOAT, "g"),
+    (FLOAT, "b"),
+    (FLOAT, "a"),
+])
+
+D2D_POINT_2U = Struct("D2D_POINT_2U", [
+    (UINT32, "x"),
+    (UINT32, "y"),
+])
+
+D2D_POINT_2F = Struct("D2D_POINT_2F", [
+    (FLOAT, "x"),
+    (FLOAT, "y"),
+])
+
+D2D_RECT_F = Struct("D2D_RECT_F", [
+    (FLOAT, "left"),
+    (FLOAT, "top"),
+    (FLOAT, "right"),
+    (FLOAT, "bottom"),
+])
+
+D2D_RECT_U = Struct("D2D_RECT_U", [
+    (UINT32, "left"),
+    (UINT32, "top"),
+    (UINT32, "right"),
+    (UINT32, "bottom"),
+])
+
+D2D_SIZE_F = Struct("D2D_SIZE_F", [
+    (FLOAT, "width"),
+    (FLOAT, "height"),
+])
+
+D2D_SIZE_U = Struct("D2D_SIZE_U", [
+    (UINT32, "width"),
+    (UINT32, "height"),
+])
+
+D2D_COLOR_F = Alias("D2D_COLOR_F", D3DCOLORVALUE)
+D2D_MATRIX_3X2_F = Struct("D2D_MATRIX_3X2_F", [
+    (FLOAT, "_11"),
+    (FLOAT, "_12"),
+    (FLOAT, "_21"),
+    (FLOAT, "_22"),
+    (FLOAT, "_31"),
+    (FLOAT, "_32"),
+])
+
+
+
+#
+# D2D1
+#
 
 ID2D1Resource = Interface("ID2D1Resource", IUnknown)
 ID2D1Bitmap = Interface("ID2D1Bitmap", ID2D1Resource)
