@@ -13,14 +13,14 @@ matrix:
   - compiler: gcc
     env:
     - APT_REPOS="ppa:ubuntu-toolchain-r/test ppa:ubuntu-sdk-team/ppa"
-    - APT_PACKAGES="gcc-4.8 g++-4.8 libdwarf-dev libproc-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
-    - GCC_VERSION=4.8
+    - APT_PACKAGES="gcc-4.9 g++-4.9 libdwarf-dev libproc-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
+    - GCC_VERSION=4.9
     - CMAKE_OPTIONS="-DENABLE_GUI=1"
   - compiler: gcc
     env:
     - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.8-multilib g++-4.8-multilib"
-    - GCC_VERSION=4.8
+    - APT_PACKAGES="gcc-4.9-multilib g++-4.9-multilib"
+    - GCC_VERSION=4.9
     - CMAKE_OPTIONS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - compiler: clang
     env:
