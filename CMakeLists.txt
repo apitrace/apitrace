@@ -483,55 +483,8 @@ include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
 
-if (WIN32)
-    set (os os_win32.cpp)
-else ()
-    set (os os_posix.cpp)
-endif ()
-
-add_convenience_library (common
-    common/trace_callset.cpp
-    common/trace_dump.cpp
-    common/trace_fast_callset.cpp
-    common/trace_file.cpp
-    common/trace_file_read.cpp
-    common/trace_file_write.cpp
-    common/trace_file_zlib.cpp
-    common/trace_file_snappy.cpp
-    common/trace_model.cpp
-    common/trace_parser.cpp
-    common/trace_parser_flags.cpp
-    common/trace_writer.cpp
-    common/trace_writer_local.cpp
-    common/trace_writer_model.cpp
-    common/trace_loader.cpp
-    common/trace_profiler.cpp
-    common/trace_option.cpp
-    common/${os}
-    common/os_backtrace.cpp
-    common/os_crtdbg.cpp
-    common/highlight.cpp
-)
-
-target_link_libraries (common
-    ${LIBBACKTRACE_LIBRARIES}
-)
-if (WIN32)
-    target_link_libraries (common
-        shell32
-    )
-endif ()
-if (ANDROID)
-    target_link_libraries (common
-        log
-    )
-endif ()
-
-
-##############################################################################
-# Sub-directories
-
 add_subdirectory (guids)
+add_subdirectory (common)
 add_subdirectory (dispatch)
 add_subdirectory (helpers)
 add_subdirectory (wrappers)

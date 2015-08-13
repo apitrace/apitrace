@@ -26,8 +26,12 @@
 
 #include <limits>
 
+#include <assert.h>
+#include <string.h>
+
 #include "highlight.hpp"
 #include "trace_dump.hpp"
+#include "guids.hpp"
 
 
 namespace trace {
@@ -196,6 +200,25 @@ public:
     }
 
     void visit(Struct *s) {
+        // Replace GUIDs with their symbolic name
+        // TODO: Move this to parsing, so it can be shared everywhere
+        if (s->members.size() == 4 &&
+            strcmp(s->sig->name, "GUID") == 0) {
+            GUID guid;
+            guid.Data1 = s->members[0]->toUInt();
+            guid.Data2 = s->members[1]->toUInt();
+            guid.Data3 = s->members[2]->toUInt();
+            Array *data4 = s->members[3]->toArray();
+            assert(data4);
+            assert(data4->values.size() == 8);
+            for (int i = 0; i < sizeof guid.Data4; ++i) {
+                guid.Data4[i] = data4->values[i]->toUInt();
+            }
+            const char *name = getGuidName(guid);
+            os << literal << name << normal;
+            return;
+        }
+
         os << "{";
         visitMembers(s);
         os << "}";
