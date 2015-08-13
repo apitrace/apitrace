@@ -249,6 +249,12 @@ else ()
         message (FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} compiler does not support C++11")
     endif ()
 
+    # We require at least GCC 4.9 for decent C++11 support
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
+        message (WARNING "GCC 4.9 or later recommended -- https://github.com/apitrace/apitrace/wiki/GCC")
+    endif ()
+
     # Adjust warnings
     add_compiler_flags (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
