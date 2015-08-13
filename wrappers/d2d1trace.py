@@ -31,7 +31,7 @@ from specs.d2d1 import d2d1
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
+    print '#include "guids_defs.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'

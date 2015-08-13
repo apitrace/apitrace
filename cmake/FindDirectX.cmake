@@ -214,6 +214,8 @@ if (WIN32)
         find_winsdk_header  (D2D1    d2d1.h)
         find_winsdk_library (D2D1    d2d1)
         find_combined       (D2D1    D2D1 D2D1)
+        find_winsdk_header  (D2D1_1  d2d1_1.h)
+        find_combined       (D2D1_1  D2D1_1 D2D1)
     endif ()
 
     find_program (DirectX_FXC_EXECUTABLE fxc

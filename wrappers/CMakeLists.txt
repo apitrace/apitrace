@@ -211,8 +211,8 @@ if (WIN32)
     endif ()
 
     # d2d1.dll, dwrite.dll
-    if (DirectX_D2D1_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+    if (DirectX_D2D1_1_INCLUDE_FOUND)
+        include_directories (BEFORE SYSTEM ${DirectX_D2D1_1_INCLUDE_DIR})
 
         add_custom_command (
             OUTPUT d2d1trace.cpp
@@ -236,7 +236,7 @@ if (WIN32)
         )
         install (TARGETS d2d1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
         install_pdb (d2d1trace DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D2D1_INCLUDE_FOUND)
+    endif ()
 
     # opengl32.dll
     add_custom_command (

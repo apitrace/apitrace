@@ -61,6 +61,11 @@ BOOL = Enum("BOOL", [
     "TRUE",
 ])
 
+PSTR = Alias("PSTR", CString)
+PCSTR = Alias("PCSTR", ConstCString)
+PWSTR = Alias("PWSTR", WString)
+PCWSTR = Alias("PCWSTR", ConstWString)
+
 LPLONG = Pointer(LONG)
 LPWORD = Pointer(WORD)
 LPDWORD = Pointer(DWORD)

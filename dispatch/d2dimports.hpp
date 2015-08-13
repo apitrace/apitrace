@@ -34,8 +34,8 @@
 
 #include "compat.h"
 
-#include <d2d1.h>
-#include <dwrite.h>
+#include <d2d1_1.h>
+#include <dwrite_1.h>
 
 #ifndef WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT
 #define WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT 0x88982f80
