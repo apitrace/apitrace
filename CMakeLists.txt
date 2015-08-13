@@ -256,6 +256,12 @@ else ()
         message (FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} compiler does not support C++11")
     endif ()
 
+    # std::regex is broken before GCC 4.9
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
+        message (FATAL_ERROR "GCC 4.9 or later required for C++11 std::regex support -- https://github.com/apitrace/apitrace/issues/370")
+    endif ()
+
     # Adjust warnings
     add_compiler_flags (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
