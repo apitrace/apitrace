@@ -180,6 +180,7 @@ endmacro ()
 
 add_definitions (
     -D__STDC_LIMIT_MACROS
+    -D__STDC_FORMAT_MACROS
 )
 
 if (WIN32)
@@ -530,6 +531,7 @@ endif ()
 ##############################################################################
 # Sub-directories
 
+add_subdirectory (guids)
 add_subdirectory (dispatch)
 add_subdirectory (helpers)
 add_subdirectory (wrappers)
