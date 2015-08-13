@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2013-2014 The Khronos Group Inc.
+** Copyright (c) 2013-2015 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -33,14 +33,14 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 31190 $ on $Date: 2015-05-14 03:29:28 -0700 (Thu, 14 May 2015) $
+** Khronos $Revision: 31811 $ on $Date: 2015-08-10 00:01:11 -0700 (Mon, 10 Aug 2015) $
 */
 
 #ifndef GL_APIENTRYP
 #define GL_APIENTRYP GL_APIENTRY*
 #endif
 
-/* Generated on date 20150514 */
+/* Generated on date 20150809 */
 
 /* Generated C header for:
  * API: gles2
@@ -1048,18 +1048,22 @@ GL_APICALL void GL_APIENTRY glDrawElementsInstancedBaseVertexBaseInstanceEXT (GL
 #define GL_EXT_buffer_storage 1
 #define GL_MAP_READ_BIT                   0x0001
 #define GL_MAP_WRITE_BIT                  0x0002
-#define GL_MAP_PERSISTENT_BIT             0x0040
-#define GL_MAP_COHERENT_BIT               0x0080
-#define GL_DYNAMIC_STORAGE_BIT            0x0100
-#define GL_CLIENT_STORAGE_BIT             0x0200
-#define GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT 0x00004000
-#define GL_BUFFER_IMMUTABLE_STORAGE       0x821F
-#define GL_BUFFER_STORAGE_FLAGS           0x8220
+#define GL_MAP_PERSISTENT_BIT_EXT         0x0040
+#define GL_MAP_COHERENT_BIT_EXT           0x0080
+#define GL_DYNAMIC_STORAGE_BIT_EXT        0x0100
+#define GL_CLIENT_STORAGE_BIT_EXT         0x0200
+#define GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT_EXT 0x00004000
+#define GL_BUFFER_IMMUTABLE_STORAGE_EXT   0x821F
+#define GL_BUFFER_STORAGE_FLAGS_EXT       0x8220
 typedef void (GL_APIENTRYP PFNGLBUFFERSTORAGEEXTPROC) (GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
 #ifdef GL_GLEXT_PROTOTYPES
 GL_APICALL void GL_APIENTRY glBufferStorageEXT (GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
 #endif
 #endif /* GL_EXT_buffer_storage */
+
+#ifndef GL_EXT_color_buffer_float
+#define GL_EXT_color_buffer_float 1
+#endif /* GL_EXT_color_buffer_float */
 
 #ifndef GL_EXT_color_buffer_half_float
 #define GL_EXT_color_buffer_half_float 1
@@ -1901,6 +1905,14 @@ GL_APICALL void GL_APIENTRY glFramebufferTexture2DMultisampleIMG (GLenum target,
 #define GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG 0x9137
 #define GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG 0x9138
 #endif /* GL_IMG_texture_compression_pvrtc2 */
+
+#ifndef GL_INTEL_framebuffer_CMAA
+#define GL_INTEL_framebuffer_CMAA 1
+typedef void (GL_APIENTRYP PFNGLAPPLYFRAMEBUFFERATTACHMENTCMAAINTELPROC) (void);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glApplyFramebufferAttachmentCMAAINTEL (void);
+#endif
+#endif /* GL_INTEL_framebuffer_CMAA */
 
 #ifndef GL_INTEL_performance_query
 #define GL_INTEL_performance_query 1
