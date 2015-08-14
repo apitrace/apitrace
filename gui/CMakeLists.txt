@@ -9,10 +9,8 @@ add_library (qubjson STATIC
     qubjson.cpp
 )
 
-add_executable (qubjson_test qubjson_test.cpp)
-target_link_libraries (qubjson_test qubjson gtest)
-add_dependencies (check qubjson_test)
-add_test (NAME qubjson_test COMMAND $<TARGET_FILE:qubjson_test>)
+add_gtest (qubjson_test qubjson_test.cpp)
+target_link_libraries (qubjson_test qubjson)
 
 set(qapitrace_SRCS
    androiddevicedialog.cpp

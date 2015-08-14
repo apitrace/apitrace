@@ -481,6 +481,14 @@ target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
 enable_testing ()
 add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND})
 
+# Convenience macro for adding unit tests
+macro (add_gtest)
+    add_executable (${ARGV})
+    target_link_libraries (${ARGV0} gtest)
+    add_dependencies (check ${ARGV0})
+    add_test (NAME ${ARGV0} COMMAND $<TARGET_FILE:${ARGV0}>)
+endmacro ()
+
 
 ##############################################################################
 # Common libraries / utilities
