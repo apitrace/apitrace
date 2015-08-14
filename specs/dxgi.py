@@ -524,31 +524,10 @@ IDXGIDevice1.methods += [
 ]
 
 
-IDXGIFactoryDWM = Interface("IDXGIFactoryDWM", IUnknown)
-IDXGISwapChainDWM = Interface("IDXGISwapChainDWM", IDXGIDeviceSubObject)
-
-IDXGIFactoryDWM.methods += [
-    StdMethod(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM)), "ppSwapChain")]),
-]
-
-# http://shchetinin.blogspot.co.uk/2012/04/dwm-graphics-directx-win8win7.html
-IDXGISwapChainDWM.methods += [
-    StdMethod(HRESULT, "Present", [(UINT, "SyncInterval"), (DXGI_PRESENT, "Flags")]),
-    StdMethod(HRESULT, "GetBuffer", [(UINT, "Buffer"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppSurface")]),
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")], sideeffects=False),
-    StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (DXGI_SWAP_CHAIN_FLAG, "SwapChainFlags")]),
-    StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
-    StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
-    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
-    StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
-]
-
-
 dxgi = Module('dxgi')
 dxgi.addInterfaces([
     IDXGIKeyedMutex,
     IDXGIFactory1,
-    IDXGIFactoryDWM,
     IDXGIDevice1,
     IDXGIAdapter1,
     IDXGIResource,
@@ -904,4 +883,33 @@ dxgi.addInterfaces([
     IDXGIOutput3,
     IDXGIFactory3,
     IDXGIFactoryMedia,
+])
+
+
+
+#
+# Undocumented interfaces
+#
+
+IDXGIFactoryDWM = Interface("IDXGIFactoryDWM", IUnknown)
+IDXGISwapChainDWM = Interface("IDXGISwapChainDWM", IDXGIDeviceSubObject)
+
+IDXGIFactoryDWM.methods += [
+    StdMethod(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM)), "ppSwapChain")]),
+]
+
+# http://shchetinin.blogspot.co.uk/2012/04/dwm-graphics-directx-win8win7.html
+IDXGISwapChainDWM.methods += [
+    StdMethod(HRESULT, "Present", [(UINT, "SyncInterval"), (DXGI_PRESENT, "Flags")]),
+    StdMethod(HRESULT, "GetBuffer", [(UINT, "Buffer"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppSurface")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (DXGI_SWAP_CHAIN_FLAG, "SwapChainFlags")]),
+    StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
+    StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
+    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGIFactoryDWM,
 ])
