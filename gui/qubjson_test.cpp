@@ -152,6 +152,10 @@ TEST(qubjson, binary_data) {
 int
 main(int argc, char **argv)
 {
+#if defined(_MSC_VER) && !defined(NDEBUG)
+    return 0;
+#else
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
+#endif
 }
