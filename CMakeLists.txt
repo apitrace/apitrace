@@ -479,7 +479,11 @@ set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_S
 target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
 
 enable_testing ()
-add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND})
+if (CMAKE_CROSSCOMPILING)
+    add_custom_target (check)
+else ()
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND})
+endif ()
 
 # Convenience macro for adding unit tests
 macro (add_gtest)
