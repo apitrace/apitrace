@@ -38,8 +38,10 @@ build
 dxsdk
 eglretrace
 glretrace
+guids_test
 install_manifest.txt
 qapitrace
 qubjson_test
+trace_parser_flags_test
 traces
 Testing
