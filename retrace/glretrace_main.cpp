@@ -479,6 +479,10 @@ initContext() {
                 numPasses += b->getNumPasses();
             }
             retrace::numPasses = numPasses > 0 ? numPasses : 1;
+            if (retrace::profilingNumPasses) {
+                std::cout << retrace::numPasses << std::endl;
+                exit(0);
+            }
             metricBackendsSetup = 1;
         }
 
