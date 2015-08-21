@@ -2039,8 +2039,8 @@ glapi.addFunctions([
     GlFunction(Void, "glCopyTexSubImage3DEXT", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
 
     # GL_EXT_cull_vertex
-    GlFunction(Void, "glCullParameterdvEXT", [(GLenum, "pname"), (Array(GLdouble, 4), "params")]),
-    GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), (Array(GLfloat, 4), "params")]),
+    GlFunction(Void, "glCullParameterdvEXT", [(GLenum, "pname"), (Array(GLdouble, "_gl_param_size(pname)"), "params")]),
+    GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), (Array(GLfloat, "_gl_param_size(pname)"), "params")]),
 
     # GL_EXT_debug_label
     GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (GLstringConst, "label")]),
@@ -2446,8 +2446,8 @@ glapi.addFunctions([
     # GL_EXT_pixel_transform
     GlFunction(Void, "glPixelTransformParameteriEXT", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glPixelTransformParameterfEXT", [(GLenum, "target"), (GLenum, "pname"), (GLfloat, "param")]),
-    GlFunction(Void, "glPixelTransformParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")]),
-    GlFunction(Void, "glPixelTransformParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLfloat)), "params")]),
+    GlFunction(Void, "glPixelTransformParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLint), "_gl_param_size(pname)"), "params")]),
+    GlFunction(Void, "glPixelTransformParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLfloat), "_gl_param_size(pname)"), "params")]),
     GlFunction(Void, "glGetPixelTransformParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetPixelTransformParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
