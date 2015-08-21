@@ -10,6 +10,7 @@
 #include "metric_backend_amd_perfmon.hpp"
 #include "metric_backend_intel_perfquery.hpp"
 #include "metric_backend_opengl.hpp"
+#include "mmap_allocator.hpp"
 
 namespace glretrace {
 
@@ -18,7 +19,7 @@ bool profilingBoundaries[QUERY_BOUNDARY_LIST_END] = {false};
 unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END] = {0};
 std::vector<MetricBackend*> metricBackends; // to be populated in initContext()
 MetricBackend* curMetricBackend = nullptr; // backend active in the current pass
-MetricWriter profiler(metricBackends);
+MetricWriter profiler(metricBackends, MmapAllocator<char>());
 
 MetricBackend* getBackend(std::string backendName) {
     // to be populated with backends

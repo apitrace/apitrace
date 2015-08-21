@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "metric_backend.hpp"
+#include "mmap_allocator.hpp"
 
 class ProfilerQuery
 {
@@ -81,12 +82,13 @@ public:
 class MetricWriter
 {
 private:
-    std::deque<ProfilerFrame> frameQueue;
-    std::deque<ProfilerCall> callQueue;
-    std::deque<ProfilerDrawcall> drawcallQueue;
+    std::deque<ProfilerFrame, MmapAllocator<ProfilerFrame>> frameQueue;
+    std::deque<ProfilerCall, MmapAllocator<ProfilerCall>> callQueue;
+    std::deque<ProfilerDrawcall, MmapAllocator<ProfilerDrawcall>> drawcallQueue;
 
 public:
-    MetricWriter(std::vector<MetricBackend*> &metricBackends);
+    MetricWriter(std::vector<MetricBackend*> &metricBackends,
+                 const MmapAllocator<char> &alloc);
 
     void addQuery(QueryBoundary boundary, unsigned eventId,
                   const void* queryData = nullptr);

@@ -120,7 +120,11 @@ void ProfilerFrame::writeEntry() const {
 }
 
 
-MetricWriter::MetricWriter(std::vector<MetricBackend*> &metricBackends)
+MetricWriter::MetricWriter(std::vector<MetricBackend*> &metricBackends,
+                           const MmapAllocator<char> &alloc)
+    : frameQueue(MmapAllocator<ProfilerCall>(alloc)),
+      callQueue(MmapAllocator<ProfilerCall>(alloc)),
+      drawcallQueue(MmapAllocator<ProfilerCall>(alloc))
 {
     ProfilerQuery::metricBackends = &metricBackends;
 }
