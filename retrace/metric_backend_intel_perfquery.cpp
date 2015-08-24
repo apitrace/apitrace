@@ -220,6 +220,7 @@ int MetricBackend_INTEL_perfquery::enableMetric(Metric* metric_, QueryBoundary p
     }
 
     Metric_INTEL_perfquery metric(gid, id);
+    metric.offset(); // triggers metric vars precache (in case context changes)
     passes[pollingRule][gid].push_back(metric);
     return 0;
 }
@@ -243,31 +244,66 @@ void MetricBackend_INTEL_perfquery::beginPass() {
     }
     glCreatePerfQueryINTEL(curQueryMetrics->first, &curQuery);
     curEvent = 0;
+    supported = true; // can change if context is switched, so revert back
 }
 
 void MetricBackend_INTEL_perfquery::endPass() {
-    if (!numPasses) return;
-    glDeletePerfQueryINTEL(curQuery);
+    if (supported && numPasses) {
+        glDeletePerfQueryINTEL(curQuery);
+    }
     curPass++;
     curQueryMetrics++;
     collector.endPass();
 }
 
+void MetricBackend_INTEL_perfquery::pausePass() {
+    if (!supported || !numPasses) return;
+    // end query
+    // ignore data from the query in progress
+    if (queryInProgress) {
+        glEndPerfQueryINTEL(curQuery);
+        curEvent++;
+        queryInProgress = false;
+    }
+    glDeletePerfQueryINTEL(curQuery);
+}
+
+void MetricBackend_INTEL_perfquery::continuePass() {
+    // here new context might be used
+    // better to check if it supports INTEL_perfquery extension
+    glretrace::Context* context = glretrace::getCurrentContext();
+    if (context && context->hasExtension("GL_INTEL_performance_query")) {
+        supported = true;
+    } else {
+        supported = false;
+    }
+
+    if (supported && numPasses) {
+    // call begin pass and save/restore event id
+        unsigned tempId = curEvent;
+        beginPass();
+        curEvent = tempId;
+    }
+}
+
 void MetricBackend_INTEL_perfquery::beginQuery(QueryBoundary boundary) {
-    if (!numPasses) return;
+    if (!supported || !numPasses) return;
     if (boundary == QUERY_BOUNDARY_CALL) return;
     if ((boundary == QUERY_BOUNDARY_FRAME) && !perFrame) return;
     if ((boundary == QUERY_BOUNDARY_DRAWCALL) && perFrame) return;
     glBeginPerfQueryINTEL(curQuery);
+    queryInProgress = true;
 }
 
 void MetricBackend_INTEL_perfquery::endQuery(QueryBoundary boundary) {
-    if (!numPasses) return;
+    if (!queryInProgress) return;
+    if (!supported || !numPasses) return;
     if (boundary == QUERY_BOUNDARY_CALL) return;
     if ((boundary == QUERY_BOUNDARY_FRAME) && !perFrame) return;
     if ((boundary == QUERY_BOUNDARY_DRAWCALL) && perFrame) return;
     glEndPerfQueryINTEL(curQuery);
     freeQuery(curEvent++);
+    queryInProgress = false;
 }
 
 void MetricBackend_INTEL_perfquery::freeQuery(unsigned event) {

@@ -163,6 +163,8 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
     flushQueries();
 
+    beforeContextSwitch();
+
     bool success = glws::makeCurrent(drawable, context ? context->wsContext : NULL);
 
     if (!success) {
@@ -180,6 +182,8 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
             context->used = true;
         }
     }
+
+    afterContextSwitch();
 
     return true;
 }

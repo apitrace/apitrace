@@ -15,6 +15,7 @@
 namespace glretrace {
 
 bool metricBackendsSetup = false;
+bool profilingContextAcquired = false;
 bool profilingBoundaries[QUERY_BOUNDARY_LIST_END] = {false};
 unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END] = {0};
 std::vector<MetricBackend*> metricBackends; // to be populated in initContext()

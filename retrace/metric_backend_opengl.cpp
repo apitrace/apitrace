@@ -324,10 +324,17 @@ void MetricBackend_opengl::processQueries() {
 
 void MetricBackend_opengl::endPass() {
     // process rest of the queries (it can be the last frame)
-    // If context is destroyed explicitly in trace file
-    // this is not going to work :(
     processQueries();
     curPass++;
+}
+
+void MetricBackend_opengl::pausePass() {
+    if (queryInProgress[QUERY_BOUNDARY_FRAME]) endQuery(QUERY_BOUNDARY_FRAME);
+    processQueries();
+}
+
+void MetricBackend_opengl::continuePass() {
+    // TODO if context switches check what it actually supports
 }
 
 void MetricBackend_opengl::beginQuery(QueryBoundary boundary) {
@@ -379,41 +386,45 @@ void MetricBackend_opengl::beginQuery(QueryBoundary boundary) {
             data[METRIC_CPU_RSS_START][boundary]->addData(boundary, time);
         }
     }
+    queryInProgress[boundary] = true;
     // DRAWCALL is a CALL
     if (boundary == QUERY_BOUNDARY_DRAWCALL) beginQuery(QUERY_BOUNDARY_CALL);
 }
 
 void MetricBackend_opengl::endQuery(QueryBoundary boundary) {
-    // CPU related
-    if (metrics[METRIC_CPU_DURATION].profiled[boundary])
-    {
-        cpuEnd[boundary] = getCurrentTime();
-        int64_t time = (cpuEnd[boundary] - cpuStart[boundary]) * cpuTimeScale;
-        data[METRIC_CPU_DURATION][boundary]->addData(boundary, time);
-    }
-    if (metrics[METRIC_CPU_VSIZE_DURATION].profiled[boundary])
-    {
-        vsizeEnd[boundary] = os::getVsize();
-        int64_t time = vsizeEnd[boundary] - vsizeStart[boundary];
-        data[METRIC_CPU_VSIZE_DURATION][boundary]->addData(boundary, time);
-    }
-    if (metrics[METRIC_CPU_RSS_DURATION].profiled[boundary])
-    {
-        rssEnd[boundary] = os::getRss();
-        int64_t time = rssEnd[boundary] - rssStart[boundary];
-        data[METRIC_CPU_RSS_DURATION][boundary]->addData(boundary, time);
-    }
-    // GPU related
-    if (glQueriesNeeded[boundary]) {
-        std::array<GLuint, QUERY_LIST_END> &query = queries[boundary].back();
-        if (metrics[METRIC_GPU_DURATION].profiled[boundary] && supportsTimestamp) {
-            // GL_TIME_ELAPSED cannot be used in nested queries
-            // so prefer this if timestamps are supported
-            glQueryCounter(query[QUERY_GPU_DURATION], GL_TIMESTAMP);
+    if (queryInProgress[boundary]) {
+        // CPU related
+        if (metrics[METRIC_CPU_DURATION].profiled[boundary])
+        {
+            cpuEnd[boundary] = getCurrentTime();
+            int64_t time = (cpuEnd[boundary] - cpuStart[boundary]) * cpuTimeScale;
+            data[METRIC_CPU_DURATION][boundary]->addData(boundary, time);
         }
-        if (metrics[METRIC_GPU_PIXELS].profiled[boundary]) {
-            glEndQuery(GL_SAMPLES_PASSED);
+        if (metrics[METRIC_CPU_VSIZE_DURATION].profiled[boundary])
+        {
+            vsizeEnd[boundary] = os::getVsize();
+            int64_t time = vsizeEnd[boundary] - vsizeStart[boundary];
+            data[METRIC_CPU_VSIZE_DURATION][boundary]->addData(boundary, time);
         }
+        if (metrics[METRIC_CPU_RSS_DURATION].profiled[boundary])
+        {
+            rssEnd[boundary] = os::getRss();
+            int64_t time = rssEnd[boundary] - rssStart[boundary];
+            data[METRIC_CPU_RSS_DURATION][boundary]->addData(boundary, time);
+        }
+        // GPU related
+        if (glQueriesNeeded[boundary]) {
+            std::array<GLuint, QUERY_LIST_END> &query = queries[boundary].back();
+            if (metrics[METRIC_GPU_DURATION].profiled[boundary] && supportsTimestamp) {
+                // GL_TIME_ELAPSED cannot be used in nested queries
+                // so prefer this if timestamps are supported
+                glQueryCounter(query[QUERY_GPU_DURATION], GL_TIMESTAMP);
+            }
+            if (metrics[METRIC_GPU_PIXELS].profiled[boundary]) {
+                glEndQuery(GL_SAMPLES_PASSED);
+            }
+        }
+        queryInProgress[boundary] = false;
     }
     // DRAWCALL is a CALL
     if (boundary == QUERY_BOUNDARY_DRAWCALL) endQuery(QUERY_BOUNDARY_CALL);

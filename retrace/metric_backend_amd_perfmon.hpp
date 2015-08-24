@@ -98,9 +98,10 @@ private:
     };
 
 private:
-    bool supported; // extension support (checked initially)
+    bool supported; // extension support (checked initially and w/ context switch)
     bool firstRound; // first profiling round (no need to free monitors)
     bool perFrame; // profiling frames?
+    bool queryInProgress;
     unsigned monitors[NUM_MONITORS]; // For cycling
     unsigned curMonitor;
     unsigned monitorEvent[NUM_MONITORS]; // Event saved in monitor
@@ -156,6 +157,10 @@ public:
     void beginPass();
 
     void endPass();
+
+    void pausePass();
+
+    void continuePass();
 
     void beginQuery(QueryBoundary boundary = QUERY_BOUNDARY_DRAWCALL);
 

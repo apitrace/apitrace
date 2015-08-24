@@ -232,6 +232,21 @@ public:
     virtual void endPass() = 0;
 
     /**
+     * Pause pass with all the queries in progress.
+     * Backend decides what to do with the data of interrupted
+     * query.
+     * Can be used before the context switch in OpenGl.
+     */
+    virtual void pausePass() = 0;
+
+    /**
+     * Continue profiling the pass after pausePass().
+     * Backend decides whether to reprofile interrupted by pausePass() query.
+     * Can be used after the context switch in OpenGl.
+     */
+    virtual void continuePass() = 0;
+
+    /**
      * Begins query (profiles unit, i.e. frames or calls). Subsequent calls
      * begin next queries.
      * Parameter boundary should be set to the type of boundary beginQuery/endQuery
