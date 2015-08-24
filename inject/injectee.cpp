@@ -243,6 +243,10 @@ MyCreateProcessAsUserW(HANDLE hToken,
                     lpCommandLine);
     }
 
+    // Certain WINE versions (at least 1.6.2) don't export
+    // kernel32.dll!CreateProcessAsUserW
+    assert(pfnCreateProcessAsUserW);
+
     BOOL bRet;
     bRet = pfnCreateProcessAsUserW(hToken,
                                    lpApplicationName,
@@ -1074,7 +1078,6 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
             assert(hKernel32);
             pfnCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)GetProcAddress(hKernel32, "CreateProcessAsUserW");
-            assert(pfnCreateProcessAsUserW);
         }
 
         /*
