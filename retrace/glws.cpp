@@ -79,7 +79,8 @@ Context::initialize(void)
 {
     assert(!initialized);
 
-    extensions.getCurrentContextExtensions(profile);
+    actualProfile = glprofile::getCurrentContextProfile();
+    actualExtensions.getCurrentContextExtensions(actualProfile);
 
     /* Ensure we got a matching profile.
      *
@@ -88,17 +89,16 @@ Context::initialize(void)
      * Also, see if OpenGL ES can be handled through ARB_ES*_compatibility.
      */
     glprofile::Profile expectedProfile = profile;
-    glprofile::Profile currentProfile = glprofile::getCurrentContextProfile();
-    if (!currentProfile.matches(expectedProfile)) {
+    if (!actualProfile.matches(expectedProfile)) {
         if (expectedProfile.api == glprofile::API_GLES &&
-            currentProfile.api == glprofile::API_GL &&
-            ((expectedProfile.major == 2 && extensions.has("GL_ARB_ES2_compatibility")) ||
-             (expectedProfile.major == 3 && extensions.has("GL_ARB_ES3_compatibility")))) {
+            actualProfile.api == glprofile::API_GL &&
+            ((expectedProfile.major == 2 && actualExtensions.has("GL_ARB_ES2_compatibility")) ||
+             (expectedProfile.major == 3 && actualExtensions.has("GL_ARB_ES3_compatibility")))) {
             std::cerr << "warning: context mismatch:"
                       << " expected " << expectedProfile << ","
-                      << " but got " << currentProfile << " with GL_ARB_ES" << expectedProfile.major << "_compatibility\n";
+                      << " but got " << actualProfile << " with GL_ARB_ES" << expectedProfile.major << "_compatibility\n";
         } else {
-            std::cerr << "error: context mismatch: expected " << expectedProfile << ", but got " << currentProfile << "\n";
+            std::cerr << "error: context mismatch: expected " << expectedProfile << ", but got " << actualProfile << "\n";
             exit(1);
         }
     }

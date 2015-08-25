@@ -59,7 +59,12 @@ struct Context {
     profile(void) const {
         return wsContext->profile;
     }
-    
+
+    inline glprofile::Profile
+    actualProfile(void) const {
+        return wsContext->actualProfile;
+    }
+
     inline bool
     hasExtension(const char *extension) const {
         return wsContext->hasExtension(extension);

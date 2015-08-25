@@ -140,13 +140,18 @@ class Context
 {
 public:
     const Visual *visual;
+
+    // Requested profile
     Profile profile;
-    
-    glprofile::Extensions extensions;
+
+    // Created profile
+    Profile actualProfile;
+    glprofile::Extensions actualExtensions;
 
     Context(const Visual *vis) :
         visual(vis),
         profile(vis->profile),
+        actualProfile(profile),
         initialized(false)
     {}
 
@@ -156,7 +161,7 @@ public:
     inline bool
     hasExtension(const char *extension) const {
         assert(initialized);
-        return extensions.has(extension);
+        return actualExtensions.has(extension);
     }
 
 private:

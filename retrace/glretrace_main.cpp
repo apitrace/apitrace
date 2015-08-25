@@ -342,7 +342,7 @@ initContext() {
     assert(currentContext);
 
     /* Ensure we have adequate extension support */
-    glprofile::Profile currentProfile = currentContext->profile();
+    glprofile::Profile currentProfile = currentContext->actualProfile();
     supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
                           currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
@@ -358,7 +358,7 @@ initContext() {
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
-            std::cout << "Error: Cannot run profile, GL_ARB_timer_query or GL_EXT_timer_query extensions are not supported." << std::endl;
+            std::cout << "error: cannot profile, GL_ARB_timer_query or GL_EXT_timer_query extensions are not supported." << std::endl;
             exit(-1);
         }
 
@@ -366,14 +366,14 @@ initContext() {
         glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
 
         if (!bits) {
-            std::cout << "Error: Cannot run profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
+            std::cout << "error: cannot profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
             exit(-1);
         }
     }
 
     /* Check for occlusion query support */
     if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
-        std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
+        std::cout << "error: cannot profile, GL_ARB_occlusion_query extension is not supported (" << currentProfile << ")" << std::endl;
         exit(-1);
     }
 
