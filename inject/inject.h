@@ -218,14 +218,11 @@ isDifferentArch(HANDLE hProcess)
         return FALSE;
     }
 
-#ifdef _WIN64
-    BOOL isThisWow64 = FALSE;
-#else
-    BOOL isThisWow64 = TRUE;
-#endif
-
-    BOOL isOtherWow64 = FALSE;
-    if (!pfnIsWow64Process(hProcess, &isOtherWow64)) {
+    // NOTE: IsWow64Process will return false on 32-bits Windows
+    BOOL isThisWow64;
+    BOOL isOtherWow64;
+    if (!pfnIsWow64Process(GetCurrentProcess(), &isThisWow64) ||
+        !pfnIsWow64Process(hProcess, &isOtherWow64)) {
         logLastError("IsWow64Process failed");
         return FALSE;
     }
