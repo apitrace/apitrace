@@ -86,6 +86,11 @@ private:
 
 public:
     typedef T value_type;
+    typedef value_type* pointer;
+    typedef const value_type* const_pointer;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+    typedef size_t size_type;
 
     MmapAllocator()
     {
@@ -104,6 +109,22 @@ public:
     };
 
     void deallocate(T* p, std::size_t n) {};
+
+    template <typename U, typename... Args>
+    void construct(U* p, Args&&... args) {::new (static_cast<void*>(p) ) U (std::forward<Args> (args)...);}
+
+    template <typename U>
+    void destroy(U* p) {p->~U();}
+
+    size_type max_size() const {
+        return ALLOC_CHUNK_SIZE / sizeof(T);
+    }
+
+    template<typename U>
+    struct rebind
+    {
+        typedef MmapAllocator<U> other;
+    };
 };
 template <class T, class U>
 bool operator==(const MmapAllocator<T>&, const MmapAllocator<U>&) {
