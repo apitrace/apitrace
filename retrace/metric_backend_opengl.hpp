@@ -9,6 +9,7 @@
 #include "glproc.hpp"
 #include "metric_backend.hpp"
 #include "glretrace.hpp"
+#include "mmap_allocator.hpp"
 
 class Metric_opengl : public Metric
 {
@@ -43,13 +44,26 @@ public:
 class MetricBackend_opengl : public MetricBackend
 {
 private:
+    MmapAllocator<char> alloc;
     // storage class
     class Storage
     {
     private:
-        std::deque<int64_t> data[QUERY_BOUNDARY_LIST_END];
+        std::deque<int64_t, MmapAllocator<int64_t>> data[QUERY_BOUNDARY_LIST_END];
 
     public:
+#ifdef _WIN32
+        Storage(MmapAllocator<char> &alloc) {
+            for (auto &d : data) {
+                d = std::deque<int64_t, MmapAllocator<int64_t>>(alloc);
+            }
+        }
+#else
+        Storage(MmapAllocator<char> &alloc)
+            : data{ std::deque<int64_t, MmapAllocator<int64_t>>(alloc),
+                    std::deque<int64_t, MmapAllocator<int64_t>>(alloc),
+                    std::deque<int64_t, MmapAllocator<int64_t>>(alloc) } {};
+#endif
         void addData(QueryBoundary boundary, int64_t data);
         int64_t* getData(QueryBoundary boundary, unsigned eventId);
     };
@@ -104,7 +118,7 @@ private:
     int64_t rssStart[QUERY_BOUNDARY_LIST_END];
     int64_t rssEnd[QUERY_BOUNDARY_LIST_END];
 
-    MetricBackend_opengl(glretrace::Context* context);
+    MetricBackend_opengl(glretrace::Context* context, MmapAllocator<char> &alloc);
 
     MetricBackend_opengl(MetricBackend_opengl const&) = delete;
 
@@ -140,7 +154,8 @@ public:
 
     unsigned getNumPasses();
 
-    static MetricBackend_opengl& getInstance(glretrace::Context* context);
+    static MetricBackend_opengl& getInstance(glretrace::Context* context,
+                                             MmapAllocator<char> &alloc);
 
 
 private:

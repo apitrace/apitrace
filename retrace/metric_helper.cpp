@@ -22,11 +22,13 @@ MetricBackend* curMetricBackend = nullptr; // backend active in the current pass
 MetricWriter profiler(metricBackends, MmapAllocator<char>());
 
 MetricBackend* getBackend(std::string backendName) {
+    // allocator for metric storage
+    MmapAllocator<char> alloc;
     // to be populated with backends
     Context *currentContext = getCurrentContext();
-    if (backendName == "GL_AMD_performance_monitor") return &MetricBackend_AMD_perfmon::getInstance(currentContext);
-    else if (backendName == "GL_INTEL_performance_query") return &MetricBackend_INTEL_perfquery::getInstance(currentContext);
-    else if (backendName == "opengl") return &MetricBackend_opengl::getInstance(currentContext);
+    if (backendName == "GL_AMD_performance_monitor") return &MetricBackend_AMD_perfmon::getInstance(currentContext, alloc);
+    else if (backendName == "GL_INTEL_performance_query") return &MetricBackend_INTEL_perfquery::getInstance(currentContext, alloc);
+    else if (backendName == "opengl") return &MetricBackend_opengl::getInstance(currentContext, alloc);
     else return nullptr;
 }
 

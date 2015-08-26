@@ -77,12 +77,17 @@ private:
     class DataCollector
     {
         private:
-            std::deque<std::deque<unsigned char*>> data;
+            MmapAllocator<unsigned char> alloc;
+            // deque with custom allocator
+            template <class T>
+            using mmapdeque = std::deque<T, MmapAllocator<std::deque<T>>>;
+            // data storage
+            mmapdeque<mmapdeque<unsigned char*>> data;
             unsigned curPass;
 
         public:
-            DataCollector()
-                : data(1, deque<unsigned char*>()),
+            DataCollector(MmapAllocator<char> &alloc)
+                : alloc(alloc), data(1, mmapdeque<unsigned char*>(alloc), alloc),
                   curPass(0) {}
 
             ~DataCollector();
@@ -110,7 +115,7 @@ private:
     /* nameLookup for querying metrics by name */
     static std::map<std::string, std::pair<unsigned, unsigned>> nameLookup;
 
-    MetricBackend_INTEL_perfquery(glretrace::Context* context);
+    MetricBackend_INTEL_perfquery(glretrace::Context* context, MmapAllocator<char> &alloc);
 
     MetricBackend_INTEL_perfquery(MetricBackend_INTEL_perfquery const&) = delete;
 
@@ -154,6 +159,7 @@ public:
 
     unsigned getNumPasses();
 
-    static MetricBackend_INTEL_perfquery& getInstance(glretrace::Context* context);
+    static MetricBackend_INTEL_perfquery& getInstance(glretrace::Context* context,
+                                                      MmapAllocator<char> &alloc);
 };
 

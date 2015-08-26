@@ -48,7 +48,9 @@ MetricType Metric_opengl::type() {
     return m_type;
 }
 
-MetricBackend_opengl::MetricBackend_opengl(glretrace::Context* context)
+MetricBackend_opengl::MetricBackend_opengl(glretrace::Context* context,
+                                           MmapAllocator<char> &alloc)
+    : alloc(alloc)
 {
     glprofile::Profile currentProfile = context->actualProfile();
     supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
@@ -187,7 +189,7 @@ unsigned MetricBackend_opengl::generatePasses() {
     for (int i = 0; i < METRIC_LIST_END; i++) {
         for (int j = 0; j < QUERY_BOUNDARY_LIST_END; j++) {
             if (metrics[i].enabled[j]) {
-                data[i][j] = std::unique_ptr<Storage>(new Storage);
+                data[i][j] = std::unique_ptr<Storage>(new Storage(alloc));
             }
         }
     }
@@ -437,7 +439,7 @@ unsigned MetricBackend_opengl::getNumPasses() {
 }
 
 MetricBackend_opengl&
-MetricBackend_opengl::getInstance(glretrace::Context* context) {
-    static MetricBackend_opengl backend(context);
+MetricBackend_opengl::getInstance(glretrace::Context* context, MmapAllocator<char> &alloc) {
+    static MetricBackend_opengl backend(context, alloc);
     return backend;
 }

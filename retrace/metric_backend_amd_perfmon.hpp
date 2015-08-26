@@ -33,6 +33,7 @@
 #include "glproc.hpp"
 #include "metric_backend.hpp"
 #include "glretrace.hpp"
+#include "mmap_allocator.hpp"
 
 #define NUM_MONITORS 1 // number of max used AMD_perfmon monitors
 
@@ -74,12 +75,17 @@ private:
     class DataCollector
     {
         private:
-            std::deque<std::deque<unsigned*>> data;
+            MmapAllocator<unsigned> alloc; // allocator
+            // deque with custom allocator
+            template <class T>
+            using mmapdeque = std::deque<T, MmapAllocator<std::deque<T>>>;
+            // data storage
+            mmapdeque<mmapdeque<unsigned*>> data;
             unsigned curPass;
 
         public:
-            DataCollector()
-                : data(1, deque<unsigned*>()),
+            DataCollector(MmapAllocator<char> &alloc)
+                : alloc(alloc), data(1, mmapdeque<unsigned*>(alloc), alloc),
                   curPass(0) {}
 
             ~DataCollector();
@@ -112,7 +118,7 @@ private:
     // lookup table (metric name -> (gid, id))
     static std::map<std::string, std::pair<unsigned, unsigned>> nameLookup;
 
-    MetricBackend_AMD_perfmon(glretrace::Context* context);
+    MetricBackend_AMD_perfmon(glretrace::Context* context, MmapAllocator<char> &alloc);
 
     MetricBackend_AMD_perfmon(MetricBackend_AMD_perfmon const&) = delete;
 
@@ -161,6 +167,7 @@ public:
 
     unsigned getNumPasses();
 
-    static MetricBackend_AMD_perfmon& getInstance(glretrace::Context* context);
+    static MetricBackend_AMD_perfmon& getInstance(glretrace::Context* context,
+                                                  MmapAllocator<char> &alloc);
 };
 
