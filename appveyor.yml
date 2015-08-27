@@ -31,7 +31,7 @@ build:
   verbosity: minimal
 
 after_build:
-- cmake --build build --use-stderr --config "%CONFIGURATION%" --target all -- /verbosity:minimal
+- cmake --build build --use-stderr --config "%CONFIGURATION%" -- /verbosity:minimal
 - cmake --build build --use-stderr --config "%CONFIGURATION%" --target check -- /verbosity:minimal
 - cmake --build build --use-stderr --config "%CONFIGURATION%" --target package -- /verbosity:minimal
 
