@@ -475,7 +475,11 @@ target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
 enable_testing ()
 if (CMAKE_CROSSCOMPILING)
     add_custom_target (check)
+elseif (DEFINED CMAKE_BUILD_TYPE)
+    # Single configuration
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
 else ()
+    # Multiple configuration
     add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure)
 endif ()
 
