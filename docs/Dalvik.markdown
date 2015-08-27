@@ -7,7 +7,7 @@ other operating systems.
 
 The following discussion assumes that tracing library is copied to '/data':
 
-    adb push /path/to/apitrace/build/wrappers/egltrace.so /data
+    adb push /path/to/apitrace/libs/[arch]/egltrace.so /data
 
 
 ## Tracing on Android 4.0 and newer ##
