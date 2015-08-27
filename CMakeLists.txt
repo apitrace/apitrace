@@ -476,7 +476,7 @@ enable_testing ()
 if (CMAKE_CROSSCOMPILING)
     add_custom_target (check)
 else ()
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure)
 endif ()
 
 # Convenience macro for adding unit tests
