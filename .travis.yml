@@ -58,6 +58,6 @@ script:
       wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
     fi
 - cmake -H. -Bbuild $CMAKE_OPTIONS
-- cmake --build build --use-stderr -- -k all package
+- cmake --build build --use-stderr -- -k all check package
 
 # vim: set sw=2 et :
