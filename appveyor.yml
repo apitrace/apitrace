@@ -14,9 +14,9 @@ shallow_clone: true
 environment:
   matrix:
   - CMAKE_GENERATOR: "Visual Studio 12"
-    CMAKE_PREFIX_PATH: C:\Qt\5.5\msvc2013
+    QT5: C:\Qt\5.5\msvc2013
   - CMAKE_GENERATOR: "Visual Studio 12 Win64"
-    CMAKE_PREFIX_PATH: C:\Qt\5.5\msvc2013_64
+    QT5: C:\Qt\5.5\msvc2013_64
 
 matrix:
   fast_finish: true
@@ -24,7 +24,8 @@ matrix:
 configuration: Debug
 
 before_build:
-- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%CMAKE_PREFIX_PATH%" -DENABLE_GUI=ON
+- set Path=%QT5%\bin;%Path%
+- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 
 build:
   project: build\apitrace.sln
