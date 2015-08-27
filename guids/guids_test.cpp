@@ -28,16 +28,20 @@
 #include "gtest/gtest.h"
 
 
-#define GUID_ENTRY(l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8,name) \
-    TEST(guids, name_##name) { \
+TEST(guids, name_known)
+{
+
+#   define GUID_ENTRY(l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8,name) \
         static const GUID name = { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }; \
-        EXPECT_STREQ(#name, getGuidName(name)); \
-    }
+        EXPECT_STREQ(#name, getGuidName(name));
 
-#include "guids_entries.h"
+#   include "guids_entries.h"
+
+}
 
 
-TEST(guids, name_generic) {
+TEST(guids, name_unknown)
+{
     static const GUID dummy = {0x01234567,0x89AB,0xCDEF,{0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF}};
     EXPECT_STREQ("uuid(01234567-89ab-cdef-0123-456789abcdef)",
                  getGuidName(dummy));
