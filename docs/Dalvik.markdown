@@ -7,7 +7,7 @@ other operating systems.
 
 The following discussion assumes that tracing library is copied to '/data':
 
-    adb push /path/to/apitrace/build/wrappers/egltrace.so /data
+    adb push /path/to/apitrace/libs/[arch]/egltrace.so /data
 
 
 ## Tracing on Android 4.0 and newer ##
@@ -21,7 +21,8 @@ Obtain the process name of the application to be traced (the one reported in
 
     PROCNAME=com.android.settings
     adb root
-    adb shell setprop wrap.$PROCNAME LD_PRELOAD=/data/egltrace.so
+    adb shell ln -s /data/data/apitrace.github.io.eglretrace/libgnustl.so /data/libgnustl.so
+    adb shell setprop wrap.$PROCNAME LD_PRELOAD="/data/libgnustl_shared.so:/data/egltrace.so"
     adb shell setprop debug.apitrace.procname $PROCNAME
 
 (the former is read by Dalvik and specifies wrapping prefix, the latter is
