@@ -2,7 +2,6 @@
 #include <cstring>
 #include <vector>
 #include <set>
-#include <regex>
 #include <iostream>
 
 #include "retrace.hpp"
@@ -77,33 +76,86 @@ void listMetricsCLI() {
     }
 }
 
-void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule) {
-    const std::regex rOuter("\\s*([^:]+):\\s*([^;]*);?"); // backend: (...)
-    const std::regex rInner("\\s*\\[\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\]\\s*,?"
-                            "|\\s*([^;,]+),?"); // [g, i] | metricName
-    std::unique_ptr<Metric> p;
-    std::string metricName;
+void parseMetricsBlock(QueryBoundary pollingRule, const char* str,
+                       std::size_t limit, MetricBackend* backend)
+{
+    const char* end;
+    bool lastItem = false;
 
-    auto rOuter_it = std::cregex_token_iterator(metrics,
-                                                metrics+std::strlen(metrics),
-                                                rOuter, {1,2});
-    auto rOuter_end = std::cregex_token_iterator();
-    while (rOuter_it != rOuter_end) {
-        static std::set<MetricBackend*> backendsHash; // for not allowing duplicates
-        std::string backendName = (rOuter_it++)->str();
+    while (((end = reinterpret_cast<const char*>(std::memchr(str, ',', limit))) != nullptr)
+           || !lastItem)
+    {
+        std::unique_ptr<Metric> p;
+        std::string metricName;
+
+        if (!end) {
+            lastItem = true;
+            end = str + limit;
+        }
+        std::size_t span = std::strspn(str, " ");
+        limit -= span;
+        str += span;
+        // parse [group, id]
+        if (*str == '[') {
+            std::string groupStr = std::string(str, 1, end-str-1);
+            limit -= end + 1 - str;
+            str = end + 1;
+            end = reinterpret_cast<const char*>(std::memchr(str, ']', limit));
+            std::string idStr = std::string(str, 0, end-str);
+            limit -= end + 1 - str;
+            str = end + 1;
+            const char* next = reinterpret_cast<const char*>(std::memchr(str, ',', limit));
+            if (next) {
+                end = next;
+                limit -= end + 1 - str;
+                str = end + 1;
+            }
+            p = backend->getMetricById(std::stoul(groupStr), std::stoul(idStr));
+            metricName = "[" + groupStr + ", " + idStr + "]";
+        // parse metricName
+        } else {
+            if (end - str) {
+                metricName = std::string(str, 0, end-str);
+                p = backend->getMetricByName(metricName);
+            }
+            limit -= end + (lastItem ? 0 : 1) - str;
+            str = end + (lastItem ? 0 : 1);
+            if (metricName.empty()) continue;
+        }
+        if (!p) {
+            std::cerr << "Warning: No metric \"" << metricName
+                << "\"." << std::endl;
+            continue;
+        }
+        int error = backend->enableMetric(p.get(), pollingRule);
+        if (error) {
+            std::cerr << "Warning: Metric " << metricName << " not enabled"
+                " (error " << error << ")." << std::endl;
+        } else {
+            profilingBoundaries[pollingRule] = true;
+        }
+    }
+}
+
+void parseBackendBlock(QueryBoundary pollingRule, const char* str,
+                       std::size_t limit, std::set<MetricBackend*> &backendsHash)
+{
+    const char* delim = reinterpret_cast<const char*>(std::memchr(str, ':', limit));
+    if (delim) {
+        std::size_t span = std::strspn(str, " ");
+        std::string backendName = std::string(str, span, delim-str-span);
         MetricBackend* backend = getBackend(backendName);
         if (!backend) {
             std::cerr << "Warning: No backend \"" << backendName << "\"."
                       << std::endl;
-            rOuter_it++;
-            continue;
+            return;
         }
         if (!backend->isSupported()) {
             std::cerr << "Warning: Backend \"" << backendName
                       << "\" is not supported." << std::endl;
-            rOuter_it++;
-            continue;
+            return;
         }
+
         /**
          * order in metricBackends is important for output
          * also there should be no duplicates
@@ -113,38 +165,20 @@ void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule) {
             backendsHash.insert(backend);
         }
 
-        auto rInner_it = std::cregex_token_iterator(rOuter_it->first, rOuter_it->second,
-                                                    rInner, {1,2,3});
-        auto rInner_end = std::cregex_token_iterator();
-        while (rInner_it != rInner_end) {
-            if (rInner_it->matched) {
-                std::string groupId = (rInner_it++)->str();
-                std::string metricId = (rInner_it++)->str();
-                rInner_it++;
-                p = backend->getMetricById(std::stoi(groupId), std::stoi(metricId));
-                metricName = "[" + groupId + ", " + metricId + "]";
-            } else {
-                rInner_it++;
-                rInner_it++;
-                metricName = (rInner_it++)->str();
-                p = backend->getMetricByName(metricName);
-            }
-
-            if (!p) {
-                std::cerr << "Warning: No metric \"" << metricName
-                    << "\"." << std::endl;
-                continue;
-            }
-            int error = backend->enableMetric(p.get(), pollingRule);
-            if (error) {
-                std::cerr << "Warning: Metric " << metricName << " not enabled"
-                             " (error " << error << ")." << std::endl;
-            } else {
-                profilingBoundaries[pollingRule] = true;
-            }
-        }
-        rOuter_it++;
+        limit -= (delim-str) + 1;
+        parseMetricsBlock(pollingRule, delim + 1, limit, backend);
     }
+}
+
+void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule) {
+    static std::set<MetricBackend*> backendsHash; // for not allowing duplicates
+    const char* end;
+
+    while ((end = std::strchr(metrics, ';')) != nullptr) {
+        parseBackendBlock(pollingRule, metrics, end-metrics, backendsHash);
+        metrics = end + 1;
+    }
+    parseBackendBlock(pollingRule, metrics, std::strlen(metrics), backendsHash);
 }
 
 } /* namespace glretrace */
