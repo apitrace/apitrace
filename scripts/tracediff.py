@@ -128,12 +128,12 @@ class ExternalDiffer(Differ):
                     '--new-line-format=+ %l\n',
                 ]
         elif tool == 'sdiff':
-            if width is None:
+            if options.width is None:
                 import curses
                 curses.setupterm()
-                width = curses.tigetnum('cols')
+                options.width = curses.tigetnum('cols')
             self.diff_args += [
-                '--width=%u' % width,
+                '--width=%u' % options.width,
                 '--speed-large-files',
             ]
         elif tool == 'wdiff':
