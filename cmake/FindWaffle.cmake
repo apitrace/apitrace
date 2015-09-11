@@ -10,28 +10,33 @@ if (ANDROID)
 
 		set (Waffle_LIB_SEARCH_PATH "$ENV{OUT}/obj/lib")
 	endif ()
-endif ()
 
-	find_path (Waffle_INCLUDE_DIR waffle.h
+	find_path (Waffle_INCLUDE_DIRS waffle.h
 		PATHS ${Waffle_INC_SEARCH_PATH}
 		DOC "The directory where waffle.h resides"
 		NO_CMAKE_FIND_ROOT_PATH NO_DEFAULT_PATH
 		)
 
-	find_library (Waffle_LIBRARY waffle-1
+	find_library (Waffle_LIBRARIES waffle-1
 		PATHS ${Waffle_LIB_SEARCH_PATH}
 		DOC "The directory where libwaffle-1 resides"
 		NO_CMAKE_FIND_ROOT_PATH NO_DEFAULT_PATH
 		)
 
-	if (Waffle_INCLUDE_DIR AND Waffle_LIBRARY)
+	if (Waffle_INCLUDE_DIRS AND Waffle_LIBRARIES)
 		set (Waffle_FOUND 1)
-	endif (Waffle_INCLUDE_DIR AND Waffle_LIBRARY)
+	endif (Waffle_INCLUDE_DIRS AND Waffle_LIBRARIES)
+else ()
+	find_package (PkgConfig)
+	if (PKG_CONFIG_FOUND)
+		pkg_search_module (Waffle waffle-1)
+	endif ()
+endif ()
 
-	mark_as_advanced (
-		Waffle_INCLUDE_DIR
-		Waffle_LIBRARY
-	)
+mark_as_advanced (
+	Waffle_INCLUDE_DIRS
+	Waffle_LIBRARIES
+)
 
 mark_as_advanced (
 	Waffle_FOUND

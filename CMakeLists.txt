@@ -156,6 +156,9 @@ endif ()
 if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE))
     # if waffle is found eglretrace will be built for Android.
     find_package (Waffle)
+    if (NOT ANDROID AND NOT Waffle_FOUND)
+        message (WARNING "Could not find Waffle, disabling eglretrace")
+    endif ()
 endif ()
 
 
