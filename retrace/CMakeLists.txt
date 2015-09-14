@@ -159,7 +159,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
 endif ()
 
 if (ENABLE_EGL)
-    if ((ANDROID OR ENABLE_WAFFLE) AND Waffle_FOUND)
+    if (ENABLE_WAFFLE)
         add_executable (eglretrace
             glws_waffle.cpp
         )
