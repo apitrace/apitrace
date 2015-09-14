@@ -165,14 +165,14 @@ if (ENABLE_EGL)
         )
 
         add_dependencies (eglretrace glproc)
-        include_directories (${Waffle_INCLUDE_DIR})
+        include_directories (${Waffle_INCLUDE_DIRS})
 
         target_link_libraries (eglretrace
             retrace_common
             glretrace_common
             glhelpers
             glproc_egl
-            ${Waffle_LIBRARY}
+            ${Waffle_LIBRARIES}
             ${X11_X11_LIB}
             ${CMAKE_THREAD_LIBS_INIT}
             ${CMAKE_DL_LIBS}
