@@ -1,3 +1,12 @@
+# CMake will throw a cryptic message if an user unwittingly invokes it from
+# this directory.
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    message (FATAL_ERROR
+        "qapitrace must be built from the top source directory.\n"
+        "Read docs/INSTALL.markdown for detailed build instructions."
+    )
+endif ()
+
 add_definitions (-DQT_FORCE_ASSERTS)
 
 if (APPLE)
