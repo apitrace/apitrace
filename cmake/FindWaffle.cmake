@@ -22,10 +22,6 @@ if (ANDROID)
 		DOC "The directory where libwaffle-1 resides"
 		NO_CMAKE_FIND_ROOT_PATH NO_DEFAULT_PATH
 		)
-
-	if (Waffle_INCLUDE_DIRS AND Waffle_LIBRARIES)
-		set (Waffle_FOUND 1)
-	endif (Waffle_INCLUDE_DIRS AND Waffle_LIBRARIES)
 else ()
 	find_package (PkgConfig)
 	if (PKG_CONFIG_FOUND)
@@ -33,11 +29,5 @@ else ()
 	endif ()
 endif ()
 
-mark_as_advanced (
-	Waffle_INCLUDE_DIRS
-	Waffle_LIBRARIES
-)
-
-mark_as_advanced (
-	Waffle_FOUND
-)
+include (FindPackageHandleStandardArgs)
+find_package_handle_standard_args (Waffle DEFAULT_MSG Waffle_LIBRARIES Waffle_INCLUDE_DIRS)
