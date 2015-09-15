@@ -1,7 +1,37 @@
+/*********************************************************************
+ *
+ * Copyright 2013 Intel Corporation
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *********************************************************************/
+
 #define WAFFLE_API_EXPERIMENTAL
 #define WAFFLE_API_VERSION 0x0103
 
-#include "os.hpp"
+#include <string.h>
+
+#include <iostream>
+
 #include "waffle.h"
 #include "glws.hpp"
 
@@ -89,33 +119,46 @@ processEvents(void) {
 }
 
 void
-init(void) {
-    Attributes<int32_t> waffle_init_attrib_list;
-    waffle_init_attrib_list.add(
-        WAFFLE_PLATFORM,
+init(void)
+{
+    int32_t waffle_platform;;
+
 #if defined(__ANDROID__)
-        WAFFLE_PLATFORM_ANDROID
+    waffle_platform = WAFFLE_PLATFORM_ANDROID;
 #elif defined(__APPLE__)
-        WAFFLE_PLATFORM_CGL
-#elif defined(HAVE_X11)
-#  if 1
-        WAFFLE_PLATFORM_GLX
-#  else
-        WAFFLE_PLATFORM_X11_EGL
-#  endif
+    waffle_platform = WAFFLE_PLATFORM_CGL
+#elif defined(_WIN32)
+    waffle_platform = WAFFLE_PLATFORM_WGL
 #else
-#  warning Unsupported platform
-        WAFFLE_NONE
+    waffle_platform = WAFFLE_PLATFORM_GLX;
+
+    const char *waffle_platform_name = getenv("WAFFLE_PLATFORM");
+    if (waffle_platform_name) {
+        if (strcmp(waffle_platform_name, "gbm") == 0) {
+            waffle_platform = WAFFLE_PLATFORM_GBM;
+        } else if (strcmp(waffle_platform_name, "glx") == 0) {
+            waffle_platform = WAFFLE_PLATFORM_GLX;
+        } else if (strcmp(waffle_platform_name, "wayland") == 0) {
+            waffle_platform = WAFFLE_PLATFORM_WAYLAND;
+        } else if (strcmp(waffle_platform_name, "x11_egl") == 0) {
+            waffle_platform = WAFFLE_PLATFORM_X11_EGL;
+        } else {
+            std::cerr << "error: unsupported WAFFLE_PLATFORM \"" << waffle_platform_name << "\"\n";
+            exit(1);
+        }
+    }
 #endif
-    );
+
+    Attributes<int32_t> waffle_init_attrib_list;
+    waffle_init_attrib_list.add(WAFFLE_PLATFORM, waffle_platform);
     waffle_init_attrib_list.end(WAFFLE_NONE);
 
     waffle_init(waffle_init_attrib_list);
 
     dpy = waffle_display_connect(NULL);
     if (!dpy) {
-        os::log("%s: waffle_display_connect(NULL) == NULL\n", __FILE__);
-        os::abort();
+        std::cerr << "error: waffle_display_connect failed\n";
+        exit(1);
     }
 }
 
@@ -143,8 +186,8 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
             waffle_api = WAFFLE_CONTEXT_OPENGL_ES3;
             break;
         default:
-            os::log("%s: Unsupported context profile\n", __FILE__);
-            os::abort();
+            std::cerr << "error: unsupported context profile " << profile << "\n";
+            exit(1);
             return NULL;
         }
     } else {
@@ -153,10 +196,8 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     }
 
     if (!waffle_display_supports_context_api(dpy, waffle_api)) {
-        os::log("%s: !waffle_display_supports_context_api\n",
-            __FILE__);
-
-        os::abort();
+        std::cerr << "error: waffle_display_supports_context_api failed \n";
+        exit(1);
         return NULL;
     }
 
@@ -186,11 +227,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     config_attrib_list.end();
 
     cfg = waffle_config_choose(dpy, config_attrib_list);
-    if (!cfg)
-    {
-        os::log("Error in %s waffle_config_choose(dpy, " \
-            "config_attrib_list)\n", __FILE__);
-        os::abort();
+    if (!cfg) {
+        std::cerr << "error: waffle_config_choose failed\n";
+        exit(1);
         return NULL;
     }
     return new WaffleVisual(profile, cfg);
@@ -222,10 +261,8 @@ createContext(const Visual *visual, Context *shareContext,
 
     context = waffle_context_create(waffleVisual->config, share_context);
     if (!context) {
-        os::log("Error in %s waffle_context_create()\n",
-               __FILE__);
-
-        os::abort();
+        std::cerr << "error: waffle_context_create failed\n";
+        exit(1);
         return NULL;
     }
     return new WaffleContext(visual, context);
