@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
+#include <memory> // for unique_ptr
 #include <iostream>
 #include <getopt.h>
 #ifndef _WIN32
@@ -38,6 +39,7 @@
 #include "os_crtdbg.hpp"
 #include "os_time.hpp"
 #include "image.hpp"
+#include "threaded_snapshot.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
 #include "trace_option.hpp"
@@ -142,6 +144,9 @@ typedef StateWriter *(*StateWriterFactory)(std::ostream &);
 static StateWriterFactory stateWriterFactory = createJSONStateWriter;
 
 
+static Snapshotter *snapshotter;
+
+
 /**
  * Take snapshots.
  */
@@ -152,7 +157,7 @@ takeSnapshot(unsigned call_no) {
     assert(dumpingSnapshots);
     assert(snapshotPrefix);
 
-    image::Image *src = dumper->getSnapshot();
+    std::unique_ptr<image::Image> src(dumper->getSnapshot());
     if (!src) {
         std::cerr << call_no << ": warning: failed to get snapshot\n";
         return;
@@ -184,18 +189,11 @@ takeSnapshot(unsigned call_no) {
                                                      snapshotPrefix,
                                                      useCallNos ? call_no : snapshot_no);
 
-            // Alpha channel often has bogus data, so strip it when writing
-            // PNG images to disk to simplify visualization.
-            bool strip_alpha = true;
-
-            if (src->writePNG(filename, strip_alpha) &&
-                retrace::verbosity >= 0) {
-                std::cout << "Wrote " << filename << "\n";
-            }
+            // Here we release our ownership on the Image, it is now the
+            // responsibility of the snapshotter to delete it.
+            snapshotter->writePNG(filename, src.release());
         }
     }
-
-    delete src;
 
     snapshot_no++;
 
@@ -318,6 +316,7 @@ usage(const char *argv0) {
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
+        "  -t, --snapshot-threaded encode screenshots on multiple threads\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
@@ -347,7 +346,7 @@ enum {
 };
 
 const static char *
-shortOptions = "bdD:hs:S:vw";
+shortOptions = "bdD:hs:S:vwt";
 
 const static struct option
 longOptions[] = {
@@ -372,6 +371,7 @@ longOptions[] = {
     {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot", required_argument, 0, 'S'},
     {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
+    {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
     {"loop", optional_argument, 0, LOOP_OPT},
@@ -391,6 +391,7 @@ int main(int argc, char **argv)
 {
     using namespace retrace;
     int i;
+    bool snapshotThreaded = false;
 
     os::setDebugOutput(os::OUTPUT_STDERR);
 
@@ -506,6 +507,9 @@ int main(int argc, char **argv)
         case SNAPSHOT_INTERVAL_OPT:
             snapshotInterval = atoi(optarg);
             break;
+        case 't':
+            snapshotThreaded = true;
+            break;
         case 'v':
             ++retrace::verbosity;
             break;
@@ -566,6 +570,12 @@ int main(int argc, char **argv)
     }
 #endif
 
+    if (snapshotThreaded) {
+        snapshotter = new ThreadedSnapshotter(std::thread::hardware_concurrency());
+    } else {
+        snapshotter = new Snapshotter();
+    }
+
     retrace::setUp();
     if (retrace::profiling) {
         retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn, retrace::profilingMemoryUsage);
@@ -584,6 +594,8 @@ int main(int argc, char **argv)
     }
     
     os::resetExceptionCallback();
+
+    delete snapshotter;
 
     // XXX: X often hangs on XCloseDisplay
     //retrace::cleanUp();
