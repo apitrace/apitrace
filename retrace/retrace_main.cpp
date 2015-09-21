@@ -37,18 +37,17 @@
 #include "os_binary.hpp"
 #include "os_crtdbg.hpp"
 #include "os_time.hpp"
-#include "os_thread.hpp"
 #include "image.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
 #include "trace_option.hpp"
+#include "relay_race.hpp"
 #include "retrace.hpp"
 #include "state_writer.hpp"
 #include "ws.hpp"
 
 
 static bool waitOnFinish = false;
-static int loopCount = 0;
 
 static const char *snapshotPrefix = "";
 static enum {
@@ -59,7 +58,6 @@ static enum {
 
 static trace::CallSet snapshotFrequency;
 static unsigned snapshotInterval = 0;
-static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
 
@@ -95,6 +93,7 @@ bool singleThread = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
+int loopCount = 0;
 
 
 static void
@@ -210,7 +209,7 @@ takeSnapshot(unsigned call_no) {
  * Take snapshots before/after retracing (as appropriate) and dispatch it to
  * the respective handler.
  */
-static void
+void
 retraceCall(trace::Call *call) {
     callNo = call->no;
 
@@ -249,328 +248,6 @@ retraceCall(trace::Call *call) {
         dumper->dumpState(*writer);
         delete writer;
         exit(0);
-    }
-}
-
-
-class RelayRunner;
-
-
-/**
- * Implement multi-threading by mimicking a relay race.
- */
-class RelayRace
-{
-private:
-    /**
-     * Runners indexed by the leg they run (i.e, the thread_ids from the
-     * trace).
-     */
-    std::vector<RelayRunner*> runners;
-
-public:
-    RelayRace();
-
-    ~RelayRace();
-
-    RelayRunner *
-    getRunner(unsigned leg);
-
-    inline RelayRunner *
-    getForeRunner() {
-        return getRunner(0);
-    }
-
-    void
-    run(void);
-
-    void
-    passBaton(trace::Call *call);
-
-    void
-    finishLine();
-
-    void
-    stopRunners();
-};
-
-
-/**
- * Each runner is a thread.
- *
- * The fore runner doesn't have its own thread, but instead uses the thread
- * where the race started.
- */
-class RelayRunner
-{
-private:
-    friend class RelayRace;
-
-    RelayRace *race;
-
-    unsigned leg;
-    
-    os::mutex mutex;
-    os::condition_variable wake_cond;
-
-    /**
-     * There are protected by the mutex.
-     */
-    bool finished;
-    trace::Call *baton;
-
-    os::thread thread;
-
-    static void
-    runnerThread(RelayRunner *_this);
-
-public:
-    RelayRunner(RelayRace *race, unsigned _leg) :
-        race(race),
-        leg(_leg),
-        finished(false),
-        baton(0)
-    {
-        /* The fore runner does not need a new thread */
-        if (leg) {
-            thread = os::thread(runnerThread, this);
-        }
-    }
-
-    ~RelayRunner() {
-        if (thread.joinable()) {
-            thread.join();
-        }
-    }
-
-    /**
-     * Thread main loop.
-     */
-    void
-    runRace(void) {
-        os::unique_lock<os::mutex> lock(mutex);
-
-        while (1) {
-            while (!finished && !baton) {
-                wake_cond.wait(lock);
-            }
-
-            if (finished) {
-                break;
-            }
-
-            assert(baton);
-            trace::Call *call = baton;
-            baton = 0;
-
-            runLeg(call);
-        }
-
-        if (0) std::cerr << "leg " << leg << " actually finishing\n";
-
-        if (leg == 0) {
-            race->stopRunners();
-        }
-    }
-
-    /**
-     * Interpret successive calls.
-     */
-    void
-    runLeg(trace::Call *call) {
-
-        /* Consume successive calls for this thread. */
-        do {
-            bool callEndsFrame = false;
-            static trace::ParseBookmark frameStart;
-
-            assert(call);
-            assert(call->thread_id == leg);
-
-            if (loopCount && call->flags & trace::CALL_FLAG_END_FRAME) {
-                callEndsFrame = true;
-                parser.getBookmark(frameStart);
-            }
-
-            retraceCall(call);
-            delete call;
-            call = parser.parse_call();
-
-            /* Restart last frame if looping is requested. */
-            if (loopCount) {
-                if (!call) {
-                    parser.setBookmark(lastFrameStart);
-                    call = parser.parse_call();
-                    if (loopCount > 0) {
-                        --loopCount;
-                    }
-                } else if (callEndsFrame) {
-                    lastFrameStart = frameStart;
-                }
-            }
-
-        } while (call && call->thread_id == leg);
-
-        if (call) {
-            /* Pass the baton */
-            assert(call->thread_id != leg);
-            flushRendering();
-            race->passBaton(call);
-        } else {
-            /* Reached the finish line */
-            if (0) std::cerr << "finished on leg " << leg << "\n";
-            if (leg) {
-                /* Notify the fore runner */
-                race->finishLine();
-            } else {
-                /* We are the fore runner */
-                finished = true;
-            }
-        }
-    }
-
-    /**
-     * Called by other threads when relinquishing the baton.
-     */
-    void
-    receiveBaton(trace::Call *call) {
-        assert (call->thread_id == leg);
-
-        mutex.lock();
-        baton = call;
-        mutex.unlock();
-
-        wake_cond.notify_one();
-    }
-
-    /**
-     * Called by the fore runner when the race is over.
-     */
-    void
-    finishRace() {
-        if (0) std::cerr << "notify finish to leg " << leg << "\n";
-
-        mutex.lock();
-        finished = true;
-        mutex.unlock();
-
-        wake_cond.notify_one();
-    }
-};
-
-
-void
-RelayRunner::runnerThread(RelayRunner *_this) {
-    _this->runRace();
-}
-
-
-RelayRace::RelayRace() {
-    runners.push_back(new RelayRunner(this, 0));
-}
-
-
-RelayRace::~RelayRace() {
-    assert(runners.size() >= 1);
-    std::vector<RelayRunner*>::const_iterator it;
-    for (it = runners.begin(); it != runners.end(); ++it) {
-        RelayRunner* runner = *it;
-        if (runner) {
-            delete runner;
-        }
-    }
-}
-
-
-/**
- * Get (or instantiate) a runner for the specified leg.
- */
-RelayRunner *
-RelayRace::getRunner(unsigned leg) {
-    RelayRunner *runner;
-
-    if (leg >= runners.size()) {
-        runners.resize(leg + 1);
-        runner = 0;
-    } else {
-        runner = runners[leg];
-    }
-    if (!runner) {
-        runner = new RelayRunner(this, leg);
-        runners[leg] = runner;
-    }
-    return runner;
-}
-
-
-/**
- * Start the race.
- */
-void
-RelayRace::run(void) {
-    trace::Call *call;
-    call = parser.parse_call();
-    if (!call) {
-        /* Nothing to do */
-        return;
-    }
-
-    /* If the user wants to loop we need to get a bookmark target. We
-     * usually get this after replaying a call that ends a frame, but
-     * for a trace that has only one frame we need to get it at the
-     * beginning. */
-    if (loopCount) {
-        parser.getBookmark(lastFrameStart);
-    }
-
-    RelayRunner *foreRunner = getForeRunner();
-    if (call->thread_id == 0) {
-        /* We are the forerunner thread, so no need to pass baton */
-        foreRunner->baton = call;
-    } else {
-        passBaton(call);
-    }
-
-    /* Start the forerunner thread */
-    foreRunner->runRace();
-}
-
-
-/**
- * Pass the baton (i.e., the call) to the appropriate thread.
- */
-void
-RelayRace::passBaton(trace::Call *call) {
-    if (0) std::cerr << "switching to thread " << call->thread_id << "\n";
-    RelayRunner *runner = getRunner(call->thread_id);
-    runner->receiveBaton(call);
-}
-
-
-/**
- * Called when a runner other than the forerunner reaches the finish line.
- *
- * Only the fore runner can finish the race, so inform him that the race is
- * finished.
- */
-void
-RelayRace::finishLine(void) {
-    RelayRunner *foreRunner = getForeRunner();
-    foreRunner->finishRace();
-}
-
-
-/**
- * Called by the fore runner after finish line to stop all other runners.
- */
-void
-RelayRace::stopRunners(void) {
-    std::vector<RelayRunner*>::const_iterator it;
-    for (it = runners.begin() + 1; it != runners.end(); ++it) {
-        RelayRunner* runner = *it;
-        if (runner) {
-            runner->finishRace();
-        }
     }
 }
 
@@ -836,7 +513,7 @@ int main(int argc, char **argv)
             waitOnFinish = true;
             break;
         case LOOP_OPT:
-            loopCount = trace::intOption(optarg, -1);
+            retrace::loopCount = trace::intOption(optarg, -1);
             break;
         case PGPU_OPT:
             retrace::debug = 0;
