@@ -36,6 +36,7 @@
 #include "com_ptr.hpp"
 #include "d3d10imports.hpp"
 #include "d3dstate.hpp"
+#include "d3d10state.hpp"
 #include "dxgistate.hpp"
 
 
@@ -337,6 +338,12 @@ getSubResourceImage(ID3D10Device *pDevice,
                          StagingDesc.Width, StagingDesc.Height);
 
     unmapResource(pStagingResource, 0);
+
+    if (image) {
+        image->label = getObjectName(pResource);
+        std::cerr << image->label << "\n";
+    }
+
 no_map:
     return image;
 }
@@ -411,8 +418,11 @@ dumpShaderResourceViewImage(StateWriter &writer,
             _snprintf(label, sizeof label,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(Desc.Format);
             writer.beginMember(label);
-            writer.writeImage(image);
+            writer.writeImage(image, imgDesc);
             writer.endMember(); // *_RESOURCE_*
             delete image;
         }
@@ -423,7 +433,8 @@ dumpShaderResourceViewImage(StateWriter &writer,
 
 static image::Image *
 getRenderTargetViewImage(ID3D10Device *pDevice,
-                         ID3D10RenderTargetView *pRenderTargetView)
+                         ID3D10RenderTargetView *pRenderTargetView,
+                         DXGI_FORMAT *dxgiFormat)
 {
     if (!pRenderTargetView) {
         return NULL;
@@ -435,6 +446,10 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
 
     D3D10_RENDER_TARGET_VIEW_DESC Desc;
     pRenderTargetView->GetDesc(&Desc);
+
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
 
     // TODO: Take the slice in consideration
     UINT MipSlice;
@@ -475,7 +490,8 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
 
 static image::Image *
 getDepthStencilViewImage(ID3D10Device *pDevice,
-                         ID3D10DepthStencilView *pDepthStencilView)
+                         ID3D10DepthStencilView *pDepthStencilView,
+                         DXGI_FORMAT *dxgiFormat)
 {
     if (!pDepthStencilView) {
         return NULL;
@@ -487,6 +503,10 @@ getDepthStencilViewImage(ID3D10Device *pDevice,
 
     D3D10_DEPTH_STENCIL_VIEW_DESC Desc;
     pDepthStencilView->GetDesc(&Desc);
+
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
 
     // TODO: Take the slice in consideration
     UINT MipSlice;
@@ -559,13 +579,14 @@ dumpTextures(StateWriter &writer, ID3D10Device *pDevice)
 
 
 image::Image *
-getRenderTargetImage(ID3D10Device *pDevice) {
+getRenderTargetImage(ID3D10Device *pDevice,
+                     DXGI_FORMAT *dxgiFormat) {
     com_ptr<ID3D10RenderTargetView> pRenderTargetView;
     pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
 
     image::Image *image = NULL;
     if (pRenderTargetView) {
-        image = getRenderTargetViewImage(pDevice, pRenderTargetView);
+        image = getRenderTargetViewImage(pDevice, pRenderTargetView, dxgiFormat);
     }
 
     return image;
@@ -589,12 +610,17 @@ dumpFramebuffer(StateWriter &writer, ID3D10Device *pDevice)
         }
 
         image::Image *image;
-        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
+        DXGI_FORMAT dxgiFormat;
+        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
+                                         &dxgiFormat);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
             writer.beginMember(label);
-            writer.writeImage(image);
+            writer.writeImage(image, imgDesc);
             writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
@@ -604,10 +630,15 @@ dumpFramebuffer(StateWriter &writer, ID3D10Device *pDevice)
 
     if (pDepthStencilView) {
         image::Image *image;
-        image = getDepthStencilViewImage(pDevice, pDepthStencilView);
+        DXGI_FORMAT dxgiFormat;
+        image = getDepthStencilViewImage(pDevice, pDepthStencilView,
+                                         &dxgiFormat);
         if (image) {
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
             writer.beginMember("DEPTH_STENCIL");
-            writer.writeImage(image);
+            writer.writeImage(image, imgDesc);
             writer.endMember();
             delete image;
         }

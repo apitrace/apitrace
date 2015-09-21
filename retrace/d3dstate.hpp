@@ -129,7 +129,8 @@ dumpDevice(StateWriter &writer, IDXGISwapChain *pSwapChain);
  */
 
 image::Image *
-getRenderTargetImage(ID3D10Device *pDevice);
+getRenderTargetImage(ID3D10Device *pDevice,
+                     DXGI_FORMAT *dxgiFormat = 0);
 
 void
 dumpTextures(StateWriter &writer, ID3D10Device *pDevice);
