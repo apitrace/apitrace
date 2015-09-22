@@ -152,6 +152,7 @@ extern unsigned samples;
 
 extern unsigned frameNo;
 extern unsigned callNo;
+extern int loopCount;
 
 extern trace::DumpFlags dumpFlags;
 

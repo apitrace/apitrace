@@ -73,6 +73,7 @@ namespace os {
 #else
 #  include <pthread.h>
 #endif
+#include <functional>
 
 
 namespace os {
@@ -279,6 +280,21 @@ namespace os {
         }
 
         inline void
+        notify_all(void) {
+#ifdef _WIN32
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+            WakeAllConditionVariable(&_native_handle);
+#  else
+            if (cWaiters) {
+                SetEvent(hEvent);
+            }
+#  endif
+#else
+            pthread_cond_broadcast(&_native_handle);
+#endif
+        }
+
+        inline void
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
@@ -294,6 +310,12 @@ namespace os {
 #else
             pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
+            while (!pred)
+                wait(lock);
         }
     };
 
@@ -399,11 +421,16 @@ namespace os {
         ~thread() {
         }
 
-        template< class Function, class Arg >
-        explicit thread( Function &f, Arg arg ) {
-            typedef CallbackParam< Function, Arg > Param;
-            Param *pParam = new Param(f, arg);
-            _native_handle = _create(pParam);
+        // XXX
+        static unsigned int
+        hardware_concurrency() {
+            return 4;
+        }
+
+        template< class Function, class... Args >
+        explicit thread( Function &&f, Args&&... args ) {
+            auto callback = std::bind(std::forward<Function>(f), std::forward<Args>(args)...);
+            _native_handle = _create(&callback);
         }
 
         inline thread &
@@ -429,23 +456,6 @@ namespace os {
     private:
         native_handle_type _native_handle;
 
-        template< typename Function, typename Arg >
-        struct CallbackParam {
-            Function &f;
-            Arg arg;
-
-            inline
-            CallbackParam(Function &_f, Arg _arg) :
-                f(_f),
-                arg(_arg)
-            {}
-
-            inline void
-            operator () (void) {
-                f(arg);
-            }
-        };
-
         template< typename Param >
         static
 #ifdef _WIN32
@@ -462,13 +472,13 @@ namespace os {
 
         template< typename Param >
         static inline native_handle_type
-        _create(Param *pParam) {
+        _create(Param *function) {
 #ifdef _WIN32
-            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, static_cast<void *>(pParam), 0, NULL);
+            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, function, 0, NULL);
             return reinterpret_cast<HANDLE>(handle);
 #else
             pthread_t t;
-            pthread_create(&t, NULL, &_callback<Param>, static_cast<void *>(pParam));
+            pthread_create(&t, NULL, &_callback<Param>, function);
             return t;
 #endif
         }

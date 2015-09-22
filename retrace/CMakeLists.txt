@@ -38,6 +38,7 @@ if (WIN32)
 endif ()
 
 add_library (retrace_common STATIC
+    relay_race.cpp
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
