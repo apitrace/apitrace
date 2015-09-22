@@ -930,7 +930,7 @@ int main(int argc, char **argv)
 #endif
 
     if (snapshotThreaded) {
-        snapshotter = new ThreadedSnapshotter(std::thread::hardware_concurrency());
+        snapshotter = new ThreadedSnapshotter(os::thread::hardware_concurrency());
     } else {
         snapshotter = new Snapshotter();
     }
