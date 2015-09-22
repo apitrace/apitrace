@@ -74,6 +74,7 @@ namespace os {
 #else
 #  include <pthread.h>
 #endif
+#include <functional>
 
 
 namespace os {
@@ -273,6 +274,21 @@ namespace os {
         }
 
         inline void
+        notify_all(void) {
+#ifdef _WIN32
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+            WakeAllConditionVariable(&_native_handle);
+#  else
+            if (cWaiters) {
+                SetEvent(hEvent);
+            }
+#  endif
+#else
+            pthread_cond_broadcast(&_native_handle);
+#endif
+        }
+
+        inline void
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
@@ -288,6 +304,12 @@ namespace os {
 #else
             pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
+            while (!pred)
+                wait(lock);
         }
     };
 
