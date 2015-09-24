@@ -126,6 +126,10 @@ private:
 
     void linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile);
     QString linkedAndroidTrace(const QString &localFile);
+    void addSurface(const ApiTexture &image, QTreeWidgetItem *parent);
+    void addSurface(const ApiFramebuffer &image, QTreeWidgetItem *parent);
+    template <typename Surface>
+    void addSurfaces(const QList<Surface> &images, const char *label);
 
 protected:
     virtual void closeEvent(QCloseEvent * event);

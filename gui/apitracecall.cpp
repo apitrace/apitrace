@@ -436,6 +436,33 @@ ApiTraceState::ApiTraceState()
 {
 }
 
+ApiTexture getTextureFrom(QVariantMap const &image, QString label) {
+    QSize size(image[QLatin1String("__width__")].toInt(),
+               image[QLatin1String("__height__")].toInt());
+    QString cls = image[QLatin1String("__class__")].toString();
+    int depth =
+        image[QLatin1String("__depth__")].toInt();
+    QString formatName =
+        image[QLatin1String("__format__")].toString();
+
+    QByteArray dataArray =
+        image[QLatin1String("__data__")].toByteArray();
+
+    QString userLabel =
+        image[QLatin1String("__label__")].toString();
+    if (!userLabel.isEmpty()) {
+        label += QString(", \"%1\"").arg(userLabel);
+    }
+
+    ApiTexture tex;
+    tex.setSize(size);
+    tex.setDepth(depth);
+    tex.setFormatName(formatName);
+    tex.setLabel(label);
+    tex.setData(dataArray);
+    return tex;
+}
+
 ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 {
     m_parameters = parsedJson[QLatin1String("parameters")].toMap();
@@ -455,36 +482,18 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
     m_buffers = parsedJson[QLatin1String("buffers")].toMap();
 
-    QVariantMap textures =
-        parsedJson[QLatin1String("textures")].toMap();
-    for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
-        QVariantMap image = itr.value().toMap();
-        QSize size(image[QLatin1String("__width__")].toInt(),
-                   image[QLatin1String("__height__")].toInt());
-        QString cls = image[QLatin1String("__class__")].toString();
-        int depth =
-            image[QLatin1String("__depth__")].toInt();
-        QString formatName =
-            image[QLatin1String("__format__")].toString();
-
-        QByteArray dataArray =
-            image[QLatin1String("__data__")].toByteArray();
-
-        QString label = itr.key();
-        QString userLabel =
-            image[QLatin1String("__label__")].toString();
-        if (!userLabel.isEmpty()) {
-            label += QString(", \"%1\"").arg(userLabel);
+    {
+        QVariantMap textures =
+            parsedJson[QLatin1String("textures")].toMap();
+        for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
+            m_textures.append(getTextureFrom(itr.value().toMap(), itr.key()));
         }
-
-        ApiTexture tex;
-        tex.setSize(size);
-        tex.setDepth(depth);
-        tex.setFormatName(formatName);
-        tex.setLabel(label);
-        tex.setData(dataArray);
-
-        m_textures.append(tex);
+    }
+    {
+        QVariantMap images = parsedJson[QLatin1String("images")].toMap();
+        for (itr = images.constBegin(); itr != images.constEnd(); ++itr) {
+            m_images.append(getTextureFrom(itr.value().toMap(), itr.key()));
+        }
     }
 
     QVariantMap fbos =
@@ -542,12 +551,18 @@ bool ApiTraceState::isEmpty() const
     return m_parameters.isEmpty() &&
            m_shaderSources.isEmpty() &&
            m_textures.isEmpty() &&
+           m_images.isEmpty() &&
            m_framebuffers.isEmpty();
 }
 
 const QList<ApiTexture> & ApiTraceState::textures() const
 {
     return m_textures;
+}
+
+const QList<ApiTexture> & ApiTraceState::images() const
+{
+    return m_images;
 }
 
 const QList<ApiFramebuffer> & ApiTraceState::framebuffers() const

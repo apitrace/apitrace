@@ -671,6 +671,51 @@ dumpTextures(StateWriter &writer, Context &context)
     writer.endMember(); // textures
 }
 
+void
+dumpImages(StateWriter &writer, Context &context) {
+    writer.beginMember("images");
+    writer.beginObject();
+
+    GLint maxImageUnits = 0;
+    glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
+    glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+
+    for(GLint imageUnit = 0; imageUnit < maxImageUnits; ++imageUnit) {
+        GLint texture = 0;
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, imageUnit, &texture);
+        if(texture) {
+            GLint level = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LEVEL, imageUnit, &level);
+            GLint isLayered = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LAYERED, imageUnit, &isLayered);
+            GLint layer = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LAYER, imageUnit, &layer);
+            std::stringstream label;
+            label << "Image Unit " << imageUnit;
+            if (level) {
+                label << ", level = " << level;
+            }
+            if (isLayered) {
+                label << ", layer = " << layer;
+            }
+            GLint target = 0;
+            // relies on GL_ARB_direct_state_access
+            glGetTextureParameteriv(texture, GL_TEXTURE_TARGET, &target);
+            GLint previousTexture = 0;
+            glGetIntegerv(getTextureBinding(target), &previousTexture);
+
+            glBindTexture(target, texture);
+            char *object_label = getObjectLabel(context, GL_TEXTURE, texture);
+            dumpActiveTextureLevel(writer, context, target, level, label.str(),
+                                   object_label);
+            free(object_label);
+            glBindTexture(target, previousTexture);
+        }
+    }
+
+    writer.endObject();
+    writer.endMember(); // images
+}
 
 bool
 getDrawableBounds(GLint *width, GLint *height) {

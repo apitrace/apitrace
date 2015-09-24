@@ -192,6 +192,8 @@ void dumpShadersUniforms(StateWriter &writer, Context &context);
 
 void dumpTextures(StateWriter &writer, Context &context);
 
+void dumpImages(StateWriter &writer, Context &context);
+
 void dumpFramebuffer(StateWriter &writer, Context &context);
 
 
