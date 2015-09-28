@@ -673,7 +673,7 @@ dumpTextures(StateWriter &writer, Context &context)
 
 void
 dumpImages(StateWriter &writer, Context &context) {
-    writer.beginMember("images");
+    writer.beginMember("textures");
     writer.beginObject();
 
     GLint maxImageUnits = 0;

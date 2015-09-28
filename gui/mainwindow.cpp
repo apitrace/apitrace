@@ -831,18 +831,15 @@ void MainWindow::fillStateForFrame() {
 
     const QList<ApiTexture> &textures =
         state.textures();
-    const QList<ApiTexture> &images =
-        state.images();
     const QList<ApiFramebuffer> &fbos =
         state.framebuffers();
 
     m_ui.surfacesTreeWidget->clear();
-    if (textures.isEmpty() && images.isEmpty() && fbos.isEmpty()) {
+    if (textures.isEmpty() && fbos.isEmpty()) {
         m_ui.surfacesTab->setDisabled(false);
     } else {
         m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
         addSurfaces(textures, "Textures");
-        addSurfaces(images, "Images");
         addSurfaces(fbos, "Framebuffers");
         m_ui.surfacesTab->setEnabled(true);
     }

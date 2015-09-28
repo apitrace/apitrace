@@ -489,12 +489,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
             m_textures.append(getTextureFrom(itr.value().toMap(), itr.key()));
         }
     }
-    {
-        QVariantMap images = parsedJson[QLatin1String("images")].toMap();
-        for (itr = images.constBegin(); itr != images.constEnd(); ++itr) {
-            m_images.append(getTextureFrom(itr.value().toMap(), itr.key()));
-        }
-    }
 
     QVariantMap fbos =
         parsedJson[QLatin1String("framebuffer")].toMap();
@@ -551,18 +545,12 @@ bool ApiTraceState::isEmpty() const
     return m_parameters.isEmpty() &&
            m_shaderSources.isEmpty() &&
            m_textures.isEmpty() &&
-           m_images.isEmpty() &&
            m_framebuffers.isEmpty();
 }
 
 const QList<ApiTexture> & ApiTraceState::textures() const
 {
     return m_textures;
-}
-
-const QList<ApiTexture> & ApiTraceState::images() const
-{
-    return m_images;
 }
 
 const QList<ApiFramebuffer> & ApiTraceState::framebuffers() const

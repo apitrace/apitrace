@@ -150,7 +150,6 @@ public:
     const QVariantMap & uniforms() const;
     const QVariantMap & buffers() const;
     const QList<ApiTexture> & textures() const;
-    const QList<ApiTexture> & images() const;
     const QList<ApiFramebuffer> & framebuffers() const;
 
     ApiFramebuffer colorBuffer() const;
@@ -159,7 +158,7 @@ private:
     QMap<QString, QString> m_shaderSources;
     QVariantMap m_uniforms;
     QVariantMap m_buffers;
-    QList<ApiTexture> m_textures, m_images;
+    QList<ApiTexture> m_textures;
     QList<ApiFramebuffer> m_framebuffers;
 };
 Q_DECLARE_METATYPE(ApiTraceState);
