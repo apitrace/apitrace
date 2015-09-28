@@ -673,6 +673,10 @@ dumpTextures(StateWriter &writer, Context &context)
 
 void
 dumpImages(StateWriter &writer, Context &context) {
+    if(!(context.ARB_shader_image_load_store &&
+         context.ARB_direct_state_access)) {
+        return;
+    }
     writer.beginMember("textures");
     writer.beginObject();
 
