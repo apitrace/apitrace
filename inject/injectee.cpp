@@ -296,12 +296,21 @@ getDescriptorName(HMODULE hModule,
 
 
 static PIMAGE_OPTIONAL_HEADER
-getOptionalHeader(HMODULE hModule)
+getOptionalHeader(HMODULE hModule,
+                  const char *szModule)
 {
     PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
-    assert(pDosHeader->e_magic == IMAGE_DOS_SIGNATURE);
+    if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+        debugPrintf("inject: warning: %s: unexpected DOS header magic (0x%04x)\n",
+                    szModule, pDosHeader->e_magic);
+        return NULL;
+    }
     PIMAGE_NT_HEADERS pNtHeaders = rvaToVa<IMAGE_NT_HEADERS>(hModule, pDosHeader->e_lfanew);
-    assert(pNtHeaders->Signature == IMAGE_NT_SIGNATURE);
+    if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE) {
+        debugPrintf("inject: warning: %s: unexpected NT header signature (0x%08lx)\n",
+                    szModule, pNtHeaders->Signature);
+        return NULL;
+    }
     assert(pNtHeaders->OptionalHeader.NumberOfRvaAndSizes > 0);
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     return pOptionalHeader;
@@ -322,8 +331,9 @@ getImageDirectoryEntry(HMODULE hModule,
         return NULL;
     }
 
-    PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule);
-    if (pOptionalHeader->DataDirectory[Entry].Size == 0) {
+    PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule, szModule);
+    if (!pOptionalHeader ||
+        pOptionalHeader->DataDirectory[Entry].Size == 0) {
         return NULL;
     }
 
