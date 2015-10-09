@@ -345,11 +345,13 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
     }
 
     /*
-     * Ignore .NET exception.
+     * Ignore .NET exceptions.
      *
      * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
+     * https://github.com/dotnet/coreclr/blob/master/src/jit/importer.cpp
      */
-    if (ExceptionCode == 0xe0434352) {
+    if (ExceptionCode == 0xe0434352 ||
+        ExceptionCode == 0xe0564552) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
