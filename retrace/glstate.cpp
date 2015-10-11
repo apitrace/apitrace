@@ -507,7 +507,6 @@ void dumpCurrentContext(StateWriter &writer)
 
     dumpShadersUniforms(writer, context);
     dumpTextures(writer, context);
-    dumpImages(writer, context);
     dumpFramebuffer(writer, context);
 
 #ifndef NDEBUG

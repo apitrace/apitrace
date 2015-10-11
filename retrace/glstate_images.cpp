@@ -667,18 +667,22 @@ dumpTextures(StateWriter &writer, Context &context)
 
     glActiveTexture(active_texture);
 
+    dumpImages(writer, context, false);
+
     writer.endObject();
     writer.endMember(); // textures
 }
 
 void
-dumpImages(StateWriter &writer, Context &context) {
+dumpImages(StateWriter &writer, Context &context, bool inOwnMember) {
     if(!(context.ARB_shader_image_load_store &&
          context.ARB_direct_state_access)) {
         return;
     }
-    writer.beginMember("textures");
-    writer.beginObject();
+    if (inOwnMember) {
+      writer.beginMember("images");
+      writer.beginObject();
+    }
 
     GLint maxImageUnits = 0;
     glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
@@ -717,8 +721,10 @@ dumpImages(StateWriter &writer, Context &context) {
         }
     }
 
-    writer.endObject();
-    writer.endMember(); // images
+    if (inOwnMember) {
+      writer.endObject();
+      writer.endMember(); // images
+    }
 }
 
 bool
