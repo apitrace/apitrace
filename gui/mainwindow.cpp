@@ -766,6 +766,28 @@ static void addSurfaceItem(const ApiSurface &surface,
     item->setData(0, Qt::UserRole, surface.data());
 }
 
+void MainWindow::addSurface(const ApiTexture &image, QTreeWidgetItem *parent) {
+    addSurfaceItem(image, image.label(), parent, m_ui.surfacesTreeWidget);
+}
+
+void MainWindow::addSurface(const ApiFramebuffer &fbo, QTreeWidgetItem *parent) {
+    addSurfaceItem(fbo, fbo.type(), parent, m_ui.surfacesTreeWidget);
+}
+
+template <typename Surface>
+void MainWindow::addSurfaces(const QList<Surface> &surfaces, const char *label) {
+    if (!surfaces.isEmpty()) {
+        QTreeWidgetItem *imageItem = new QTreeWidgetItem(m_ui.surfacesTreeWidget);
+        imageItem->setText(0, tr(label));
+        if (surfaces.count() <= 6) {
+            imageItem->setExpanded(true);
+        }
+        for (int i = 0; i < surfaces.count(); ++i) {
+            addSurface(surfaces[i], imageItem);
+        }
+    }
+}
+
 void MainWindow::fillStateForFrame()
 {
     if (!m_selectedEvent || !m_selectedEvent->hasState()) {
@@ -818,38 +840,8 @@ void MainWindow::fillStateForFrame()
         m_ui.surfacesTab->setDisabled(false);
     } else {
         m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
-        if (!textures.isEmpty()) {
-            QTreeWidgetItem *textureItem =
-                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
-            textureItem->setText(0, tr("Textures"));
-            if (textures.count() <= 6) {
-                textureItem->setExpanded(true);
-            }
-
-            for (int i = 0; i < textures.count(); ++i) {
-                const ApiTexture &texture =
-                    textures[i];
-                addSurfaceItem(texture, texture.label(),
-                               textureItem,
-                               m_ui.surfacesTreeWidget);
-            }
-        }
-        if (!fbos.isEmpty()) {
-            QTreeWidgetItem *fboItem =
-                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
-            fboItem->setText(0, tr("Framebuffers"));
-            if (fbos.count() <= 6) {
-                fboItem->setExpanded(true);
-            }
-
-            for (int i = 0; i < fbos.count(); ++i) {
-                const ApiFramebuffer &fbo =
-                    fbos[i];
-                addSurfaceItem(fbo, fbo.type(),
-                               fboItem,
-                               m_ui.surfacesTreeWidget);
-            }
-        }
+        addSurfaces(textures, "Textures");
+        addSurfaces(fbos, "Framebuffers");
         m_ui.surfacesTab->setEnabled(true);
     }
     m_ui.stateDock->show();
