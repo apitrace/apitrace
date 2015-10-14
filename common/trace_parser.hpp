@@ -240,32 +240,8 @@ protected:
 };
 
 
-// Decorator for parser which loops
-class LastFrameLoopParser : public AbstractParser  {
-public:
-    LastFrameLoopParser(AbstractParser *p, int c) {
-        parser = p;
-        loopCount = c;
-    }
-
-    ~LastFrameLoopParser() {
-        delete parser;
-    }
-
-    Call *parse_call(void);
-
-    // Delegate to Parser
-    void getBookmark(ParseBookmark &bookmark) { parser->getBookmark(bookmark); }
-    void setBookmark(const ParseBookmark &bookmark) { parser->setBookmark(bookmark); }
-    bool open(const char *filename);
-    void close(void) { parser->close(); }
-    unsigned long long getVersion(void) const { return parser->getVersion(); }
-private:
-    int loopCount;
-    AbstractParser *parser;
-    ParseBookmark frameStart;
-    ParseBookmark lastFrameStart;
-};
+AbstractParser *
+lastFrameLoopParser(AbstractParser *parser, int loopCount);
 
 
 } /* namespace trace */

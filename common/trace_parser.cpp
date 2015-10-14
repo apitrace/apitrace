@@ -1040,47 +1040,4 @@ inline void Parser::skip_byte(void) {
 }
 
 
-bool
-LastFrameLoopParser::open(const char *filename)
-{
-    bool ret = parser->open(filename);
-    if (ret) {
-        /* If the user wants to loop we need to get a bookmark target. We
-         * usually get this after replaying a call that ends a frame, but
-         * for a trace that has only one frame we need to get it at the
-         * beginning. */
-        parser->getBookmark(frameStart);
-        lastFrameStart = frameStart;
-    }
-    return ret;
-}
-
-Call *
-LastFrameLoopParser::parse_call(void)
-{
-    trace::Call *call;
-
-    call = parser->parse_call();
-
-    /* Restart last frame when looping is requested. */
-    if (call) {
-        lastFrameStart = frameStart;
-        if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            parser->getBookmark(frameStart);
-        }
-    } else {
-        if (loopCount) {
-            frameStart = lastFrameStart;
-            parser->setBookmark(frameStart);
-            call = parser->parse_call();
-            if (loopCount > 0) {
-                --loopCount;
-            }
-        }
-    }
-
-    return call;
-}
-
-
 } /* namespace trace */

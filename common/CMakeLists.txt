@@ -20,6 +20,7 @@ add_convenience_library (common
     trace_model.cpp
     trace_parser.cpp
     trace_parser_flags.cpp
+    trace_parser_loop.cpp
     trace_writer.cpp
     trace_writer_local.cpp
     trace_writer_model.cpp

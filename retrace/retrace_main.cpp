@@ -870,7 +870,7 @@ int main(int argc, char **argv)
     for (i = optind; i < argc; ++i) {
         parser = new trace::Parser;
         if (loopCount) {
-            parser = new trace::LastFrameLoopParser(parser, loopCount);
+            parser = lastFrameLoopParser(parser, loopCount);
         }
 
         if (!parser->open(argv[i])) {
