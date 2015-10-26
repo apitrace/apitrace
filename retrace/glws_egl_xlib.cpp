@@ -495,5 +495,26 @@ makeCurrentInternal(Drawable *drawable, Context *context)
 }
 
 
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: EGL/XLIB::wglBindTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: EGL/XLIB::wglReleaseTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    // nothing to do here.
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
 
 } /* namespace glws */
