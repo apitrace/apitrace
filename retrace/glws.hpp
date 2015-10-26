@@ -237,7 +237,16 @@ makeCurrent(Drawable *drawable, Context *context)
 bool
 processEvents(void);
 
+// iBuffer is one of GL_FRONT/BACK_LEFT/RIGHT, GL_AUX0...
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer);
+
+// iBuffer is one of GL_FRONT/BACK_LEFT/RIGHT, GL_AUX0...
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer);
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList);
+
 
 } /* namespace glws */
-
-

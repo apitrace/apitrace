@@ -548,4 +548,60 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
 }
 
 
+static int
+enum_buffer_to_wgl_buffer(GLenum buffer)
+{
+    switch (buffer) {
+    case GL_FRONT_LEFT:
+        return WGL_FRONT_LEFT_ARB;
+    case GL_BACK_LEFT:
+        return WGL_BACK_LEFT_ARB;
+    case GL_FRONT_RIGHT:
+        return WGL_FRONT_RIGHT_ARB;
+    case GL_BACK_RIGHT:
+        return WGL_BACK_RIGHT_ARB;
+    case GL_AUX0:
+        return WGL_AUX0_ARB;
+    default:
+        std::cerr << "error: invalid buffer in enum_buffer_to_wgl_buffer()\n";
+        return WGL_FRONT_LEFT_ARB;
+    }
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int buf) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLBINDTEXIMAGEARBPROC,
+             pfnwglBindTexImageARB, "wglBindTexImageARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglBindTexImageARB(wglDrawable->hPBuffer,
+                                 enum_buffer_to_wgl_buffer(buf));
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int buf) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLRELEASETEXIMAGEARBPROC,
+             pfnwglReleaseTexImageARB, "wglReleaseTexImageARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglReleaseTexImageARB(wglDrawable->hPBuffer,
+                                    enum_buffer_to_wgl_buffer(buf));
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLSETPBUFFERATTRIBARBPROC,
+             pfnwglSetPbufferAttribARB, "wglSetPbufferAttribARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglSetPbufferAttribARB(wglDrawable->hPBuffer, attribList);
+}
+
+
 } /* namespace glws */
