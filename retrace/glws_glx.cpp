@@ -68,14 +68,21 @@ public:
     Window window;
     bool ever_current;
 
-    GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
+    GlxDrawable(const Visual *vis, int w, int h,
+                const glws::pbuffer_info *pbInfo) :
+        Drawable(vis, w, h, pbInfo ? true : false),
         ever_current(false)
     {
-        XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
+        const GlxVisual *glxvisual = static_cast<const GlxVisual *>(visual);
+        XVisualInfo *visinfo = glxvisual->visinfo;
 
         const char *name = "glretrace";
-        window = createWindow(visinfo, name, width, height);
+        if (pbInfo) {
+            window = createPbuffer(display, glxvisual, pbInfo, w, h);
+        }
+        else {
+            window = createWindow(visinfo, name, width, height);
+        }
 
         glXWaitX();
     }
@@ -125,6 +132,7 @@ public:
     }
 
     void swapBuffers(void) {
+        assert(!pbuffer);
         if (ever_current) {
             // The window has been bound to a context at least once
             glXSwapBuffers(display, window);
@@ -136,6 +144,10 @@ public:
         }
         processKeys(window);
     }
+
+private:
+    Window createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                         const glws::pbuffer_info *pbInfo, int w, int h);
 };
 
 
@@ -353,6 +365,53 @@ makeCurrentInternal(Drawable *drawable, Context *context)
         return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
 }
+
+Window
+GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                           const glws::pbuffer_info *pbInfo, int w, int h)
+{
+    int samples = 0;
+
+    // XXX ideally, we'd populate these attributes according to the Visual info
+    Attributes<int> attribs;
+    attribs.add(GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT);
+    attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+    attribs.add(GLX_RED_SIZE, 1);
+    attribs.add(GLX_GREEN_SIZE, 1);
+    attribs.add(GLX_BLUE_SIZE, 1);
+    attribs.add(GLX_ALPHA_SIZE, 1);
+    //attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+    attribs.add(GLX_DEPTH_SIZE, 1);
+    attribs.add(GLX_STENCIL_SIZE, 1);
+    if (samples > 1) {
+        attribs.add(GLX_SAMPLE_BUFFERS, 1);
+        attribs.add(GLX_SAMPLES_ARB, samples);
+    }
+    attribs.end();
+
+    int num_configs = 0;
+    GLXFBConfig *fbconfigs;
+    fbconfigs = glXChooseFBConfig(dpy, screen, attribs, &num_configs);
+    if (!num_configs || !fbconfigs) {
+        std::cerr << "error: glXChooseFBConfig for pbuffer failed.\n";
+        exit(1);
+    }
+
+    Attributes<int> pbAttribs;
+    pbAttribs.add(GLX_PBUFFER_WIDTH, w);
+    pbAttribs.add(GLX_PBUFFER_HEIGHT, h);
+    pbAttribs.add(GLX_PRESERVED_CONTENTS, True);
+    pbAttribs.end();
+
+    GLXDrawable pbuffer = glXCreatePbuffer(dpy, fbconfigs[0], pbAttribs);
+    if (!pbuffer) {
+        std::cerr << "error: glXCreatePbuffer() failed\n";
+        exit(1);
+    }
+
+    return pbuffer;
+}
+
 
 
 } /* namespace glws */
