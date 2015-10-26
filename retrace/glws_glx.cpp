@@ -414,5 +414,133 @@ GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
 }
 
 
+// For GLX, we implement wglBindTexARB() as a copy operation.
+// We copy the pbuffer image to the currently bound texture.
+// If there's any rendering to the pbuffer before the wglReleaseTexImage()
+// call, the results are undefined (and permitted by the extension spec).
+//
+// The spec says that glTexImage and glCopyTexImage calls which effect
+// the pbuffer/texture should not be allowed, but we do not enforce that.
+//
+// The spec says that when a pbuffer is released from the texture that
+// the contents do not have to be preserved.  But that's what will happen
+// since we're copying here.
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    GLint readBufSave;
+    GLint width, height;
+
+    assert(pBuffer->pbuffer);
+
+    // Save the current drawing surface and bind the pbuffer surface
+    Drawable *drawableSave = Drawable::GetCurrent();
+    makeCurrentInternal(pBuffer, Context::GetCurrent());
+
+    glGetIntegerv(GL_READ_BUFFER, &readBufSave);
+
+    assert(iBuffer == GL_FRONT_LEFT ||
+           iBuffer == GL_BACK_LEFT ||
+           iBuffer == GL_FRONT_RIGHT ||
+           iBuffer == GL_BACK_RIGHT ||
+           iBuffer == GL_AUX0);
+
+    // set src buffer
+    glReadBuffer(iBuffer);
+
+    // Just copy image from pbuffer to texture
+    switch (pBuffer->pbInfo.texTarget) {
+    case GL_TEXTURE_1D:
+        glGetTexLevelParameteriv(GL_TEXTURE_1D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        if (width == pBuffer->width) {
+            // replace existing texture
+            glCopyTexSubImage1D(GL_TEXTURE_1D,
+                                pBuffer->mipmapLevel,
+                                0,    // xoffset
+                                0, 0, // x, y
+                                pBuffer->width);
+        } else {
+            // define initial texture
+            glCopyTexImage1D(GL_TEXTURE_1D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, 0);
+        }
+        break;
+    case GL_TEXTURE_2D:
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_HEIGHT, &height);
+        if (width == pBuffer->width && height == pBuffer->height) {
+            // replace existing texture
+            glCopyTexSubImage2D(GL_TEXTURE_2D,
+                                pBuffer->mipmapLevel,
+                                0, 0, // xoffset, yoffset
+                                0, 0, // x, y
+                                pBuffer->width, pBuffer->height);
+        } else {
+            // define initial texture
+            glCopyTexImage2D(GL_TEXTURE_2D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, pBuffer->height, 0);
+        }
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        {
+            const GLenum target =
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + pBuffer->cubeFace;
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_WIDTH, &width);
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_HEIGHT, &height);
+            if (width == pBuffer->width && height == pBuffer->height) {
+                // replace existing texture
+                glCopyTexSubImage2D(target,
+                                    pBuffer->mipmapLevel,
+                                    0, 0, // xoffset, yoffset
+                                    0, 0, // x, y
+                                    pBuffer->width, pBuffer->height);
+            } else {
+                // define new texture
+                glCopyTexImage2D(target,
+                                 pBuffer->mipmapLevel,
+                                 pBuffer->pbInfo.texFormat,
+                                 0, 0, // x, y
+                                 pBuffer->width, pBuffer->height, 0);
+            }
+        }
+        break;
+    default:
+        ; // no op
+    }
+
+    // restore
+    glReadBuffer(readBufSave);
+
+    // rebind previous drawing surface
+    makeCurrentInternal(drawableSave, Context::GetCurrent());
+
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    assert(pBuffer->pbuffer);
+    // nothing to do here.
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    assert(pBuffer->pbuffer);
+    // Nothing to do here.  retrace_wglSetPbufferAttribARB() will have parsed
+    // and saved the mipmap/cubeface info in the Drawable.
+    std::cout << "Calling GLX setPbufferAttrib\n";
+    return true;
+}
 
 } /* namespace glws */
