@@ -198,9 +198,17 @@ class GlRetracer(Retracer):
             print '    glretrace::updateDrawable(std::max(dstX0, dstX1), std::max(dstY0, dstY1));'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
+            # The Windows OpenGL runtime will skip calls when there's no
+            # context bound to the current context, but this might cause
+            # crashes on other systems, particularly with NVIDIA Linux drivers.
             print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
-            print r'    if (retrace::debug && !currentContext) {'
-            print r'       retrace::warning(call) << "no current context\n";'
+            print r'    if (!currentContext) {'
+            print r'        if (retrace::debug) {'
+            print r'            retrace::warning(call) << "no current context\n";'
+            print r'        }'
+            print r'#ifndef _WIN32'
+            print r'        return;'
+            print r'#endif'
             print r'    }'
 
         if function.name == "glEnd":
