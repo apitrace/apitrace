@@ -99,7 +99,7 @@ glws::Drawable *
 createDrawable(void);
 
 glws::Drawable *
-createPbuffer(int width, int height);
+createPbuffer(int width, int height, const glws::pbuffer_info *info);
 
 Context *
 createContext(Context *shareContext, glprofile::Profile profile);

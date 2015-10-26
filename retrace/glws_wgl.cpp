@@ -96,11 +96,13 @@ public:
     HPBUFFERARB hPBuffer;
     HDC hDC;
 
-    WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
-        Drawable(vis, width, height, pbuffer)
+    WglDrawable(const Visual *vis, int width, int height,
+                const glws::pbuffer_info *pbInfo) :
+        Drawable(vis, width, height, pbInfo ? true : false)
     {
-        if (pbuffer) {
-            createPbuffer(vis, width, height);
+
+        if (pbInfo) {
+            createPbuffer(vis, pbInfo, width, height);
             hWnd = 0;
         }
         else {
@@ -196,7 +198,8 @@ public:
     }
 
 private:
-    bool createPbuffer(const Visual *vis, int width, int height);
+    bool createPbuffer(const Visual *vis,
+                       const glws::pbuffer_info *pbInfo, int width, int height);
 };
 
 
@@ -415,9 +418,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
 Drawable *
 createDrawable(const Visual *visual, int width, int height,
-               const glws::pbuffer_info *info)
+               const glws::pbuffer_info *pbInfo)
 {
-    return new WglDrawable(visual, width, height, info);
+    return new WglDrawable(visual, width, height, pbInfo);
 }
 
 Context *
@@ -449,7 +452,9 @@ processEvents(void)
 
 
 bool
-glws::WglDrawable::createPbuffer(const Visual *vis, int width, int height)
+glws::WglDrawable::createPbuffer(const Visual *vis,
+                                 const glws::pbuffer_info *pbInfo,
+                                 int width, int height)
 {
     if (!is_wgl_ext_supported("WGL_ARB_pbuffer")) {
         exit(1);

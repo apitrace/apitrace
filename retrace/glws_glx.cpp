@@ -263,9 +263,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo)
 {
-    return new GlxDrawable(visual, width, height, pbuffer);
+    return new GlxDrawable(visual, width, height, pbInfo);
 }
 
 Context *
