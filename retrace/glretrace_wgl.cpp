@@ -280,8 +280,92 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     context_map[orig_context] = context;
 }
 
+
+static GLenum
+wgl_buffer_to_enum(int iBuffer)
+{
+    switch (iBuffer) {
+    case WGL_FRONT_LEFT_ARB:
+        return GL_FRONT_LEFT;
+    case WGL_BACK_LEFT_ARB:
+        return GL_BACK_LEFT;
+    case WGL_FRONT_RIGHT_ARB:
+        return GL_FRONT_RIGHT;
+    case WGL_BACK_RIGHT_ARB:
+        return GL_BACK_RIGHT;
+    case WGL_AUX0_ARB:
+        return GL_AUX0;
+    default:
+        std::cerr << "error: invalid iBuffer in wgl_buffer_to_enum()\n";
+        return GL_FRONT_LEFT;
+    }
+}
+
+static void retrace_wglBindTexImageARB(trace::Call &call) {
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
+    signed long long iBuffer = call.arg(1).toSInt();
+
+    glretrace::bindTexImage(pbuffer, wgl_buffer_to_enum(iBuffer));
+}
+
+static void retrace_wglReleaseTexImageARB(trace::Call &call) {
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
+    signed long long iBuffer = call.arg(1).toSInt();
+
+    glretrace::releaseTexImage(pbuffer, wgl_buffer_to_enum(iBuffer));
+}
+
+static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
+    const trace::Value * attribList = &call.arg(1);
+
+    // call the window system's setPbufferAttrib function.
+    {
+        int attribs[100], j = 0;
+        const trace::Array *attribs_ = attribList ? attribList->toArray() : NULL;
+
+        for (size_t i = 0; i + 1 < attribs_->values.size(); i += 2) {
+            int param_i = attribs_->values[i]->toSInt();
+            if (param_i == 0) {
+                attribs[j] = 0;
+            }
+
+            attribs[j] = param_i;
+            attribs[j+1] = attribs_->values[i+1]->toSInt();
+        }
+
+        glretrace::setPbufferAttrib(pbuffer, attribs);
+    }
+
+    if (!pbuffer || !attribList)
+        return;
+
+    // Update the glws::Drawable's fields
+    const int undefined = -99999;
+    int val;
+
+    val = parseAttrib(attribList, WGL_MIPMAP_LEVEL_ARB, undefined);
+    if (val != undefined) {
+        pbuffer->mipmapLevel = val;
+    }
+
+    val = parseAttrib(attribList, WGL_CUBE_MAP_FACE_ARB, undefined);
+    if (val != undefined) {
+        // Drawable::cubeFace is integer in [0..5]
+        val -= WGL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
+        if (val < 0 || val > 5) {
+            fprintf(stderr, "Invalid WGL_CUBE_MAP_FACE_ARB value!\n");
+        }
+        else {
+            pbuffer->cubeFace = val;
+        }
+    }
+}
+
+
 const retrace::Entry glretrace::wgl_callbacks[] = {
     {"glAddSwapHintRectWIN", &retrace::ignore},
+    {"wglBindTexImageARB", &retrace_wglBindTexImageARB},
     {"wglChoosePixelFormat", &retrace::ignore},
     {"wglChoosePixelFormatARB", &retrace::ignore},
     {"wglChoosePixelFormatEXT", &retrace::ignore},
@@ -312,8 +396,8 @@ const retrace::Entry glretrace::wgl_callbacks[] = {
     {"wglMakeCurrent", &retrace_wglMakeCurrent},
     {"wglQueryPbufferARB", &retrace::ignore},
     {"wglReleasePbufferDCARB", &retrace::ignore},
-    {"wglReleaseTexImageARB", &retrace::ignore},
-    {"wglSetPbufferAttribARB", &retrace::ignore},
+    {"wglReleaseTexImageARB", &retrace_wglReleaseTexImageARB},
+    {"wglSetPbufferAttribARB", &retrace_wglSetPbufferAttribARB},
     {"wglSetPixelFormat", &retrace::ignore},
     {"wglShareLists", &retrace_wglShareLists},
     {"wglSwapBuffers", &retrace_wglSwapBuffers},

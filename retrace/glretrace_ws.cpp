@@ -85,6 +85,9 @@ createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32
         exit(1);
     }
 
+    if (pbInfo)
+        draw->pbInfo = *pbInfo;
+
     return draw;
 }
 
@@ -314,5 +317,23 @@ parseContextAttribList(const trace::Value *attribs)
     return profile;
 }
 
+
+// WGL_ARB_render_texture / wglBindTexImageARB()
+bool
+bindTexImage(glws::Drawable *pBuffer, int iBuffer) {
+    return glws::bindTexImage(pBuffer, iBuffer);
+}
+
+// WGL_ARB_render_texture / wglReleaseTexImageARB()
+bool
+releaseTexImage(glws::Drawable *pBuffer, int iBuffer) {
+    return glws::releaseTexImage(pBuffer, iBuffer);
+}
+
+// WGL_ARB_render_texture / wglSetPbufferAttribARB()
+bool
+setPbufferAttrib(glws::Drawable *pBuffer, const int *attribs) {
+    return glws::setPbufferAttrib(pBuffer, attribs);
+}
 
 } /* namespace glretrace */
