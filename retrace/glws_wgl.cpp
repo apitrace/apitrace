@@ -478,6 +478,16 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
     attribs.add(WGL_BLUE_BITS_ARB, 8);
     attribs.add(WGL_ALPHA_BITS_ARB, 8);
     attribs.add(WGL_COLOR_BITS_ARB, 32);
+    if (pbInfo->texFormat) {
+        if (pbInfo->texFormat == GL_RGBA)
+            attribs.add(WGL_BIND_TO_TEXTURE_RGBA_ARB, true);
+        else if (pbInfo->texFormat == GL_RGB)
+            attribs.add(WGL_BIND_TO_TEXTURE_RGB_ARB, true);
+        else {
+            std::cerr << "error: unexpected texture format.\n";
+            exit(1);
+        }
+    }
     attribs.end();
 
     int pixelFormats[20];
@@ -492,7 +502,31 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
 
     // create pbuffer
     Attributes<int> pbAttribs;
-    // No attribs yet
+    if (pbInfo->texFormat) {
+        if (pbInfo->texFormat == GL_RGBA) {
+            pbAttribs.add(WGL_TEXTURE_FORMAT_ARB, WGL_TEXTURE_RGBA_ARB);
+        } else if (pbInfo->texFormat == GL_RGB) {
+            pbAttribs.add(WGL_TEXTURE_FORMAT_ARB, WGL_TEXTURE_RGB_ARB);
+        } else {
+            std::cerr << "error: unexpected texture format.\n";
+            exit(1);
+        }
+    }
+    if (pbInfo->texTarget) {
+        if (pbInfo->texTarget == GL_TEXTURE_1D) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_1D_ARB);
+        } else if (pbInfo->texTarget == GL_TEXTURE_2D) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_2D_ARB);
+        } else if (pbInfo->texTarget == GL_TEXTURE_CUBE_MAP) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_CUBE_MAP_ARB);
+        } else {
+            std::cerr << "error: unexpected texture targett.\n";
+            exit(1);
+        }
+    }
+    if (pbInfo->texMipmap) {
+        pbAttribs.add(WGL_MIPMAP_TEXTURE_ARB, pbInfo->texMipmap);
+    }
     pbAttribs.end();
 
     hPBuffer = pfnwglCreatePbufferARB(hdc, pixelFormats[0],
