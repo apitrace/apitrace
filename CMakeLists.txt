@@ -289,7 +289,7 @@ else ()
     endif ()
 
     # Enable SSE2 intrinsics on x86
-    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4 AND WIN32)
         check_cxx_compiler_flag ("-msse2" CXX_COMPILER_FLAG_MSSE2)
         if (CXX_COMPILER_FLAG_MSSE2)
             add_compiler_flags (-msse2 -mfpmath=sse)
