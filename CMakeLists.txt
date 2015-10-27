@@ -289,23 +289,15 @@ else ()
     endif ()
 
     # Enable SSE2 intrinsics on x86
-    if (CMAKE_SIZEOF_VOID_P EQUAL 4 AND WIN32)
-        check_cxx_compiler_flag ("-msse2" CXX_COMPILER_FLAG_MSSE2)
-        if (CXX_COMPILER_FLAG_MSSE2)
-            add_compiler_flags (-msse2 -mfpmath=sse)
+    if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+       add_compiler_flags (-msse2 -mfpmath=sse)
 
-            # And tell GCC to assume 4 bytes alignment, many Linux/Windows
-            # applications only guarantee that, but not on systems where ABI
-            # clearly states otherwise.
-            #
-            # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
-            if (NOT ANDROID)
-                check_cxx_compiler_flag (-mincoming-stack-boundary=2 CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
-                if (CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
-                    add_compiler_flags (-mincoming-stack-boundary=2)
-                endif ()
-            endif ()
-        endif ()
+       # And tell GCC to assume 4 bytes alignment, many Linux/Windows
+       # applications only guarantee that, but not on systems where ABI
+       # clearly states otherwise.
+       #
+       # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
+       add_compiler_flags (-mincoming-stack-boundary=2)
     endif ()
 
     # Be nice to Eclipse
