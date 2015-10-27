@@ -62,9 +62,10 @@ class WaffleDrawable : public Drawable
 public:
     struct waffle_window *window;
 
-    WaffleDrawable(const Visual *vis, int w, int h, bool pbuffer,
+    WaffleDrawable(const Visual *vis, int w, int h,
+        const pbuffer_info *info,
         struct waffle_window *win) :
-        Drawable (vis, w, h, pbuffer),
+        Drawable (vis, w, h, info),
         window (win)
     {}
 
@@ -236,14 +237,15 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const pbuffer_info *info)
 {
     struct waffle_window *window;
     const WaffleVisual *waffleVisual =
         static_cast<const WaffleVisual *>(visual);
 
     window = waffle_window_create(waffleVisual->config, width, height);
-    return new WaffleDrawable(visual, width, height, pbuffer, window);
+    return new WaffleDrawable(visual, width, height, info, window);
 }
 
 Context *
@@ -283,6 +285,27 @@ makeCurrentInternal(Drawable *drawable, Context *context)
         return waffle_make_current(dpy, waffleDrawable->window,
                                    waffleContext->context);
     }
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Waffle::wglBindTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Waffle::wglReleaseTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    // nothing to do here.
+    assert(pBuffer->pbuffer);
+    return true;
 }
 
 } /* namespace glws */
