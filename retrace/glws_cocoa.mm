@@ -102,8 +102,8 @@ public:
     NSOpenGLView *view;
     NSOpenGLContext *currentContext;
 
-    CocoaDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
+    CocoaDrawable(const Visual *vis, int w, int h, const pbuffer_info *info) :
+        Drawable(vis, w, h, info),
         currentContext(nil)
     {
         NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
@@ -278,11 +278,12 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const pbuffer_info *info)
 {
     initThread();
 
-    return new CocoaDrawable(visual, width, height, pbuffer);
+    return new CocoaDrawable(visual, width, height, info);
 }
 
 Context *
@@ -341,6 +342,27 @@ processEvents(void) {
             [NSApp sendEvent:event];
     } while (event);
 
+    return true;
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Cocoa::wglBindTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Cocoa::wglReleaseTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    // nothing to do here.
+    assert(pBuffer->pbuffer);
     return true;
 }
 
