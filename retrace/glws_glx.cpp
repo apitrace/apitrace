@@ -433,8 +433,10 @@ bindTexImage(Drawable *pBuffer, int iBuffer) {
     assert(pBuffer->pbuffer);
 
     // Save the current drawing surface and bind the pbuffer surface
-    Drawable *drawableSave = Drawable::GetCurrent();
-    makeCurrentInternal(pBuffer, Context::GetCurrent());
+    GLXDrawable prevDrawable = glXGetCurrentDrawable();
+    GLXContext prevContext = glXGetCurrentContext();
+    GlxDrawable *glxPBuffer = static_cast<GlxDrawable *>(pBuffer);
+    glXMakeCurrent(display, glxPBuffer->window, prevContext);
 
     glGetIntegerv(GL_READ_BUFFER, &readBufSave);
 
@@ -522,7 +524,7 @@ bindTexImage(Drawable *pBuffer, int iBuffer) {
     glReadBuffer(readBufSave);
 
     // rebind previous drawing surface
-    makeCurrentInternal(drawableSave, Context::GetCurrent());
+    glXMakeCurrent(display, prevDrawable, prevContext);
 
     return true;
 }

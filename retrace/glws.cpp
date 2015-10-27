@@ -36,10 +36,6 @@
 namespace glws {
 
 
-OS_THREAD_SPECIFIC(Context *) Context::currentContext;
-OS_THREAD_SPECIFIC(Drawable *) Drawable::currentDrawable;
-
-
 bool
 checkExtension(const char *extName, const char *extString)
 {

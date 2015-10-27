@@ -35,7 +35,6 @@
 #include <vector>
 #include <string>
 
-#include "os_thread.hpp"
 #include "glprofile.hpp"
 
 
@@ -107,8 +106,6 @@ public:
     virtual ~Visual() {}
 };
 
-class Context;
-
 
 class Drawable
 {
@@ -148,15 +145,6 @@ public:
     virtual void copySubBuffer(int x, int y, int width, int height);
 
     virtual void swapBuffers(void) = 0;
-
-    static Drawable *GetCurrent(void) {
-        return currentDrawable;
-    }
-
-private:
-    static OS_THREAD_SPECIFIC(Drawable *) currentDrawable;
-
-    friend bool makeCurrent(Drawable *, Context *);
 };
 
 
@@ -188,18 +176,11 @@ public:
         return actualExtensions.has(extension);
     }
 
-    static Context *GetCurrent(void) {
-        return currentContext;
-    }
-
 private:
     bool initialized;
     void initialize(void);
 
     friend bool makeCurrent(Drawable *, Context *);
-
-public:
-    static OS_THREAD_SPECIFIC(Context *) currentContext;
 };
 
 
@@ -225,8 +206,6 @@ makeCurrentInternal(Drawable *drawable, Context *context);
 inline bool
 makeCurrent(Drawable *drawable, Context *context)
 {
-    Drawable::currentDrawable = drawable;
-    Context::currentContext = context;
     bool success = makeCurrentInternal(drawable, context);
     if (success && context && !context->initialized) {
         context->initialize();
