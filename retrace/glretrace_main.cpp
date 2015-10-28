@@ -82,47 +82,63 @@ static std::list<CallQuery> callQueries;
 static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
+// Limit certain warnings
+// TODO: expose this via a command line option.
+static const unsigned
+maxWarningCount = 100;
+
+static std::map< uint64_t, unsigned > errorCounts;
+
 void
 checkGlError(trace::Call &call) {
     GLenum error = glGetError();
     while (error != GL_NO_ERROR) {
-        std::ostream & os = retrace::warning(call);
+        uint64_t errorHash = call.sig->id ^ uint64_t(error) << 32;
+        size_t errorCount = errorCounts[errorHash]++;
+        if (errorCount <= maxWarningCount) {
+            std::ostream & os = retrace::warning(call);
 
-        os << "glGetError(";
-        os << call.name();
-        os << ") = ";
+            os << "glGetError(";
+            os << call.name();
+            os << ") = ";
 
-        switch (error) {
-        case GL_INVALID_ENUM:
-            os << "GL_INVALID_ENUM";
-            break;
-        case GL_INVALID_VALUE:
-            os << "GL_INVALID_VALUE";
-            break;
-        case GL_INVALID_OPERATION:
-            os << "GL_INVALID_OPERATION";
-            break;
-        case GL_STACK_OVERFLOW:
-            os << "GL_STACK_OVERFLOW";
-            break;
-        case GL_STACK_UNDERFLOW:
-            os << "GL_STACK_UNDERFLOW";
-            break;
-        case GL_OUT_OF_MEMORY:
-            os << "GL_OUT_OF_MEMORY";
-            break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            os << "GL_INVALID_FRAMEBUFFER_OPERATION";
-            break;
-        case GL_TABLE_TOO_LARGE:
-            os << "GL_TABLE_TOO_LARGE";
-            break;
-        default:
-            os << error;
-            break;
+            switch (error) {
+            case GL_INVALID_ENUM:
+                os << "GL_INVALID_ENUM";
+                break;
+            case GL_INVALID_VALUE:
+                os << "GL_INVALID_VALUE";
+                break;
+            case GL_INVALID_OPERATION:
+                os << "GL_INVALID_OPERATION";
+                break;
+            case GL_STACK_OVERFLOW:
+                os << "GL_STACK_OVERFLOW";
+                break;
+            case GL_STACK_UNDERFLOW:
+                os << "GL_STACK_UNDERFLOW";
+                break;
+            case GL_OUT_OF_MEMORY:
+                os << "GL_OUT_OF_MEMORY";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                os << "GL_INVALID_FRAMEBUFFER_OPERATION";
+                break;
+            case GL_TABLE_TOO_LARGE:
+                os << "GL_TABLE_TOO_LARGE";
+                break;
+            default:
+                os << error;
+                break;
+            }
+
+            if (errorCount == maxWarningCount) {
+                os << ": too many identical messages; ignoring";
+            }
+
+            os << std::endl;
         }
-        os << "\n";
-    
+
         error = glGetError();
     }
 }
@@ -447,11 +463,6 @@ frame_complete(trace::Call &call) {
 }
 
 
-// Limit messages
-// TODO: expose this via a command line option.
-static const unsigned
-maxMessageCount = 100;
-
 static std::map< uint64_t, unsigned > messageCounts;
 
 
@@ -480,7 +491,7 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
                          + ((uint64_t)type     << 32)
                          + ((uint64_t)source   << 48);
     size_t messageCount = messageCounts[messageHash]++;
-    if (messageCount > maxMessageCount) {
+    if (messageCount > maxWarningCount) {
         return;
     }
 
@@ -572,7 +583,7 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 
     std::cerr << ": ";
 
-    if (messageCount == maxMessageCount) {
+    if (messageCount == maxWarningCount) {
         std::cerr << "too many identical messages; ignoring"
                   << highlighter.normal()
                   << std::endl;
