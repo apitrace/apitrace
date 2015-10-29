@@ -63,29 +63,25 @@ static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
 #define WGL_PROC(type, func, name) \
-    type func = (type) wglGetProcAddress(name); \
+    func = (type) wglGetProcAddress(name); \
     if (!func) { \
-        std::cerr << "error: unable to get " << name << " function.\n"; \
+        std::cerr << "error: failed to get pointer to " << name << "\n"; \
         exit(1); \
     }
 
-static bool
-is_wgl_ext_supported(const char *ext)
-{
-    PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
-        (PFNWGLGETEXTENSIONSSTRINGARBPROC)
-        wglGetProcAddress("wglGetExtensionsStringARB");
-    if (!pfnWglGetExtensionsStringARB) {
-        return false;
-    }
-    HDC hdc = wglGetCurrentDC();
-    const char * extensionsString = pfnWglGetExtensionsStringARB(hdc);
-    if (!checkExtension(ext, extensionsString)) {
-        std::cerr << "error: " << ext << "extension is not supported.\n";
-        return false;
-    }
-    return true;
-}
+
+static bool has_WGL_ARB_pbuffer = false;
+static PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB;
+static PFNWGLCREATEPBUFFERARBPROC pfnWglCreatePbufferARB;
+static PFNWGLGETPBUFFERDCARBPROC pfnWglGetPbufferDCARB;
+static PFNWGLCHOOSEPIXELFORMATARBPROC pfnWglChoosePixelFormatARB;
+static PFNWGLDESTROYPBUFFERARBPROC pfnWglDestroyPbufferARB;
+static PFNWGLRELEASEPBUFFERDCARBPROC pfnWglReleasePbufferDCARB;
+
+static bool has_WGL_ARB_render_texture = false;
+static PFNWGLBINDTEXIMAGEARBPROC pfnWglBindTexImageARB;
+static PFNWGLRELEASETEXIMAGEARBPROC pfnWglReleaseTexImageARB;
+static PFNWGLSETPBUFFERATTRIBARBPROC pfnWglSetPbufferAttribARB;
 
 
 class WglDrawable : public Drawable
@@ -154,12 +150,8 @@ public:
 
     ~WglDrawable() {
         if (hPBuffer) {
-            WGL_PROC(PFNWGLDESTROYPBUFFERARBPROC,
-                     pfnwglDestroyPbufferARB, "wglDestroyPbufferARB");
-            WGL_PROC(PFNWGLRELEASEPBUFFERDCARBPROC,
-                     pfnwglReleasePbufferDCARB, "wglReleasePbufferDCARB");
-            pfnwglReleasePbufferDCARB(hPBuffer, hDC);
-            pfnwglDestroyPbufferARB(hPBuffer);
+            pfnWglReleasePbufferDCARB(hPBuffer, hDC);
+            pfnWglDestroyPbufferARB(hPBuffer);
         }
         else {
             ReleaseDC(hWnd, hDC);
@@ -240,7 +232,7 @@ public:
             exit(1);
         }
 
-        PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
+        pfnWglGetExtensionsStringARB =
             (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
         if (!pfnWglGetExtensionsStringARB) {
             if (required) {
@@ -251,6 +243,32 @@ public:
             }
         }
         const char * extensionsString = pfnWglGetExtensionsStringARB(hDC);
+        assert(extensionsString);
+
+        if (checkExtension("WGL_ARB_pbuffer", extensionsString)) {
+            has_WGL_ARB_pbuffer = true;
+            WGL_PROC(PFNWGLCREATEPBUFFERARBPROC,
+                     pfnWglCreatePbufferARB, "wglCreatePbufferARB");
+            WGL_PROC(PFNWGLGETPBUFFERDCARBPROC,
+                     pfnWglGetPbufferDCARB, "wglGetPbufferDCARB");
+            WGL_PROC(PFNWGLCHOOSEPIXELFORMATARBPROC,
+                     pfnWglChoosePixelFormatARB, "wglChoosePixelFormatARB");
+            WGL_PROC(PFNWGLDESTROYPBUFFERARBPROC,
+                     pfnWglDestroyPbufferARB, "wglDestroyPbufferARB");
+            WGL_PROC(PFNWGLRELEASEPBUFFERDCARBPROC,
+                     pfnWglReleasePbufferDCARB, "wglReleasePbufferDCARB");
+        }
+        if (checkExtension("WGL_ARB_render_texture", extensionsString)) {
+            assert(has_WGL_ARB_pbuffer);
+            has_WGL_ARB_render_texture = true;
+            WGL_PROC(PFNWGLBINDTEXIMAGEARBPROC,
+                     pfnWglBindTexImageARB, "wglBindTexImageARB");
+            WGL_PROC(PFNWGLRELEASETEXIMAGEARBPROC,
+                     pfnWglReleaseTexImageARB, "wglReleaseTexImageARB");
+            WGL_PROC(PFNWGLSETPBUFFERATTRIBARBPROC,
+                     pfnWglSetPbufferAttribARB, "wglSetPbufferAttribARB");
+        }
+
         if (!checkExtension("WGL_ARB_create_context", extensionsString)) {
             if (required) {
                 std::cerr << "error: WGL_ARB_create_context not supported\n";
@@ -456,17 +474,11 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
                                  const glws::pbuffer_info *pbInfo,
                                  int width, int height)
 {
-    if (!is_wgl_ext_supported("WGL_ARB_pbuffer")) {
+    if (!has_WGL_ARB_pbuffer) {
+        std::cerr << "error: WGL_ARB_pbuffer extension is unsupported\n";
         exit(1);
         return false;
     }
-
-    WGL_PROC(PFNWGLCREATEPBUFFERARBPROC,
-             pfnwglCreatePbufferARB, "wglCreatePbufferARB");
-    WGL_PROC(PFNWGLGETPBUFFERDCARBPROC,
-             pfnwglGetPbufferDCARB, "wglGetPbufferDCARB");
-    WGL_PROC(PFNWGLCHOOSEPIXELFORMATARBPROC,
-             pfnwglChoosePixelFormatARB, "wglChoosePixelFormatARB");
 
     // choose pixel format
     Attributes<int> attribs;
@@ -493,7 +505,7 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
     int pixelFormats[20];
     UINT numPixelFormats;
     HDC hdc = wglGetCurrentDC();
-    if (!pfnwglChoosePixelFormatARB(hdc, attribs, NULL,
+    if (!pfnWglChoosePixelFormatARB(hdc, attribs, NULL,
                                     20, pixelFormats,
                                     &numPixelFormats)) {
         std::cerr << "error: wglChoosePixelFormatARB failed.\n";
@@ -529,7 +541,7 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
     }
     pbAttribs.end();
 
-    hPBuffer = pfnwglCreatePbufferARB(hdc, pixelFormats[0],
+    hPBuffer = pfnWglCreatePbufferARB(hdc, pixelFormats[0],
                                       width, height, pbAttribs);
     if (!hPBuffer) {
         std::cerr << "error: wglCreatePbufferARB failed (format "
@@ -538,7 +550,7 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
         std::cerr << "error code " << er << "\n";
         exit(1);
     }
-    hDC = pfnwglGetPbufferDCARB(hPBuffer);
+    hDC = pfnWglGetPbufferDCARB(hPBuffer);
     if (!hDC) {
         std::cerr << "error: wglGetPbufferDCARB failed\n";
         exit(1);
@@ -570,37 +582,31 @@ enum_buffer_to_wgl_buffer(GLenum buffer)
 
 bool
 bindTexImage(Drawable *pBuffer, int buf) {
-    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+    if (!has_WGL_ARB_render_texture) {
         return false;
     }
-    WGL_PROC(PFNWGLBINDTEXIMAGEARBPROC,
-             pfnwglBindTexImageARB, "wglBindTexImageARB");
     WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
-    return pfnwglBindTexImageARB(wglDrawable->hPBuffer,
+    return pfnWglBindTexImageARB(wglDrawable->hPBuffer,
                                  enum_buffer_to_wgl_buffer(buf));
 }
 
 bool
 releaseTexImage(Drawable *pBuffer, int buf) {
-    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+    if (!has_WGL_ARB_render_texture) {
         return false;
     }
-    WGL_PROC(PFNWGLRELEASETEXIMAGEARBPROC,
-             pfnwglReleaseTexImageARB, "wglReleaseTexImageARB");
     WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
-    return pfnwglReleaseTexImageARB(wglDrawable->hPBuffer,
+    return pfnWglReleaseTexImageARB(wglDrawable->hPBuffer,
                                     enum_buffer_to_wgl_buffer(buf));
 }
 
 bool
 setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
-    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+    if (!has_WGL_ARB_render_texture) {
         return false;
     }
-    WGL_PROC(PFNWGLSETPBUFFERATTRIBARBPROC,
-             pfnwglSetPbufferAttribARB, "wglSetPbufferAttribARB");
     WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
-    return pfnwglSetPbufferAttribARB(wglDrawable->hPBuffer, attribList);
+    return pfnWglSetPbufferAttribARB(wglDrawable->hPBuffer, attribList);
 }
 
 
