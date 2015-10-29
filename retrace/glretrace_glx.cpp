@@ -173,8 +173,9 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
     const trace::Value *attrib_list = &call.arg(2);
     int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
     int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
+    glws::pbuffer_info pbInfo = {0, 0, false};
 
-    glws::Drawable *drawable = glretrace::createPbuffer(width, height);
+    glws::Drawable *drawable = glretrace::createPbuffer(width, height, &pbInfo);
     
     drawable_map[orig_drawable] = drawable;
 }

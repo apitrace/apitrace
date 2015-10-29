@@ -35,6 +35,7 @@
 #include "glws.hpp"
 #include "ws_win32.hpp"
 
+#include <GL/wglext.h>
 
 namespace glws {
 
@@ -61,64 +62,109 @@ static PFN_WGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
 static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
+#define WGL_PROC(type, func, name) \
+    type func = (type) wglGetProcAddress(name); \
+    if (!func) { \
+        std::cerr << "error: unable to get " << name << " function.\n"; \
+        exit(1); \
+    }
+
+static bool
+is_wgl_ext_supported(const char *ext)
+{
+    PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
+        (PFNWGLGETEXTENSIONSSTRINGARBPROC)
+        wglGetProcAddress("wglGetExtensionsStringARB");
+    if (!pfnWglGetExtensionsStringARB) {
+        return false;
+    }
+    HDC hdc = wglGetCurrentDC();
+    const char * extensionsString = pfnWglGetExtensionsStringARB(hdc);
+    if (!checkExtension(ext, extensionsString)) {
+        std::cerr << "error: " << ext << "extension is not supported.\n";
+        return false;
+    }
+    return true;
+}
+
+
 class WglDrawable : public Drawable
 {
 public:
+    // Only one of hWnd and pbBuffer will be non-zero
     HWND hWnd;
+    HPBUFFERARB hPBuffer;
     HDC hDC;
-    PIXELFORMATDESCRIPTOR pfd;
-    int iPixelFormat;
 
-    WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
-        Drawable(vis, width, height, pbuffer)
+    WglDrawable(const Visual *vis, int width, int height,
+                const glws::pbuffer_info *pbInfo) :
+        Drawable(vis, width, height, pbInfo ? true : false)
     {
-        BOOL bRet;
 
-        hWnd = ws::createWindow("glretrace", width, height);
-
-        hDC = GetDC(hWnd);
-   
-        ZeroMemory(&pfd, sizeof pfd);
-        pfd.nSize = sizeof pfd;
-        pfd.nVersion = 1;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-        pfd.cColorBits = 3;
-        // XXX: ChoosePixelFormat will return a software pixelformat if we
-        // request alpha bits and the hardware driver doesn't advertise any
-        // pixel format with alpha bits (e.g. NVIDIA OpenGL driver on 16bpp
-        // screens.)
-        pfd.cAlphaBits = 1;
-        pfd.cDepthBits = 1;
-        pfd.cStencilBits = 1;
-        pfd.iLayerType = PFD_MAIN_PLANE;
-
-        if (visual->doubleBuffer) {
-           pfd.dwFlags |= PFD_DOUBLEBUFFER;
+        if (pbInfo) {
+            createPbuffer(vis, pbInfo, width, height);
+            hWnd = 0;
         }
+        else {
+            hWnd = ws::createWindow("glretrace", width, height);
 
-        iPixelFormat = pfnChoosePixelFormat(hDC, &pfd);
-        if (iPixelFormat <= 0) {
-            std::cerr << "error: ChoosePixelFormat failed\n";
-            exit(1);
-        }
+            hDC = GetDC(hWnd);
 
-        pfnDescribePixelFormat(hDC, iPixelFormat, sizeof pfd, &pfd);
-        assert(pfd.dwFlags & PFD_SUPPORT_OPENGL);
-        if (pfd.dwFlags & PFD_GENERIC_FORMAT) {
-            std::cerr << "warning: ChoosePixelFormat returned a pixel format supported by the GDI software implementation\n";
-        }
+            PIXELFORMATDESCRIPTOR pfd;
+            ZeroMemory(&pfd, sizeof pfd);
+            pfd.nSize = sizeof pfd;
+            pfd.nVersion = 1;
+            pfd.iPixelType = PFD_TYPE_RGBA;
+            pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+            pfd.cColorBits = 3;
+            // XXX: ChoosePixelFormat will return a software pixelformat if we
+            // request alpha bits and the hardware driver doesn't advertise any
+            // pixel format with alpha bits (e.g. NVIDIA OpenGL driver on 16bpp
+            // screens.)
+            pfd.cAlphaBits = 1;
+            pfd.cDepthBits = 1;
+            pfd.cStencilBits = 1;
+            pfd.iLayerType = PFD_MAIN_PLANE;
 
-        bRet = pfnSetPixelFormat(hDC, iPixelFormat, &pfd);
-        if (!bRet) {
-            std::cerr << "error: SetPixelFormat failed\n";
-            exit(1);
+            if (visual->doubleBuffer) {
+               pfd.dwFlags |= PFD_DOUBLEBUFFER;
+            }
+
+            int iPixelFormat = pfnChoosePixelFormat(hDC, &pfd);
+            if (iPixelFormat <= 0) {
+                std::cerr << "error: ChoosePixelFormat failed\n";
+                exit(1);
+            }
+
+            pfnDescribePixelFormat(hDC, iPixelFormat, sizeof pfd, &pfd);
+            assert(pfd.dwFlags & PFD_SUPPORT_OPENGL);
+            if (pfd.dwFlags & PFD_GENERIC_FORMAT) {
+                std::cerr << "warning: ChoosePixelFormat returned a pixel format supported by the GDI software implementation\n";
+            }
+
+            BOOL bRet = pfnSetPixelFormat(hDC, iPixelFormat, &pfd);
+            if (!bRet) {
+                std::cerr << "error: SetPixelFormat failed\n";
+                exit(1);
+            }
+
+            hPBuffer = 0;
         }
     }
 
     ~WglDrawable() {
-        ReleaseDC(hWnd, hDC);
-        DestroyWindow(hWnd);
+        if (hPBuffer) {
+            WGL_PROC(PFNWGLDESTROYPBUFFERARBPROC,
+                     pfnwglDestroyPbufferARB, "wglDestroyPbufferARB");
+            WGL_PROC(PFNWGLRELEASEPBUFFERDCARBPROC,
+                     pfnwglReleasePbufferDCARB, "wglReleasePbufferDCARB");
+            pfnwglReleasePbufferDCARB(hPBuffer, hDC);
+            pfnwglDestroyPbufferARB(hPBuffer);
+        }
+        else {
+            ReleaseDC(hWnd, hDC);
+            DestroyWindow(hWnd);
+        }
     }
     
     void
@@ -143,12 +189,17 @@ public:
     }
 
     void swapBuffers(void) {
+        assert(!pbuffer);
         BOOL bRet;
         bRet = pfnSwapBuffers(hDC);
         if (!bRet) {
             std::cerr << "warning: SwapBuffers failed\n";
         }
     }
+
+private:
+    bool createPbuffer(const Visual *vis,
+                       const glws::pbuffer_info *pbInfo, int width, int height);
 };
 
 
@@ -366,9 +417,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo)
 {
-    return new WglDrawable(visual, width, height, pbuffer);
+    return new WglDrawable(visual, width, height, pbInfo);
 }
 
 Context *
@@ -396,6 +448,159 @@ bool
 processEvents(void)
 {
     return ws::processEvents();
+}
+
+
+bool
+glws::WglDrawable::createPbuffer(const Visual *vis,
+                                 const glws::pbuffer_info *pbInfo,
+                                 int width, int height)
+{
+    if (!is_wgl_ext_supported("WGL_ARB_pbuffer")) {
+        exit(1);
+        return false;
+    }
+
+    WGL_PROC(PFNWGLCREATEPBUFFERARBPROC,
+             pfnwglCreatePbufferARB, "wglCreatePbufferARB");
+    WGL_PROC(PFNWGLGETPBUFFERDCARBPROC,
+             pfnwglGetPbufferDCARB, "wglGetPbufferDCARB");
+    WGL_PROC(PFNWGLCHOOSEPIXELFORMATARBPROC,
+             pfnwglChoosePixelFormatARB, "wglChoosePixelFormatARB");
+
+    // choose pixel format
+    Attributes<int> attribs;
+    attribs.add(WGL_DRAW_TO_PBUFFER_ARB, true);
+    attribs.add(WGL_DEPTH_BITS_ARB, 24);
+    attribs.add(WGL_STENCIL_BITS_ARB, 8);
+    attribs.add(WGL_RED_BITS_ARB, 8);
+    attribs.add(WGL_GREEN_BITS_ARB, 8);
+    attribs.add(WGL_BLUE_BITS_ARB, 8);
+    attribs.add(WGL_ALPHA_BITS_ARB, 8);
+    attribs.add(WGL_COLOR_BITS_ARB, 32);
+    if (pbInfo->texFormat) {
+        if (pbInfo->texFormat == GL_RGBA)
+            attribs.add(WGL_BIND_TO_TEXTURE_RGBA_ARB, true);
+        else if (pbInfo->texFormat == GL_RGB)
+            attribs.add(WGL_BIND_TO_TEXTURE_RGB_ARB, true);
+        else {
+            std::cerr << "error: unexpected texture format.\n";
+            exit(1);
+        }
+    }
+    attribs.end();
+
+    int pixelFormats[20];
+    UINT numPixelFormats;
+    HDC hdc = wglGetCurrentDC();
+    if (!pfnwglChoosePixelFormatARB(hdc, attribs, NULL,
+                                    20, pixelFormats,
+                                    &numPixelFormats)) {
+        std::cerr << "error: wglChoosePixelFormatARB failed.\n";
+        exit(1);
+    }
+
+    // create pbuffer
+    Attributes<int> pbAttribs;
+    if (pbInfo->texFormat) {
+        if (pbInfo->texFormat == GL_RGBA) {
+            pbAttribs.add(WGL_TEXTURE_FORMAT_ARB, WGL_TEXTURE_RGBA_ARB);
+        } else if (pbInfo->texFormat == GL_RGB) {
+            pbAttribs.add(WGL_TEXTURE_FORMAT_ARB, WGL_TEXTURE_RGB_ARB);
+        } else {
+            std::cerr << "error: unexpected texture format.\n";
+            exit(1);
+        }
+    }
+    if (pbInfo->texTarget) {
+        if (pbInfo->texTarget == GL_TEXTURE_1D) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_1D_ARB);
+        } else if (pbInfo->texTarget == GL_TEXTURE_2D) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_2D_ARB);
+        } else if (pbInfo->texTarget == GL_TEXTURE_CUBE_MAP) {
+            pbAttribs.add(WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_CUBE_MAP_ARB);
+        } else {
+            std::cerr << "error: unexpected texture targett.\n";
+            exit(1);
+        }
+    }
+    if (pbInfo->texMipmap) {
+        pbAttribs.add(WGL_MIPMAP_TEXTURE_ARB, pbInfo->texMipmap);
+    }
+    pbAttribs.end();
+
+    hPBuffer = pfnwglCreatePbufferARB(hdc, pixelFormats[0],
+                                      width, height, pbAttribs);
+    if (!hPBuffer) {
+        std::cerr << "error: wglCreatePbufferARB failed (format "
+                  << pixelFormats[0] << ")\n";
+        DWORD er = GetLastError();
+        std::cerr << "error code " << er << "\n";
+        exit(1);
+    }
+    hDC = pfnwglGetPbufferDCARB(hPBuffer);
+    if (!hDC) {
+        std::cerr << "error: wglGetPbufferDCARB failed\n";
+        exit(1);
+    }
+
+    return true;
+}
+
+
+static int
+enum_buffer_to_wgl_buffer(GLenum buffer)
+{
+    switch (buffer) {
+    case GL_FRONT_LEFT:
+        return WGL_FRONT_LEFT_ARB;
+    case GL_BACK_LEFT:
+        return WGL_BACK_LEFT_ARB;
+    case GL_FRONT_RIGHT:
+        return WGL_FRONT_RIGHT_ARB;
+    case GL_BACK_RIGHT:
+        return WGL_BACK_RIGHT_ARB;
+    case GL_AUX0:
+        return WGL_AUX0_ARB;
+    default:
+        std::cerr << "error: invalid buffer in enum_buffer_to_wgl_buffer()\n";
+        return WGL_FRONT_LEFT_ARB;
+    }
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int buf) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLBINDTEXIMAGEARBPROC,
+             pfnwglBindTexImageARB, "wglBindTexImageARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglBindTexImageARB(wglDrawable->hPBuffer,
+                                 enum_buffer_to_wgl_buffer(buf));
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int buf) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLRELEASETEXIMAGEARBPROC,
+             pfnwglReleaseTexImageARB, "wglReleaseTexImageARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglReleaseTexImageARB(wglDrawable->hPBuffer,
+                                    enum_buffer_to_wgl_buffer(buf));
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    if (!is_wgl_ext_supported("WGL_ARB_render_texture")) {
+        return false;
+    }
+    WGL_PROC(PFNWGLSETPBUFFERATTRIBARBPROC,
+             pfnwglSetPbufferAttribARB, "wglSetPbufferAttribARB");
+    WglDrawable *wglDrawable = static_cast<WglDrawable *>(pBuffer);
+    return pfnwglSetPbufferAttribARB(wglDrawable->hPBuffer, attribList);
 }
 
 

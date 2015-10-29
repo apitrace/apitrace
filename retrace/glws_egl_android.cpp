@@ -184,8 +184,8 @@ struct ResourceTracker
 class EglDrawable : public Drawable, private ResourceTracker
 {
 public:
-    EglDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
+    EglDrawable(const Visual *vis, int w, int h, const pbuffer_info *info) :
+        Drawable(vis, w, h, info),
         api(EGL_OPENGL_ES_API),
         windowId(0)
     {
@@ -442,9 +442,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const pbuffer_info *info)
 {
-    return new EglDrawable(visual, width, height, pbuffer);
+    return new EglDrawable(visual, width, height, info);
 }
 
 
@@ -538,6 +539,27 @@ makeCurrentInternal(Drawable *drawable, Context *context)
 bool processEvents(void)
 {
     return false;
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: EGL/Android::wglBindTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: EGL/Android::wglReleaseTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    // nothing to do here.
+    assert(pBuffer->pbuffer);
+    return true;
 }
 
 static void readParamsAndStartTrace()

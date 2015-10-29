@@ -99,7 +99,7 @@ glws::Drawable *
 createDrawable(void);
 
 glws::Drawable *
-createPbuffer(int width, int height);
+createPbuffer(int width, int height, const glws::pbuffer_info *info);
 
 Context *
 createContext(Context *shareContext, glprofile::Profile profile);
@@ -135,6 +135,19 @@ blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags);
 
 GLenum
 clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeout);
+
+
+// WGL_ARB_render_texture
+bool
+bindTexImage(glws::Drawable *pBuffer, int iBuffer);
+
+// WGL_ARB_render_texture
+bool
+releaseTexImage(glws::Drawable *pBuffer, int iBuffer);
+
+// WGL_ARB_render_texture
+bool
+setPbufferAttrib(glws::Drawable *pBuffer, const int *attribList);
 
 } /* namespace glretrace */
 

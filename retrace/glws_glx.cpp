@@ -68,14 +68,21 @@ public:
     Window window;
     bool ever_current;
 
-    GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
+    GlxDrawable(const Visual *vis, int w, int h,
+                const glws::pbuffer_info *pbInfo) :
+        Drawable(vis, w, h, pbInfo ? true : false),
         ever_current(false)
     {
-        XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
+        const GlxVisual *glxvisual = static_cast<const GlxVisual *>(visual);
+        XVisualInfo *visinfo = glxvisual->visinfo;
 
         const char *name = "glretrace";
-        window = createWindow(visinfo, name, width, height);
+        if (pbInfo) {
+            window = createPbuffer(display, glxvisual, pbInfo, w, h);
+        }
+        else {
+            window = createWindow(visinfo, name, width, height);
+        }
 
         glXWaitX();
     }
@@ -125,6 +132,7 @@ public:
     }
 
     void swapBuffers(void) {
+        assert(!pbuffer);
         if (ever_current) {
             // The window has been bound to a context at least once
             glXSwapBuffers(display, window);
@@ -136,6 +144,10 @@ public:
         }
         processKeys(window);
     }
+
+private:
+    Window createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                         const glws::pbuffer_info *pbInfo, int w, int h);
 };
 
 
@@ -251,9 +263,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo)
 {
-    return new GlxDrawable(visual, width, height, pbuffer);
+    return new GlxDrawable(visual, width, height, pbInfo);
 }
 
 Context *
@@ -354,5 +367,182 @@ makeCurrentInternal(Drawable *drawable, Context *context)
     }
 }
 
+Window
+GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                           const glws::pbuffer_info *pbInfo, int w, int h)
+{
+    int samples = 0;
+
+    // XXX ideally, we'd populate these attributes according to the Visual info
+    Attributes<int> attribs;
+    attribs.add(GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT);
+    attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+    attribs.add(GLX_RED_SIZE, 1);
+    attribs.add(GLX_GREEN_SIZE, 1);
+    attribs.add(GLX_BLUE_SIZE, 1);
+    attribs.add(GLX_ALPHA_SIZE, 1);
+    //attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+    attribs.add(GLX_DEPTH_SIZE, 1);
+    attribs.add(GLX_STENCIL_SIZE, 1);
+    if (samples > 1) {
+        attribs.add(GLX_SAMPLE_BUFFERS, 1);
+        attribs.add(GLX_SAMPLES_ARB, samples);
+    }
+    attribs.end();
+
+    int num_configs = 0;
+    GLXFBConfig *fbconfigs;
+    fbconfigs = glXChooseFBConfig(dpy, screen, attribs, &num_configs);
+    if (!num_configs || !fbconfigs) {
+        std::cerr << "error: glXChooseFBConfig for pbuffer failed.\n";
+        exit(1);
+    }
+
+    Attributes<int> pbAttribs;
+    pbAttribs.add(GLX_PBUFFER_WIDTH, w);
+    pbAttribs.add(GLX_PBUFFER_HEIGHT, h);
+    pbAttribs.add(GLX_PRESERVED_CONTENTS, True);
+    pbAttribs.end();
+
+    GLXDrawable pbuffer = glXCreatePbuffer(dpy, fbconfigs[0], pbAttribs);
+    if (!pbuffer) {
+        std::cerr << "error: glXCreatePbuffer() failed\n";
+        exit(1);
+    }
+
+    return pbuffer;
+}
+
+
+// For GLX, we implement wglBindTexARB() as a copy operation.
+// We copy the pbuffer image to the currently bound texture.
+// If there's any rendering to the pbuffer before the wglReleaseTexImage()
+// call, the results are undefined (and permitted by the extension spec).
+//
+// The spec says that glTexImage and glCopyTexImage calls which effect
+// the pbuffer/texture should not be allowed, but we do not enforce that.
+//
+// The spec says that when a pbuffer is released from the texture that
+// the contents do not have to be preserved.  But that's what will happen
+// since we're copying here.
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    GLint readBufSave;
+    GLint width, height;
+
+    assert(pBuffer->pbuffer);
+
+    // Save the current drawing surface and bind the pbuffer surface
+    GLXDrawable prevDrawable = glXGetCurrentDrawable();
+    GLXContext prevContext = glXGetCurrentContext();
+    GlxDrawable *glxPBuffer = static_cast<GlxDrawable *>(pBuffer);
+    glXMakeCurrent(display, glxPBuffer->window, prevContext);
+
+    glGetIntegerv(GL_READ_BUFFER, &readBufSave);
+
+    assert(iBuffer == GL_FRONT_LEFT ||
+           iBuffer == GL_BACK_LEFT ||
+           iBuffer == GL_FRONT_RIGHT ||
+           iBuffer == GL_BACK_RIGHT ||
+           iBuffer == GL_AUX0);
+
+    // set src buffer
+    glReadBuffer(iBuffer);
+
+    // Just copy image from pbuffer to texture
+    switch (pBuffer->pbInfo.texTarget) {
+    case GL_TEXTURE_1D:
+        glGetTexLevelParameteriv(GL_TEXTURE_1D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        if (width == pBuffer->width) {
+            // replace existing texture
+            glCopyTexSubImage1D(GL_TEXTURE_1D,
+                                pBuffer->mipmapLevel,
+                                0,    // xoffset
+                                0, 0, // x, y
+                                pBuffer->width);
+        } else {
+            // define initial texture
+            glCopyTexImage1D(GL_TEXTURE_1D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, 0);
+        }
+        break;
+    case GL_TEXTURE_2D:
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_HEIGHT, &height);
+        if (width == pBuffer->width && height == pBuffer->height) {
+            // replace existing texture
+            glCopyTexSubImage2D(GL_TEXTURE_2D,
+                                pBuffer->mipmapLevel,
+                                0, 0, // xoffset, yoffset
+                                0, 0, // x, y
+                                pBuffer->width, pBuffer->height);
+        } else {
+            // define initial texture
+            glCopyTexImage2D(GL_TEXTURE_2D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, pBuffer->height, 0);
+        }
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        {
+            const GLenum target =
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + pBuffer->cubeFace;
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_WIDTH, &width);
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_HEIGHT, &height);
+            if (width == pBuffer->width && height == pBuffer->height) {
+                // replace existing texture
+                glCopyTexSubImage2D(target,
+                                    pBuffer->mipmapLevel,
+                                    0, 0, // xoffset, yoffset
+                                    0, 0, // x, y
+                                    pBuffer->width, pBuffer->height);
+            } else {
+                // define new texture
+                glCopyTexImage2D(target,
+                                 pBuffer->mipmapLevel,
+                                 pBuffer->pbInfo.texFormat,
+                                 0, 0, // x, y
+                                 pBuffer->width, pBuffer->height, 0);
+            }
+        }
+        break;
+    default:
+        ; // no op
+    }
+
+    // restore
+    glReadBuffer(readBufSave);
+
+    // rebind previous drawing surface
+    glXMakeCurrent(display, prevDrawable, prevContext);
+
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    assert(pBuffer->pbuffer);
+    // nothing to do here.
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    assert(pBuffer->pbuffer);
+    // Nothing to do here.  retrace_wglSetPbufferAttribARB() will have parsed
+    // and saved the mipmap/cubeface info in the Drawable.
+    std::cout << "Calling GLX setPbufferAttrib\n";
+    return true;
+}
 
 } /* namespace glws */

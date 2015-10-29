@@ -76,13 +76,17 @@ getVisual(glprofile::Profile profile) {
 
 
 static glws::Drawable *
-createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
+createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32,
+                     const glws::pbuffer_info *pbInfo = NULL) {
     glws::Visual *visual = getVisual(profile);
-    glws::Drawable *draw = glws::createDrawable(visual, width, height, pbuffer);
+    glws::Drawable *draw = glws::createDrawable(visual, width, height, pbInfo);
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
         exit(1);
     }
+
+    if (pbInfo)
+        draw->pbInfo = *pbInfo;
 
     return draw;
 }
@@ -101,13 +105,13 @@ createDrawable(void) {
 
 
 glws::Drawable *
-createPbuffer(int width, int height) {
+createPbuffer(int width, int height, const glws::pbuffer_info *pbInfo) {
     // Zero area pbuffers are often accepted, but given we create window
     // drawables instead, they should have non-zero area.
     width  = std::max(width,  1);
     height = std::max(height, 1);
 
-    return createDrawableHelper(defaultProfile, width, height, true);
+    return createDrawableHelper(defaultProfile, width, height, pbInfo);
 }
 
 
@@ -313,5 +317,23 @@ parseContextAttribList(const trace::Value *attribs)
     return profile;
 }
 
+
+// WGL_ARB_render_texture / wglBindTexImageARB()
+bool
+bindTexImage(glws::Drawable *pBuffer, int iBuffer) {
+    return glws::bindTexImage(pBuffer, iBuffer);
+}
+
+// WGL_ARB_render_texture / wglReleaseTexImageARB()
+bool
+releaseTexImage(glws::Drawable *pBuffer, int iBuffer) {
+    return glws::releaseTexImage(pBuffer, iBuffer);
+}
+
+// WGL_ARB_render_texture / wglSetPbufferAttribARB()
+bool
+setPbufferAttrib(glws::Drawable *pBuffer, const int *attribs) {
+    return glws::setPbufferAttrib(pBuffer, attribs);
+}
 
 } /* namespace glretrace */
