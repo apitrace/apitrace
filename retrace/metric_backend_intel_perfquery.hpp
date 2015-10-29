@@ -80,7 +80,7 @@ private:
             MmapAllocator<unsigned char> alloc;
             // deque with custom allocator
             template <class T>
-            using mmapdeque = std::deque<T, MmapAllocator<std::deque<T>>>;
+            using mmapdeque = std::deque<T, MmapAllocator<T>>;
             // data storage
             mmapdeque<mmapdeque<unsigned char*>> data;
             unsigned curPass;

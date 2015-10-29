@@ -78,7 +78,7 @@ private:
             MmapAllocator<unsigned> alloc; // allocator
             // deque with custom allocator
             template <class T>
-            using mmapdeque = std::deque<T, MmapAllocator<std::deque<T>>>;
+            using mmapdeque = std::deque<T, MmapAllocator<T>>;
             // data storage
             mmapdeque<mmapdeque<unsigned*>> data;
             unsigned curPass;
