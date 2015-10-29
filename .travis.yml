@@ -2,6 +2,9 @@ branches:
   except:
   - /^appveyor.*$/
 
+sudo: required
+dist: trusty
+
 language: cpp
 
 env:
@@ -12,35 +15,28 @@ matrix:
   include:
   - compiler: gcc
     env:
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test ppa:ubuntu-sdk-team/ppa"
-    - APT_PACKAGES="gcc-4.8 g++-4.8 libdwarf-dev libproc-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
-    - GCC_VERSION=4.8
+    - APT_PACKAGES="libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
     - CMAKE_OPTIONS="-DENABLE_GUI=1"
   - compiler: gcc
     env:
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.8-multilib g++-4.8-multilib"
-    - GCC_VERSION=4.8
+    - APT_PACKAGES="gcc-multilib g++-multilib"
     - CMAKE_OPTIONS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - compiler: clang
     env:
-    - APT_PACKAGES="libdwarf-dev libproc-dev"
+    - APT_PACKAGES="libdwarf-dev libprocps3-dev"
     - CMAKE_OPTIONS="-DENABLE_GUI=0"
   - compiler: ": mingw32"
     env:
-    - APT_REPOS="ppa:tobydox/mingw-x-precise"
+    - APT_REPOS="ppa:tobydox/mingw-x-trusty"
     - APT_PACKAGES="mingw32-x-gcc"
     - MINGW_ROOT=/opt/mingw32
     - MINGW_PREFIX=i686-w64-mingw32
     - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
 
 before_install:
-- sudo add-apt-repository -y ppa:kalakris/cmake
 - for APT_REPO in $APT_REPOS; do sudo add-apt-repository -y $APT_REPO; done
 - sudo apt-get update -qq
-- sudo apt-get install -qq -y cmake
 - if [ "$APT_PACKAGES" ]; then sudo apt-get install -qq -y $APT_PACKAGES; fi
-- if [ "$GCC_VERSION" ]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-$GCC_VERSION 60 --slave /usr/bin/g++ g++ /usr/bin/g++-$GCC_VERSION; fi
 - if [ "$MINGW_ROOT" ]; then export PATH=$MINGW_ROOT/bin:$PATH; fi
 
 script:
