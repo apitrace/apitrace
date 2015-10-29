@@ -410,7 +410,7 @@ dumpUniformBlock(StateWriter &writer,
             << "  offset " << offset << ", array stride " << array_stride << ", matrix stride " << matrix_stride << ", row_major " << is_row_major << "\n"
         ;
 
-        delete block_name;
+        delete [] block_name;
     }
 
     GLint ubo = 0;
