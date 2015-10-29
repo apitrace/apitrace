@@ -744,10 +744,7 @@ getDrawableBounds(GLint *width, GLint *height) {
 #elif defined(HAVE_X11)
 
     Display *display;
-    Drawable drawable;
-    Window root;
-    int x, y;
-    unsigned int w, h, bw, depth;
+    GLXDrawable drawable;
 
     display = glXGetCurrentDisplay();
     if (!display) {
@@ -759,9 +756,11 @@ getDrawableBounds(GLint *width, GLint *height) {
         return false;
     }
 
-    if (!XGetGeometry(display, drawable, &root, &x, &y, &w, &h, &bw, &depth)) {
-        return false;
-    }
+    // XGetGeometry will fail for PBuffers, whereas glXQueryDrawable should not.
+    unsigned int w = 0;
+    unsigned int h = 0;
+    glXQueryDrawable(display, drawable, GLX_WIDTH, &w);
+    glXQueryDrawable(display, drawable, GLX_HEIGHT, &h);
 
     *width = w;
     *height = h;
