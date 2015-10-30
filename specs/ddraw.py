@@ -747,16 +747,22 @@ DDCOLORCONTROL = Struct("DDCOLORCONTROL", [
 ])
 LPDDCOLORCONTROL = Pointer(DDCOLORCONTROL)
 
-DirectDrawEnumerateExFlags = Flags(DWORD, [
+DDENUM = Flags(DWORD, [
     "DDENUM_ATTACHEDSECONDARYDEVICES",
     "DDENUM_DETACHEDSECONDARYDEVICES",
     "DDENUM_NONDISPLAYDEVICES",
 ])
 
-DirectDrawCreateFlags = FakeEnum(DWORD, [
+DDCREATE = FakeEnum(DWORD, [
     "DDCREATE_HARDWAREONLY",
     "DDCREATE_EMULATIONONLY",
 ])
+
+DDCREATE_LPGUID = Polymorphic("reinterpret_cast<uintptr_t>(lpGUID)", [
+    ("DDCREATE_HARDWAREONLY", IntPointer("LPGUID")),
+    ("DDCREATE_EMULATIONONLY", IntPointer("LPGUID")),
+], LPGUID)
+
 
 DirectDrawColorControlFlags = Flags(DWORD, [
     "DDCOLOR_BRIGHTNESS",
@@ -1621,25 +1627,14 @@ LPDDENUMCALLBACKW   = FunctionPointer(BOOL, "LPDDENUMCALLBACKW", [Pointer(GUID),
 LPDDENUMCALLBACKEXA = FunctionPointer(BOOL, "LPDDENUMCALLBACKEXA", [Pointer(GUID), LPSTR, LPSTR, LPVOID, HMONITOR])
 LPDDENUMCALLBACKEXW = FunctionPointer(BOOL, "LPDDENUMCALLBACKEXW", [Pointer(GUID), LPWSTR, LPWSTR, LPVOID, HMONITOR])
 
-DDENUM = Flags(DWORD, [
-    "DDENUM_ATTACHEDSECONDARYDEVICES",
-    "DDENUM_DETACHEDSECONDARYDEVICES",
-    "DDENUM_NONDISPLAYDEVICES",
-])
-
-DDCREATE = Flags(DWORD, [
-    "DDCREATE_HARDWAREONLY",
-    "DDCREATE_EMULATIONONLY",
-])
-
 ddraw = Module("ddraw")
 ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")], sideeffects=False),
     StdFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")], sideeffects=False),
     StdFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")], sideeffects=False),
     StdFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")], sideeffects=False),
-    StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (LPUNKNOWN, "pUnkOuter")]),
-    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(ObjPointer(Void)), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreate", [(DDCREATE_LPGUID, "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (LPUNKNOWN, "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateEx", [(DDCREATE_LPGUID, "lpGUID"), Out(Pointer(ObjPointer(Void)), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(Void, "AcquireDDThreadLock", [], internal=True),
     StdFunction(Void, "ReleaseDDThreadLock", [], internal=True),
