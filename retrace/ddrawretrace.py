@@ -31,6 +31,7 @@ import sys
 from dllretrace import DllRetracer as Retracer
 from specs.stdapi import API
 from specs.d3d import ddraw, HWND
+from specs.ddraw import DDCREATE_LPGUID
 
 
 class D3DRetracer(Retracer):
@@ -109,6 +110,18 @@ class D3DRetracer(Retracer):
             print '        retrace::delRegionByPointer(_pbData);'
             print '        _maps[_this] = 0;'
             print '    }'
+
+    def extractArg(self, function, arg, arg_type, lvalue, rvalue):
+        # Handle DDCREATE_* flags
+        if arg.type is DDCREATE_LPGUID:
+            print '    if (%s.toArray()) {' % rvalue
+            Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
+            print '    } else {'
+            print '        %s = static_cast<%s>(%s.toPointer());' % (lvalue, arg_type, rvalue)
+            print '    }'
+            return
+
+        Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
 
 
 def main():
