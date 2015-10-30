@@ -92,7 +92,20 @@ _getVertexSize(DWORD dwFVF) {
     for (DWORD CoordIndex = 0; CoordIndex < dwNumTextures; ++CoordIndex) {
         // See D3DFVF_TEXCOORDSIZE*
         DWORD dwTexCoordSize = (dwFVF >> (CoordIndex*2 + 16)) & 3;
-        size += dwTexCoordSize * sizeof(FLOAT);
+        switch (dwTexCoordSize) {
+        case D3DFVF_TEXTUREFORMAT2:
+            size += 2 * sizeof(FLOAT);
+            break;
+        case D3DFVF_TEXTUREFORMAT1:
+            size += 1 * sizeof(FLOAT);
+            break;
+        case D3DFVF_TEXTUREFORMAT3:
+            size += 3 * sizeof(FLOAT);
+            break;
+        case D3DFVF_TEXTUREFORMAT4:
+            size += 4 * sizeof(FLOAT);
+            break;
+        }
     }
 
     assert((dwFVF & D3DFVF_RESERVED2) == 0);
