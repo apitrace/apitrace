@@ -248,6 +248,9 @@ static void retrace_wglCreatePbufferARB(trace::Call &call) {
 
     pbInfo.texMipmap = !!parseAttrib(attribs, WGL_MIPMAP_TEXTURE_ARB, 0);
 
+    // WGL interface needs the HDC
+    pbInfo.hdc_drawable = getDrawable(call.arg(0).toUInt());
+
     glws::Drawable *drawable = glretrace::createPbuffer(iWidth, iHeight,
                                                         &pbInfo);
 

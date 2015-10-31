@@ -43,6 +43,8 @@ namespace glws {
 
 using glprofile::Profile;
 
+class Drawable;
+
 
 bool
 checkExtension(const char *extName, const char *extString);
@@ -53,6 +55,8 @@ struct pbuffer_info
     int texFormat;  // GL_RGB, GL_RGBA, or GL_NONE
     int texTarget;  // GL_TEXTURE_1D/2D/CUBE_MAP or GL_NONE
     bool texMipmap; // 0 or 1 (false/true)
+
+    Drawable *hdc_drawable;  // Needed for WGL Pbuffers
 };
 
 

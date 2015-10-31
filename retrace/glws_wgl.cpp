@@ -504,7 +504,10 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
 
     int pixelFormats[20];
     UINT numPixelFormats;
-    HDC hdc = wglGetCurrentDC();
+    WglDrawable *wgl_draw = static_cast<WglDrawable *>(pbInfo->hdc_drawable);
+    HDC hdc = wgl_draw->hDC;
+    assert(hdc);
+
     if (!pfnWglChoosePixelFormatARB(hdc, attribs, NULL,
                                     20, pixelFormats,
                                     &numPixelFormats)) {
