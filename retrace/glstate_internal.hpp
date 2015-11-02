@@ -50,6 +50,8 @@ struct Context
     unsigned KHR_debug:1;
     unsigned EXT_debug_label:1;
     unsigned NV_read_depth_stencil:1;  /* ES only */
+    unsigned ARB_shader_image_load_store:1;
+    unsigned ARB_direct_state_access:1;
 
     Context(void);
 };
@@ -191,6 +193,8 @@ void dumpParameters(StateWriter &writer, Context &context);
 void dumpShadersUniforms(StateWriter &writer, Context &context);
 
 void dumpTextures(StateWriter &writer, Context &context);
+
+void dumpImages(StateWriter &writer, Context &context, bool dumpIntoOwnMember);
 
 void dumpFramebuffer(StateWriter &writer, Context &context);
 
