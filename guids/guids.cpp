@@ -29,7 +29,8 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <string.h>
-#include <stdlib.h>
+
+#include <algorithm>
 
 #include <os_string.hpp>
 
@@ -52,43 +53,33 @@ guidEntries[] = {
 };
 
 
-static int
-guidEntryCompare(const GUID *g1, const GuidEntry *e2)
+inline bool
+guidCompare(const GUID &g1, const GUID &g2)
 {
-    const GUID *g2 = &e2->guid;
     int ret;
-    if (g1->Data1 == g2->Data1) {
-        ret = g1->Data2 - g2->Data2;
+    if (g1.Data1 == g2.Data1) {
+        ret = g1.Data2 - g2.Data2;
         if (ret == 0) {
-            ret = g1->Data3 - g2->Data3;
+            ret = g1.Data3 - g2.Data3;
             if (ret == 0) {
-                ret = memcmp(g1->Data4, g2->Data4, sizeof g1->Data4);
+                ret = memcmp(g1.Data4, g2.Data4, sizeof g1.Data4);
             }
         }
     } else {
-        ret = g1->Data1 > g2->Data1 ? 1 : -1;
+        ret = g1.Data1 > g2.Data1 ? 1 : -1;
     }
-    if (g1 == g2) {
+    if (&g1 == &g2) {
         assert(ret == 0);
     }
 
-    if (0) {
-        fprintf(stderr, 
-                "%08" PRIx32 "-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x "
-                "%08" PRIx32 "-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x %s %i\n",
-                (uint32_t)g1->Data1,
-                g1->Data2, g1->Data3,
-                g1->Data4[0], g1->Data4[1],
-                g1->Data4[2], g1->Data4[3], g1->Data4[4], g1->Data4[5], g1->Data4[6], g1->Data4[7],
-                (uint32_t)g2->Data1,
-                g2->Data2, g2->Data3,
-                g2->Data4[0], g2->Data4[1],
-                g2->Data4[2], g2->Data4[3], g2->Data4[4], g2->Data4[5], g2->Data4[6], g2->Data4[7],
-                e2->name,
-                ret);
-    }
-    
-    return ret;
+    return ret < 0;
+}
+
+inline bool
+guidEntryCompare(const GuidEntry &e1, const GUID &g2)
+{
+    const GUID &g1 = e1.guid;
+    return guidCompare(g1, g2);
 }
 
 
@@ -103,27 +94,22 @@ getGuidName(const GUID & guid)
     static bool checked = false;
     if (!checked) {
         for (size_t i = 0; i < numEntries - 1; ++i) {
-            assert(guidEntryCompare(&guidEntries[i].guid, &guidEntries[i + 1]) <= 0);
+            assert(guidEntryCompare(guidEntries[i], guidEntries[i + 1].guid));
         }
-        assert(guidEntryCompare(&guidEntries[0].guid, &guidEntries[numEntries - 1]) <= 0);
+        assert(guidEntryCompare(guidEntries[0], guidEntries[numEntries - 1].guid));
         checked = true;
     }
 #endif
 
     // Binary search
+    const GuidEntry *first = guidEntries;
+    const GuidEntry *last = first + numEntries;
     const GuidEntry *entry;
-    entry = (const GuidEntry *)
-            bsearch(&guid,
-                    guidEntries,
-                    numEntries,
-                    entrySize,
-                    (int (*)(const void *, const void *)) &guidEntryCompare);
-
-    if (entry) {
-        assert(memcmp(&entry->guid, &guid, sizeof(GUID)) == 0);
+    entry = std::lower_bound(first, last, guid, guidEntryCompare);
+    if (entry != last &&
+        !guidCompare(guid, entry->guid)) {
         return entry->name;
     }
-
 
     // Generic case
     // See https://en.wikipedia.org/wiki/Globally_unique_identifier#Text_encoding
