@@ -25,28 +25,75 @@
  **************************************************************************/
 
 
-#pragma once
-
-#include <stdlib.h>
+#include "trace_ostream.hpp"
 
 
-namespace trace {
+#include <assert.h>
+#include <string.h>
+
+#include <zlib.h>
+
+#include "os.hpp"
+
+#include <iostream>
 
 
-class OutStream {
+using namespace trace;
+
+
+class ZLibOutStream : public OutStream {
 public:
-    virtual ~OutStream() {}
+    ZLibOutStream(gzFile file);
+    virtual ~ZLibOutStream();
 
-    virtual bool write(const void *buffer, size_t length) = 0;
-    virtual void flush(void) = 0;
+protected:
+    virtual bool write(const void *buffer, size_t length);
+    virtual void close();
+    virtual void flush();
+private:
+    gzFile m_gzFile;
 };
 
+ZLibOutStream::ZLibOutStream(gzFile file)
+    : m_gzFile(file)
+{
+}
+
+ZLibOutStream::~ZLibOutStream()
+{
+    close();
+}
+
+bool ZLibOutStream::write(const void *buffer, size_t length)
+{
+    return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
+}
+
+void ZLibOutStream::close()
+{
+    if (m_gzFile) {
+        gzclose(m_gzFile);
+        m_gzFile = nullptr;
+    }
+}
+
+void ZLibOutStream::flush()
+{
+    gzflush(m_gzFile, Z_SYNC_FLUSH);
+}
+
 
 OutStream *
-createSnappyStream(const char *filename);
+trace::createZLibStream(const char *filename)
+{
+    gzFile file = gzopen(filename, "wb");
+    if (!file) {
+        return nullptr;
+    }
 
-OutStream *
-createZLibStream(const char *filename);
+    // Currently we only use gzip for offline compression, so aim for maximum
+    // compression
+    gzsetparams(file, Z_BEST_COMPRESSION, Z_DEFAULT_STRATEGY);
 
-
-} /* namespace trace */
+    return new ZLibOutStream(file);
+}

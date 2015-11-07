@@ -27,6 +27,7 @@ add_convenience_library (common
     trace_profiler.cpp
     trace_option.cpp
     trace_ostream_snappy.cpp
+    trace_ostream_zlib.cpp
     ${os}
     os_backtrace.cpp
     os_crtdbg.cpp
