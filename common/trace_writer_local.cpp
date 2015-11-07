@@ -34,7 +34,7 @@
 #include "os_thread.hpp"
 #include "os_string.hpp"
 #include "os_version.hpp"
-#include "trace_file.hpp"
+#include "trace_ostream.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
 #include "os_backtrace.hpp"
@@ -158,13 +158,13 @@ static OS_THREAD_SPECIFIC(uintptr_t)
 thread_num;
 
 void LocalWriter::checkProcessId(void) {
-    if (m_file->isOpened() &&
+    if (m_file &&
         os::getCurrentProcessId() != pid) {
         // We are a forked child process that inherited the trace file, so
         // create a new file.  We can't call any method of the current
         // file, as it may cause it to flush and corrupt the parent's
         // trace, so we effectively leak the old file object.
-        m_file = File::createSnappy();
+        close();
         // Don't want to open the same file again
         os::unsetEnvironment("TRACE_FILE");
         open();
@@ -176,7 +176,7 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     ++acquired;
 
     checkProcessId();
-    if (!m_file->isOpened()) {
+    if (!m_file) {
         open();
     }
 
@@ -230,7 +230,7 @@ void LocalWriter::flush(void) {
         os::log("apitrace: ignoring exception while tracing\n");
     } else {
         ++acquired;
-        if (m_file->isOpened()) {
+        if (m_file) {
             if (os::getCurrentProcessId() != pid) {
                 os::log("apitrace: ignoring exception in child process\n");
             } else {

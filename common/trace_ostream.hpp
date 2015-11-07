@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2015 VMware, Inc.
  * Copyright 2011 Zack Rusin
  * All Rights Reserved.
  *
@@ -24,31 +25,25 @@
  **************************************************************************/
 
 
-#include "trace_file.hpp"
+#pragma once
 
-#include <assert.h>
-
-
-using namespace trace;
+#include <stdlib.h>
 
 
-File::File(const std::string &filename)
-    : m_isOpened(false)
-{
-    if (!filename.empty()) {
-        open(filename);
-    }
-}
-
-File::~File()
-{
-    // We can't invoke any overriden virtual method here anymore
-    assert(!m_isOpened);
-}
+namespace trace {
 
 
-void File::setCurrentOffset(const File::Offset &offset)
-{
-    assert(0);
-}
+class OutStream {
+public:
+    virtual ~OutStream() {}
 
+    virtual bool write(const void *buffer, size_t length) = 0;
+    virtual void flush(void) = 0;
+};
+
+
+OutStream *
+createSnappyStream(const char *filename);
+
+
+} /* namespace trace */

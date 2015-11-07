@@ -1,6 +1,7 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2015 VMware, Inc
+ * Copyright 2011 Zack Rusin
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,27 +25,37 @@
  **************************************************************************/
 
 
-#include "os.hpp"
-#include "trace_file.hpp"
+/*
+ * Snappy file format.
+ * -------------------
+ *
+ * Snappy at its core is just a compressoin algorithm so we're
+ * creating a new file format which uses snappy compression
+ * to hold the trace data.
+ *
+ * The file is composed of a number of chunks, they are:
+ * chunk {
+ *     uint32 - specifying the length of the compressed data
+ *     compressed data, in little endian
+ * }
+ * File can contain any number of such chunks.
+ * The default size of an uncompressed chunk is specified in
+ * SNAPPY_CHUNK_SIZE.
+ *
+ * Note:
+ * Currently the default size for a a to-be-compressed data is
+ * 1mb, meaning that the compressed data will be <= 1mb.
+ * The reason it's 1mb is because it seems
+ * to offer a pretty good compression/disk io speed ratio
+ * but that might change.
+ *
+ */
 
 
-using namespace trace;
+#pragma once
 
 
-File *
-File::createForWrite(const char *filename)
-{
-    File *file;
-    file = File::createSnappy();
-    if (!file) {
-        return NULL;
-    }
+#define SNAPPY_BYTE1 'a'
+#define SNAPPY_BYTE2 't'
 
-    if (!file->open(filename, File::Write)) {
-        os::log("error: could not open %s for writing\n", filename);
-        delete file;
-        return NULL;
-    }
 
-    return file;
-}

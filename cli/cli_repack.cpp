@@ -32,6 +32,7 @@
 #include "cli.hpp"
 
 #include "trace_file.hpp"
+#include "trace_ostream.hpp"
 
 
 static const char *synopsis = "Repack a trace file with Snappy compression.";
@@ -65,7 +66,7 @@ repack(const char *inFileName, const char *outFileName)
         return 1;
     }
 
-    trace::File *outFile = trace::File::createForWrite(outFileName);
+    trace::OutStream *outFile = trace::createSnappyStream(outFileName);
     if (!outFile) {
         delete inFile;
         return 1;

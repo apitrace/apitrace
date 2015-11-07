@@ -37,11 +37,11 @@
 #include "trace_model.hpp"
 
 namespace trace {
-    class File;
+    class OutStream;
 
     class Writer {
     protected:
-        File *m_file;
+        OutStream *m_file;
         unsigned call_no;
 
         std::vector<bool> functions;

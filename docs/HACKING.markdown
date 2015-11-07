@@ -182,6 +182,7 @@ https://github.com/apitrace/apitrace-tests .
 
 # Further reading #
 
+* [Writing ELF Shared Library Wrappers](https://github.com/amonakov/on-wrapping/blob/master/interposers-discussion.asciidoc)
 * [Intercepting and Instrumenting COM Applications](https://www.usenix.org/legacy/events/coots99/full_papers/hunt/hunt_html)
 * [Proxy-Dll: Intercept Calls to DirectX](http://www.mikoweb.eu/index.php?node=21)
 

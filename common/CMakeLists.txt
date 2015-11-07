@@ -14,7 +14,6 @@ add_convenience_library (common
     trace_fast_callset.cpp
     trace_file.cpp
     trace_file_read.cpp
-    trace_file_write.cpp
     trace_file_zlib.cpp
     trace_file_snappy.cpp
     trace_model.cpp
@@ -27,6 +26,7 @@ add_convenience_library (common
     trace_loader.cpp
     trace_profiler.cpp
     trace_option.cpp
+    trace_ostream_snappy.cpp
     ${os}
     os_backtrace.cpp
     os_crtdbg.cpp

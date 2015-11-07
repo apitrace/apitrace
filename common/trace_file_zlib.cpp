@@ -50,20 +50,17 @@ using namespace trace;
 
 class ZLibFile : public File {
 public:
-    ZLibFile(const std::string &filename = std::string(),
-             File::Mode mode = File::Read);
+    ZLibFile(const std::string &filename = std::string());
     virtual ~ZLibFile();
 
 
     virtual bool supportsOffsets() const;
     virtual File::Offset currentOffset();
 protected:
-    virtual bool rawOpen(const std::string &filename, File::Mode mode);
-    virtual bool rawWrite(const void *buffer, size_t length);
+    virtual bool rawOpen(const std::string &filename);
     virtual size_t rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
-    virtual void rawFlush();
     virtual bool rawSkip(size_t length);
     virtual int  rawPercentRead();
 private:
@@ -72,9 +69,8 @@ private:
     double m_endOffset;
 };
 
-ZLibFile::ZLibFile(const std::string &filename,
-                   File::Mode mode)
-    : File(filename, mode),
+ZLibFile::ZLibFile(const std::string &filename)
+    : File(filename),
       m_gzFile(NULL)
 {
 }
@@ -84,17 +80,9 @@ ZLibFile::~ZLibFile()
     close();
 }
 
-bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
+bool ZLibFile::rawOpen(const std::string &filename)
 {
-    int flags;
-    const char *fmode;
-    if (mode == File::Write) {
-        flags = O_WRONLY | O_CREAT | O_TRUNC;
-        fmode = "wb";
-    } else {
-        flags = O_RDONLY;
-        fmode = "rb";
-    }
+    int flags = O_RDONLY;
 #ifdef O_BINARY
     flags |= O_BINARY;
 #endif
@@ -111,9 +99,9 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
         return false;
     }
 
-    m_gzFile = gzdopen(fd, fmode);
+    m_gzFile = gzdopen(fd, "rb");
 
-    if (mode == File::Read && m_gzFile) {
+    if (m_gzFile) {
         //XXX: unfortunately zlib doesn't support
         //     SEEK_END or we could've done:
         //m_endOffset = gzseek(m_gzFile, 0, SEEK_END);
@@ -124,11 +112,6 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
     }
 
     return m_gzFile != NULL;
-}
-
-bool ZLibFile::rawWrite(const void *buffer, size_t length)
-{
-    return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
 }
 
 size_t ZLibFile::rawRead(void *buffer, size_t length)
@@ -148,11 +131,6 @@ void ZLibFile::rawClose()
         gzclose(m_gzFile);
         m_gzFile = NULL;
     }
-}
-
-void ZLibFile::rawFlush()
-{
-    gzflush(m_gzFile, Z_SYNC_FLUSH);
 }
 
 File::Offset ZLibFile::currentOffset()

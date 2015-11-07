@@ -33,7 +33,7 @@
 #include <vector>
 
 #include "os.hpp"
-#include "trace_file.hpp"
+#include "trace_ostream.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
 
@@ -43,27 +43,26 @@ namespace trace {
 Writer::Writer() :
     call_no(0)
 {
-    m_file = File::createSnappy();
-    close();
+    m_file = nullptr;
 }
 
 Writer::~Writer()
 {
     close();
-    delete m_file;
-    m_file = NULL;
 }
 
 void
 Writer::close(void) {
-    m_file->close();
+    delete m_file;
+    m_file = nullptr;
 }
 
 bool
 Writer::open(const char *filename) {
     close();
 
-    if (!m_file->open(filename, File::Write)) {
+    m_file = createSnappyStream(filename);
+    if (!m_file) {
         return false;
     }
 

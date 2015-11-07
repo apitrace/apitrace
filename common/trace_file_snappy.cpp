@@ -60,6 +60,7 @@
 #include <string.h>
 
 #include "trace_file.hpp"
+#include "trace_snappy.hpp"
 
 
 #define SNAPPY_CHUNK_SIZE (1 * 1024 * 1024)
@@ -71,20 +72,17 @@ using namespace trace;
 
 class SnappyFile : public File {
 public:
-    SnappyFile(const std::string &filename = std::string(),
-               File::Mode mode = File::Read);
+    SnappyFile(const std::string &filename = std::string());
     virtual ~SnappyFile();
 
     virtual bool supportsOffsets() const;
     virtual File::Offset currentOffset();
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
-    virtual bool rawOpen(const std::string &filename, File::Mode mode);
-    virtual bool rawWrite(const void *buffer, size_t length);
+    virtual bool rawOpen(const std::string &filename);
     virtual size_t rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
-    virtual void rawFlush();
     virtual bool rawSkip(size_t length);
     virtual int rawPercentRead();
 
@@ -125,8 +123,7 @@ private:
     std::streampos m_endPos;
 };
 
-SnappyFile::SnappyFile(const std::string &filename,
-                              File::Mode mode)
+SnappyFile::SnappyFile(const std::string &filename)
     : File(),
       m_cacheMaxSize(SNAPPY_CHUNK_SIZE),
       m_cacheSize(m_cacheMaxSize),
@@ -145,20 +142,15 @@ SnappyFile::~SnappyFile()
     delete [] m_cache;
 }
 
-bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
+bool SnappyFile::rawOpen(const std::string &filename)
 {
-    std::ios_base::openmode fmode = std::fstream::binary;
-    if (mode == File::Write) {
-        fmode |= (std::fstream::out | std::fstream::trunc);
-        createCache(SNAPPY_CHUNK_SIZE);
-    } else if (mode == File::Read) {
-        fmode |= std::fstream::in;
-    }
+    std::ios_base::openmode fmode = std::fstream::binary
+                                  | std::fstream::in;
 
     m_stream.open(filename.c_str(), fmode);
 
     //read in the initial buffer if we're reading
-    if (m_stream.is_open() && mode == File::Read) {
+    if (m_stream.is_open()) {
         m_stream.seekg(0, std::ios::end);
         m_endPos = m_stream.tellg();
         m_stream.seekg(0, std::ios::beg);
@@ -170,42 +162,8 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
         assert(byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 
         flushReadCache();
-    } else if (m_stream.is_open() && mode == File::Write) {
-        // write the snappy file identifier
-        m_stream << SNAPPY_BYTE1;
-        m_stream << SNAPPY_BYTE2;
     }
     return m_stream.is_open();
-}
-
-bool SnappyFile::rawWrite(const void *buffer, size_t length)
-{
-    if (freeCacheSize() > length) {
-        memcpy(m_cachePtr, buffer, length);
-        m_cachePtr += length;
-    } else if (freeCacheSize() == length) {
-        memcpy(m_cachePtr, buffer, length);
-        m_cachePtr += length;
-        flushWriteCache();
-    } else {
-        size_t sizeToWrite = length;
-
-        while (sizeToWrite >= freeCacheSize()) {
-            size_t endSize = freeCacheSize();
-            size_t offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (const char*)buffer + offset, endSize);
-            sizeToWrite -= endSize;
-            m_cachePtr += endSize;
-            flushWriteCache();
-        }
-        if (sizeToWrite) {
-            size_t offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (const char*)buffer + offset, sizeToWrite);
-            m_cachePtr += sizeToWrite;
-        }
-    }
-
-    return true;
 }
 
 size_t SnappyFile::rawRead(void *buffer, size_t length)
@@ -248,37 +206,10 @@ int SnappyFile::rawGetc()
 
 void SnappyFile::rawClose()
 {
-    if (m_mode == File::Write) {
-        flushWriteCache();
-    }
     m_stream.close();
     delete [] m_cache;
     m_cache = NULL;
     m_cachePtr = NULL;
-}
-
-void SnappyFile::rawFlush()
-{
-    assert(m_mode == File::Write);
-    flushWriteCache();
-    m_stream.flush();
-}
-
-void SnappyFile::flushWriteCache()
-{
-    size_t inputLength = usedCacheSize();
-
-    if (inputLength) {
-        size_t compressedLength;
-
-        ::snappy::RawCompress(m_cache, inputLength,
-                              m_compressedCache, &compressedLength);
-
-        writeCompressedLength(compressedLength);
-        m_stream.write(m_compressedCache, compressedLength);
-        m_cachePtr = m_cache;
-    }
-    assert(m_cachePtr == m_cache);
 }
 
 void SnappyFile::flushReadCache(size_t skipLength)
