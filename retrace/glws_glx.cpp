@@ -88,7 +88,11 @@ public:
     }
 
     ~GlxDrawable() {
-        XDestroyWindow(display, window);
+        if (pbuffer) {
+            glXDestroyPbuffer(display, window);
+        } else {
+            XDestroyWindow(display, window);
+        }
     }
 
     void
