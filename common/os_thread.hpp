@@ -90,18 +90,11 @@ namespace os {
         typedef pthread_mutex_t native_handle_type;
 #endif
 
+    protected:
         _base_mutex(void) {
-#ifdef _WIN32
-            InitializeCriticalSection(&_native_handle);
-#else
-            pthread_mutexattr_t attr;
-            pthread_mutexattr_init(&attr);
-            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-            pthread_mutex_init(&_native_handle, &attr);
-            pthread_mutexattr_destroy(&attr);
-#endif
         }
 
+    public:
         ~_base_mutex() {
 #ifdef _WIN32
             DeleteCriticalSection(&_native_handle);
