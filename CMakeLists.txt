@@ -304,7 +304,7 @@ else ()
     add_compiler_flags (-fmessage-length=0)
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND CMAKE_BUILD_TYPE MATCHES Rel)
+if (CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_BUILD_TYPE MATCHES Rel)
     message (WARNING
         "\n"
         "  WARNING: NON-DEBUG BUILDS ON CLANG CAN TAKE UP TO 45MIN!\n"
