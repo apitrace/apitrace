@@ -130,7 +130,8 @@ public:
     }
 
     ~CocoaDrawable() {
-        [window release];
+        [view release];
+        [window close];
     }
 
     void
