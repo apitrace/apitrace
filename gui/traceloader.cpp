@@ -55,6 +55,15 @@ void TraceLoader::loadTrace(const QString &filename)
         return;
     }
 
+    if (!m_parser.supportsOffsets()) {
+        emit parseProblem(
+            "This trace in compressed in a format that does not allow random seeking.\n"
+            "Please repack the trace with `apitrace repack`."
+        );
+        m_parser.close();
+        return;
+    }
+
     emit startedParsing();
 
     if (m_parser.supportsOffsets()) {

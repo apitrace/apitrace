@@ -56,6 +56,7 @@ public slots:
     void search(const ApiTrace::SearchRequest &request);
 
 signals:
+    void parseProblem(const QString &message);
     void startedParsing();
     void parsed(int percent);
     void guessedApi(int api);

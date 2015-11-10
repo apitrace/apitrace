@@ -64,6 +64,7 @@ private slots:
     void replayProfileFound(trace::Profile *state);
     void replayThumbnailsFound(const ImageHash &thumbnails);
     void replayError(const QString &msg);
+    void loadError(const QString &msg);
     void startedLoadingTrace();
     void loadProgess(int percent);
     void finishedLoadingTrace();

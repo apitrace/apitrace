@@ -110,6 +110,7 @@ public slots:
 signals:
     void loadTrace(const QString &name);
     void requestFrame(ApiTraceFrame *frame);
+    void problemLoadingTrace(const QString &message);
     void startedLoadingTrace();
     void loaded(int percent);
     void finishedLoadingTrace();

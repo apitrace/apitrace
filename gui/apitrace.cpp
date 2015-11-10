@@ -45,6 +45,8 @@ ApiTrace::ApiTrace()
             this, SIGNAL(foundCallIndex(ApiTraceCall*)));
 
 
+    connect(m_loader, SIGNAL(parseProblem(const QString&)),
+            this, SIGNAL(problemLoadingTrace(const QString&)));
     connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
     connect(m_loader, SIGNAL(parsed(int)),

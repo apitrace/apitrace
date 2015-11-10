@@ -398,6 +398,15 @@ void MainWindow::replayError(const QString &message)
         this, tr("Replay Failed"), message);
 }
 
+void MainWindow::loadError(const QString &message)
+{
+    m_progressBar->hide();
+    statusBar()->showMessage(
+        tr("Load unsuccessful."), 2000);
+    QMessageBox::warning(
+        this, tr("Load Failed"), message);
+}
+
 void MainWindow::startedLoadingTrace()
 {
     Q_ASSERT(m_trace);
@@ -993,6 +1002,8 @@ void MainWindow::initObjects()
 
 void MainWindow::initConnections()
 {
+    connect(m_trace, SIGNAL(problemLoadingTrace(const QString&)),
+            this, SLOT(loadError(const QString&)));
     connect(m_trace, SIGNAL(startedLoadingTrace()),
             this, SLOT(startedLoadingTrace()));
     connect(m_trace, SIGNAL(loaded(int)),
