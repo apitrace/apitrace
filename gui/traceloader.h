@@ -93,7 +93,6 @@ private:
     void loadHelpFile();
     void guessApi(const trace::Call *call);
     void scanTrace();
-    void parseTrace();
 
     void searchNext(const ApiTrace::SearchRequest &request);
     void searchPrev(const ApiTrace::SearchRequest &request);
