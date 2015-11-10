@@ -23,7 +23,6 @@ add_convenience_library (common
     trace_writer.cpp
     trace_writer_local.cpp
     trace_writer_model.cpp
-    trace_loader.cpp
     trace_profiler.cpp
     trace_option.cpp
     trace_ostream_snappy.cpp
