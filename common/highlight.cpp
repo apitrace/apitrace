@@ -230,7 +230,7 @@ haveAnsi(void)
     static bool result = false;
 
     if (!checked) {
-        // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#Environment_variable
+        // https://conemu.github.io/en/ConEmuEnvironment.html
         // XXX: Didn't quite work for me
         if (0) {
             const char *conEmuANSI = getenv("ConEmuANSI");

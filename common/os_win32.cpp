@@ -289,7 +289,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      * flag.
      *
      * See also:
-     * - http://code.google.com/p/nativeclient/issues/detail?id=1495
+     * - https://bugs.chromium.org/p/nativeclient/issues/detail?id=1495
      */
 #ifdef _MSC_VER
 #ifndef _WIN64
