@@ -235,8 +235,6 @@ class GlRetracer(Retracer):
                 print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
             elif function.name == 'glUnmapNamedBuffer':
                 print r'            glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
-            elif function.name == 'glUnmapNamedBuffer':
-                print r'            glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
             elif function.name == 'glUnmapNamedBufferEXT':
                 print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
             elif function.name == 'glUnmapObjectBufferATI':
