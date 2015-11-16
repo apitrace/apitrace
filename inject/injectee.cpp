@@ -58,7 +58,7 @@ static int VERBOSITY = 0;
 #define NOOP 0
 
 
-static CRITICAL_SECTION Mutex = {(PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0};
+static CRITICAL_SECTION Mutex;
 
 
 
@@ -1037,6 +1037,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
+        InitializeCriticalSection(&Mutex);
+
         g_hThisModule = hinstDLL;
 
         /*
