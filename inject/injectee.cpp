@@ -58,7 +58,7 @@ static int VERBOSITY = 0;
 #define NOOP 0
 
 
-static CRITICAL_SECTION Mutex;
+static CRITICAL_SECTION g_Mutex;
 
 
 
@@ -379,21 +379,21 @@ replaceAddress(LPVOID *lpOldAddress, LPVOID lpNewAddress)
         return TRUE;
     }
 
-    EnterCriticalSection(&Mutex);
+    EnterCriticalSection(&g_Mutex);
 
     if (!(VirtualProtect(lpOldAddress, sizeof *lpOldAddress, PAGE_READWRITE, &flOldProtect))) {
-        LeaveCriticalSection(&Mutex);
+        LeaveCriticalSection(&g_Mutex);
         return FALSE;
     }
 
     *lpOldAddress = lpNewAddress;
 
     if (!(VirtualProtect(lpOldAddress, sizeof *lpOldAddress, flOldProtect, &flOldProtect))) {
-        LeaveCriticalSection(&Mutex);
+        LeaveCriticalSection(&g_Mutex);
         return FALSE;
     }
 
-    LeaveCriticalSection(&Mutex);
+    LeaveCriticalSection(&g_Mutex);
     return TRUE;
 }
 
@@ -642,9 +642,9 @@ patchModule(HMODULE hModule,
     /* Hook modules only once */
     if (action == ACTION_HOOK) {
         std::pair< std::set<HMODULE>::iterator, bool > ret;
-        EnterCriticalSection(&Mutex);
+        EnterCriticalSection(&g_Mutex);
         ret = g_hHookedModules.insert(hModule);
-        LeaveCriticalSection(&Mutex);
+        LeaveCriticalSection(&g_Mutex);
         if (!ret.second) {
             return;
         }
@@ -951,10 +951,10 @@ MyFreeLibrary(HMODULE hModule)
     BOOL bRet = FreeLibrary(hModule);
     DWORD dwLastError = GetLastError();
 
-    EnterCriticalSection(&Mutex);
+    EnterCriticalSection(&g_Mutex);
     // TODO: Only clear the modules that have been freed
     g_hHookedModules.clear();
-    LeaveCriticalSection(&Mutex);
+    LeaveCriticalSection(&g_Mutex);
 
     SetLastError(dwLastError);
     return bRet;
@@ -1037,7 +1037,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        InitializeCriticalSection(&Mutex);
+        InitializeCriticalSection(&g_Mutex);
 
         g_hThisModule = hinstDLL;
 
