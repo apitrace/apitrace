@@ -25,13 +25,20 @@
  **************************************************************************/
 
 
+/*
+ * Provides access to real dlopen, as tracing libraries interpose it.
+ */
+
+
 #include "os.hpp"
+#include "dlopen.hpp"
 
 
 #ifdef __GLIBC__
 
 
 #include <dlfcn.h>
+
 
 extern "C" void * __libc_dlopen_mode(const char * filename, int flag);
 extern "C" void * __libc_dlsym(void * handle, const char * symbol);
@@ -75,5 +82,36 @@ dlsym(void * handle, const char * symbol)
 }
 
 
-
 #endif /* __GLIBC__ */
+
+
+/*
+ * Invoke the true dlopen() function.
+ */
+void *
+_dlopen(const char *filename, int flag)
+{
+    typedef void * (*PFN_DLOPEN)(const char *, int);
+    static PFN_DLOPEN dlopen_ptr = NULL;
+
+    if (!dlopen_ptr) {
+#if defined(ANDROID)
+        /* Android does not have dlopen in libdl.so; instead, the
+         * implementation is available in the dynamic linker itself.
+         * Oddly enough, we still can interpose it, but need to use
+         * RTLD_DEFAULT to get pointer to the original function.  */
+        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_DEFAULT, "dlopen");
+#elif defined(__GLIBC__)
+        void *libdl_handle = __libc_dlopen_mode("libdl.so.2", RTLD_LOCAL | RTLD_NOW);
+        dlopen_ptr = (PFN_DLOPEN)__libc_dlsym(libdl_handle, "dlopen");
+#else
+        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
+#endif
+        if (!dlopen_ptr) {
+            os::log("apitrace: error: failed to look up real dlopen\n");
+            return NULL;
+        }
+    }
+
+    return dlopen_ptr(filename, flag);
+}

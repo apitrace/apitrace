@@ -26,6 +26,7 @@
 
 #include "glproc.hpp"
 
+#include <string.h>
 
 #if !defined(_WIN32)
 #include "dlopen.hpp"
