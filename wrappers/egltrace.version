@@ -5,6 +5,7 @@
         egl[A-Z]*;
         gl[A-Z]*;
         dlopen;
+        dlsym;
     local:
         *;
 };

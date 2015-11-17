@@ -689,16 +689,3 @@ void
 retrace::cleanUp(void) {
     glws::cleanup();
 }
-
-
-#ifndef _WIN32
-
-#include "dlopen.hpp"
-
-void *
-_dlopen(const char *filename, int flag)
-{
-   return dlopen(filename, flag);
-}
-
-#endif

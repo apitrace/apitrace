@@ -30,7 +30,7 @@
 
 #if !defined(_WIN32)
 #include <unistd.h> // for symlink
-#include "dlopen.hpp"
+#include <dlfcn.h>
 #endif
 
 
@@ -197,7 +197,7 @@ void * _libgl_sym(const char *symbol)
          * exposes symbols to it.
          */
 
-        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+        _libGlHandle = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
         if (!_libGlHandle) {
             os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
