@@ -73,14 +73,17 @@ Build as:
 
 Additional requirements:
 
+* [Android CMake](https://github.com/taka-no-me/android-cmake)
 * [Android NDK](http://developer.android.com/sdk/ndk/index.html)
 * [Android SDK](http://developer.android.com/sdk/index.html#Other). **Make sure you have Android 4.4.2 (API 19) platform SDK installed and Android build tools "21.1.2". API 19 is needed only to build the APK, but it will still run on lower API versions (with works starting with API 12).**
 
 Build as:
 
+    wget -N https://raw.githubusercontent.com/taka-no-me/android-cmake/master/android.toolchain.cmake
+    
     cmake \
         -H. -Bbuild \
-        -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
         -DANDROID_NDK=/path/to/your/ndk \
         -DANDROID_API_LEVEL=9 \
         -DANDROID_STL=gnustl_shared \
@@ -97,7 +100,7 @@ CMake as:
 
     cmake \
         -H. -Bbuild \
-        -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
         -DANDROID_API_LEVEL=9 \
         -DANDROID_TOOLCHAIN_NAME=aarch64-linux-android-4.9 \
         -DANDROID_ABI=arm64-v8a
