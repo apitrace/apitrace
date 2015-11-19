@@ -67,6 +67,7 @@ if (NOT ANDROID)
                 "dependencies."
             )
         endif ()
+        option (ENABLE_STATIC_EXE "Statically link executables" OFF)
     endif ()
 endif ()
 
@@ -104,7 +105,7 @@ endif ()
 
 find_package (Threads)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ENABLE_STATIC_EXE)
     find_package (procps)
     if (PROCPS_FOUND)
         add_definitions (-DHAVE_READPROC_H)
@@ -317,6 +318,8 @@ endif ()
 if (MINGW)
     # Avoid depending on MinGW runtime DLLs
     add_linker_flags (-static-libgcc -static-libstdc++)
+elseif (ENABLE_STATIC_EXE)
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
 
 if (ENABLE_FRAME_POINTER)
@@ -404,7 +407,7 @@ if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
 endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
-if (NOT WIN32)
+if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
     # gzip traces (e.g., apitrace-tests/traces/zlib-no-eof.trace).
     find_package (ZLIB 1.2.6)
@@ -421,7 +424,7 @@ include_directories (${ZLIB_INCLUDE_DIRS})
 # version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.
 # So if the system's ZLIB was did not meet the our requirements, then there's
 # no safe way to use the system's PNG library.
-if (NOT WIN32 AND ZLIB_FOUND)
+if (NOT WIN32 AND NOT ENABLE_STATIC_EXE AND ZLIB_FOUND)
     find_package (PNG)
 endif ()
 if (NOT PNG_FOUND)
