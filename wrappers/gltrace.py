@@ -315,6 +315,7 @@ class GlTracer(Tracer):
                 ptype = function_pointer_type(function)
                 pvalue = function_pointer_value(function)
                 print '    if (strcmp("%s", (const char *)procName) == 0) {' % function.name
+                print '        assert(procPtr != (%s)&%s);' % (retType, function.name)
                 print '        %s = (%s)procPtr;' % (pvalue, ptype)
                 print '        return (%s)&%s;' % (retType, function.name,)
                 print '    }'
