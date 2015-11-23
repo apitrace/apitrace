@@ -1,8 +1,8 @@
 
 /* pngread.c - read a PNG file
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 26, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -63,7 +63,7 @@ png_create_read_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
          /* In stable builds only warn if an application error can be completely
           * handled.
           */
-#        if PNG_LIBPNG_BUILD_BASE_TYPE >= PNG_LIBPNG_BUILD_RC
+#        if PNG_RELEASE_BUILD
             png_ptr->flags |= PNG_FLAG_APP_WARNINGS_WARN;
 #        endif
 #     endif
@@ -814,8 +814,7 @@ png_read_end(png_structrp png_ptr, png_inforp info_ptr)
          /* Zero length IDATs are legal after the last IDAT has been
           * read, but not after other chunks have been read.
           */
-         if ((length > 0) ||
-             (png_ptr->mode & PNG_HAVE_CHUNK_AFTER_IDAT) != 0)
+         if ((length > 0) || (png_ptr->mode & PNG_HAVE_CHUNK_AFTER_IDAT) != 0)
             png_benign_error(png_ptr, "Too many IDATs found");
 
          png_crc_finish(png_ptr, length);
@@ -1044,9 +1043,9 @@ png_read_png(png_structrp png_ptr, png_inforp info_ptr,
    /* Tell libpng to strip 16-bit/color files down to 8 bits per color.
     */
    if ((transforms & PNG_TRANSFORM_SCALE_16) != 0)
-     /* Added at libpng-1.5.4. "strip_16" produces the same result that it
-      * did in earlier versions, while "scale_16" is now more accurate.
-      */
+      /* Added at libpng-1.5.4. "strip_16" produces the same result that it
+       * did in earlier versions, while "scale_16" is now more accurate.
+       */
 #ifdef PNG_READ_SCALE_16_TO_8_SUPPORTED
       png_set_scale_16(png_ptr);
 #else
@@ -1210,7 +1209,7 @@ png_read_png(png_structrp png_ptr, png_inforp info_ptr,
 
       for (iptr = 0; iptr < info_ptr->height; iptr++)
          info_ptr->row_pointers[iptr] = png_voidcast(png_bytep,
-            png_malloc(png_ptr, info_ptr->rowbytes));
+             png_malloc(png_ptr, info_ptr->rowbytes));
    }
 
    png_read_image(png_ptr, info_ptr->row_pointers);
@@ -1684,10 +1683,11 @@ decode_gamma(png_image_read_control *display, png_uint_32 value, int encoding)
          value *= 257;
          break;
 
+#ifdef __GNUC__
       default:
          png_error(display->image->opaque->png_ptr,
             "unexpected encoding (internal error)");
-         break;
+#endif
    }
 
    return value;
@@ -1824,6 +1824,7 @@ png_create_colormap_entry(png_image_read_control *display,
             y = (y + 128) >> 8;
             y *= 255;
             y = PNG_sRGB_FROM_LINEAR((y + 64) >> 7);
+            alpha = PNG_DIV257(alpha);
             encoding = P_sRGB;
          }
 
@@ -2286,8 +2287,14 @@ png_image_read_colormap(png_voidp argument)
                      output_processing = PNG_CMAP_NONE;
                      break;
                   }
-
+#ifdef __COVERITY__
+                 /* Coverity claims that output_encoding cannot be 2 (P_LINEAR)
+                  * here.
+                  */
+                  back_alpha = 255;
+#else
                   back_alpha = output_encoding == P_LINEAR ? 65535 : 255;
+#endif
                }
 
                /* output_processing means that the libpng-processed row will be
@@ -2412,7 +2419,14 @@ png_image_read_colormap(png_voidp argument)
                 */
                background_index = i;
                png_create_colormap_entry(display, i++, back_r, back_g, back_b,
-                  output_encoding == P_LINEAR ? 65535U : 255U, output_encoding);
+#ifdef __COVERITY__
+                 /* Coverity claims that output_encoding cannot be 2 (P_LINEAR)
+                  * here.
+                  */ 255U,
+#else
+                  output_encoding == P_LINEAR ? 65535U : 255U,
+#endif
+                  output_encoding);
 
                /* For non-opaque input composite on the sRGB background - this
                 * requires inverting the encoding for each component.  The input
@@ -2834,10 +2848,6 @@ png_image_read_colormap(png_voidp argument)
 
    switch (data_encoding)
    {
-      default:
-         png_error(png_ptr, "bad data option (internal error)");
-         break;
-
       case P_sRGB:
          /* Change to 8-bit sRGB */
          png_set_alpha_mode_fixed(png_ptr, PNG_ALPHA_PNG, PNG_GAMMA_sRGB);
@@ -2847,6 +2857,11 @@ png_image_read_colormap(png_voidp argument)
          if (png_ptr->bit_depth > 8)
             png_set_scale_16(png_ptr);
          break;
+
+#ifdef __GNUC__
+      default:
+         png_error(png_ptr, "bad data option (internal error)");
+#endif
    }
 
    if (cmap_entries > 256 || cmap_entries > image->colormap_entries)
@@ -3246,7 +3261,7 @@ png_image_read_composite(png_voidp argument)
       png_uint_32  width = image->width;
       ptrdiff_t    step_row = display->row_bytes;
       unsigned int channels =
-         (image->format & PNG_FORMAT_FLAG_COLOR) != 0 ? 3 : 1;
+          (image->format & PNG_FORMAT_FLAG_COLOR) != 0 ? 3 : 1;
       int pass;
 
       for (pass = 0; pass < passes; ++pass)
@@ -3397,10 +3412,6 @@ png_image_read_background(png_voidp argument)
     */
    switch (info_ptr->bit_depth)
    {
-      default:
-         png_error(png_ptr, "unexpected bit depth");
-         break;
-
       case 8:
          /* 8-bit sRGB gray values with an alpha channel; the alpha channel is
           * to be removed by composing on a background: either the row if
@@ -3618,6 +3629,11 @@ png_image_read_background(png_voidp argument)
             }
          }
          break;
+
+#ifdef __GNUC__
+      default:
+         png_error(png_ptr, "unexpected bit depth");
+#endif
    }
 
    return 1;
