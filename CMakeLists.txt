@@ -1,14 +1,6 @@
 cmake_minimum_required (VERSION 2.8.11)
 
 
-# Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
-# abandoned it for clang.  This must be done before the project is defined.
-# But DONT force clang if we are cross-compiling to Android.
-if (APPLE AND NOT ANDROID_NDK)
-    set (CMAKE_C_COMPILER "clang")
-    set (CMAKE_CXX_COMPILER "clang++")
-endif ()
-
 if (CMAKE_GENERATOR STREQUAL "Xcode")
     message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
 endif ()
