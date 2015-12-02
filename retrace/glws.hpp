@@ -129,7 +129,9 @@ public:
         width(w),
         height(h),
         pbuffer(pb),
-        visible(false)
+        visible(false),
+        mipmapLevel(0),
+        cubeFace(0)
     {}
 
     virtual ~Drawable() {}
