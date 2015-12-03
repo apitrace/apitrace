@@ -53,6 +53,9 @@
 
 /**
  * Dummy thread to force Cocoa to enter multithreading mode.
+ *
+ * See also:
+ * - https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/mmAutoreleasePools.html
  */
 @interface DummyThread : NSObject
     + (void)enterMultiThreaded;
