@@ -12,6 +12,7 @@ init:
 shallow_clone: true
 
 environment:
+  MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
   - CMAKE_GENERATOR: "Visual Studio 12"
     QT5: C:\Qt\5.5\msvc2013
@@ -32,9 +33,9 @@ build:
   verbosity: minimal
 
 after_build:
-- cmake --build build --use-stderr --config "%CONFIGURATION%" -- /verbosity:minimal
-- cmake --build build --use-stderr --config "%CONFIGURATION%" --target check -- /verbosity:minimal
-- cmake --build build --use-stderr --config "%CONFIGURATION%" --target package -- /verbosity:minimal
+- cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
+- cmake --build build --config "%CONFIGURATION%" --target check -- %MSBUILD_FLAGS%
+- cmake --build build --config "%CONFIGURATION%" --target package -- %MSBUILD_FLAGS%
 
 #artifacts:
 #- path: build/apitrace-*.7z
