@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2010-2015 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -278,6 +278,10 @@ breakpoint(void)
 #define DBG_PRINTEXCEPTION_C 0x40010006
 #endif
 
+#ifndef DBG_PRINTEXCEPTION_WIDE_C
+#define DBG_PRINTEXCEPTION_WIDE_C 0x4001000A
+#endif
+
 static PVOID prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
@@ -313,9 +317,10 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
     }
 
     /*
-     * Ignore OutputDebugStringA exception.
+     * Ignore OutputDebugStringA/W exceptions.
      */
-    if (ExceptionCode == DBG_PRINTEXCEPTION_C) {
+    if (ExceptionCode == DBG_PRINTEXCEPTION_C ||
+        ExceptionCode == DBG_PRINTEXCEPTION_WIDE_C) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
