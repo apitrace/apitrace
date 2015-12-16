@@ -664,8 +664,12 @@ patchModule(HMODULE hModule,
      * stack overflow), especially when those libraries use techniques like
      * modifying the hooked functions prolog (instead of patching IAT like we
      * do).
+     *
+     * See also:
+     * - http://www.nynaeve.net/?p=62
      */
     if (stricmp(szBaseName, "kernel32.dll") == 0 ||
+        stricmp(szBaseName, "AcLayers.dll") == 0 ||
         stricmp(szBaseName, "ConEmuHk.dll") == 0 ||
         stricmp(szBaseName, "gameoverlayrenderer.dll") == 0 ||
         stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0) {
