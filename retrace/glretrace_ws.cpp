@@ -203,7 +203,9 @@ updateDrawable(int width, int height) {
     }
 
     glws::Drawable *currentDrawable = currentContext->drawable;
-    assert(currentDrawable);
+    if (!currentDrawable) {
+        return;
+    }
 
     if (currentDrawable->pbuffer) {
         return;

@@ -359,16 +359,20 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 bool
 makeCurrentInternal(Drawable *drawable, Context *context)
 {
-    if (!drawable || !context) {
-        return glXMakeCurrent(display, None, NULL);
-    } else {
+    Window draw = None;
+    if (drawable) {
         GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
-        GlxContext *glxContext = static_cast<GlxContext *>(context);
-
         glxDrawable->ever_current = true;
-
-        return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
+        draw = glxDrawable->window;
     }
+
+    GLXContext ctx = nullptr;
+    if (context) {
+        GlxContext *glxContext = static_cast<GlxContext *>(context);
+        ctx = glxContext->context;
+    }
+
+    return glXMakeCurrent(display, draw, ctx);
 }
 
 Window
