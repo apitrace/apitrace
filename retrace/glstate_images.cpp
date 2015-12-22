@@ -308,9 +308,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 
         }
 
-        unsigned bits_per_element;
-        unsigned bits_per_pixel;
-        _gl_format_size(formatDesc.format, formatDesc.type, bits_per_element, bits_per_pixel);
+        unsigned bits_per_pixel = _gl_format_size(formatDesc.format, formatDesc.type);
 
         desc.width = buffer_size * 8 / bits_per_pixel;
         desc.height = 1;
