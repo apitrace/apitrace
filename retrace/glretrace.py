@@ -254,6 +254,11 @@ class GlRetracer(Retracer):
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
 
+        if function.name.startswith('glCopyImageSubData'):
+            print r'    if (srcTarget == GL_RENDERBUFFER || dstTarget == GL_RENDERBUFFER) {'
+            print r'        retrace::warning(call) << " renderbuffer targets unsupported (https://github.com/apitrace/apitrace/issues/404)\n";'
+            print r'    }'
+
         is_draw_arrays = self.draw_arrays_function_regex.match(function.name) is not None
         is_draw_elements = self.draw_elements_function_regex.match(function.name) is not None
         is_misc_draw = self.misc_draw_function_regex.match(function.name) is not None
