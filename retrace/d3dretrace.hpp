@@ -86,6 +86,9 @@ public:
 HWND
 createWindow(int width, int height);
 
+HWND
+createWindow(HWND hWnd, int width, int height);
+
 void
 resizeWindow(HWND hWnd, int width, int height);
 

@@ -88,7 +88,12 @@ class D3DRetracer(Retracer):
 
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
-            print r'    HWND hWnd = d3dretrace::createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
+            print r'    HWND hWnd = pPresentationParameters->hDeviceWindow;'
+            if 'hFocusWindow' in method.argNames():
+                print r'    if (hWnd == NULL) {'
+                print r'        hWnd = hFocusWindow;'
+                print r'    }'
+            print r'    hWnd = d3dretrace::createWindow(hWnd, pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
             print r'    pPresentationParameters->hDeviceWindow = hWnd;'
             if 'hFocusWindow' in method.argNames():
                 print r'    hFocusWindow = hWnd;'

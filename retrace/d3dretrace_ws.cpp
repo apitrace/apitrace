@@ -47,6 +47,28 @@ createWindow(int width, int height)
 }
 
 
+typedef std::map<HWND, HWND> HWND_MAP;
+static HWND_MAP g_hWndMap;
+
+
+HWND
+createWindow(HWND hWnd, int width, int height)
+{
+    HWND_MAP::iterator it;
+    it = g_hWndMap.find(hWnd);
+    if (it == g_hWndMap.end()) {
+        // Create a new window
+        hWnd = createWindow(width, height);
+        g_hWndMap[hWnd] = hWnd;
+    } else {
+        // Reuse the existing window
+        hWnd = it->second;
+        ws::resizeWindow(hWnd, width, height);
+    }
+    return hWnd;
+}
+
+
 void
 resizeWindow(HWND hWnd, int width, int height)
 {
