@@ -129,7 +129,6 @@ public:
 
         [window setContentView:view];
         [window setTitle:@"glretrace"];
-        [window orderOut:nil];
     }
 
     ~CocoaDrawable() {
@@ -145,6 +144,8 @@ public:
 
         [window setContentSize:NSMakeSize(w, h)];
 
+        processEvents();
+
         if (currentContext != nil) {
             [currentContext update];
             [window makeKeyAndOrderFront:nil];
@@ -153,8 +154,6 @@ public:
         }
 
         Drawable::resize(w, h);
-
-        processEvents();
     }
 
     void show(void) {
