@@ -494,10 +494,19 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
     return maxindex + 1;
 }
 
-#define _glDrawRangeElementsBaseVertex_count(start, end, count, type, indices, basevertex) _glDrawElementsBaseVertex_count(count, type, indices, basevertex)
+static inline GLuint
+_glDrawRangeElementsBaseVertex_count(GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex)
+{
+    if (end < start ||
+        count < 0) {
+        return 0;
+    }
+
+    return end + basevertex + 1;
+}
 
 #define _glDrawElements_count(count, type, indices) _glDrawElementsBaseVertex_count(count, type, indices, 0)
-#define _glDrawRangeElements_count(start, end, count, type, indices) _glDrawElements_count(count, type, indices)
+#define _glDrawRangeElements_count(start, end, count, type, indices) _glDrawRangeElementsBaseVertex_count(start, end, count, type, indices, 0)
 #define _glDrawRangeElementsEXT_count _glDrawRangeElements_count
 
 /* FIXME take in consideration instancing */
