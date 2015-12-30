@@ -496,7 +496,7 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
 
 #define _glDrawRangeElementsBaseVertex_count(start, end, count, type, indices, basevertex) _glDrawElementsBaseVertex_count(count, type, indices, basevertex)
 
-#define _glDrawElements_count(count, type, indices) _glDrawElementsBaseVertex_count(count, type, indices, 0);
+#define _glDrawElements_count(count, type, indices) _glDrawElementsBaseVertex_count(count, type, indices, 0)
 #define _glDrawRangeElements_count(start, end, count, type, indices) _glDrawElements_count(count, type, indices)
 #define _glDrawRangeElementsEXT_count _glDrawRangeElements_count
 
