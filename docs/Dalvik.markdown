@@ -5,7 +5,7 @@ bootup by `init`) and Java applications are run by forks of the initial
 resident process.  Thus, injecting apitrace's tracing library is different from
 other operating systems.
 
-The following discussion assumes that tracing library is copied to '/data':
+The following discussion assumes that tracing library is copied to `/data`:
 
     adb push /path/to/apitrace/libs/[arch]/egltrace.so /data
 
@@ -27,7 +27,7 @@ Obtain the process name of the application to be traced (the one reported in
 
 (the former is read by Dalvik and specifies wrapping prefix, the latter is
 read by apitrace itself and used in case apitrace is preloaded into Java VM
-globally to specify which process should be traced).  Elevating priviliges
+globally to specify which process should be traced).  Elevating privileges
 via `adb root` is required to set the first property.
 
 If the `wrap.$PROCNAME` property name is longer than 31 characters [you'll need
@@ -39,7 +39,7 @@ use `-S` flag to `am start`:
     adb shell am start -S $PROCNAME
 
 Use `adb logcat \*:S apitrace` to examine apitrace debug output.  Trace files
-are saved into '/data/data/$PROCNAME' directory by default:
+are saved into `/data/data/$PROCNAME` directory by default:
 
     adb pull /data/data/$PROCNAME/$PROCNAME.trace
     adb shell rm /data/data/$PROCNAME/$PROCNAME.trace
@@ -49,7 +49,7 @@ are saved into '/data/data/$PROCNAME' directory by default:
 
 `LD_PRELOAD` is supported since Android 2.3 "Gingerbread" and newer, but
 injecting tracing library globally is no longer supported, as the
-`debug.apitrace.procname` system propery is no longer honored.
+`debug.apitrace.procname` system property is no longer honored.
 
 Consider checking out an
 [older commit](https://github.com/apitrace/apitrace/commit/888112983ef9564b3a9d15699faa17c337d3942b)
