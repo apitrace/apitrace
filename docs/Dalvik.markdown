@@ -30,6 +30,9 @@ read by apitrace itself and used in case apitrace is preloaded into Java VM
 globally to specify which process should be traced).  Elevating priviliges
 via `adb root` is required to set the first property.
 
+If the `wrap.$PROCNAME` property name is longer than 31 characters [you'll need
+to truncate it](https://github.com/apitrace/apitrace/issues/296).
+
 Make sure the process is not loaded before starting to trace it, for example
 use `-S` flag to `am start`:
 
