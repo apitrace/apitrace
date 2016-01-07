@@ -39,7 +39,7 @@ and their authors see the git history.
 
 # Version 4 #
 
-* Support tracing in Android, both native and Dalvik applications
+* Support tracing in Android, both native and Java applications
 
 * Show frame thumbnails in the GUI
 

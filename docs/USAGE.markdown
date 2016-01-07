@@ -141,7 +141,7 @@ See the `ld.so` man page for more information about `LD_PRELOAD` and
 
 To trace standalone native OpenGL ES applications, use
 `LD_PRELOAD=/path/to/egltrace.so /path/to/application` as described in the
-previous section.  To trace Java applications, refer to Dalvik.markdown.
+previous section.  To trace Java applications, refer to Android.markdown.
 
 ### Mac OS X ###
 

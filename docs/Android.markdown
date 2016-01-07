@@ -1,6 +1,6 @@
-# Tracing Dalvik VM (Java) applications on Android #
+# Tracing Java applications on Android #
 
-Android's Java virtual machine, Dalvik, runs as a system service (started at
+Android's Java virtual machine, runs as a system service (started at
 bootup by `init`) and Java applications are run by forks of the initial
 resident process.  Thus, injecting apitrace's tracing library is different from
 other operating systems.
@@ -12,7 +12,7 @@ The following discussion assumes that tracing library is copied to `/data`:
 
 ## Tracing on Android 4.0 and newer ##
 
-Starting from Android 4.0 (Ice Cream Sandwich) release, Dalvik supports
+Starting from Android 4.0 (Ice Cream Sandwich) release, the system supports
 running designated processes with wrappers, in which case a new Java VM is
 started with 'system()' library call for that process.
 

@@ -195,11 +195,11 @@ void * dlopen(const char *filename, int flag)
 #if defined(ANDROID)
 
 /*
- * Undocumented Android extensions used by Dalvik which have bound information
- * passed to it, but is currently ignored, so probably unreliable.
+ * Undocumented Android extensions used by the wrappers which have bound
+ * information passed to it, but is currently ignored, so probably unreliable.
  *
  * See:
- * https://github.com/android/platform_frameworks_base/blob/master/opengl/libs/GLES_CM/gl.cpp
+ * https://github.com/android/platform_frameworks_base/search?q=glVertexPointerBounds
  */
 
 extern "C" PUBLIC
