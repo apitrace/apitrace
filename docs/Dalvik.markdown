@@ -43,14 +43,3 @@ are saved into `/data/data/$PROCNAME` directory by default:
 
     adb pull /data/data/$PROCNAME/$PROCNAME.trace
     adb shell rm /data/data/$PROCNAME/$PROCNAME.trace
-
-
-## Tracing on Android pre-4.0 ##
-
-`LD_PRELOAD` is supported since Android 2.3 "Gingerbread" and newer, but
-injecting tracing library globally is no longer supported, as the
-`debug.apitrace.procname` system property is no longer honored.
-
-Consider checking out an
-[older commit](https://github.com/apitrace/apitrace/commit/888112983ef9564b3a9d15699faa17c337d3942b)
-if you need to trace on Android pre-4.0.
