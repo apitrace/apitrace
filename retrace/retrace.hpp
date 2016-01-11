@@ -122,6 +122,15 @@ extern bool forceWindowed;
 /**
  * Add profiling data to the dump when retracing.
  */
+extern unsigned curPass;
+extern unsigned numPasses;
+extern bool profilingWithBackends;
+extern char* profilingCallsMetricsString;
+extern char* profilingFramesMetricsString;
+extern char* profilingDrawCallsMetricsString;
+extern bool profilingListMetrics;
+extern bool profilingNumPasses;
+
 extern bool profiling;
 extern bool profilingCpuTimes;
 extern bool profilingGpuTimes;

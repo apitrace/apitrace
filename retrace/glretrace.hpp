@@ -27,6 +27,8 @@
 
 #include "glws.hpp"
 #include "retrace.hpp"
+#include "metric_backend.hpp"
+#include "metric_writer.hpp"
 
 #include "os_thread.hpp"
 
@@ -70,6 +72,14 @@ struct Context {
         return wsContext->hasExtension(extension);
     }
 };
+
+extern bool metricBackendsSetup;
+extern bool profilingContextAcquired;
+extern bool profilingBoundaries[QUERY_BOUNDARY_LIST_END];
+extern unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END];
+extern std::vector<MetricBackend*> metricBackends;
+extern MetricBackend* curMetricBackend;
+extern MetricWriter profiler;
 
 extern glprofile::Profile defaultProfile;
 
@@ -122,6 +132,8 @@ extern const retrace::Entry egl_callbacks[];
 
 void frame_complete(trace::Call &call);
 void initContext();
+void beforeContextSwitch();
+void afterContextSwitch();
 
 
 void updateDrawable(int width, int height);
@@ -129,6 +141,14 @@ void updateDrawable(int width, int height);
 void flushQueries();
 void beginProfile(trace::Call &call, bool isDraw);
 void endProfile(trace::Call &call, bool isDraw);
+
+MetricBackend* getBackend(std::string backendName);
+
+bool isLastPass();
+
+void listMetricsCLI();
+
+void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule);
 
 GLenum
 blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags);
