@@ -110,7 +110,15 @@ void parseMetricsBlock(QueryBoundary pollingRule, const char* str,
                 limit -= end + 1 - str;
                 str = end + 1;
             }
-            p = backend->getMetricById(std::stoul(groupStr), std::stoul(idStr));
+#if defined(ANDROID)
+	    // http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android
+	    unsigned groupId = strtoul(groupStr.c_str(), nullptr, 10);
+	    unsigned metricId = strtoul(idStr.c_str(), nullptr, 10);
+#else
+	    unsigned groupId = std::stoul(groupStr);
+	    unsigned metricId = std::stoul(idStr);
+#endif
+            p = backend->getMetricById(groupId, metricId);
             metricName = "[" + groupStr + ", " + idStr + "]";
         // parse metricName
         } else {
