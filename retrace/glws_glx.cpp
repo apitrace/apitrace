@@ -65,7 +65,8 @@ public:
 class GlxDrawable : public Drawable
 {
 public:
-    Window window;
+    Window window = 0;
+    GLXDrawable drawable = 0;
     bool ever_current;
 
     GlxDrawable(const Visual *vis, int w, int h,
@@ -78,10 +79,11 @@ public:
 
         const char *name = "glretrace";
         if (pbInfo) {
-            window = createPbuffer(display, glxvisual, pbInfo, w, h);
+            drawable = createPbuffer(display, glxvisual, pbInfo, w, h);
         }
         else {
             window = createWindow(visinfo, name, width, height);
+            drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
         }
 
         glXWaitX();
@@ -89,14 +91,19 @@ public:
 
     ~GlxDrawable() {
         if (pbuffer) {
-            glXDestroyPbuffer(display, window);
+            glXDestroyPbuffer(display, drawable);
         } else {
+            glXDestroyWindow(display, drawable);
             XDestroyWindow(display, window);
         }
     }
 
     void
     resize(int w, int h) {
+        if (!window) {
+            return;
+        }
+
         if (w == width && h == height) {
             return;
         }
@@ -116,7 +123,8 @@ public:
     }
 
     void show(void) {
-        if (visible) {
+        if (!window ||
+            visible) {
             return;
         }
 
@@ -130,23 +138,27 @@ public:
     }
 
     void copySubBuffer(int x, int y, int width, int height) {
-        glXCopySubBufferMESA(display, window, x, y, width, height);
+        glXCopySubBufferMESA(display, drawable, x, y, width, height);
 
-        processKeys(window);
+        if (window) {
+            processKeys(window);
+        }
     }
 
     void swapBuffers(void) {
         assert(!pbuffer);
         if (ever_current) {
             // The window has been bound to a context at least once
-            glXSwapBuffers(display, window);
+            glXSwapBuffers(display, drawable);
         } else {
             // Don't call glXSwapBuffers on this window to avoid an
             // (untrappable) X protocol error with NVIDIA's driver.
             std::cerr << "warning: attempt to issue SwapBuffers on unbound window "
                          " - skipping.\n";
         }
-        processKeys(window);
+        if (window) {
+            processKeys(window);
+        }
     }
 
 private:
@@ -363,7 +375,7 @@ makeCurrentInternal(Drawable *drawable, Context *context)
     if (drawable) {
         GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
         glxDrawable->ever_current = true;
-        draw = glxDrawable->window;
+        draw = glxDrawable->drawable;
     }
 
     GLXContext ctx = nullptr;
@@ -444,7 +456,7 @@ bindTexImage(Drawable *pBuffer, int iBuffer) {
     GLXDrawable prevDrawable = glXGetCurrentDrawable();
     GLXContext prevContext = glXGetCurrentContext();
     GlxDrawable *glxPBuffer = static_cast<GlxDrawable *>(pBuffer);
-    glXMakeCurrent(display, glxPBuffer->window, prevContext);
+    glXMakeCurrent(display, glxPBuffer->drawable, prevContext);
 
     glGetIntegerv(GL_READ_BUFFER, &readBufSave);
 
