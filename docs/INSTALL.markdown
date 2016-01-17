@@ -35,6 +35,7 @@ self contained, and to prevent symbol collisions when tracing.
 Requirements:
 
 * g++
+* libx11-dev
 
 Optional dependencies:
 
