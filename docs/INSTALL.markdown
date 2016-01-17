@@ -2,13 +2,15 @@
 
 Requirements common for all platforms:
 
+* C++ compiler
+
 * Python version 2.7
 
   * Python Image Library
 
 * CMake version 2.8.11 or higher (tested with version 2.8.12.2)
 
-Optional requirements:
+Optional dependencies:
 
 * zlib 1.2.6 or higher
 
@@ -32,7 +34,9 @@ self contained, and to prevent symbol collisions when tracing.
 
 # Linux #
 
-Additional optional dependencies:
+Optional dependencies:
+
+* Xlib headers
 
 * libprocps (procps development libraries)
 
