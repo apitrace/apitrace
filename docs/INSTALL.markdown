@@ -32,7 +32,11 @@ self contained, and to prevent symbol collisions when tracing.
 
 # Linux #
 
-Additional optional dependencies:
+Requirements:
+
+* g++
+
+Optional dependencies:
 
 * libprocps (procps development libraries)
 
