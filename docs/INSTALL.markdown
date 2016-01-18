@@ -39,8 +39,8 @@ Requirements:
 
 Optional dependencies:
 
+* libqt5webkit5-dev (for `qapitrace`)
 * libprocps (procps development libraries)
-
 * libdwarf
 
 Build as:
