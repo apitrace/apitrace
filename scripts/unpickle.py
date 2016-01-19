@@ -227,6 +227,17 @@ class Call:
             self._hash = hash(hashable)
         return self._hash
 
+    def arg(self, argName):
+        '''Lookup argument by name.'''
+        for name, value in self.args:
+            if name == argName:
+                return value
+        raise NameError(argName)
+
+    def argValues(self):
+        '''Return the arg values'''
+        return [value for name, value in self.args]
+
 
 class Unpickler:
 
