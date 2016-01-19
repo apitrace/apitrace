@@ -51,6 +51,7 @@ set(qapitrace_SRCS
    traceprocess.cpp
    trimprocess.cpp
    vertexdatainterpreter.cpp
+   leaktracethread.cpp
    graphing/frameaxiswidget.cpp
    graphing/graphwidget.cpp
    graphing/graphaxiswidget.cpp
