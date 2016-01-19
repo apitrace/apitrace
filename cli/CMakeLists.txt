@@ -19,6 +19,7 @@ add_executable (apitrace
     cli_diff.cpp
     cli_diff_state.cpp
     cli_diff_images.cpp
+    cli_leaks.cpp
     cli_dump.cpp
     cli_dump_images.cpp
     cli_pager.cpp
