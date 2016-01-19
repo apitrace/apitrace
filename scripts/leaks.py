@@ -29,6 +29,7 @@ import subprocess
 import sys
 import os.path
 import optparse
+import re
 
 import unpickle
 
@@ -36,7 +37,8 @@ import unpickle
 class ContextState:
 
     def __init__(self):
-        self.textures = {}
+        # a map of maps
+        self.objectDicts = {}
 
 
 class LeakDetector(unpickle.Unpickler):
@@ -56,33 +58,34 @@ class LeakDetector(unpickle.Unpickler):
         # Reached the end of the trace -- dump any live objects
         self.dumpLeaks("<EOF>", self.context)
 
+    genDelRegExp = re.compile('^gl(Gen|Delete)(Buffers|Textures|FrameBuffers|RenderBuffers)[A-Z]*$')
+
     def handleCall(self, call):
         # Ignore calls without side effects
         if call.flags & unpickle.CALL_FLAG_NO_SIDE_EFFECTS:
             return
 
         # Dump call for debugging:
-        if False:
-            sys.stderr.write(str(call))
+        if 0:
+            sys.stderr.write('%s\n' % call)
 
         # FIXME: keep track of current context on each thread (*MakeCurrent)
         context = self.context
 
-        if call.functionName == 'glGenTextures':
-            n, textures = call.argValues()
-            for i in range(n):
-                texture = textures[i]
-                context.textures[texture] = call.no
+        mo = self.genDelRegExp.match(call.functionName)
+        if mo:
+            verb = mo.group(1)
+            subject = mo.group(2)
 
-        if call.functionName == 'glDeleteTextures':
-            n, textures = call.argValues()
-            for i in range(n):
-                texture = textures[i]
-                try:
-                    del context.textures[texture]
-                except KeyError:
-                    # Ignore if texture name was never generated
-                    pass
+            subject = subject.lower().rstrip('s')
+            objectDict = context.objectDicts.setdefault(subject, {})
+
+            if verb == 'Gen':
+                self.handleGenerate(call, objectDict)
+            elif verb == 'Delete':
+                self.handleDelete(call, objectDict)
+            else:
+                assert 0
 
         if call.functionName in [
             'glXDestroyContext',
@@ -91,10 +94,30 @@ class LeakDetector(unpickle.Unpickler):
         ]:
             self.dumpLeaks(call.no, context)
 
-    def dumpLeaks(self, callNo, context):
-        for textureName, textureCallNo in context.textures.iteritems():
-            sys.stderr.write('%u: error: texture %u was not destroyed until %s\n' % (textureCallNo, textureName, callNo))
-        context.textures.clear()
+    def handleGenerate(self, call, objectDict):
+        n, names = call.argValues()
+        for i in range(n):
+            name = names[i]
+            objectDict[name] = call.no
+
+    def handleDelete(self, call, objectDict):
+        n, names = call.argValues()
+        for i in range(n):
+            name = names[i]
+            try:
+                del objectDict[name]
+            except KeyError:
+                # Ignore if texture name was never generated
+                pass
+
+    def dumpLeaks(self, currentCallNo, context):
+        for kind, objectDict in context.objectDicts.iteritems():
+            self.dumpNamespaceLeaks(currentCallNo, objectDict, kind)
+
+    def dumpNamespaceLeaks(self, currentCallNo, objectDict, kind):
+        for name, creationCallNo in objectDict.iteritems():
+            sys.stderr.write('%u: error: %s %u was not destroyed until %s\n' % (creationCallNo, kind, name, currentCallNo))
+        objectDict.clear()
 
 
 def main():
