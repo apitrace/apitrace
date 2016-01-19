@@ -34,13 +34,6 @@ import re
 import unpickle
 
 
-class ContextState:
-
-    def __init__(self):
-        # a map of maps
-        self.objectDicts = {}
-
-
 class LeakDetector(unpickle.Unpickler):
 
     def __init__(self, apitrace, trace):
@@ -50,13 +43,16 @@ class LeakDetector(unpickle.Unpickler):
 
         unpickle.Unpickler.__init__(self, p.stdout)
 
-        self.context = ContextState()
+        self.numContexts = 0
+
+        # a map of maps
+        self.objectDicts = {}
 
     def parse(self):
         unpickle.Unpickler.parse(self)
 
         # Reached the end of the trace -- dump any live objects
-        self.dumpLeaks("<EOF>", self.context)
+        self.dumpLeaks("<EOF>")
 
     genDelRegExp = re.compile('^gl(Gen|Delete)(Buffers|Textures|FrameBuffers|RenderBuffers)[A-Z]*$')
 
@@ -69,16 +65,13 @@ class LeakDetector(unpickle.Unpickler):
         if 0:
             sys.stderr.write('%s\n' % call)
 
-        # FIXME: keep track of current context on each thread (*MakeCurrent)
-        context = self.context
-
         mo = self.genDelRegExp.match(call.functionName)
         if mo:
             verb = mo.group(1)
             subject = mo.group(2)
 
             subject = subject.lower().rstrip('s')
-            objectDict = context.objectDicts.setdefault(subject, {})
+            objectDict = self.objectDicts.setdefault(subject, {})
 
             if verb == 'Gen':
                 self.handleGenerate(call, objectDict)
@@ -87,18 +80,37 @@ class LeakDetector(unpickle.Unpickler):
             else:
                 assert 0
 
+        # TODO: Track labels via glObjectLabel* calls
+
         if call.functionName in [
+            'CGLCreateContext',
+            'eglCreateContext',
+            'glXCreateContext',
+            'glXCreateContextAttribsARB',
+            'glXCreateContextWithConfigSGIX',
+            'wglCreateContext',
+            'wglCreateContextAttribsARB',
+        ]:
+            # FIXME: Ignore failing context creation calls
+            self.numContexts += 1
+
+        if call.functionName in [
+            'CGLDestroyContext',
             'glXDestroyContext',
             'eglDestroyContext',
             'wglDeleteContext',
         ]:
-            self.dumpLeaks(call.no, context)
+            assert self.numContexts > 0
+            self.numContexts -= 1
+            if self.numContexts == 0:
+                self.dumpLeaks(call.no)
 
     def handleGenerate(self, call, objectDict):
         n, names = call.argValues()
         for i in range(n):
             name = names[i]
             objectDict[name] = call.no
+            # TODO: Keep track of call stack backtrace too
 
     def handleDelete(self, call, objectDict):
         n, names = call.argValues()
@@ -110,8 +122,8 @@ class LeakDetector(unpickle.Unpickler):
                 # Ignore if texture name was never generated
                 pass
 
-    def dumpLeaks(self, currentCallNo, context):
-        for kind, objectDict in context.objectDicts.iteritems():
+    def dumpLeaks(self, currentCallNo):
+        for kind, objectDict in self.objectDicts.iteritems():
             self.dumpNamespaceLeaks(currentCallNo, objectDict, kind)
 
     def dumpNamespaceLeaks(self, currentCallNo, objectDict, kind):
