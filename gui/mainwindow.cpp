@@ -24,6 +24,7 @@
 #include "vertexdatainterpreter.h"
 #include "trace_profiler.hpp"
 #include "image/image.hpp"
+#include "leaktracethread.h"
 
 #include <QAction>
 #include <QApplication>
@@ -864,6 +865,27 @@ void MainWindow::showSettings()
     dialog.exec();
 }
 
+void MainWindow::leakTrace()
+{
+    LeakTraceThread *t=new LeakTraceThread(m_trace->fileName());
+
+    connect (t,SIGNAL(finished()),this,SLOT(leakTraceFinished()));
+
+    connect (t,SIGNAL(leakTraceErrors(const QList<ApiTraceError> &)),
+            this,SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+
+    t->start();
+}
+
+void MainWindow::leakTraceFinished(){
+
+    LeakTraceThread *t = qobject_cast<LeakTraceThread*>(sender());
+
+    m_ui.errorsDock->setVisible(t->hasError());
+
+    delete t;
+}
+
 void MainWindow::openHelp(const QUrl &url)
 {
     QDesktopServices::openUrl(url);
@@ -1082,6 +1104,8 @@ void MainWindow::initConnections()
             this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
+    connect(m_ui.actionLeakTrace,SIGNAL(triggered()),
+            this, SLOT(leakTrace()));
 
     connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));

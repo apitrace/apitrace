@@ -92,6 +92,7 @@
     <addaction name="actionLookupState"/>
     <addaction name="actionShowThumbnails"/>
     <addaction name="actionTrim"/>
+    <addaction name="actionLeakTrace"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
@@ -774,6 +775,14 @@
    </property>
    <property name="text">
     <string>Retrace on Android</string>
+   </property>
+  </action>
+  <action name="actionLeakTrace">
+   <property name="text">
+    <string>&amp;LeakTrace</string>
+   </property>
+   <property name="toolTip">
+    <string>trace opengl object leaks</string>
    </property>
   </action>
   <zorder>stateDock</zorder>

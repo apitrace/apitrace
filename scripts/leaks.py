@@ -93,7 +93,7 @@ class LeakDetector(unpickle.Unpickler):
 
     def dumpLeaks(self, callNo, context):
         for textureName, textureCallNo in context.textures.iteritems():
-            sys.stderr.write('error: call %s: texture %u created in call %u was never destroyed\n' % (callNo, textureName, textureCallNo))
+            sys.stderr.write('%u: error: texture %u was not destroyed until %s\n' % (textureCallNo, textureName, callNo))
         context.textures.clear()
 
 

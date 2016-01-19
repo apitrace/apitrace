@@ -72,6 +72,8 @@ private slots:
     void showThumbnails();
     void trim();
     void showSettings();
+    void leakTrace();
+    void leakTraceFinished();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
