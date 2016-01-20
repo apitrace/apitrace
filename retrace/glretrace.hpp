@@ -57,6 +57,8 @@ struct Context {
 
     bool used;
 
+    bool KHR_debug;
+
     inline glprofile::Profile
     profile(void) const {
         return wsContext->profile;

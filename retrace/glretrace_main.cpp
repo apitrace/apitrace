@@ -399,6 +399,7 @@ initContext() {
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
+    currentContext->KHR_debug = currentContext->hasExtension("GL_KHR_debug");
 
 #ifdef __APPLE__
     // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.
@@ -766,6 +767,23 @@ public:
     dumpState(StateWriter &writer) {
         glstate::dumpCurrentContext(writer);
     }
+
+    void
+    log(trace::Call &call) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (currentContext && currentContext->KHR_debug) {
+            char *str;
+            int len = asprintf(&str, "%d:%s", call.no, call.name());
+            if (len > 0) {
+                glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
+                                     GL_DEBUG_TYPE_MARKER, 0,
+                                     GL_DEBUG_SEVERITY_NOTIFICATION,
+                                     len, str);
+                free(str);
+            }
+        }
+    }
+
 };
 
 static GLDumper glDumper;
