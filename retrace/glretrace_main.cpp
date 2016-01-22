@@ -148,6 +148,7 @@ void
 insertCallNoMarker(trace::Call &call, Context *currentContext)
 {
     if (!currentContext ||
+        currentContext->insideBeginEnd ||
         !currentContext->KHR_debug) {
         return;
     }
