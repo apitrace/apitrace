@@ -44,6 +44,8 @@
  */
 #define DEBUG_OUTPUT_SYNCHRONOUS 0
 
+#define APITRACE_MARKER_ID 0xA3ACE001U
+
 namespace glretrace {
 
 glprofile::Profile defaultProfile(glprofile::API_GL, 1, 0);
@@ -162,7 +164,8 @@ insertCallNoMarker(trace::Call &call, Context *currentContext)
                                      : glDebugMessageInsertKHR;
 
         pfnGlDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
-                                GL_DEBUG_TYPE_MARKER, 0,
+                                GL_DEBUG_TYPE_MARKER,
+                                APITRACE_MARKER_ID,
                                 GL_DEBUG_SEVERITY_NOTIFICATION,
                                 len, str);
     }
@@ -639,7 +642,8 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         return;
     }
     if (retrace::markers &&
-        source == GL_DEBUG_SOURCE_THIRD_PARTY) {
+        source == GL_DEBUG_SOURCE_THIRD_PARTY &&
+        id == APITRACE_MARKER_ID) {
         return;
     }
 
