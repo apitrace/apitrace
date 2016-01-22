@@ -211,6 +211,10 @@ class GlRetracer(Retracer):
             print r'#endif'
             print r'    }'
 
+            print r'    if (currentContext) {'
+            print r'        glretrace::insertCallNoMarker(call, currentContext);'
+            print r'    }'
+
         if function.name == "glEnd":
             print r'    if (currentContext) {'
             print r'        currentContext->insideBeginEnd = false;'

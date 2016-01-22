@@ -143,6 +143,27 @@ checkGlError(trace::Call &call) {
     }
 }
 
+
+void
+insertCallNoMarker(trace::Call &call, Context *currentContext)
+{
+    if (!currentContext ||
+        !currentContext->KHR_debug) {
+        return;
+    }
+
+    char *str;
+    int len = asprintf(&str, "%d:%s", call.no, call.name());
+    if (len > 0) {
+        glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
+                             GL_DEBUG_TYPE_MARKER, 0,
+                             GL_DEBUG_SEVERITY_NOTIFICATION,
+                             len, str);
+    }
+    free(str);
+}
+
+
 static inline int64_t
 getCurrentTime(void) {
     if (retrace::profilingGpuTimes && supportsTimestamp) {
@@ -767,23 +788,6 @@ public:
     dumpState(StateWriter &writer) {
         glstate::dumpCurrentContext(writer);
     }
-
-    void
-    log(trace::Call &call) {
-        glretrace::Context *currentContext = glretrace::getCurrentContext();
-        if (currentContext && currentContext->KHR_debug) {
-            char *str;
-            int len = asprintf(&str, "%d:%s", call.no, call.name());
-            if (len > 0) {
-                glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
-                                     GL_DEBUG_TYPE_MARKER, 0,
-                                     GL_DEBUG_SEVERITY_NOTIFICATION,
-                                     len, str);
-                free(str);
-            }
-        }
-    }
-
 };
 
 static GLDumper glDumper;

@@ -126,6 +126,10 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
 void
 checkGlError(trace::Call &call);
 
+void
+insertCallNoMarker(trace::Call &call, Context *currentContext);
+
+
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];

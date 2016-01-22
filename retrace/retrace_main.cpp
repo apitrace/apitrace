@@ -238,10 +238,6 @@ retraceCall(trace::Call *call) {
         }
     }
 
-    if (call->flags & trace::CALL_FLAG_RENDER) {
-       dumper->log(*call);
-    }
-
     retracer.retrace(*call);
 
     if (doSnapshot) {

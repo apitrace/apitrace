@@ -226,8 +226,6 @@ public:
 
     virtual void
     dumpState(StateWriter &) = 0;
-
-    virtual void log(trace::Call &call) {}
 };
 
 
