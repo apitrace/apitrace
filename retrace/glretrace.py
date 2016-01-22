@@ -211,7 +211,7 @@ class GlRetracer(Retracer):
             print r'#endif'
             print r'    }'
 
-            print r'    if (currentContext) {'
+            print r'    if (retrace::markers) {'
             print r'        glretrace::insertCallNoMarker(call, currentContext);'
             print r'    }'
 

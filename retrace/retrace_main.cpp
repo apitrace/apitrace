@@ -73,6 +73,7 @@ trace::Profiler profiler;
 
 int verbosity = 0;
 unsigned debug = 1;
+bool markers = false;
 bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
@@ -603,6 +604,7 @@ usage(const char *argv0) {
         "\n"
         "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
         "  -d, --debug             increase debugging checks\n"
+        "      --markers           insert call no markers in the command stream\n"
         "      --pcpu              cpu profiling (cpu times per call)\n"
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
@@ -655,6 +657,7 @@ enum {
     SINGLETHREAD_OPT,
     SNAPSHOT_INTERVAL_OPT,
     DUMP_FORMAT_OPT,
+    MARKERS_OPT
 };
 
 const static char *
@@ -664,6 +667,7 @@ const static struct option
 longOptions[] = {
     {"benchmark", no_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
+    {"markers", no_argument, 0, MARKERS_OPT},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT },
     {"core", no_argument, 0, CORE_OPT},
     {"db", no_argument, 0, DB_OPT},
@@ -722,6 +726,9 @@ int main(int argc, char **argv)
         case 'b':
             retrace::debug = 0;
             retrace::verbosity = -1;
+            break;
+        case MARKERS_OPT:
+            retrace::markers = true;
             break;
         case 'd':
             ++retrace::debug;

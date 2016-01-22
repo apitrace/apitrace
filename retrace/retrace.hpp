@@ -114,6 +114,11 @@ extern int verbosity;
 extern unsigned debug;
 
 /**
+ * Call no markers.
+ */
+extern bool markers;
+
+/**
  * Whether to force windowed. Recommeded, as there is no guarantee that the
  * original display mode is available.
  */

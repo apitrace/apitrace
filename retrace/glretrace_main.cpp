@@ -38,7 +38,6 @@
 #include "os_memory.hpp"
 #include "highlight.hpp"
 
-
 /* Synchronous debug output may reduce performance however,
  * without it the callNo in the callback may be inaccurate
  * as the callback may be called at any time.
@@ -637,6 +636,10 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     /* Ignore application messages while dumping state. */
     if (retrace::dumpingState &&
         source == GL_DEBUG_SOURCE_APPLICATION) {
+        return;
+    }
+    if (retrace::markers &&
+        source == GL_DEBUG_SOURCE_THIRD_PARTY) {
         return;
     }
 
