@@ -153,13 +153,19 @@ insertCallNoMarker(trace::Call &call, Context *currentContext)
         return;
     }
 
+    glprofile::Profile currentProfile = currentContext->actualProfile();
+
     char *str;
     int len = asprintf(&str, "%d:%s", call.no, call.name());
     if (len > 0) {
-        glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
-                             GL_DEBUG_TYPE_MARKER, 0,
-                             GL_DEBUG_SEVERITY_NOTIFICATION,
-                             len, str);
+        auto pfnGlDebugMessageInsert = currentProfile.desktop()
+                                     ? glDebugMessageInsert
+                                     : glDebugMessageInsertKHR;
+
+        pfnGlDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
+                                GL_DEBUG_TYPE_MARKER, 0,
+                                GL_DEBUG_SEVERITY_NOTIFICATION,
+                                len, str);
     }
     free(str);
 }
@@ -453,7 +459,7 @@ initContext() {
 
     /* Setup debug message call back */
     if (retrace::debug) {
-        if (currentContext->hasExtension("GL_KHR_debug")) {
+        if (currentContext->KHR_debug) {
             if (currentProfile.desktop()) {
                 glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
                 glDebugMessageCallback(&debugOutputCallback, currentContext);
