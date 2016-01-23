@@ -160,18 +160,13 @@ insertCallMarker(trace::Call &call, Context *currentContext)
     std::stringstream ss;
     trace::dump(call, ss,
                 trace::DUMP_FLAG_NO_COLOR |
-                trace::DUMP_FLAG_NO_ARG_NAMES);
+                trace::DUMP_FLAG_NO_ARG_NAMES |
+                trace::DUMP_FLAG_NO_MULTILINE);
 
     std::string msg = ss.str();
-    size_t length = msg.find_last_not_of("\n");
-    if (length == std::string::npos) {
-        length = msg.length();
-    } else {
-        ++length;
-    }
-    if (length > currentContext->maxDebugMessageLength) {
-        length = msg.length();
-    }
+    GLsizei length = msg.length() > currentContext->maxDebugMessageLength
+                   ? currentContext->maxDebugMessageLength
+                   : msg.length();
 
     auto pfnGlDebugMessageInsert = currentProfile.desktop()
                                  ? glDebugMessageInsert

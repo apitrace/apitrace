@@ -113,8 +113,12 @@ public:
             } else if (c == '\r') {
                 // Ignore carriage-return
             } else if (c == '\n') {
-                // Reset formatting so that it looks correct with 'less -R'
-                os << normal << '\n' << literal;
+                if (dumpFlags & DUMP_FLAG_NO_MULTILINE) {
+                    os << "\\n";
+                } else {
+                    // Reset formatting so that it looks correct with 'less -R'
+                    os << normal << '\n' << literal;
+                }
             } else {
                 // FIXME: handle wchar_t octals properly
                 unsigned octal0 = c & 0x7;
@@ -308,14 +312,16 @@ public:
             os << " // " << red << "incomplete" << normal;
         }
         
-        os << "\n";
-
-        if (call->backtrace != NULL) {
-            os << bold << red << "Backtrace:\n" << normal;
-            visit(*call->backtrace);
-        }
-        if (callFlags & CALL_FLAG_END_FRAME) {
+        if (!(dumpFlags & DUMP_FLAG_NO_MULTILINE)) {
             os << "\n";
+
+            if (call->backtrace != NULL) {
+                os << bold << red << "Backtrace:\n" << normal;
+                visit(*call->backtrace);
+            }
+            if (callFlags & CALL_FLAG_END_FRAME) {
+                os << "\n";
+            }
         }
     }
 };
