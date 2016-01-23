@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include <map>
+#include <sstream>
 
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -156,20 +157,20 @@ insertCallNoMarker(trace::Call &call, Context *currentContext)
 
     glprofile::Profile currentProfile = currentContext->actualProfile();
 
-    char *str;
-    int len = asprintf(&str, "%d:%s", call.no, call.name());
-    if (len > 0) {
-        auto pfnGlDebugMessageInsert = currentProfile.desktop()
-                                     ? glDebugMessageInsert
-                                     : glDebugMessageInsertKHR;
+    std::stringstream ss;
+    ss << call.no << ":" << call.name();
+    std::string s = ss.str();
 
-        pfnGlDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
-                                GL_DEBUG_TYPE_MARKER,
-                                APITRACE_MARKER_ID,
-                                GL_DEBUG_SEVERITY_NOTIFICATION,
-                                len, str);
-    }
-    free(str);
+    auto pfnGlDebugMessageInsert = currentProfile.desktop()
+                                 ? glDebugMessageInsert
+                                 : glDebugMessageInsertKHR;
+
+    pfnGlDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
+                            GL_DEBUG_TYPE_MARKER,
+                            APITRACE_MARKER_ID,
+                            GL_DEBUG_SEVERITY_NOTIFICATION,
+                            s.length(),
+                            s.c_str());
 }
 
 
