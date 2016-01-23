@@ -58,6 +58,7 @@ struct Context {
     bool used;
 
     bool KHR_debug;
+    GLsizei maxDebugMessageLength = 0;
 
     inline glprofile::Profile
     profile(void) const {
@@ -127,7 +128,7 @@ void
 checkGlError(trace::Call &call);
 
 void
-insertCallNoMarker(trace::Call &call, Context *currentContext);
+insertCallMarker(trace::Call &call, Context *currentContext);
 
 
 extern const retrace::Entry gl_callbacks[];

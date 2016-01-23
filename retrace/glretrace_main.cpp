@@ -147,7 +147,7 @@ checkGlError(trace::Call &call) {
 
 
 void
-insertCallNoMarker(trace::Call &call, Context *currentContext)
+insertCallMarker(trace::Call &call, Context *currentContext)
 {
     if (!currentContext ||
         currentContext->insideBeginEnd ||
@@ -158,8 +158,20 @@ insertCallNoMarker(trace::Call &call, Context *currentContext)
     glprofile::Profile currentProfile = currentContext->actualProfile();
 
     std::stringstream ss;
-    ss << call.no << ":" << call.name();
-    std::string s = ss.str();
+    trace::dump(call, ss,
+                trace::DUMP_FLAG_NO_COLOR |
+                trace::DUMP_FLAG_NO_ARG_NAMES);
+
+    std::string msg = ss.str();
+    size_t length = msg.find_last_not_of("\n");
+    if (length == std::string::npos) {
+        length = msg.length();
+    } else {
+        ++length;
+    }
+    if (length > currentContext->maxDebugMessageLength) {
+        length = msg.length();
+    }
 
     auto pfnGlDebugMessageInsert = currentProfile.desktop()
                                  ? glDebugMessageInsert
@@ -169,8 +181,8 @@ insertCallNoMarker(trace::Call &call, Context *currentContext)
                             GL_DEBUG_TYPE_MARKER,
                             APITRACE_MARKER_ID,
                             GL_DEBUG_SEVERITY_NOTIFICATION,
-                            s.length(),
-                            s.c_str());
+                            length,
+                            msg.c_str());
 }
 
 
@@ -430,7 +442,12 @@ initContext() {
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
+
     currentContext->KHR_debug = currentContext->hasExtension("GL_KHR_debug");
+    if (currentContext->KHR_debug) {
+        glGetIntegerv(GL_MAX_DEBUG_MESSAGE_LENGTH, &currentContext->maxDebugMessageLength);
+        assert(currentContext->maxDebugMessageLength > 0);
+    }
 
 #ifdef __APPLE__
     // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.

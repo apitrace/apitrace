@@ -212,7 +212,7 @@ class GlRetracer(Retracer):
             print r'    }'
 
             print r'    if (retrace::markers) {'
-            print r'        glretrace::insertCallNoMarker(call, currentContext);'
+            print r'        glretrace::insertCallMarker(call, currentContext);'
             print r'    }'
 
         if function.name == "glEnd":
