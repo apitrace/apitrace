@@ -315,6 +315,21 @@ parameters.
 String values are contained inside `""` pairs and may span multiple lines.
 Integer values are given without quotes.
 
+## Trace OpenGL object leaks ##
+
+you can trace OpenGL object leaks by running:
+
+    apitrace leaks application.trace
+
+This will print leaked object list and its generated call No. 
+
+apitrace provides very basic leak trace function, it traces all Textures/
+FrameBuffers/RenderBuffers/Buffers generate and delete call,if objects not
+deleted until context destroy, it's treated as 'leaked' . This logic didn't
+consider multi-context in multi-thread situation, so may report incorrect
+results in such scenarios. 
+
+For GUI, this function entry is in menu->Trace->LeakTrace
 
 ## Dump OpenGL state at a particular call ##
 
