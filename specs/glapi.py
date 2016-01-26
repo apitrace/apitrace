@@ -1096,7 +1096,7 @@ glapi.addFunctions([
     GlFunction(Void, "glClearNamedFramebufferiv", [(GLframebuffer, "framebuffer"), (GLenum, "buffer"), (GLint, "drawbuffer"), (Array(Const(GLint), "_glClearBuffer_size(buffer)"), "value")]),
     GlFunction(Void, "glClearNamedFramebufferuiv", [(GLframebuffer, "framebuffer"), (GLenum, "buffer"), (GLint, "drawbuffer"), (Array(Const(GLuint), "_glClearBuffer_size(buffer)"), "value")]),
     GlFunction(Void, "glClearNamedFramebufferfv", [(GLframebuffer, "framebuffer"), (GLenum, "buffer"), (GLint, "drawbuffer"), (Array(Const(GLfloat), "_glClearBuffer_size(buffer)"), "value")]),
-    GlFunction(Void, "glClearNamedFramebufferfi", [(GLframebuffer, "framebuffer"), (GLenum, "buffer"), (Const(GLfloat), "depth"), (GLint, "stencil")]),
+    GlFunction(Void, "glClearNamedFramebufferfi", [(GLframebuffer, "framebuffer"), (GLenum, "buffer"), (GLint, "drawbuffer"), (GLfloat, "depth"), (GLint, "stencil")]),
     GlFunction(Void, "glBlitNamedFramebuffer", [(GLframebuffer, "readFramebuffer"), (GLframebuffer, "drawFramebuffer"), (GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield, "mask"), (GLenum, "filter")]),
     GlFunction(GLenum, "glCheckNamedFramebufferStatus", [(GLframebuffer, "framebuffer"), (GLenum, "target")]),
     GlFunction(Void, "glGetNamedFramebufferParameteriv", [(GLframebuffer, "framebuffer"), (GLenum, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
