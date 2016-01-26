@@ -34,6 +34,37 @@ import sys
 import xml.etree.ElementTree as ET
 
 
+def canonical(x, y):
+    assert x != y
+
+    # Prefer the shortest
+    if x.startswith(y):
+        return y
+    if y.startswith(x):
+        return x
+
+    # then _KHR
+    if x.endswith('_KHR'):
+        return x
+    if y.endswith('_KHR'):
+        return y
+
+    # then _ARB
+    if x.endswith('_ARB'):
+        return x
+    if y.endswith('_ARB'):
+        return y
+
+    # then _EXT
+    if x.endswith('_EXT'):
+        return x
+    if y.endswith('_EXT'):
+        return y
+
+    # Return the first
+    return x
+
+
 for arg in sys.argv[1:]:
     tree = ET.parse(arg)
     root = tree.getroot()
@@ -55,7 +86,12 @@ for arg in sys.argv[1:]:
             else:
                 continue
 
-            params.setdefault(value, name)
+            try:
+                origName = params[value]
+            except KeyError:
+                params[value] = name
+            else:
+                params[value] = canonical(origName, name)
 
 
     values = params.keys()
