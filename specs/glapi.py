@@ -731,8 +731,8 @@ glapi.addFunctions([
     GlFunction(String(Const(GLubyte)), "glGetStringi", [(GLenum, "name"), (GLuint, "index")], sideeffects=False),
 
     # GL_VERSION_3_1
-    GlFunction(Void, "glDrawArraysInstanced", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glDrawElementsInstanced", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawArraysInstanced", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "instancecount")]),
+    GlFunction(Void, "glDrawElementsInstanced", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "instancecount")]),
     GlFunction(Void, "glTexBuffer", [(GLenum, "target"), (GLenum, "internalformat"), (GLbuffer, "buffer")]),
     GlFunction(Void, "glPrimitiveRestartIndex", [(GLuint, "index")]),
 
@@ -996,9 +996,9 @@ glapi.addFunctions([
     GlFunction(Void, "glPrimitiveBoundingBoxARB", [(GLfloat, "minX"), (GLfloat, "minY"), (GLfloat, "minZ"), (GLfloat, "minW"), (GLfloat, "maxX"), (GLfloat, "maxY"), (GLfloat, "maxZ"), (GLfloat, "maxW")]),
 
     # GL_ARB_base_instance
-    GlFunction(Void, "glDrawArraysInstancedBaseInstance", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
-    GlFunction(Void, "glDrawElementsInstancedBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
-    GlFunction(Void, "glDrawElementsInstancedBaseVertexBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLint, "basevertex"), (GLuint, "baseinstance")]),
+    GlFunction(Void, "glDrawArraysInstancedBaseInstance", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "instancecount"), (GLuint, "baseinstance")]),
+    GlFunction(Void, "glDrawElementsInstancedBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "instancecount"), (GLuint, "baseinstance")]),
+    GlFunction(Void, "glDrawElementsInstancedBaseVertexBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "instancecount"), (GLint, "basevertex"), (GLuint, "baseinstance")]),
 
     # GL_ARB_bindless_texture
     GlFunction(GLtextureHandle, "glGetTextureHandleARB", [(GLtexture, "texture")]),
@@ -1172,7 +1172,7 @@ glapi.addFunctions([
     # GL_ARB_draw_elements_base_vertex
     GlFunction(Void, "glDrawElementsBaseVertex", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLint, "basevertex")]),
     GlFunction(Void, "glDrawRangeElementsBaseVertex", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLint, "basevertex")]),
-    GlFunction(Void, "glDrawElementsInstancedBaseVertex", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLint, "basevertex")]),
+    GlFunction(Void, "glDrawElementsInstancedBaseVertex", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "instancecount"), (GLint, "basevertex")]),
     GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "drawcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "drawcount"), "indices"), (GLsizei, "drawcount"), (Array(Const(GLint), "drawcount"), "basevertex")]),
 
     # GL_ARB_draw_indirect
@@ -1648,8 +1648,8 @@ glapi.addFunctions([
     GlFunction(Void, "glGetQueryIndexediv", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_transform_feedback_instanced
-    GlFunction(Void, "glDrawTransformFeedbackInstanced", [(GLenum_mode, "mode"), (GLfeedback, "id"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glDrawTransformFeedbackStreamInstanced", [(GLenum_mode, "mode"), (GLfeedback, "id"), (GLuint, "stream"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawTransformFeedbackInstanced", [(GLenum_mode, "mode"), (GLfeedback, "id"), (GLsizei, "instancecount")]),
+    GlFunction(Void, "glDrawTransformFeedbackStreamInstanced", [(GLenum_mode, "mode"), (GLfeedback, "id"), (GLuint, "stream"), (GLsizei, "instancecount")]),
 
     # GL_ARB_transpose_matrix
     GlFunction(Void, "glLoadTransposeMatrixfARB", [(Array(Const(GLfloat), 16), "m")]),
