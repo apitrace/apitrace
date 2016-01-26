@@ -96,6 +96,10 @@ struct ImageDesc
 };
 
 
+static GLenum
+getTextureTarget(Context &context, GLuint texture);
+
+
 /**
  * OpenGL ES does not support glGetTexLevelParameteriv, but it is possible to
  * probe whether a texture has a given size by crafting a dummy glTexSubImage()
@@ -605,12 +609,10 @@ finished:
     free(object_label);
 }
 
-
 static void
 dumpTextureImages(StateWriter &writer, Context &context)
 {
-    if(!(context.ARB_shader_image_load_store &&
-         context.ARB_direct_state_access)) {
+    if (!context.ARB_shader_image_load_store) {
         return;
     }
 
@@ -618,10 +620,10 @@ dumpTextureImages(StateWriter &writer, Context &context)
     glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
 
-    for(GLint imageUnit = 0; imageUnit < maxImageUnits; ++imageUnit) {
+    for (GLint imageUnit = 0; imageUnit < maxImageUnits; ++imageUnit) {
         GLint texture = 0;
         glGetIntegeri_v(GL_IMAGE_BINDING_NAME, imageUnit, &texture);
-        if(texture) {
+        if (texture) {
             GLint level = 0;
             glGetIntegeri_v(GL_IMAGE_BINDING_LEVEL, imageUnit, &level);
             GLint isLayered = 0;
@@ -636,9 +638,7 @@ dumpTextureImages(StateWriter &writer, Context &context)
             if (isLayered) {
                 label << ", layer = " << layer;
             }
-            GLint target = 0;
-            // relies on GL_ARB_direct_state_access
-            glGetTextureParameteriv(texture, GL_TEXTURE_TARGET, &target);
+            GLenum target = getTextureTarget(context, texture);
             GLint previousTexture = 0;
             glGetIntegerv(getTextureBinding(target), &previousTexture);
 
@@ -822,46 +822,53 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 
 static GLenum
-getTextureTarget(Context &context, GLint texture)
+getTextureTarget(Context &context, GLuint texture)
 {
     if (!glIsTexture(texture)) {
         return GL_NONE;
     }
 
-    flushErrors();
+    GLint result = GL_NONE;
+    if (context.ARB_direct_state_access) {
 
-    // Temporarily disable debug messages
-    GLDEBUGPROC prevDebugCallbackFunction = 0;
-    void *prevDebugCallbackUserParam = 0;
-    if (context.KHR_debug) {
-        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
-        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
-        glDebugMessageCallback(NULL, NULL);
-    }
+        glGetTextureParameteriv(texture, GL_TEXTURE_TARGET, &result);
+        assert(result != GL_NONE);
 
-    GLenum result = GL_NONE;
-    for (unsigned i = 0; i < numTextureTargets; ++i) {
-        GLenum target = textureTargets[i];
-        GLenum binding = getTextureBinding(target);
+    } else {
+        flushErrors();
 
-        GLint bound_texture = 0;
-        glGetIntegerv(binding, &bound_texture);
-        glBindTexture(target, texture);
-
-        bool succeeded = glGetError() == GL_NO_ERROR;
-
-        glBindTexture(target, bound_texture);
-
-        if (succeeded) {
-            result = target;
-            break;
+        // Temporarily disable debug messages
+        GLDEBUGPROC prevDebugCallbackFunction = 0;
+        void *prevDebugCallbackUserParam = 0;
+        if (context.KHR_debug) {
+            glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+            glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallback(NULL, NULL);
         }
 
-        flushErrors();
-    }
+        for (unsigned i = 0; i < numTextureTargets; ++i) {
+            GLenum target = textureTargets[i];
+            GLenum binding = getTextureBinding(target);
 
-    if (context.KHR_debug) {
-        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+            GLint bound_texture = 0;
+            glGetIntegerv(binding, &bound_texture);
+            glBindTexture(target, texture);
+
+            bool succeeded = glGetError() == GL_NO_ERROR;
+
+            glBindTexture(target, bound_texture);
+
+            if (succeeded) {
+                result = target;
+                break;
+            }
+
+            flushErrors();
+        }
+
+        if (context.KHR_debug) {
+            glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        }
     }
 
     return result;
