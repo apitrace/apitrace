@@ -496,7 +496,11 @@ class Tracer:
         for function in api.getAllFunctions():
             self.traceFunctionDecl(function)
         for function in api.getAllFunctions():
-            self.traceFunctionImpl(function)
+            try:
+                self.traceFunctionImpl(function)
+            except:
+                sys.stderr.write("error: %s: exception\n" % function.name)
+                raise
         print
 
         self.footer(api)

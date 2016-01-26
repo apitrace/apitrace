@@ -523,9 +523,16 @@ _glDrawRangeElementsBaseVertex_count(GLuint start, GLuint end, GLsizei count, GL
 #define _glDrawArraysInstancedARB_count _glDrawArraysInstanced_count
 #define _glDrawArraysInstancedEXT_count _glDrawArraysInstanced_count
 #define _glDrawArraysInstancedANGLE_count _glDrawArraysInstanced_count
+#define _glDrawArraysInstancedBaseInstanceEXT_count _glDrawArraysInstancedBaseInstance_count
+#define _glDrawElementsBaseVertexEXT_count _glDrawElementsBaseVertex_count
 #define _glDrawElementsInstancedARB_count _glDrawElementsInstanced_count
 #define _glDrawElementsInstancedEXT_count _glDrawElementsInstanced_count
 #define _glDrawElementsInstancedANGLE_count _glDrawElementsInstanced_count
+#define _glDrawElementsInstancedBaseInstanceEXT_count _glDrawElementsInstancedBaseInstance_count
+#define _glDrawElementsInstancedBaseVertexEXT_count _glDrawElementsInstancedBaseVertex_count
+#define _glDrawElementsInstancedBaseVertexBaseInstanceEXT_count _glDrawElementsInstancedBaseVertexBaseInstance_count
+#define _glDrawRangeElementsBaseVertexEXT_count _glDrawRangeElementsBaseVertex_count
+
 
 static inline GLuint
 _glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawcount) {
@@ -559,6 +566,7 @@ _glMultiDrawElementsBaseVertex_count(const GLsizei *count, GLenum type, const GL
 
 #define _glMultiDrawArraysEXT_count _glMultiDrawArrays_count
 #define _glMultiDrawElementsEXT_count _glMultiDrawElements_count
+#define _glMultiDrawElementsBaseVertexEXT_count _glMultiDrawElementsBaseVertex_count
 
 #define _glMultiModeDrawArraysIBM_count(first, count, drawcount, modestride) _glMultiDrawArrays_count(first, count, drawcount)
 #define _glMultiModeDrawElementsIBM_count(count, type, indices, drawcount, modestride) _glMultiDrawElements_count(count, type, (const GLvoid **)indices, drawcount)

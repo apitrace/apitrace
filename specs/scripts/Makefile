@@ -28,13 +28,13 @@ download: \
 
 
 %.xml:
-	wget -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
+	wget -nv -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
 
 %.spec:
-	wget -N https://www.opengl.org/registry/oldspecs/$@
+	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
 
 %.tm:
-	wget -N https://www.opengl.org/registry/oldspecs/$@
+	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
 
 glapi.py: xml2api.py gl.xml
 	python $^ > $@
