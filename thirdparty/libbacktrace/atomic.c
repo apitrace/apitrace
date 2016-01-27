@@ -1,5 +1,5 @@
-/* posix.c -- POSIX file I/O routines for the backtrace library.
-   Copyright (C) 2012-2016 Free Software Foundation, Inc.
+/* atomic.c -- Support for atomic functions if not present.
+   Copyright (C) 2013-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,69 +32,82 @@ POSSIBILITY OF SUCH DAMAGE.  */
 
 #include "config.h"
 
-#include <errno.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "backtrace.h"
+#include "backtrace-supported.h"
 #include "internal.h"
 
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
+/* This file holds implementations of the atomic functions that are
+   used if the host compiler has the sync functions but not the atomic
+   functions, as is true of versions of GCC before 4.7.  */
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
+#if !defined (HAVE_ATOMIC_FUNCTIONS) && defined (HAVE_SYNC_FUNCTIONS)
 
-#ifndef FD_CLOEXEC
-#define FD_CLOEXEC 1
-#endif
+/* Do an atomic load of a pointer.  */
 
-/* Open a file for reading.  */
-
-int
-backtrace_open (const char *filename, backtrace_error_callback error_callback,
-		void *data, int *does_not_exist)
+void *
+backtrace_atomic_load_pointer (void *arg)
 {
-  int descriptor;
+  void **pp;
+  void *p;
 
-  if (does_not_exist != NULL)
-    *does_not_exist = 0;
-
-  descriptor = open (filename, (int) (O_RDONLY | O_BINARY | O_CLOEXEC));
-  if (descriptor < 0)
-    {
-      if (does_not_exist != NULL && errno == ENOENT)
-	*does_not_exist = 1;
-      else
-	error_callback (data, filename, errno);
-      return -1;
-    }
-
-#ifdef HAVE_FCNTL
-  /* Set FD_CLOEXEC just in case the kernel does not support
-     O_CLOEXEC. It doesn't matter if this fails for some reason.
-     FIXME: At some point it should be safe to only do this if
-     O_CLOEXEC == 0.  */
-  fcntl (descriptor, F_SETFD, FD_CLOEXEC);
-#endif
-
-  return descriptor;
+  pp = (void **) arg;
+  p = *pp;
+  while (!__sync_bool_compare_and_swap (pp, p, p))
+    p = *pp;
+  return p;
 }
 
-/* Close DESCRIPTOR.  */
+/* Do an atomic load of an int.  */
 
 int
-backtrace_close (int descriptor, backtrace_error_callback error_callback,
-		 void *data)
+backtrace_atomic_load_int (int *p)
 {
-  if (close (descriptor) < 0)
-    {
-      error_callback (data, "close", errno);
-      return 0;
-    }
-  return 1;
+  int i;
+
+  i = *p;
+  while (!__sync_bool_compare_and_swap (p, i, i))
+    i = *p;
+  return i;
 }
+
+/* Do an atomic store of a pointer.  */
+
+void
+backtrace_atomic_store_pointer (void *arg, void *p)
+{
+  void **pp;
+  void *old;
+
+  pp = (void **) arg;
+  old = *pp;
+  while (!__sync_bool_compare_and_swap (pp, old, p))
+    old = *pp;
+}
+
+/* Do an atomic store of a size_t value.  */
+
+void
+backtrace_atomic_store_size_t (size_t *p, size_t v)
+{
+  size_t old;
+
+  old = *p;
+  while (!__sync_bool_compare_and_swap (p, old, v))
+    old = *p;
+}
+
+/* Do an atomic store of a int value.  */
+
+void
+backtrace_atomic_store_int (int *p, int v)
+{
+  size_t old;
+
+  old = *p;
+  while (!__sync_bool_compare_and_swap (p, old, v))
+    old = *p;
+}
+
+#endif

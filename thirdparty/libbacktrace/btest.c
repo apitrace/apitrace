@@ -1,5 +1,5 @@
 /* btest.c -- Test for libbacktrace library
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -92,7 +92,7 @@ struct sdata
 struct symdata
 {
   const char *name;
-  uintptr_t val;
+  uintptr_t val, size;
   int failed;
 };
 
@@ -129,6 +129,13 @@ check (const char *name, int index, const struct info *all, int want_lineno,
 {
   if (*failed)
     return;
+  if (all[index].filename == NULL || all[index].function == NULL)
+    {
+      fprintf (stderr, "%s: [%d]: missing file name or function name\n",
+	       name, index);
+      *failed = 1;
+      return;
+    }
   if (strcmp (base (all[index].filename), "btest.c") != 0)
     {
       fprintf (stderr, "%s: [%d]: got %s expected test.c\n", name, index,
@@ -238,7 +245,8 @@ error_callback_two (void *vdata, const char *msg, int errnum)
 
 static void
 callback_three (void *vdata, uintptr_t pc ATTRIBUTE_UNUSED,
-		const char *symname, uintptr_t symval)
+		const char *symname, uintptr_t symval,
+		uintptr_t symsize)
 {
   struct symdata *data = (struct symdata *) vdata;
 
@@ -250,6 +258,7 @@ callback_three (void *vdata, uintptr_t pc ATTRIBUTE_UNUSED,
       assert (data->name != NULL);
     }
   data->val = symval;
+  data->size = symsize;
 }
 
 /* The backtrace_syminfo error callback function.  */
@@ -305,6 +314,14 @@ f3 (int f1line, int f2line)
   if (i != 0)
     {
       fprintf (stderr, "test1: unexpected return value %d\n", i);
+      data.failed = 1;
+    }
+
+  if (data.index < 3)
+    {
+      fprintf (stderr,
+	       "test1: not enough frames; got %zu, expected at least 3\n",
+	       data.index);
       data.failed = 1;
     }
 
@@ -458,6 +475,7 @@ f23 (int f1line, int f2line)
 
 	  symdata.name = NULL;
 	  symdata.val = 0;
+	  symdata.size = 0;
 	  symdata.failed = 0;
 
 	  i = backtrace_syminfo (state, addrs[j], callback_three,
@@ -598,6 +616,78 @@ f33 (int f1line, int f2line)
   return failures;
 }
 
+#if BACKTRACE_SUPPORTS_DATA
+
+int global = 1;
+
+static int
+test5 (void)
+{
+  struct symdata symdata;
+  int i;
+  uintptr_t addr = (uintptr_t) &global;
+
+  if (sizeof (global) > 1)
+    addr += 1;
+
+  symdata.name = NULL;
+  symdata.val = 0;
+  symdata.size = 0;
+  symdata.failed = 0;
+
+  i = backtrace_syminfo (state, addr, callback_three,
+			 error_callback_three, &symdata);
+  if (i == 0)
+    {
+      fprintf (stderr,
+	       "test5: unexpected return value from backtrace_syminfo %d\n",
+	       i);
+      symdata.failed = 1;
+    }
+
+  if (!symdata.failed)
+    {
+      if (symdata.name == NULL)
+	{
+	  fprintf (stderr, "test5: NULL syminfo name\n");
+	  symdata.failed = 1;
+	}
+      else if (strcmp (symdata.name, "global") != 0)
+	{
+	  fprintf (stderr,
+		   "test5: unexpected syminfo name got %s expected %s\n",
+		   symdata.name, "global");
+	  symdata.failed = 1;
+	}
+      else if (symdata.val != (uintptr_t) &global)
+	{
+	  fprintf (stderr,
+		   "test5: unexpected syminfo value got %lx expected %lx\n",
+		   (unsigned long) symdata.val,
+		   (unsigned long) (uintptr_t) &global);
+	  symdata.failed = 1;
+	}
+      else if (symdata.size != sizeof (global))
+	{
+	  fprintf (stderr,
+		   "test5: unexpected syminfo size got %lx expected %lx\n",
+		   (unsigned long) symdata.size,
+		   (unsigned long) sizeof (global));
+	  symdata.failed = 1;
+	}
+    }
+
+  printf ("%s: backtrace_syminfo variable\n",
+	  symdata.failed ? "FAIL" : "PASS");
+
+  if (symdata.failed)
+    ++failures;
+
+  return failures;
+}
+
+#endif /* BACKTRACE_SUPPORTS_DATA  */
+
 static void
 error_callback_create (void *data ATTRIBUTE_UNUSED, const char *msg,
 		       int errnum)
@@ -622,6 +712,9 @@ main (int argc ATTRIBUTE_UNUSED, char **argv)
   test2 ();
   test3 ();
   test4 ();
+#if BACKTRACE_SUPPORTS_DATA
+  test5 ();
+#endif
 #endif
 
   exit (failures ? EXIT_FAILURE : EXIT_SUCCESS);

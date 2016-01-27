@@ -1,4 +1,4 @@
-/* posix.c -- POSIX file I/O routines for the backtrace library.
+/* sort.c -- Sort without allocating memory
    Copyright (C) 2012-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
@@ -32,69 +32,77 @@ POSSIBILITY OF SUCH DAMAGE.  */
 
 #include "config.h"
 
-#include <errno.h>
+#include <stddef.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "backtrace.h"
 #include "internal.h"
 
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
+/* The GNU glibc version of qsort allocates memory, which we must not
+   do if we are invoked by a signal handler.  So provide our own
+   sort.  */
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-
-#ifndef FD_CLOEXEC
-#define FD_CLOEXEC 1
-#endif
-
-/* Open a file for reading.  */
-
-int
-backtrace_open (const char *filename, backtrace_error_callback error_callback,
-		void *data, int *does_not_exist)
+static void
+swap (char *a, char *b, size_t size)
 {
-  int descriptor;
+  size_t i;
 
-  if (does_not_exist != NULL)
-    *does_not_exist = 0;
-
-  descriptor = open (filename, (int) (O_RDONLY | O_BINARY | O_CLOEXEC));
-  if (descriptor < 0)
+  for (i = 0; i < size; i++, a++, b++)
     {
-      if (does_not_exist != NULL && errno == ENOENT)
-	*does_not_exist = 1;
-      else
-	error_callback (data, filename, errno);
-      return -1;
+      char t;
+
+      t = *a;
+      *a = *b;
+      *b = t;
     }
-
-#ifdef HAVE_FCNTL
-  /* Set FD_CLOEXEC just in case the kernel does not support
-     O_CLOEXEC. It doesn't matter if this fails for some reason.
-     FIXME: At some point it should be safe to only do this if
-     O_CLOEXEC == 0.  */
-  fcntl (descriptor, F_SETFD, FD_CLOEXEC);
-#endif
-
-  return descriptor;
 }
 
-/* Close DESCRIPTOR.  */
-
-int
-backtrace_close (int descriptor, backtrace_error_callback error_callback,
-		 void *data)
+void
+backtrace_qsort (void *basearg, size_t count, size_t size,
+		 int (*compar) (const void *, const void *))
 {
-  if (close (descriptor) < 0)
+  char *base = (char *) basearg;
+  size_t i;
+  size_t mid;
+
+ tail_recurse:
+  if (count < 2)
+    return;
+
+  /* The symbol table and DWARF tables, which is all we use this
+     routine for, tend to be roughly sorted.  Pick the middle element
+     in the array as our pivot point, so that we are more likely to
+     cut the array in half for each recursion step.  */
+  swap (base, base + (count / 2) * size, size);
+
+  mid = 0;
+  for (i = 1; i < count; i++)
     {
-      error_callback (data, "close", errno);
-      return 0;
+      if ((*compar) (base, base + i * size) > 0)
+	{
+	  ++mid;
+	  if (i != mid)
+	    swap (base + mid * size, base + i * size, size);
+	}
     }
-  return 1;
+
+  if (mid > 0)
+    swap (base, base + mid * size, size);
+
+  /* Recurse with the smaller array, loop with the larger one.  That
+     ensures that our maximum stack depth is log count.  */
+  if (2 * mid < count)
+    {
+      backtrace_qsort (base, mid, size, compar);
+      base += (mid + 1) * size;
+      count -= mid + 1;
+      goto tail_recurse;
+    }
+  else
+    {
+      backtrace_qsort (base + (mid + 1) * size, count - (mid + 1),
+		       size, compar);
+      count = mid;
+      goto tail_recurse;
+    }
 }

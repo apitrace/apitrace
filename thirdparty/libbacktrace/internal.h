@@ -1,5 +1,5 @@
 /* internal.h -- Internal header file for stack backtrace library.
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,48 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #define __sync_lock_test_and_set(A, B) (abort(), 0)
 #define __sync_lock_release(A) abort()
 
-#endif /* !defined(HAVE_SYNC_FUNCTIONS) */
+#endif /* !defined (HAVE_SYNC_FUNCTIONS) */
+
+#ifdef HAVE_ATOMIC_FUNCTIONS
+
+/* We have the atomic builtin functions.  */
+
+#define backtrace_atomic_load_pointer(p) \
+    __atomic_load_n ((p), __ATOMIC_ACQUIRE)
+#define backtrace_atomic_load_int(p) \
+    __atomic_load_n ((p), __ATOMIC_ACQUIRE)
+#define backtrace_atomic_store_pointer(p, v) \
+    __atomic_store_n ((p), (v), __ATOMIC_RELEASE)
+#define backtrace_atomic_store_size_t(p, v) \
+    __atomic_store_n ((p), (v), __ATOMIC_RELEASE)
+#define backtrace_atomic_store_int(p, v) \
+    __atomic_store_n ((p), (v), __ATOMIC_RELEASE)
+
+#else /* !defined (HAVE_ATOMIC_FUNCTIONS) */
+#ifdef HAVE_SYNC_FUNCTIONS
+
+/* We have the sync functions but not the atomic functions.  Define
+   the atomic ones in terms of the sync ones.  */
+
+extern void *backtrace_atomic_load_pointer (void *);
+extern int backtrace_atomic_load_int (int *);
+extern void backtrace_atomic_store_pointer (void *, void *);
+extern void backtrace_atomic_store_size_t (size_t *, size_t);
+extern void backtrace_atomic_store_int (int *, int);
+
+#else /* !defined (HAVE_SYNC_FUNCTIONS) */
+
+/* We have neither the sync nor the atomic functions.  These will
+   never be called.  */
+
+#define backtrace_atomic_load_pointer(p) (abort(), (void *) NULL)
+#define backtrace_atomic_load_int(p) (abort(), 0)
+#define backtrace_atomic_store_pointer(p, v) abort()
+#define backtrace_atomic_store_size_t(p, v) abort()
+#define backtrace_atomic_store_int(p, v) abort()
+
+#endif /* !defined (HAVE_SYNC_FUNCTIONS) */
+#endif /* !defined (HAVE_ATOMIC_FUNCTIONS) */
 
 /* The type of the function that collects file/line information.  This
    is like backtrace_pcinfo.  */
@@ -155,13 +196,20 @@ extern int backtrace_close (int descriptor,
 			    backtrace_error_callback error_callback,
 			    void *data);
 
-/* Allocate memory.  This is like malloc.  */
+/* Sort without using memory.  */
+
+extern void backtrace_qsort (void *base, size_t count, size_t size,
+			     int (*compar) (const void *, const void *));
+
+/* Allocate memory.  This is like malloc.  If ERROR_CALLBACK is NULL,
+   this does not report an error, it just returns NULL.  */
 
 extern void *backtrace_alloc (struct backtrace_state *state, size_t size,
 			      backtrace_error_callback error_callback,
 			      void *data) ATTRIBUTE_MALLOC;
 
-/* Free memory allocated by backtrace_alloc.  */
+/* Free memory allocated by backtrace_alloc.  If ERROR_CALLBACK is
+   NULL, this does not report an error.  */
 
 extern void backtrace_free (struct backtrace_state *state, void *mem,
 			    size_t size,
@@ -192,13 +240,17 @@ extern void *backtrace_vector_grow (struct backtrace_state *state, size_t size,
 				    struct backtrace_vector *vec);
 
 /* Finish the current allocation on VEC.  Prepare to start a new
-   allocation.  The finished allocation will never be freed.  */
+   allocation.  The finished allocation will never be freed.  Returns
+   a pointer to the base of the finished entries, or NULL on
+   failure.  */
 
-extern void backtrace_vector_finish (struct backtrace_state *state,
-				     struct backtrace_vector *vec);
+extern void* backtrace_vector_finish (struct backtrace_state *state,
+				      struct backtrace_vector *vec,
+				      backtrace_error_callback error_callback,
+				      void *data);
 
-/* Release any extra space allocated for VEC.  Returns 1 on success, 0
-   on failure.  */
+/* Release any extra space allocated for VEC.  This may change
+   VEC->base.  Returns 1 on success, 0 on failure.  */
 
 extern int backtrace_vector_release (struct backtrace_state *state,
 				     struct backtrace_vector *vec,
