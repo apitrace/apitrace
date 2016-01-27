@@ -353,6 +353,17 @@ endif ()
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+enable_testing ()
+if (CMAKE_CROSSCOMPILING)
+    add_custom_target (check)
+elseif (DEFINED CMAKE_BUILD_TYPE)
+    # Single configuration
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+else ()
+    # Multiple configuration
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure)
+endif ()
+
 
 ##############################################################################
 # Installation directories
@@ -467,17 +478,6 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/include)
 add_library (gtest ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/src/gtest-all.cc)
 set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest)
 target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
-
-enable_testing ()
-if (CMAKE_CROSSCOMPILING)
-    add_custom_target (check)
-elseif (DEFINED CMAKE_BUILD_TYPE)
-    # Single configuration
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
-else ()
-    # Multiple configuration
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure)
-endif ()
 
 # Convenience macro for adding unit tests
 macro (add_gtest)

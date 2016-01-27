@@ -143,11 +143,8 @@ add_convenience_library (backtrace EXCLUDE_FROM_ALL
     state.c
 )
 
-set (ENABLE_LIBBACKTRACE_TEST false CACHE BOOL "Enable libbacktrace testing")
-if (ENABLE_LIBBACKTRACE_TEST)
-    enable_testing ()
-    add_executable (btest btest.c)
-    set_property (SOURCE btest.c PROPERTY COMPILE_FLAGS "-g")
-    target_link_libraries (btest backtrace)
-    add_test (test-libbacktrace btest)
-endif ()
+add_executable (btest btest.c)
+set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_link_libraries (btest backtrace)
+add_dependencies (check btest)
+add_test (libbacktrace_btest btest)
