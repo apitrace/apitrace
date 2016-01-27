@@ -209,7 +209,15 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        print 'static void _trace_user_arrays(GLuint count);'
+        print r'static void _trace_user_arrays(GLuint count);'
+        print
+
+        print r'static void _fakeStringMarker(GLsizei len, const GLvoid * string);'
+        print
+        print r'static inline void'
+        print r'_fakeStringMarker(const std::string &s) {'
+        print r'    _fakeStringMarker(s.length(), s.data());'
+        print r'}'
         print
 
         print '// whether glLockArraysEXT() has ever been called'
@@ -1107,6 +1115,12 @@ class GlTracer(Tracer):
 
         print '}'
         print
+
+        # Fake glStringMarkerGREMEDY
+        print r'static void _fakeStringMarker(GLsizei len, const GLvoid * string) {'
+        glStringMarkerGREMEDY = api.getFunctionByName('glStringMarkerGREMEDY')
+        self.fake_call(glStringMarkerGREMEDY, ['len', 'string'])
+        print r'}'
 
     #
     # Hooks for glTexCoordPointer, which is identical to the other array
