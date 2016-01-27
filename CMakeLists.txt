@@ -512,33 +512,9 @@ if (ENABLE_CLI)
         add_subdirectory (inject)
     endif ()
     add_subdirectory (cli)
+    add_subdirectory (scripts)
 endif ()
 
-##############################################################################
-# Scripts (to support the CLI)
-
-install (
-    PROGRAMS
-        scripts/highlight.py
-        scripts/jsondiff.py
-        scripts/profileshader.py
-        scripts/retracediff.py
-        scripts/snapdiff.py
-        scripts/tracecheck.py
-        scripts/tracediff.py
-        scripts/unpickle.py
-    DESTINATION ${SCRIPTS_INSTALL_DIR}
-)
-if (WIN32)
-    install (
-        PROGRAMS scripts/convert.py
-        DESTINATION ${SCRIPTS_INSTALL_DIR}
-    )
-    install (
-        FILES scripts/apitrace.PIXExp
-        DESTINATION ${SCRIPTS_INSTALL_DIR}
-    )
-endif ()
 
 ##############################################################################
 # GUI
