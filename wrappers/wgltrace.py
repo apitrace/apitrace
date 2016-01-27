@@ -112,47 +112,102 @@ class WglTracer(GlTracer):
             glBitmap = glapi.getFunctionByName('glBitmap')
             glEndList = glapi.getFunctionByName('glEndList')
 
-            print r'    bool warned = false;'
+            print r'    BOOL bRet;'
+            print r'    TEXTMETRIC tm;'
+            print r'    bRet = GetTextMetricsA(hdc, &tm);'
+            print r'    assert(bRet);'
+            print
+            print r'    HDC memDC = CreateCompatibleDC(hdc);'
+            print
+            print r'    SetMapMode(memDC, MM_TEXT);'
+            print r'    SetTextAlign(memDC, TA_BASELINE);'
+            print r'    SetBkColor(memDC, RGB(0, 0, 0));'
+            print r'    SetBkMode(memDC, OPAQUE);'
+            print r'    SetTextColor(memDC, RGB(255,255,255));'
+            print
+            print r'    BITMAPINFO * bmi = (BITMAPINFO *)malloc(offsetof(BITMAPINFO, bmiColors[2]));'
+            print r'    ZeroMemory(&bmi->bmiHeader, sizeof bmi->bmiHeader);'
+            print r'    bmi->bmiHeader.biSize = sizeof bmi->bmiHeader;'
+            print r'    bmi->bmiHeader.biPlanes = 1;'
+            print r'    bmi->bmiHeader.biBitCount = 1;'
+            print r'    bmi->bmiHeader.biCompression = BI_RGB;'
+            print r'    bmi->bmiColors[0].rgbBlue     = 0;'
+            print r'    bmi->bmiColors[0].rgbGreen    = 0;'
+            print r'    bmi->bmiColors[0].rgbRed      = 0;'
+            print r'    bmi->bmiColors[0].rgbReserved = 0;'
+            print r'    bmi->bmiColors[1].rgbBlue     = 255;'
+            print r'    bmi->bmiColors[1].rgbGreen    = 255;'
+            print r'    bmi->bmiColors[1].rgbRed      = 255;'
+            print r'    bmi->bmiColors[1].rgbReserved = 0;'
+            print
             print r'    for (DWORD i = 0; i < count; ++i) {'
             self.fake_call(glNewList, ['listBase + i', 'GL_COMPILE'])
 
-            print r'        UINT uChar = first + i;'
-            print r'        GLYPHMETRICS gm;'
-            print r'        ZeroMemory(&gm, sizeof gm);'
-            print r'        static const MAT2 mat2 = {{0, 1}, {0, 0}, {0, 0}, {0, -1}};'
-            print r'        DWORD cbBuffer = GetGlyphOutlineA(hdc, uChar, GGO_BITMAP, &gm, 0, NULL, &mat2);'
-            print r'        if (cbBuffer == GDI_ERROR) {'
-            print r'            if (!warned) {'
-            print r'                os::log("apitrace: warning: wglUseFontBitmapsA: GetGlyphOutlineA failed\n");'
-            print r'                warned = true;'
+            print r'        char cChar = first + i;'
+
+            print r'        // TODO: Use GetCharABSWidths'
+            print r'        // http://www.codeproject.com/Articles/14915/Width-of-text-in-italic-font'
+            print r'        // https://support.microsoft.com/en-us/kb/94646'
+            print r'        SIZE size;'
+            print r'        bRet = GetTextExtentPoint32A(hdc, &cChar, 1, &size);'
+            print r'        if (bRet) {'
+            print r'            assert(size.cx >= 0);'
+            print r'            assert(size.cy >= 0);'
+            print
+            print r'            // Round width to 32 pixels'
+            print r'            int nWidth = (size.cx + 0x1f) & ~0x1f;'
+            print r'            int nHeight = size.cy;'
+            print
+            print r'            DWORD dwBytes = nWidth / 8 * nHeight;'
+            print r'            LPVOID lpvBits = NULL;'
+            print r'            if (dwBytes) {'
+            print r'                lpvBits = malloc(dwBytes);'
+            print
+            print r'                HBITMAP memBM = CreateCompatibleBitmap(memDC, nWidth, nHeight);'
+            print
+            print r'                HGDIOBJ origBM = SelectObject(memDC, memBM);'
+            print
+            print r'                PatBlt(memDC, 0, 0, nWidth, nHeight, BLACKNESS);'
+            print r'                SelectObject(memDC, GetCurrentObject(hdc, OBJ_FONT));'
+            print
+            print r'                bmi->bmiHeader.biWidth  = nWidth;'
+            print r'                bmi->bmiHeader.biHeight = nHeight;'
+            print
+            print r'                bRet = TextOutA(memDC, 0, tm.tmAscent, &cChar, 1);'
+            print r'                assert(bRet);'
+            print
+            print r'                SelectObject(memDC, origBM);'
+            print
+            print r'                int nScanLines = GetDIBits(memDC, memBM, 0, nHeight, lpvBits, bmi, DIB_RGB_COLORS);'
+            print r'                assert(nScanLines == nHeight);'
+            print
+            print r'                DeleteObject(memBM);'
             print r'            }'
-            print r'        } else {'
-            print r'            LPVOID lpvBuffer = NULL;'
-            print r'            if (cbBuffer) {'
-            print r'                lpvBuffer =  malloc(cbBuffer);'
-            print r'                DWORD dwRet;'
-            print r'                dwRet = GetGlyphOutlineA(hdc, uChar, GGO_BITMAP, &gm, cbBuffer, lpvBuffer, &mat2);'
-            print r'                assert(dwRet != GDI_ERROR);'
-            print r'                assert(dwRet > 0);'
-            print r'            }'
-            print r'            GLsizei width  =  gm.gmBlackBoxX;'
-            print r'            GLfloat height =  gm.gmBlackBoxY;'
-            print r'            GLfloat xorig  = -gm.gmptGlyphOrigin.x;'
-            print r'            GLfloat yorig  =  gm.gmptGlyphOrigin.y;'
-            print r'            GLfloat xmove  =  gm.gmCellIncX;'
-            print r'            GLfloat ymove  =  gm.gmCellIncY;'
-            print r'            if (cbBuffer == 0) {'
+            print
+            print r'            GLsizei width  = nWidth;'
+            print r'            GLfloat height = nHeight;'
+            print r'            GLfloat xorig  = 0;'
+            print r'            GLfloat yorig  = tm.tmDescent;'
+            print r'            GLfloat xmove  = size.cx;'
+            print r'            GLfloat ymove  = 0;'
+            print r'            const GLubyte *bitmap = (const GLubyte *)lpvBits;'
+            print r'            if (bitmap == NULL) {'
             print r'                // We still need to emit an empty glBitmap for empty characters like spaces;'
             print r'                width = height = xorig = yorig = 0;'
             print r'            }'
-            print r'            const GLubyte *bitmap = (const GLubyte *)lpvBuffer;'
+
+            # FIXME: glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
+            # FIXME: glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
             self.fake_call(glBitmap, ['width', 'height', 'xorig', 'yorig', 'xmove', 'ymove', 'bitmap'])
 
-            print r'            free(lpvBuffer);'
+            print r'            free(lpvBits);'
             print r'        }'
             self.fake_call(glEndList, [])
             print r'    }'
+            print
+            print r'    DeleteDC(memDC);'
+            print r'    free(bmi);'
 
 
 if __name__ == '__main__':
