@@ -965,6 +965,7 @@ class Tracer:
         print '    trace::fakeMemcpy(%s, %s);' % (ptr, size)
     
     def fake_call(self, function, args):
+        print '        {'
         print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
         for arg, instance in zip(function.args, args):
             assert not arg.output
@@ -974,4 +975,5 @@ class Tracer:
         print '            trace::localWriter.endEnter();'
         print '            trace::localWriter.beginLeave(_fake_call);'
         print '            trace::localWriter.endLeave();'
+        print '        }'
        
