@@ -69,6 +69,7 @@ add_library (glretrace_common STATIC
     glretrace_cgl.cpp
     glretrace_glx.cpp
     glretrace_wgl.cpp
+    glretrace_wgl_font.cpp
     glretrace_egl.cpp
     glretrace_main.cpp
     glretrace_ws.cpp

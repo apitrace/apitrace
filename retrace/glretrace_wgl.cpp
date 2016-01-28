@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include "glretrace_wgl.hpp"
+
 #include "glproc.hpp"
 #include "retrace.hpp"
 #include "glretrace.hpp"
@@ -366,6 +368,44 @@ static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
 }
 
 
+static void retrace_wglUseFontBitmapsAW(trace::Call &call)
+{
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        return;
+    }
+
+    uint32_t first = call.arg(1).toUInt();
+    uint32_t count = call.arg(2).toUInt();
+    uint32_t listBase = call.arg(3).toUInt();
+
+    GLint row_length = 0;
+    GLint alignment = 4;
+    _glGetIntegerv(GL_UNPACK_ROW_LENGTH, &row_length);
+    _glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        uint32_t dwChar = (first + i) % 256;
+        const Bitmap *bm = &wglSystemFontBitmaps[dwChar];
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, bm->width);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+        glNewList(listBase + i, GL_COMPILE);
+
+        glBitmap(bm->width, bm->height,
+                 bm->xorig, bm->yorig, bm->xmove, bm->ymove,
+                 (const GLubyte *)bm->pixels);
+
+        glEndList();
+    }
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, row_length);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+}
+
+
+
 const retrace::Entry glretrace::wgl_callbacks[] = {
     {"glAddSwapHintRectWIN", &retrace::ignore},
     {"wglBindTexImageARB", &retrace_wglBindTexImageARB},
@@ -406,6 +446,8 @@ const retrace::Entry glretrace::wgl_callbacks[] = {
     {"wglSwapBuffers", &retrace_wglSwapBuffers},
     {"wglSwapIntervalEXT", &retrace::ignore},
     {"wglSwapLayerBuffers", &retrace_wglSwapLayerBuffers},
+    {"wglUseFontBitmapsA", &retrace_wglUseFontBitmapsAW},
+    {"wglUseFontBitmapsW", &retrace_wglUseFontBitmapsAW},
     {NULL, NULL}
 };
 
