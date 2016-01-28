@@ -63,7 +63,10 @@ private:
     void operator=(MmapedFileBuffer const&) = delete;
 
     void newMmap() {
-        ftruncate(fd, chunkSize * (mmaps.size() + 1));
+        int ret = ftruncate(fd, chunkSize * (mmaps.size() + 1));
+        if (ret < 0) {
+            abort();
+        }
         vptr = mmap(NULL, chunkSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
                     chunkSize * mmaps.size());
         mmaps.push_front(vptr);
