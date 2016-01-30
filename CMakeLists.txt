@@ -36,6 +36,8 @@ option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
 
 option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
+option (ENABLE_LIBSSP_MINGW "Link against libssp with Mingw" ON)
+
 # Proprietary Linux games often ship their own libraries (zlib, libstdc++,
 # etc.) in order to ship a single set of binaries across multiple
 # distributions.  Given that apitrace wrapper modules will be loaded into those
@@ -278,7 +280,7 @@ else ()
     if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
         set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fstack-protector-all")
         set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all")
-        if (MINGW)
+        if (MINGW AND ENABLE_LIBSSP_MINGW)
             # MinGW doesn't link against libssp automatically, and furthermore
             # we want static linking.
             set (SSP_LIBRARY "-Wl,-Bstatic -lssp -Wl,-Bdynamic")
