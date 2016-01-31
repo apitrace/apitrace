@@ -768,5 +768,30 @@
 #endif
 
 
+#ifndef _WIN32_WINNT_WINBLUE
+#define _WIN32_WINNT_WINBLUE 0x0603
+#endif
+
+#ifndef _WIN32_WINNT_WINTHRESHOLD
+#define _WIN32_WINNT_WINTHRESHOLD 0x0A00
+#endif
+
+#ifndef _WIN32_WINNT_WIN10
+#define _WIN32_WINNT_WIN10 0x0A00
+#endif
+
+#ifndef NTDDI_WINBLUE
+#define NTDDI_WINBLUE 0x06030000
+#endif
+
+#ifndef NTDDI_WINTHRESHOLD
+#define NTDDI_WINTHRESHOLD 0x0A000000
+#endif
+
+#ifndef NTDDI_WIN10
+#define NTDDI_WIN10 0x0A000000
+#endif
+
+
 #endif /* __MINGW32__ */
 
