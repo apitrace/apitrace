@@ -180,10 +180,10 @@ if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
     if (MINGW OR CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
         # Windows XP
-        add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+        add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
     else ()
         # Windows 7
-        add_definitions (-D_WIN32_WINNT=0x0601 -DWINVER=0x0601)
+        add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
     endif ()
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)

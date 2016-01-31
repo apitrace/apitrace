@@ -21,6 +21,7 @@ if (DirectX_D3D11_INCLUDE_FOUND)
             ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wrl
         )
 
+        remove_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
         add_definitions (
             #inhibit warnings
             -w
@@ -31,6 +32,8 @@ if (DirectX_D3D11_INCLUDE_FOUND)
             -D_XM_NO_INTRINSICS_
             -DXMINLINE=inline
             -DXM_NO_ALIGNMENT
+
+            -D_WIN32_WINNT=0x0501 -DWINVER=0x0501
         )
         if (CMAKE_SIZEOF_VOID_P EQUAL 8)
             add_definitions (-D_XM_X64_)

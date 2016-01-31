@@ -326,6 +326,7 @@ if (WIN32)
             DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/dcomp.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
@@ -342,6 +343,7 @@ if (WIN32)
                 retrace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/dcomp.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
