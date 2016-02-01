@@ -35,6 +35,7 @@ from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10, d3d10_1
 from specs.d3d11 import d3d11
+from specs.dcomp import dcomp
 
 
 class D3DRetracer(Retracer):
@@ -205,6 +206,8 @@ class D3DRetracer(Retracer):
             print r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);'
             self.checkResult(interface, method)
             return
+        if method.name == 'CreateTargetForHwnd':
+            print r'    hwnd = d3dretrace::createWindow(1024, 768);'
 
         if method.name == 'SetFullscreenState':
             print r'    if (retrace::forceWindowed) {'
@@ -399,6 +402,7 @@ def main():
     print r'#include "d3d10state.hpp"'
     print r'#include "d3d11imports.hpp"'
     print r'#include "d3d11size.hpp"'
+    print r'#include "dcompimports.hpp"'
     print r'#include "d3dstate.hpp"'
     print
     print '''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;'''
@@ -411,6 +415,7 @@ def main():
     api.addModule(d3d10)
     api.addModule(d3d10_1)
     api.addModule(d3d11)
+    api.addModule(dcomp)
 
     retracer = D3DRetracer()
     retracer.retraceApi(api)
