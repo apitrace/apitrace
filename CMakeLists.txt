@@ -289,14 +289,18 @@ else ()
 
     # Enable SSE2 intrinsics on x86
     if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-       add_compiler_flags (-msse2 -mfpmath=sse)
+        add_compiler_flags (-msse2 -mfpmath=sse)
 
-       # And tell GCC to assume 4 bytes alignment, many Linux/Windows
-       # applications only guarantee that, but not on systems where ABI
-       # clearly states otherwise.
-       #
-       # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
-       add_compiler_flags (-mincoming-stack-boundary=2)
+        # And tell GCC to assume 4 bytes alignment, many Linux/Windows
+        # applications only guarantee that, but not on systems where ABI
+        # clearly states otherwise.
+        #
+        # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
+        if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+            add_compiler_flags (-mstackrealign)
+        else ()
+            add_compiler_flags (-mincoming-stack-boundary=2)
+        endif ()
     endif ()
 
     # Be nice to Eclipse
