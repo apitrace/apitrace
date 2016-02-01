@@ -361,14 +361,21 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
 
 class Retracer:
 
+    def makeFunctionId(self, function):
+        name = function.name
+        if function.overloaded:
+            # TODO: Use a sequence number
+            name += '__%08x' % (hash(function) & 0xffffffff)
+        return name
+
     def retraceFunction(self, function):
-        print 'static void retrace_%s(trace::Call &call) {' % function.name
+        print 'static void retrace_%s(trace::Call &call) {' % self.makeFunctionId(function)
         self.retraceFunctionBody(function)
         print '}'
         print
 
     def retraceInterfaceMethod(self, interface, method):
-        print 'static void retrace_%s__%s(trace::Call &call) {' % (interface.name, method.name)
+        print 'static void retrace_%s__%s(trace::Call &call) {' % (interface.name, self.makeFunctionId(method))
         self.retraceInterfaceMethodBody(interface, method)
         print '}'
         print
@@ -605,16 +612,18 @@ class Retracer:
         print 'const retrace::Entry %s[] = {' % self.table_name
         for function in functions:
             if not function.internal:
+                sigName = function.sigName()
                 if function.sideeffects:
-                    print '    {"%s", &retrace_%s},' % (function.name, function.name)
+                    print '    {"%s", &retrace_%s},' % (sigName, self.makeFunctionId(function))
                 else:
-                    print '    {"%s", &retrace::ignore},' % (function.name,)
+                    print '    {"%s", &retrace::ignore},' % (sigName,)
         for interface in interfaces:
             for base, method in interface.iterBaseMethods():
+                sigName = method.sigName()
                 if method.sideeffects:
-                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, base.name, method.name)
+                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, sigName, base.name, self.makeFunctionId(method))
                 else:
-                    print '    {"%s::%s", &retrace::ignore},' % (interface.name, method.name)
+                    print '    {"%s::%s", &retrace::ignore},' % (interface.name, sigName)
         print '    {NULL, NULL}'
         print '};'
         print
