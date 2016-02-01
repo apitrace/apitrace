@@ -67,20 +67,29 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         self.visit(const.type)
 
     def visitStruct(self, struct):
-        # Ensure member array has nonzero length to avoid MSVC error C2466
-        print 'static const char * _struct%s_members[%u] = {' % (struct.tag, max(len(struct.members), 1))
-        for type, name,  in struct.members:
-            if name is None:
-                print '    "",'
-            else:
-                print '    "%s",' % (name,)
-        print '};'
+        # Write array with structure's member names
+        numMembers = len(struct.members)
+        if numMembers:
+            # Ensure member array has nonzero length to avoid MSVC error C2466
+            memberNames = '_struct%s_members' % (struct.tag,)
+            print 'static const char * %s[%u] = {' % (memberNames, numMembers)
+            for type, name,  in struct.members:
+                if name is None:
+                    print '    "",'
+                else:
+                    print '    "%s",' % (name,)
+            print '};'
+        else:
+            sys.stderr.write('warning: %s has no members\n' % struct.name)
+            memberNames = 'nullptr'
+
+        # Write structure's signature
         print 'static const trace::StructSig _struct%s_sig = {' % (struct.tag,)
         if struct.name is None:
             structName = '""'
         else:
             structName = '"%s"' % struct.name
-        print '    %u, %s, %u, _struct%s_members' % (struct.id, structName, len(struct.members), struct.tag)
+        print '    %u, %s, %u, %s' % (struct.id, structName, numMembers, memberNames)
         print '};'
         print
 
