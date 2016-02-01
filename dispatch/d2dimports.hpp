@@ -35,6 +35,7 @@
 #include "winsdk_compat.h"
 
 #include <d2d1_1.h>
+#include <d2d1effectauthor.h>  // for D2D1_PROPERTY_BINDING
 #include <dwrite_1.h>
 
 #ifndef WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT
