@@ -202,30 +202,21 @@ resolveUniformName(const GLchar *name,  GLint size)
 
 struct AttribDesc
 {
-    GLenum type;
-    GLenum size;
+    GLenum type = GL_NONE;
+    GLenum size = 0;
 
-    GLenum elemType;
-    GLint elemStride;
+    GLenum elemType = GL_NONE;
+    GLint elemStride = 0;
 
-    GLint numCols;
-    GLint numRows;
+    GLint numCols = 0;
+    GLint numRows = 0;
 
-    GLsizei rowStride;
-    GLsizei colStride;
+    GLsizei rowStride = 0;
+    GLsizei colStride = 0;
 
-    GLsizei arrayStride;
+    GLsizei arrayStride = 0;
 
-    AttribDesc() :
-        type(GL_NONE),
-        size(0),
-        elemType(GL_NONE),
-        elemStride(0),
-        numCols(0),
-        numRows(0),
-        rowStride(0),
-        colStride(0),
-        arrayStride(0)
+    AttribDesc(void)
     {}
 
     AttribDesc(GLenum _type,
@@ -248,15 +239,19 @@ struct AttribDesc
                 matrix_stride = numRows * elemStride;
             }
             colStride = matrix_stride;
+            if (!array_stride) {
+                arrayStride = numCols * colStride;
+            }
         } else {
             colStride = elemStride;
             if (!matrix_stride) {
                 matrix_stride = numCols * elemStride;
             }
             rowStride = matrix_stride;
+            if (!array_stride) {
+                arrayStride = numRows * rowStride;
+            }
         }
-
-        arrayStride = array_stride ? array_stride : size * matrix_stride;
     }
 
     inline
