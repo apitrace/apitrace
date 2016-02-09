@@ -190,6 +190,10 @@ BufferMapping::BufferMapping() :
 GLvoid *
 BufferMapping::map(GLenum _target, GLuint _buffer)
 {
+    if (target == _target && buffer == _buffer) {
+        return map_pointer;
+    }
+
     target = _target;
     buffer = _buffer;
     map_pointer = NULL;

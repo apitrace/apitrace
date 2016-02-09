@@ -166,10 +166,10 @@ dumpProgram(StateWriter &writer, Context &context, GLint program)
 
 
 /**
- * Built-in uniforms can't be queried through glGetUniform*.
+ * Built-in uniforms/attributes need special treatment.
  */
 static inline bool
-isBuiltinUniform(const GLchar *name)
+isBuiltinName(const GLchar *name)
 {
     return name[0] == 'g' && name[1] == 'l' && name[2] == '_';
 }
@@ -526,7 +526,7 @@ dumpProgramUniforms(StateWriter &writer, GLint program)
         GLenum type = GL_NONE;
         glGetActiveUniform(program, index, active_uniform_max_length, &length, &size, &type, name);
 
-        if (isBuiltinUniform(name)) {
+        if (isBuiltinName(name)) {
             continue;
         }
 
@@ -824,6 +824,152 @@ dumpProgramUniformsStage(StateWriter &writer, GLint program, const char *stage)
     writer.endMember();
 }
 
+struct VertexAttrib {
+    std::string name;
+    AttribDesc desc;
+    GLsizei offset = 0;
+    GLsizei stride = 0;
+    GLsizei size = 0;
+    const GLbyte *map;
+};
+
+static void
+dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
+{
+    if (program <= 0) {
+        return;
+    }
+
+    GLint activeAttribs = 0;
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &activeAttribs);
+    if (!activeAttribs) {
+        return;
+    }
+
+    GLint max_name_length = 0;
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_name_length);
+    std::vector<GLchar> name(max_name_length);
+
+    std::map<GLuint, BufferMapping> mappings;
+    std::vector<VertexAttrib> attribs;
+    unsigned count = ~0U;
+
+    for (GLint index = 0; index < activeAttribs; ++index) {
+        GLsizei length = 0;
+        GLint shaderSize = 0;
+        GLenum shaderType = GL_NONE;
+        glGetActiveAttrib(program, index, max_name_length, &length, &shaderSize, &shaderType, &name[0]);
+
+        if (isBuiltinName(&name[0])) {
+            // TODO: Handle built-ins too
+            std::cerr << "warning: dumping of built-in vertex attribute (" << &name[0] << ") not yet supported\n";
+            continue;
+        }
+
+        GLint location = glGetAttribLocation(program, &name[0]);
+        if (location < 0) {
+            continue;
+        }
+
+        GLint buffer = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer);
+        if (!buffer) {
+            continue;
+        }
+
+
+
+        GLint size = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_SIZE, &size);
+        GLint type = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_TYPE, &type);
+        GLint normalized = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &normalized);
+        GLint stride = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &stride);
+        GLvoid * pointer = 0;
+        glGetVertexAttribPointerv(location, GL_VERTEX_ATTRIB_ARRAY_POINTER, &pointer);
+
+        GLint offset = reinterpret_cast<intptr_t>(pointer);
+        assert(offset >= 0);
+
+        GLint divisor = 0;
+        glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_DIVISOR, &divisor);
+        if (divisor) {
+            // TODO: not clear the best way of presenting instanced attibutes on the dump
+            std::cerr << "warning: dumping of instanced attributes (" << &name[0] << ") not yet supported\n";
+            return;
+        }
+
+        if (size == GL_BGRA) {
+            std::cerr << "warning: dumping of GL_BGRA attributes (" << &name[0] << ") not yet supported\n";
+            size = 4;
+        }
+
+        AttribDesc desc(type, size);
+        if (!desc) {
+            std::cerr << "warning: dumping of packed attribute (" << &name[0] << ") not yet supported\n";
+            // TODO: handle
+            continue;
+        }
+
+        attribs.emplace_back();
+        VertexAttrib &attrib = attribs.back();
+        attrib.name = &name[0];
+
+        // TODO handle normalized attributes
+        if (normalized) {
+            std::cerr << "warning: dumping of normalized attribute (" << &name[0] << ") not yet supported\n";
+        }
+
+        attrib.desc = desc;
+        GLsizei attribSize = attrib.desc.arrayStride;
+
+        if (stride == 0) {
+            // tightly packed
+            stride = attribSize;
+        }
+
+        attrib.offset = offset;
+        attrib.stride = stride;
+
+        BufferMapping &mapping = mappings[buffer];
+        attrib.map = (const GLbyte *)mapping.map(GL_ARRAY_BUFFER, buffer);
+
+        BufferBinding bb(GL_ARRAY_BUFFER, buffer);
+        GLint bufferSize = 0;
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+
+        if (bufferSize <= offset ||
+            bufferSize <= offset + attribSize) {
+            return;
+        } else {
+            unsigned attribCount = (bufferSize - offset - attribSize)/stride + 1;
+            count = std::min(count, attribCount);
+        }
+    }
+
+    if (count == 0 || count == ~0U || attribs.empty()) {
+        return;
+    }
+
+    writer.beginMember("vertices");
+    writer.beginArray();
+    for (unsigned vertex = 0; vertex < count; ++vertex) {
+        writer.beginObject();
+        for (auto attrib : attribs) {
+            const AttribDesc & desc = attrib.desc;
+            assert(desc);
+
+            const GLbyte *vertex_data = attrib.map + attrib.stride*vertex + attrib.offset;
+            dumpAttribArray(writer, attrib.name, desc, vertex_data);
+        }
+        writer.endObject();
+    }
+    writer.endArray();
+    writer.endMember();
+}
+
 void
 dumpShadersUniforms(StateWriter &writer, Context &context)
 {
@@ -890,6 +1036,11 @@ dumpShadersUniforms(StateWriter &writer, Context &context)
 
     writer.beginMember("buffers");
     writer.beginObject();
+    if (pipeline) {
+        dumpVertexAttributes(writer, context, vertex_program);
+    } else {
+        dumpVertexAttributes(writer, context, program);
+    }
     if (program) {
         dumpTransformFeedback(writer, program);
     }
