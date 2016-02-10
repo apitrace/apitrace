@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ##########################################################################
 #
+# Copyright 2015 VMware, Inc.
 # Copyright 2011 Jose Fonseca
 # All Rights Reserved.
 #
@@ -28,6 +29,7 @@
 import json
 import optparse
 import re
+import difflib
 import sys
 
 
@@ -131,7 +133,7 @@ class Dumper(Visitor):
         self._write(']')
 
     def visitValue(self, node):
-        self._write(json.dumps(node))
+        self._write(json.dumps(node, allow_nan=True))
 
 
 
@@ -175,7 +177,12 @@ class Comparer(Visitor):
     def visitValue(self, a, b):
         if isinstance(a, float) and isinstance(b, (int, long, float)) or \
            isinstance(b, float) and isinstance(a, (int, long, float)):
-            if a == 0:
+            if a is b:
+                # NaNs take this path
+                return True
+            elif a == b:
+                return True
+            elif a == 0:
                 return abs(b) < self.tolerance
             else:
                 return abs((b - a)/a) < self.tolerance
@@ -247,9 +254,37 @@ class Differ(Visitor):
             self.replace(a, b)
 
     def replace(self, a, b):
+        if self.isMultilineString(a) or self.isMultilineString(b):
+            a = str(a)
+            b = str(b)
+            a = a.splitlines()
+            b = b.splitlines()
+            differ = difflib.Differ()
+            result = differ.compare(a, b)
+            self.dumper.level += 1
+            for entry in result:
+                self.dumper._newline()
+                self.dumper._indent()
+                tag = entry[:2]
+                text = entry[2:]
+                if tag == '? ':
+                    tag = '  '
+                    prefix = ' '
+                    text = text.rstrip()
+                    suffix = ''
+                else:
+                    prefix = '"'
+                    suffix = '\\n"'
+                line = tag + prefix + text + suffix
+                self.dumper._write(line)
+            self.dumper.level -= 1
+            return
         self.dumper.visit(a)
         self.dumper._write(' -> ')
         self.dumper.visit(b)
+
+    def isMultilineString(self, value):
+        return isinstance(value, basestring) and '\n' in value
 
 
 #
@@ -301,6 +336,10 @@ def main():
     optparser = optparse.OptionParser(
         usage="\n\t%prog [options] <ref_json> <src_json>")
     optparser.add_option(
+        '--ignore-added',
+        action="store_true", dest="ignore_added", default=False,
+        help="ignore added state")
+    optparser.add_option(
         '--keep-images',
         action="store_false", dest="strip_images", default=True,
         help="compare images")
@@ -310,14 +349,14 @@ def main():
     if len(args) != 2:
         optparser.error('incorrect number of arguments')
 
-    a = load(open(sys.argv[1], 'rt'), options.strip_images)
-    b = load(open(sys.argv[2], 'rt'), options.strip_images)
+    a = load(open(args[0], 'rt'), options.strip_images)
+    b = load(open(args[1], 'rt'), options.strip_images)
 
     if False:
         dumper = Dumper()
         dumper.visit(a)
 
-    differ = Differ()
+    differ = Differ(ignore_added = options.ignore_added)
     differ.visit(a, b)
 
 

@@ -1,0 +1,116 @@
+Name
+
+    VMWX_map_buffer_debug
+
+Name Strings
+
+    GL_VMWX_map_buffer_debug
+
+Contact
+
+    Jose Fonseca, VMware (jfonseca 'at' vmware.com)
+
+IP Status
+
+    No known IP claims.
+
+Status
+
+    Implemented by Apitrace
+
+Version
+
+    Last Modified Date: December 14, 2014
+    Version: 1
+
+Number
+
+    TBD.
+
+Dependencies
+
+    GL_ARB_buffer_storage is required.
+
+Overview
+
+    This extension provides a mechanism for the application to notify OpenGL
+    debugging tools that it modified ranges of persistent buffer mappings,
+    without explicitly flushing buffer ranges.
+
+New Procedures and Functions
+
+    void NotifyMappedBufferRangeVMWX(const void * start, sizeiptr length);
+
+New Tokens
+
+    Accepted in the <flags> parameter of BufferStorage:
+
+        MAP_NOTIFY_EXPLICIT_BIT_VMWX                 0x80000000
+
+    Accepted as part of the <access> parameter to MapBufferRange and
+    MapNamedBufferRange:
+
+        MAP_NOTIFY_EXPLICIT_BIT_VMWX                 0x80000000
+
+Additions to Chapter 6 of the OpenGL Core Profile Specification, Version 4.3,
+"Buffer Objects"
+
+    Modify Section 6.2, "Creating and Modifying Buffer Object Data Stores"
+
+    Add to the bulleted list describing flags that modify buffer storage
+    flags, p.57.
+
+        * MAP_NOTIFY_EXPLICIT_BIT_VMWX indicates that the application will
+          notify whenever discrete subranges of coherent mappings are
+          notified.
+
+          This flag may only be used in conjunction with MAP_PERSISTENT_BIT.
+
+    Modify Section 6.3, "Mapping and Unmapping Buffer Data"
+
+    Add to the bulleted list describing flags that modify buffer mappings,
+    p.62.
+
+        * MAP_NOTIFY_EXPLICIT_BIT_VMWX indicates that discrete subranges of the
+          mapping will be notified explicitly when modified.
+
+          When this flag is set, modifications to each subrange must be
+          explicitly flushed by calling NotifyMappedBufferRangeVMWX.
+
+          This flag may only be used in conjunction with MAP_PERSISTENT_BIT.
+
+          If this bit is set, the value of BUFFER_STORAGE_FLAGS for the buffer
+          being mapped must include MAP_NOTIFY_EXPLICIT_BIT_VMWX.
+
+Issues
+
+    1) Why is this extension necessary?
+
+    It is true that an application may be friendly towards OpenGL debugging
+    tools that intercept calls by ensuring that MAP_PERSISTENT_BIT is always
+    set with MAP_FLUSH_EXPLICIT_BIT, and never with MAP_COHERENT_BIT.  But
+    this restricts/deviates from intended behavior.  This extensions provides
+    a mechanism for applications to notify debugging tools without affecting
+    behavior.
+
+
+    2) Why the new MAP_NOTIFY_EXPLICIT_BIT_VMWX token?
+
+    To be future-proof.
+
+    In order to record complete traces, OpenGL tracing tools may choose to
+    mask out support for coherent mappings by failing BufferStorage calls with
+    OUT_OF_MEMORY when MAP_COHERENT_BIT is set without
+    MAP_NOTIFY_EXPLICIT_BIT_VMWX; or use techniques to approximately detect
+    writes to coherent mappings if the application calls MapBufferRange with
+    MAP_COHERENT_BIT and MAP_NOTIFY_EXPLICIT_BIT_VMWX.
+
+    It is therefore crucial that applications that want to explicitily notify
+    modified subranges with calls NotifyMappedBufferRangeVMWX set the
+    MAP_NOTIFY_EXPLICIT_BIT_VMWX bit both on BufferStorage and MapBufferRange
+    calls, to opt-out of further interference from debugging tools.
+
+
+Revision History
+
+    Version 1, 2014/12/14 - Initial version

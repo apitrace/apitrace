@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_PARSER_HPP_
-#define _TRACE_PARSER_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -46,7 +45,21 @@ struct ParseBookmark
 };
 
 
-class Parser
+// Parser interface
+class AbstractParser
+{
+public:
+    virtual ~AbstractParser() {}
+    virtual  Call *parse_call(void) = 0;
+    virtual void getBookmark(ParseBookmark &bookmark) = 0;
+    virtual void setBookmark(const ParseBookmark &bookmark) = 0;
+    virtual bool open(const char *filename) = 0;
+    virtual void close(void) = 0;
+    virtual unsigned long long getVersion(void) const = 0;
+};
+
+
+class Parser: public AbstractParser
 {
 protected:
     File *file;
@@ -96,8 +109,8 @@ protected:
 
     unsigned next_call_no;
 
-public:
     unsigned long long version;
+public:
     API api;
 
     Parser();
@@ -121,6 +134,10 @@ public:
 
     void setBookmark(const ParseBookmark &bookmark);
 
+    unsigned long long getVersion(void) const {
+        return version;
+    }
+
     int percentRead()
     {
         return file->percentRead();
@@ -139,9 +156,11 @@ protected:
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
     
+public:
     static CallFlags
     lookupCallFlags(const char *name);
 
+protected:
     Call *parse_Call(Mode mode);
 
     void parse_enter(Mode mode);
@@ -204,6 +223,9 @@ protected:
     Value *parse_repr();
     void scan_repr();
 
+    Value *parse_wstring();
+    void scan_wstring();
+
     const char * read_string(void);
     void skip_string(void);
 
@@ -218,6 +240,9 @@ protected:
 };
 
 
+AbstractParser *
+lastFrameLoopParser(AbstractParser *parser, int loopCount);
+
+
 } /* namespace trace */
 
-#endif /* _TRACE_PARSER_HPP_ */

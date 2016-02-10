@@ -17,10 +17,11 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#pragma warning(disable : 4616 6001 6993)
+#pragma warning(disable : 4616 6993)
 #endif
 
 #include "BC.h"
+
 
 namespace DirectX
 {
@@ -31,13 +32,46 @@ inline static DWORD _GetBCFlags( _In_ DWORD compress )
     static_assert( TEX_COMPRESS_A_DITHER == BC_FLAGS_DITHER_A, "TEX_COMPRESS_* flags should match BC_FLAGS_*"  );
     static_assert( TEX_COMPRESS_DITHER == (BC_FLAGS_DITHER_RGB | BC_FLAGS_DITHER_A), "TEX_COMPRESS_* flags should match BC_FLAGS_*"  );
     static_assert( TEX_COMPRESS_UNIFORM == BC_FLAGS_UNIFORM, "TEX_COMPRESS_* flags should match BC_FLAGS_*"  );
-    return ( compress & (BC_FLAGS_DITHER_RGB|BC_FLAGS_DITHER_A|BC_FLAGS_UNIFORM) );
+    static_assert( TEX_COMPRESS_BC7_USE_3SUBSETS == BC_FLAGS_USE_3SUBSETS, "TEX_COMPRESS_* flags should match BC_FLAGS_*"  );
+    return ( compress & (BC_FLAGS_DITHER_RGB|BC_FLAGS_DITHER_A|BC_FLAGS_UNIFORM|BC_FLAGS_USE_3SUBSETS) );
+}
+
+inline static DWORD _GetSRGBFlags( _In_ DWORD compress )
+{
+    static_assert( TEX_COMPRESS_SRGB_IN == TEX_FILTER_SRGB_IN, "TEX_COMPRESS_SRGB* should match TEX_FILTER_SRGB*" );
+    static_assert( TEX_COMPRESS_SRGB_OUT == TEX_FILTER_SRGB_OUT, "TEX_COMPRESS_SRGB* should match TEX_FILTER_SRGB*" );
+    static_assert( TEX_COMPRESS_SRGB == TEX_FILTER_SRGB, "TEX_COMPRESS_SRGB* should match TEX_FILTER_SRGB*" );
+    return ( compress & TEX_COMPRESS_SRGB );
+}
+
+inline static bool _DetermineEncoderSettings( _In_ DXGI_FORMAT format, _Out_ BC_ENCODE& pfEncode, _Out_ size_t& blocksize, _Out_ DWORD& cflags )
+{
+    switch(format)
+    {
+    case DXGI_FORMAT_BC1_UNORM:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:    pfEncode = nullptr;         blocksize = 8;   cflags = 0; break;
+    case DXGI_FORMAT_BC2_UNORM:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:    pfEncode = D3DXEncodeBC2;   blocksize = 16;  cflags = 0; break;
+    case DXGI_FORMAT_BC3_UNORM:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:    pfEncode = D3DXEncodeBC3;   blocksize = 16;  cflags = 0; break;
+    case DXGI_FORMAT_BC4_UNORM:         pfEncode = D3DXEncodeBC4U;  blocksize = 8;   cflags = TEX_FILTER_RGB_COPY_RED; break;
+    case DXGI_FORMAT_BC4_SNORM:         pfEncode = D3DXEncodeBC4S;  blocksize = 8;   cflags = TEX_FILTER_RGB_COPY_RED; break;
+    case DXGI_FORMAT_BC5_UNORM:         pfEncode = D3DXEncodeBC5U;  blocksize = 16;  cflags = TEX_FILTER_RGB_COPY_RED | TEX_FILTER_RGB_COPY_GREEN; break;
+    case DXGI_FORMAT_BC5_SNORM:         pfEncode = D3DXEncodeBC5S;  blocksize = 16;  cflags = TEX_FILTER_RGB_COPY_RED | TEX_FILTER_RGB_COPY_GREEN; break;
+    case DXGI_FORMAT_BC6H_UF16:         pfEncode = D3DXEncodeBC6HU; blocksize = 16;  cflags = 0; break;
+    case DXGI_FORMAT_BC6H_SF16:         pfEncode = D3DXEncodeBC6HS; blocksize = 16;  cflags = 0; break;
+    case DXGI_FORMAT_BC7_UNORM:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:    pfEncode = D3DXEncodeBC7;   blocksize = 16;  cflags = 0; break;
+    default:                            pfEncode = nullptr;         blocksize = 0;   cflags = 0; return false;
+    }
+
+    return true;
 }
 
 
 //-------------------------------------------------------------------------------------
 static HRESULT _CompressBC( _In_ const Image& image, _In_ const Image& result, _In_ DWORD bcflags,
-                            _In_ float alphaRef, _In_ bool degenerate )
+                            _In_ DWORD srgb, _In_ float alphaRef )
 {
     if ( !image.pixels || !result.pixels )
         return E_POINTER;
@@ -64,25 +98,9 @@ static HRESULT _CompressBC( _In_ const Image& image, _In_ const Image& result, _
     // Determine BC format encoder
     BC_ENCODE pfEncode;
     size_t blocksize;
-    switch(result.format)
-    {
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:    pfEncode = nullptr;         blocksize = 8;   break;
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:    pfEncode = D3DXEncodeBC2;   blocksize = 16;  break;
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:    pfEncode = D3DXEncodeBC3;   blocksize = 16;  break;
-    case DXGI_FORMAT_BC4_UNORM:         pfEncode = D3DXEncodeBC4U;  blocksize = 8;   break;
-    case DXGI_FORMAT_BC4_SNORM:         pfEncode = D3DXEncodeBC4S;  blocksize = 8;   break;
-    case DXGI_FORMAT_BC5_UNORM:         pfEncode = D3DXEncodeBC5U;  blocksize = 16;  break;
-    case DXGI_FORMAT_BC5_SNORM:         pfEncode = D3DXEncodeBC5S;  blocksize = 16;  break;
-    case DXGI_FORMAT_BC6H_UF16:         pfEncode = D3DXEncodeBC6HU; blocksize = 16;  break;
-    case DXGI_FORMAT_BC6H_SF16:         pfEncode = D3DXEncodeBC6HS; blocksize = 16;  break;
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:    pfEncode = D3DXEncodeBC7;   blocksize = 16;  break;
-    default:
+    DWORD cflags;
+    if ( !_DetermineEncoderSettings( result.format, pfEncode, blocksize, cflags ) )
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
-    }
 
     XMVECTOR temp[16];
     const uint8_t *pSrc = image.pixels;
@@ -91,55 +109,65 @@ static HRESULT _CompressBC( _In_ const Image& image, _In_ const Image& result, _
     {
         const uint8_t *sptr = pSrc;
         uint8_t* dptr = pDest;
-        for( size_t count = 0; count < rowPitch; count += sbpp*4 )
+        size_t ph = std::min<size_t>( 4, image.height - h );
+        size_t w = 0;
+        for( size_t count = 0; (count < result.rowPitch) && (w < image.width); count += blocksize, w += 4 )
         {
-            if ( !_LoadScanline( &temp[0], 4, sptr, rowPitch, format ) )
+            size_t pw = std::min<size_t>( 4, image.width - w );
+            assert( pw > 0 && ph > 0 );
+
+            if ( !_LoadScanline( &temp[0], pw, sptr, rowPitch, format ) )
                 return E_FAIL;
 
-            if ( image.height > 1 )
+            if ( ph > 1 )
             {
-                if ( !_LoadScanline( &temp[4], 4, sptr + rowPitch, rowPitch, format ) )
+                if ( !_LoadScanline( &temp[4], pw, sptr + rowPitch, rowPitch, format ) )
                     return E_FAIL;
 
-                if ( image.height > 2 )
+                if ( ph > 2 )
                 {
-                    if ( !_LoadScanline( &temp[8], 4, sptr + rowPitch*2, rowPitch, format ) )
+                    if ( !_LoadScanline( &temp[8], pw, sptr + rowPitch*2, rowPitch, format ) )
                         return E_FAIL;
 
-                    if ( !_LoadScanline( &temp[12], 4, sptr + rowPitch*3, rowPitch, format ) )
-                        return E_FAIL;
+                    if ( ph > 3 )
+                    {
+                        if ( !_LoadScanline( &temp[12], pw, sptr + rowPitch*3, rowPitch, format ) )
+                            return E_FAIL;
+                    }
                 }
             }
 
-            if ( degenerate )
+            if ( pw != 4 || ph != 4 )
             {
-                assert( image.width < 4 || image.height < 4 );
-                const size_t uSrc[] = { 0, 0, 0, 1 };
+                // Replicate pixels for partial block
+                static const size_t uSrc[] = { 0, 0, 0, 1 };
 
-                if ( image.width < 4 )
+                if ( pw < 4 )
                 {
-                    for( size_t t=0; t < image.height && t < 4; ++t )
+                    for( size_t t = 0; t < ph && t < 4; ++t )
                     {
-                        for( size_t s = image.width; s < 4; ++s )
+                        for( size_t s = pw; s < 4; ++s )
                         {
-                            temp[ t*4 + s ] = temp[ t*4 + uSrc[s] ]; 
+#pragma prefast(suppress: 26000, "PREFAST false positive")
+                            temp[ (t << 2) | s ] = temp[ (t << 2) | uSrc[s] ]; 
                         }
                     }
                 }
 
-                if ( image.height < 4 )
+                if ( ph < 4 )
                 {
-                    for( size_t t=image.height; t < 4; ++t )
+                    for( size_t t = ph; t < 4; ++t )
                     {
-                        for( size_t s =0; s < 4; ++s )
+                        for( size_t s = 0; s < 4; ++s )
                         {
-                            temp[ t*4 + s ] = temp[ uSrc[t]*4 + s ]; 
+#pragma prefast(suppress: 26000, "PREFAST false positive")
+                            temp[ (t << 2) | s ] = temp[ (uSrc[t] << 2) | s ]; 
                         }
                     }
                 }
             }
 
-            _ConvertScanline( temp, 16, result.format, format, 0 );
+            _ConvertScanline( temp, 16, result.format, format, cflags | srgb );
             
             if ( pfEncode )
                 pfEncode( dptr, temp, bcflags );
@@ -161,13 +189,10 @@ static HRESULT _CompressBC( _In_ const Image& image, _In_ const Image& result, _
 //-------------------------------------------------------------------------------------
 #ifdef _OPENMP
 static HRESULT _CompressBC_Parallel( _In_ const Image& image, _In_ const Image& result, _In_ DWORD bcflags,
-                                     _In_ float alphaRef )
+                                     _In_ DWORD srgb, _In_ float alphaRef )
 {
     if ( !image.pixels || !result.pixels )
         return E_POINTER;
-
-    // Parallel version doesn't support degenerate case
-    assert( ((image.width % 4) == 0) && ((image.height % 4) == 0 ) );
 
     assert( image.width == result.width );
     assert( image.height == result.height );
@@ -189,35 +214,19 @@ static HRESULT _CompressBC_Parallel( _In_ const Image& image, _In_ const Image& 
     // Determine BC format encoder
     BC_ENCODE pfEncode;
     size_t blocksize;
-    switch(result.format)
-    {
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:    pfEncode = nullptr;         blocksize = 8;   break;
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:    pfEncode = D3DXEncodeBC2;   blocksize = 16;  break;
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:    pfEncode = D3DXEncodeBC3;   blocksize = 16;  break;
-    case DXGI_FORMAT_BC4_UNORM:         pfEncode = D3DXEncodeBC4U;  blocksize = 8;   break;
-    case DXGI_FORMAT_BC4_SNORM:         pfEncode = D3DXEncodeBC4S;  blocksize = 8;   break;
-    case DXGI_FORMAT_BC5_UNORM:         pfEncode = D3DXEncodeBC5U;  blocksize = 16;  break;
-    case DXGI_FORMAT_BC5_SNORM:         pfEncode = D3DXEncodeBC5S;  blocksize = 16;  break;
-    case DXGI_FORMAT_BC6H_UF16:         pfEncode = D3DXEncodeBC6HU; blocksize = 16;  break;
-    case DXGI_FORMAT_BC6H_SF16:         pfEncode = D3DXEncodeBC6HS; blocksize = 16;  break;
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:    pfEncode = D3DXEncodeBC7;   blocksize = 16;  break;
-    default:
+    DWORD cflags;
+    if ( !_DetermineEncoderSettings( result.format, pfEncode, blocksize, cflags ) )
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
-    }
 
     // Refactored version of loop to support parallel independance
-    const size_t nBlocks = std::max<size_t>(1, image.width / 4) * std::max<size_t>(1, image.height / 4);
+    const size_t nBlocks = std::max<size_t>(1, (image.width + 3) / 4 ) * std::max<size_t>(1, (image.height + 3) / 4 );
 
     bool fail = false;
 
 #pragma omp parallel for
     for( int nb=0; nb < static_cast<int>( nBlocks ); ++nb )
     {
-        const size_t nbWidth = std::max<size_t>(1, image.width / 4);
+        const size_t nbWidth = std::max<size_t>(1, (image.width + 3) / 4 );
 
         const size_t y = nb / nbWidth;
         const size_t x = nb - (y*nbWidth);
@@ -229,20 +238,61 @@ static HRESULT _CompressBC_Parallel( _In_ const Image& image, _In_ const Image& 
 
         uint8_t *pDest = result.pixels + (nb*blocksize);
 
+        size_t ph = std::min<size_t>( 4, image.height - y );
+        size_t pw = std::min<size_t>( 4, image.width - x );
+        assert( pw > 0 && ph > 0 );
+
         XMVECTOR temp[16];
-        if ( !_LoadScanline( &temp[0], 4, pSrc, rowPitch, format ) )
+        if ( !_LoadScanline( &temp[0], pw, pSrc, rowPitch, format ) )
             fail = true;
 
-        if ( !_LoadScanline( &temp[4], 4, pSrc + rowPitch, rowPitch, format ) )
-            fail = true;
+        if ( ph > 1 )
+        {
+            if ( !_LoadScanline( &temp[4], pw, pSrc + rowPitch, rowPitch, format ) )
+                fail = true;
 
-        if ( !_LoadScanline( &temp[8], 4, pSrc + rowPitch*2, rowPitch, format ) )
-            fail = true;
+            if ( ph > 2 )
+            {
+                if ( !_LoadScanline( &temp[8], pw, pSrc + rowPitch*2, rowPitch, format ) )
+                    fail = true;
 
-        if ( !_LoadScanline( &temp[12], 4, pSrc + rowPitch*3, rowPitch, format ) )
-            fail = true;
+                if ( ph > 3 )
+                {
+                    if ( !_LoadScanline( &temp[12], pw, pSrc + rowPitch*3, rowPitch, format ) )
+                        fail = true;
+                }
+            }
+        }
 
-        _ConvertScanline( temp, 16, result.format, format, 0 );
+        if ( pw != 4 || ph != 4 )
+        {
+            // Replicate pixels for partial block
+            static const size_t uSrc[] = { 0, 0, 0, 1 };
+
+            if ( pw < 4 )
+            {
+                for( size_t t = 0; t < ph && t < 4; ++t )
+                {
+                    for( size_t s = pw; s < 4; ++s )
+                    {
+                        temp[ (t << 2) | s ] = temp[ (t << 2) | uSrc[s] ]; 
+                    }
+                }
+            }
+
+            if ( ph < 4 )
+            {
+                for( size_t t = ph; t < 4; ++t )
+                {
+                    for( size_t s = 0; s < 4; ++s )
+                    {
+                        temp[ (t << 2) | s ] = temp[ (uSrc[t] << 2) | s ]; 
+                    }
+                }
+            }
+        }
+
+        _ConvertScanline( temp, 16, result.format, format, cflags | srgb );
             
         if ( pfEncode )
             pfEncode( pDest, temp, bcflags );
@@ -313,21 +363,6 @@ static HRESULT _DecompressBC( _In_ const Image& cImage, _In_ const Image& result
     assert( cImage.width == result.width );
     assert( cImage.height == result.height );
 
-    // Image must be a multiple of 4 (degenerate cases of 1x1, 1x2, 2x1, and 2x2 are allowed)
-    size_t width = cImage.width;
-    if ( (width % 4) != 0 )
-    {
-        if ( width != 1 && width != 2 )
-            return E_INVALIDARG;
-    }
-
-    size_t height = cImage.height;
-    if ( (height % 4) != 0 )
-    {
-        if ( height != 1 && height != 2 )
-            return E_INVALIDARG;
-    }
-
     const DXGI_FORMAT format = result.format;
     size_t dbpp = BitsPerPixel( format );
     if ( !dbpp )
@@ -390,26 +425,34 @@ static HRESULT _DecompressBC( _In_ const Image& cImage, _In_ const Image& result
     {
         const uint8_t *sptr = pSrc;
         uint8_t* dptr = pDest;
-        for( size_t count = 0; count < cImage.rowPitch; count += sbpp )
+        size_t ph = std::min<size_t>( 4, cImage.height - h );
+        size_t w = 0;
+        for( size_t count = 0; (count < cImage.rowPitch) && (w < cImage.width); count += sbpp, w += 4 )
         {
             pfDecode( temp, sptr );
             _ConvertScanline( temp, 16, format, cformat, 0 );
 
-            if ( !_StoreScanline( dptr, rowPitch, format, &temp[0], 4 ) )
+            size_t pw = std::min<size_t>( 4, cImage.width - w );
+            assert( pw > 0 && ph > 0 );
+
+            if ( !_StoreScanline( dptr, rowPitch, format, &temp[0], pw ) )
                 return E_FAIL;
 
-            if ( result.height > 1 )
+            if ( ph > 1 )
             {
-                if ( !_StoreScanline( dptr + rowPitch, rowPitch, format, &temp[4], 4 ) )
+                if ( !_StoreScanline( dptr + rowPitch, rowPitch, format, &temp[4], pw ) )
                     return E_FAIL;
 
-                if ( result.height > 2 )
+                if ( ph > 2 )
                 {
-                    if ( !_StoreScanline( dptr + rowPitch*2, rowPitch, format, &temp[8], 4 ) )
+                    if ( !_StoreScanline( dptr + rowPitch*2, rowPitch, format, &temp[8], pw ) )
                         return E_FAIL;
 
-                    if ( !_StoreScanline( dptr + rowPitch*3, rowPitch, format, &temp[12], 4 ) )
-                        return E_FAIL;
+                    if ( ph > 3 )
+                    {
+                        if ( !_StoreScanline( dptr + rowPitch*3, rowPitch, format, &temp[12], pw ) )
+                            return E_FAIL;
+                    }
                 }
             }
 
@@ -425,6 +468,92 @@ static HRESULT _DecompressBC( _In_ const Image& cImage, _In_ const Image& result
 }
 
 
+//-------------------------------------------------------------------------------------
+bool _IsAlphaAllOpaqueBC( _In_ const Image& cImage )
+{
+    if ( !cImage.pixels )
+        return false;
+
+    // Promote "typeless" BC formats
+    DXGI_FORMAT cformat;
+    switch( cImage.format )
+    {
+    case DXGI_FORMAT_BC1_TYPELESS:  cformat = DXGI_FORMAT_BC1_UNORM; break;
+    case DXGI_FORMAT_BC2_TYPELESS:  cformat = DXGI_FORMAT_BC2_UNORM; break;
+    case DXGI_FORMAT_BC3_TYPELESS:  cformat = DXGI_FORMAT_BC3_UNORM; break;
+    case DXGI_FORMAT_BC7_TYPELESS:  cformat = DXGI_FORMAT_BC7_UNORM; break;
+    default:                        cformat = cImage.format;         break;
+    }
+
+    // Determine BC format decoder
+    BC_DECODE pfDecode;
+    size_t sbpp;
+    switch(cformat)
+    {
+    case DXGI_FORMAT_BC1_UNORM:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:    pfDecode = D3DXDecodeBC1;   sbpp = 8;   break;
+    case DXGI_FORMAT_BC2_UNORM:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:    pfDecode = D3DXDecodeBC2;   sbpp = 16;  break;
+    case DXGI_FORMAT_BC3_UNORM:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:    pfDecode = D3DXDecodeBC3;   sbpp = 16;  break;
+    case DXGI_FORMAT_BC7_UNORM:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:    pfDecode = D3DXDecodeBC7;   sbpp = 16;  break;
+    default:
+        // BC4, BC5, and BC6 don't have alpha channels
+        return false;
+    }
+
+    // Scan blocks for non-opaque alpha
+    static const XMVECTORF32 threshold = { 0.99f, 0.99f, 0.99f, 0.99f };
+
+    XMVECTOR temp[16];
+    const uint8_t *pPixels = cImage.pixels;
+    for( size_t h = 0; h < cImage.height; h += 4 )
+    {
+        const uint8_t *ptr = pPixels;
+        size_t ph = std::min<size_t>( 4, cImage.height - h );
+        size_t w = 0;
+        for( size_t count = 0; (count < cImage.rowPitch) && (w < cImage.width); count += sbpp, w += 4 )
+        {
+            pfDecode( temp, ptr );
+
+            size_t pw = std::min<size_t>( 4, cImage.width - w );
+            assert( pw > 0 && ph > 0 );
+
+            if ( pw == 4 && ph == 4 )
+            {
+                // Full blocks
+                for( size_t j = 0; j < 16; ++j )
+                {
+                    XMVECTOR alpha = XMVectorSplatW( temp[j] );
+                    if ( XMVector4Less( alpha, threshold ) )
+                        return false;
+                }
+            }
+            else
+            {
+                // Handle partial blocks
+                for( size_t y = 0; y < ph; ++y )
+                {
+                    for( size_t x = 0; x < pw; ++x )
+                    {
+                        XMVECTOR alpha = XMVectorSplatW( temp[ y * 4 + x ] );
+                        if ( XMVector4Less( alpha, threshold ) )
+                            return false;
+                    }
+                }
+            }
+
+            ptr += sbpp;
+        }
+
+        pPixels += cImage.rowPitch;
+    }
+
+    return true;
+}
+
+
 //=====================================================================================
 // Entry-points
 //=====================================================================================
@@ -432,34 +561,18 @@ static HRESULT _DecompressBC( _In_ const Image& cImage, _In_ const Image& result
 //-------------------------------------------------------------------------------------
 // Compression
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT Compress( const Image& srcImage, DXGI_FORMAT format, DWORD compress, float alphaRef, ScratchImage& image )
 {
-    if ( IsCompressed(srcImage.format) || !IsCompressed(format) || IsTypeless(format) )
+    if ( IsCompressed(srcImage.format) || !IsCompressed(format) )
         return E_INVALIDARG;
 
-    // Image size must be a multiple of 4 (degenerate cases for mipmaps are allowed)
-    bool degenerate = false;
-
-    size_t width = srcImage.width;
-    if ( (width % 4) != 0 )
-    {
-        if ( width != 1 && width != 2 )
-            return E_INVALIDARG;
-
-        degenerate = true;
-    }
-
-    size_t height = srcImage.height;
-    if ( (height % 4) != 0 )
-    {
-        if ( height != 1 && height != 2 )
-            return E_INVALIDARG;
-
-        degenerate = true;
-    }
+    if ( IsTypeless(format)
+         || IsTypeless(srcImage.format) || IsPlanar(srcImage.format) || IsPalettized(srcImage.format) )
+        return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     // Create compressed image
-    HRESULT hr = image.Initialize2D( format, width, height, 1, 1 );
+    HRESULT hr = image.Initialize2D( format, srcImage.width, srcImage.height, 1, 1 );
     if ( FAILED(hr) )
         return hr;
 
@@ -471,17 +584,17 @@ HRESULT Compress( const Image& srcImage, DXGI_FORMAT format, DWORD compress, flo
     }
 
     // Compress single image
-    if ( (compress & TEX_COMPRESS_PARALLEL) && !degenerate )
+    if (compress & TEX_COMPRESS_PARALLEL)
     {
 #ifndef _OPENMP
         return E_NOTIMPL;
 #else
-        hr = _CompressBC_Parallel( srcImage, *img, _GetBCFlags( compress ), alphaRef );
+        hr = _CompressBC_Parallel( srcImage, *img, _GetBCFlags( compress ), _GetSRGBFlags( compress ), alphaRef );
 #endif // _OPENMP
     }
     else
     {
-        hr = _CompressBC( srcImage, *img, _GetBCFlags( compress ), alphaRef, degenerate );
+        hr = _CompressBC( srcImage, *img, _GetBCFlags( compress ), _GetSRGBFlags( compress ), alphaRef );
     }
 
     if ( FAILED(hr) )
@@ -490,29 +603,19 @@ HRESULT Compress( const Image& srcImage, DXGI_FORMAT format, DWORD compress, flo
     return hr;
 }
 
+_Use_decl_annotations_
 HRESULT Compress( const Image* srcImages, size_t nimages, const TexMetadata& metadata,
                   DXGI_FORMAT format, DWORD compress, float alphaRef, ScratchImage& cImages )
 {
     if ( !srcImages || !nimages )
         return E_INVALIDARG;
 
-    if ( !IsCompressed(format) || IsTypeless(format) )
+    if ( IsCompressed(metadata.format) || !IsCompressed(format) )
         return E_INVALIDARG;
 
-    // Image size must be a multiple of 4 (degenerate cases for mipmaps are allowed)
-    size_t width = srcImages[0].width;
-    if ( (width % 4) != 0 )
-    {
-        if ( width != 1 && width != 2 )
-            return E_INVALIDARG;
-    }
-
-    size_t height = srcImages[0].height;
-    if ( (height % 4) != 0 )
-    {
-        if ( height != 1 && height != 2 )
-            return E_INVALIDARG;
-    }
+    if ( IsTypeless(format)
+         || IsTypeless(metadata.format) || IsPlanar(metadata.format) || IsPalettized(metadata.format) )
+        return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     cImages.Release();
 
@@ -541,24 +644,20 @@ HRESULT Compress( const Image* srcImages, size_t nimages, const TexMetadata& met
 
         const Image& src = srcImages[ index ];
 
-        height = src.height;
-        width = src.width;
-        if ( width != dest[ index ].width || height != dest[ index ].height )
+        if ( src.width != dest[ index ].width || src.height != dest[ index ].height )
         {
             cImages.Release();
             return E_FAIL;
         }
 
-        bool degenerate = ((height < 4) || (width < 4)) != 0;
-
-        if ( (compress & TEX_COMPRESS_PARALLEL) && !degenerate)
+        if ( (compress & TEX_COMPRESS_PARALLEL) )
         {
 #ifndef _OPENMP
             return E_NOTIMPL;
 #else
             if ( compress & TEX_COMPRESS_PARALLEL )
             {
-                hr = _CompressBC_Parallel( src, dest[ index ], _GetBCFlags( compress ), alphaRef );
+                hr = _CompressBC_Parallel( src, dest[ index ], _GetBCFlags( compress ), _GetSRGBFlags( compress ), alphaRef );
                 if ( FAILED(hr) )
                 {
                     cImages.Release();
@@ -569,7 +668,7 @@ HRESULT Compress( const Image* srcImages, size_t nimages, const TexMetadata& met
         }
         else
         {
-            hr = _CompressBC( src, dest[ index ], _GetBCFlags( compress ), alphaRef, degenerate );
+            hr = _CompressBC( src, dest[ index ], _GetBCFlags( compress ), _GetSRGBFlags( compress ), alphaRef );
             if ( FAILED(hr) )
             {
                 cImages.Release();
@@ -585,9 +684,10 @@ HRESULT Compress( const Image* srcImages, size_t nimages, const TexMetadata& met
 //-------------------------------------------------------------------------------------
 // Decompression
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT Decompress( const Image& cImage, DXGI_FORMAT format, ScratchImage& image )
 {
-    if ( IsCompressed(format) || IsTypeless(format) )
+    if ( !IsCompressed(cImage.format) || IsCompressed(format) )
         return E_INVALIDARG;
 
     if ( format == DXGI_FORMAT_UNKNOWN )
@@ -600,8 +700,14 @@ HRESULT Decompress( const Image& cImage, DXGI_FORMAT format, ScratchImage& image
             return E_INVALIDARG;
         }
     }
-    else if ( !IsCompressed(cImage.format) || !IsValid(format) )
-        return E_INVALIDARG;
+    else
+    {
+        if ( !IsValid(format) )
+            return E_INVALIDARG;
+
+        if ( IsTypeless(format) || IsPlanar(format) || IsPalettized(format) )
+            return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
+    }
 
     // Create decompressed image
     HRESULT hr = image.Initialize2D( format, cImage.width, cImage.height, 1, 1 );
@@ -623,13 +729,14 @@ HRESULT Decompress( const Image& cImage, DXGI_FORMAT format, ScratchImage& image
     return hr;
 }
 
+_Use_decl_annotations_
 HRESULT Decompress( const Image* cImages, size_t nimages, const TexMetadata& metadata,
                     DXGI_FORMAT format, ScratchImage& images )
 {
     if ( !cImages || !nimages )
         return E_INVALIDARG;
 
-    if ( IsCompressed(format) || IsTypeless(format) )
+    if ( !IsCompressed(metadata.format) || IsCompressed(format) )
         return E_INVALIDARG;
 
     if ( format == DXGI_FORMAT_UNKNOWN )
@@ -642,8 +749,14 @@ HRESULT Decompress( const Image* cImages, size_t nimages, const TexMetadata& met
             return E_FAIL;
         }
     }
-    else if ( !IsValid(format) )
-        return E_INVALIDARG;
+    else
+    {
+        if ( !IsValid(format) )
+            return E_INVALIDARG;
+
+        if ( IsTypeless(format) || IsPlanar(format) || IsPalettized(format) )
+            HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
+    }
 
     images.Release();
 

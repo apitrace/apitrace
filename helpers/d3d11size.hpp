@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3D11SIZE_HPP_
-#define _D3D11SIZE_HPP_
+#pragma once
 
 
 /* We purposedly don't include any D3D header, so that this header can be used
@@ -42,6 +41,7 @@
 #include <algorithm>
 
 #include "dxgisize.hpp"
+#include "com_ptr.hpp"
 
 
 inline UINT
@@ -60,7 +60,17 @@ _getNumMipLevels(const D3D11_TEXTURE2D_DESC *pDesc) {
 }
 
 inline UINT
+_getNumMipLevels(const D3D11_TEXTURE2D_DESC1 *pDesc) {
+    return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width, pDesc->Height);
+}
+
+inline UINT
 _getNumMipLevels(const D3D11_TEXTURE3D_DESC *pDesc) {
+    return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width, pDesc->Height, pDesc->Depth);
+}
+
+inline UINT
+_getNumMipLevels(const D3D11_TEXTURE3D_DESC1 *pDesc) {
     return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width, pDesc->Height, pDesc->Depth);
 }
 
@@ -80,7 +90,17 @@ _getNumSubResources(const D3D11_TEXTURE2D_DESC *pDesc) {
 }
 
 inline UINT
+_getNumSubResources(const D3D11_TEXTURE2D_DESC1 *pDesc) {
+    return _getNumMipLevels(pDesc) * pDesc->ArraySize;
+}
+
+inline UINT
 _getNumSubResources(const D3D11_TEXTURE3D_DESC *pDesc) {
+    return _getNumMipLevels(pDesc);
+}
+
+inline UINT
+_getNumSubResources(const D3D11_TEXTURE3D_DESC1 *pDesc) {
     return _getNumMipLevels(pDesc);
 }
 
@@ -102,7 +122,19 @@ _calcSubresourceSize(const D3D11_TEXTURE2D_DESC *pDesc, UINT Subresource, UINT R
 }
 
 static inline size_t
+_calcSubresourceSize(const D3D11_TEXTURE2D_DESC1 *pDesc, UINT Subresource, UINT RowPitch, UINT SlicePitch = 0) {
+    UINT MipLevel = Subresource % _getNumMipLevels(pDesc);
+    return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, pDesc->Height, RowPitch, 1, SlicePitch);
+}
+
+static inline size_t
 _calcSubresourceSize(const D3D11_TEXTURE3D_DESC *pDesc, UINT Subresource, UINT RowPitch, UINT SlicePitch) {
+    UINT MipLevel = Subresource;
+    return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, pDesc->Height, RowPitch, pDesc->Depth, SlicePitch);
+}
+
+static inline size_t
+_calcSubresourceSize(const D3D11_TEXTURE3D_DESC1 *pDesc, UINT Subresource, UINT RowPitch, UINT SlicePitch) {
     UINT MipLevel = Subresource;
     return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, pDesc->Height, RowPitch, pDesc->Depth, SlicePitch);
 }
@@ -123,7 +155,7 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
     UINT Width;
     UINT Height = 1;
     UINT Depth = 1;
-    UINT MipLevel = 0;
+    UINT MipLevels = 1;
 
     switch (Type) {
     case D3D11_RESOURCE_DIMENSION_BUFFER:
@@ -140,7 +172,7 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
             static_cast<ID3D11Texture1D *>(pDstResource)->GetDesc(&Desc);
             Format = Desc.Format;
             Width = Desc.Width;
-            MipLevel = DstSubresource % Desc.MipLevels;
+            MipLevels = Desc.MipLevels;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
@@ -150,7 +182,7 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
             Format = Desc.Format;
             Width = Desc.Width;
             Height = Desc.Height;
-            MipLevel = DstSubresource % Desc.MipLevels;
+            MipLevels = Desc.MipLevels;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
@@ -161,6 +193,7 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
             Width = Desc.Width;
             Height = Desc.Height;
             Depth = Desc.Depth;
+            MipLevels = Desc.MipLevels;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_UNKNOWN:
@@ -173,9 +206,17 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
         Width  = pDstBox->right  - pDstBox->left;
         Height = pDstBox->bottom - pDstBox->top;
         Depth  = pDstBox->back   - pDstBox->front;
+    } else {
+        assert(Width  > 0);
+        assert(Height > 0);
+        assert(Depth  > 0);
+        UINT MipLevel = DstSubresource % MipLevels;
+        Width  = std::max(Width  >> MipLevel, UINT(1));
+        Height = std::max(Height >> MipLevel, UINT(1));
+        Depth  = std::max(Depth  >> MipLevel, UINT(1));
     }
 
-    return _calcMipDataSize(MipLevel, Format, Width, Height, SrcRowPitch, Depth, SrcDepthPitch);
+    return _calcDataSize(Format, Width, Height, SrcRowPitch, Depth, SrcDepthPitch);
 }
 
 
@@ -194,4 +235,49 @@ _getMapDesc(ID3D11DeviceContext* pContext, ID3D11Resource * pResource, UINT Subr
 }
 
 
-#endif /* _D3D11SIZE_HPP_ */
+static inline void
+_normalizeMap(ID3D11Resource * pResource, D3D11_MAPPED_SUBRESOURCE * pMappedResource)
+{
+    D3D11_RESOURCE_DIMENSION Type = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+    pResource->GetType(&Type);
+
+    switch (Type) {
+    default:
+    case D3D11_RESOURCE_DIMENSION_UNKNOWN:
+        assert(0);
+        /* fall-through */
+    case D3D11_RESOURCE_DIMENSION_BUFFER:
+    case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        pMappedResource->RowPitch = 0;
+        /* fall-through */
+    case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        pMappedResource->DepthPitch = 0;
+        break;
+    case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        break;
+    }
+}
+
+
+static inline D3D11_QUERY
+_getQueryType(ID3D11Query *pQuery)
+{
+    D3D11_QUERY_DESC Desc;
+    pQuery->GetDesc(&Desc);
+    return Desc.Query;
+}
+
+
+static inline D3D11_QUERY
+_getQueryType(ID3D11Asynchronous *pAsync)
+{
+    com_ptr<ID3D11Query> pQuery;
+    HRESULT hr;
+    hr = pAsync->QueryInterface(IID_ID3D11Query, (void **)&pQuery);
+    if (FAILED(hr)) {
+        return (D3D11_QUERY)-1;
+    }
+    return _getQueryType(pQuery);
+}
+
+

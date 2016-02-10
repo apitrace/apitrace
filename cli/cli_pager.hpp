@@ -24,12 +24,10 @@
  **************************************************************************/
 
 
-#ifndef _CLI_PAGER_HPP_
-#define _CLI_PAGER_HPP_
+#pragma once
 
 
 void
 pipepager(void);
 
 
-#endif /* _CLI_PAGER_HPP_ */

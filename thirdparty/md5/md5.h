@@ -24,6 +24,10 @@
 #undef HIGHFIRST
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*  On machines where "long" is 64 bits, we need to declare
     uint32 as something guaranteed to be 32 bits.  */
 
@@ -45,8 +49,8 @@ extern void MD5Transform(uint32 * , uint32 *);
  */
 typedef struct MD5Context MD5_CTX;
 
-/*  Define CHECK_HARDWARE_PROPERTIES to have main.c verify
-    byte order and uint32 settings.  */
-#define CHECK_HARDWARE_PROPERTIES
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !MD5_H */

@@ -26,8 +26,7 @@
  *
  *********************************************************************/
 
-#ifndef _TRACE_FAST_CALLSET_HPP_
-#define _TRACE_FAST_CALLSET_HPP_
+#pragma once
 
 #include "trace_model.hpp"
 
@@ -139,4 +138,3 @@ public:
 
 } /* namespace trace */
 
-#endif /* _TRACE_FAST_CALLSET_HPP_ */

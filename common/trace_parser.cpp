@@ -673,6 +673,9 @@ Value *Parser::parse_value(void) {
     case trace::TYPE_REPR:
         value = parse_repr();
         break;
+    case trace::TYPE_WSTRING:
+        value = parse_wstring();
+        break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
         exit(1);
@@ -733,6 +736,9 @@ void Parser::scan_value(void) {
         break;
     case trace::TYPE_REPR:
         scan_repr();
+        break;
+    case trace::TYPE_WSTRING:
+        scan_wstring();
         break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
@@ -915,6 +921,28 @@ Value *Parser::parse_repr() {
 void Parser::scan_repr() {
     scan_value();
     scan_value();
+}
+
+
+Value *Parser::parse_wstring() {
+    size_t len = read_uint();
+    wchar_t * value = new wchar_t[len + 1];
+    for (size_t i = 0; i < len; ++i) {
+        value[i] = read_uint();
+    }
+    value[len] = 0;
+#if TRACE_VERBOSE
+    std::cerr << "\tWSTRING \"" << value << "\"\n";
+#endif
+    return new WString(value);
+}
+
+
+void Parser::scan_wstring() {
+    size_t len = read_uint();
+    for (size_t i = 0; i < len; ++i) {
+        skip_uint();
+    }
 }
 
 

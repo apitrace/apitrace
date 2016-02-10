@@ -1,3 +1,6 @@
+moc_*.cpp
 qapitrace.qrc.depends
+qapitrace_automoc.cpp
+qrc_qapitrace.cpp
 qrc_qapitrace.cxx
 ui_*.h

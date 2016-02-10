@@ -106,4 +106,28 @@ if __name__ == '__main__':
 PUBLIC
 void * gll_noop = 0;
 
+
+__attribute__((constructor))
+static void
+_init(void) {
+    /*
+     * XXX: Setting DYLD_IMAGE_SUFFIX to anything (even an empty string)
+     * changes dlopen behavior causing our trick of symlinking a temporary file
+     * to the real OpenGL framework to stop working, leading to infinite
+     * recursion.
+     */
+    if (getenv("DYLD_IMAGE_SUFFIX")) {
+       os::log("error: tracing with DYLD_IMAGE_SUFFIX not supported.\n");
+       os::abort();
+    }
+
+    /*
+     * XXX: Temporary workaround for
+     * https://github.com/apitrace/apitrace/issues/278#issuecomment-46889575
+     * until we have a better way of intercepting applications that
+     * dlopen("libGL.dylib") directly.
+     */
+    setenv("SDL_OPENGL_LIBRARY", "/System/Library/Frameworks/OpenGL.framework/OpenGL", 1);
+}
+
 '''

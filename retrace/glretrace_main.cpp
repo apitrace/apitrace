@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include <map>
+#include <sstream>
 
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -38,19 +39,18 @@
 #include "os_memory.hpp"
 #include "highlight.hpp"
 
-
 /* Synchronous debug output may reduce performance however,
  * without it the callNo in the callback may be inaccurate
  * as the callback may be called at any time.
  */
 #define DEBUG_OUTPUT_SYNCHRONOUS 0
 
+#define APITRACE_MARKER_ID 0xA3ACE001U
+
 namespace glretrace {
 
-glws::Profile defaultProfile = glws::PROFILE_COMPAT;
+glprofile::Profile defaultProfile(glprofile::API_GL, 1, 0);
 
-bool insideList = false;
-bool insideGlBeginEnd = false;
 bool supportsARBShaderObjects = false;
 
 enum {
@@ -78,57 +78,108 @@ struct CallQuery
 static bool supportsElapsed = true;
 static bool supportsTimestamp = true;
 static bool supportsOcclusion = true;
-static bool supportsDebugOutput = true;
 
 static std::list<CallQuery> callQueries;
 
 static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
+// Limit certain warnings
+// TODO: expose this via a command line option.
+static const unsigned
+maxWarningCount = 100;
+
+static std::map< uint64_t, unsigned > errorCounts;
+
 void
 checkGlError(trace::Call &call) {
     GLenum error = glGetError();
     while (error != GL_NO_ERROR) {
-        std::ostream & os = retrace::warning(call);
+        uint64_t errorHash = call.sig->id ^ uint64_t(error) << 32;
+        size_t errorCount = errorCounts[errorHash]++;
+        if (errorCount <= maxWarningCount) {
+            std::ostream & os = retrace::warning(call);
 
-        os << "glGetError(";
-        os << call.name();
-        os << ") = ";
+            os << "glGetError(";
+            os << call.name();
+            os << ") = ";
 
-        switch (error) {
-        case GL_INVALID_ENUM:
-            os << "GL_INVALID_ENUM";
-            break;
-        case GL_INVALID_VALUE:
-            os << "GL_INVALID_VALUE";
-            break;
-        case GL_INVALID_OPERATION:
-            os << "GL_INVALID_OPERATION";
-            break;
-        case GL_STACK_OVERFLOW:
-            os << "GL_STACK_OVERFLOW";
-            break;
-        case GL_STACK_UNDERFLOW:
-            os << "GL_STACK_UNDERFLOW";
-            break;
-        case GL_OUT_OF_MEMORY:
-            os << "GL_OUT_OF_MEMORY";
-            break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            os << "GL_INVALID_FRAMEBUFFER_OPERATION";
-            break;
-        case GL_TABLE_TOO_LARGE:
-            os << "GL_TABLE_TOO_LARGE";
-            break;
-        default:
-            os << error;
-            break;
+            switch (error) {
+            case GL_INVALID_ENUM:
+                os << "GL_INVALID_ENUM";
+                break;
+            case GL_INVALID_VALUE:
+                os << "GL_INVALID_VALUE";
+                break;
+            case GL_INVALID_OPERATION:
+                os << "GL_INVALID_OPERATION";
+                break;
+            case GL_STACK_OVERFLOW:
+                os << "GL_STACK_OVERFLOW";
+                break;
+            case GL_STACK_UNDERFLOW:
+                os << "GL_STACK_UNDERFLOW";
+                break;
+            case GL_OUT_OF_MEMORY:
+                os << "GL_OUT_OF_MEMORY";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                os << "GL_INVALID_FRAMEBUFFER_OPERATION";
+                break;
+            case GL_TABLE_TOO_LARGE:
+                os << "GL_TABLE_TOO_LARGE";
+                break;
+            default:
+                os << error;
+                break;
+            }
+
+            if (errorCount == maxWarningCount) {
+                os << ": too many identical messages; ignoring";
+            }
+
+            os << std::endl;
         }
-        os << "\n";
-    
+
         error = glGetError();
     }
 }
+
+
+void
+insertCallMarker(trace::Call &call, Context *currentContext)
+{
+    if (!currentContext ||
+        currentContext->insideBeginEnd ||
+        !currentContext->KHR_debug) {
+        return;
+    }
+
+    glprofile::Profile currentProfile = currentContext->actualProfile();
+
+    std::stringstream ss;
+    trace::dump(call, ss,
+                trace::DUMP_FLAG_NO_COLOR |
+                trace::DUMP_FLAG_NO_ARG_NAMES |
+                trace::DUMP_FLAG_NO_MULTILINE);
+
+    std::string msg = ss.str();
+    GLsizei length = msg.length() > currentContext->maxDebugMessageLength
+                   ? currentContext->maxDebugMessageLength
+                   : msg.length();
+
+    auto pfnGlDebugMessageInsert = currentProfile.desktop()
+                                 ? glDebugMessageInsert
+                                 : glDebugMessageInsertKHR;
+
+    pfnGlDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY,
+                            GL_DEBUG_TYPE_MARKER,
+                            APITRACE_MARKER_ID,
+                            GL_DEBUG_SEVERITY_NOTIFICATION,
+                            length,
+                            msg.c_str());
+}
+
 
 static inline int64_t
 getCurrentTime(void) {
@@ -221,6 +272,32 @@ flushQueries() {
 
 void
 beginProfile(trace::Call &call, bool isDraw) {
+    if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+            if (curMetricBackend) {
+                curMetricBackend->beginQuery(isDraw ? QUERY_BOUNDARY_DRAWCALL : QUERY_BOUNDARY_CALL);
+            }
+            if (isLastPass() && curMetricBackend) {
+                Context *currentContext = getCurrentContext();
+                GLuint program = currentContext ? currentContext->activeProgram : 0;
+                unsigned eventId = profilingBoundariesIndex[QUERY_BOUNDARY_CALL]++;
+                ProfilerCall::data callData = {false,
+                                               call.no,
+                                               program,
+                                               call.sig->name};
+                if (profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_CALL, eventId, &callData);
+                }
+                if (isDraw && profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                    eventId = profilingBoundariesIndex[QUERY_BOUNDARY_DRAWCALL]++;
+                    profiler.addQuery(QUERY_BOUNDARY_DRAWCALL, eventId, &callData);
+                }
+            }
+        }
+        return;
+    }
+
     glretrace::Context *currentContext = glretrace::getCurrentContext();
 
     /* Create call query */
@@ -264,6 +341,15 @@ beginProfile(trace::Call &call, bool isDraw) {
 
 void
 endProfile(trace::Call &call, bool isDraw) {
+    if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+            if (curMetricBackend) {
+                curMetricBackend->endQuery(isDraw ? QUERY_BOUNDARY_DRAWCALL : QUERY_BOUNDARY_CALL);
+            }
+        }
+        return;
+    }
 
     /* CPU profiling for all calls */
     if (retrace::profilingCpuTimes) {
@@ -289,22 +375,85 @@ endProfile(trace::Call &call, bool isDraw) {
     }
 }
 
+
+GLenum
+blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags) {
+    GLenum result;
+
+    do {
+        result = glClientWaitSync(sync, flags, 1000);
+    } while (result == GL_TIMEOUT_EXPIRED);
+
+    switch (result) {
+    case GL_ALREADY_SIGNALED:
+    case GL_CONDITION_SATISFIED:
+        break;
+    default:
+        retrace::warning(call) << "got " << glstate::enumToString(result) << "\n";
+    }
+
+    return result;
+}
+
+
+/**
+ * Helper for properly retrace glClientWaitSync().
+ */
+GLenum
+clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeout) {
+    GLenum result = call.ret->toSInt();
+    switch (result) {
+    case GL_ALREADY_SIGNALED:
+    case GL_CONDITION_SATISFIED:
+        // We must block, as following calls might rely on the fence being
+        // signaled
+        result = blockOnFence(call, sync, flags);
+        break;
+    case GL_TIMEOUT_EXPIRED:
+        result = glClientWaitSync(sync, flags, timeout);
+        break;
+    case GL_WAIT_FAILED:
+        break;
+    default:
+        retrace::warning(call) << "unexpected return value\n";
+        break;
+    }
+    return result;
+}
+
+
+/*
+ * Called the first time a context is made current.
+ */
 void
 initContext() {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
+    assert(currentContext);
 
     /* Ensure we have adequate extension support */
-    assert(currentContext);
-    supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
+    glprofile::Profile currentProfile = currentContext->actualProfile();
+    supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
+                          currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
-    supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");
-    supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
+    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
+
+    currentContext->KHR_debug = currentContext->hasExtension("GL_KHR_debug");
+    if (currentContext->KHR_debug) {
+        glGetIntegerv(GL_MAX_DEBUG_MESSAGE_LENGTH, &currentContext->maxDebugMessageLength);
+        assert(currentContext->maxDebugMessageLength > 0);
+    }
+
+#ifdef __APPLE__
+    // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.
+    // http://lists.apple.com/archives/mac-opengl/2014/Nov/threads.html#00001
+    supportsTimestamp   = false;
+#endif
 
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
-            std::cout << "Error: Cannot run profile, GL_ARB_timer_query or GL_EXT_timer_query extensions are not supported." << std::endl;
+            std::cout << "error: cannot profile, GL_ARB_timer_query or GL_EXT_timer_query extensions are not supported." << std::endl;
             exit(-1);
         }
 
@@ -312,25 +461,38 @@ initContext() {
         glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
 
         if (!bits) {
-            std::cout << "Error: Cannot run profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
+            std::cout << "error: cannot profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
             exit(-1);
         }
     }
 
     /* Check for occlusion query support */
     if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
-        std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
+        std::cout << "error: cannot profile, GL_ARB_occlusion_query extension is not supported (" << currentProfile << ")" << std::endl;
         exit(-1);
     }
 
     /* Setup debug message call back */
-    if (retrace::debug && supportsDebugOutput) {
-        glretrace::Context *currentContext = glretrace::getCurrentContext();
-        glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
-        glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
+    if (retrace::debug) {
+        if (currentContext->KHR_debug) {
+            if (currentProfile.desktop()) {
+                glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+                glDebugMessageCallback(&debugOutputCallback, currentContext);
+            } else {
+                glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+                glDebugMessageCallbackKHR(&debugOutputCallback, currentContext);
+            }
 
-        if (DEBUG_OUTPUT_SYNCHRONOUS) {
-            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+            if (DEBUG_OUTPUT_SYNCHRONOUS) {
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            }
+        } else if (currentContext->hasExtension("GL_ARB_debug_output")) {
+            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+            glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
+
+            if (DEBUG_OUTPUT_SYNCHRONOUS) {
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+            }
         }
     }
 
@@ -355,7 +517,32 @@ initContext() {
 
 void
 frame_complete(trace::Call &call) {
-    if (retrace::profiling) {
+    if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL])
+        {
+            if (isLastPass() && curMetricBackend) {
+                // frame end indicator
+                ProfilerCall::data callData = {true, 0, 0, ""};
+                if (profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_CALL, 0, &callData);
+                }
+                if (profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_DRAWCALL, 0, &callData);
+                }
+            }
+        }
+        if (curMetricBackend) {
+            curMetricBackend->endQuery(QUERY_BOUNDARY_FRAME);
+        }
+        if (profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+            if (isLastPass() && curMetricBackend) {
+                profiler.addQuery(QUERY_BOUNDARY_FRAME,
+                        profilingBoundariesIndex[QUERY_BOUNDARY_FRAME]++);
+            }
+        }
+    }
+    else if (retrace::profiling) {
         /* Complete any remaining queries */
         flushQueries();
 
@@ -370,17 +557,90 @@ frame_complete(trace::Call &call) {
         return;
     }
 
-    assert(currentContext->drawable);
-    if (retrace::debug && !currentContext->drawable->visible) {
+    glws::Drawable *currentDrawable = currentContext->drawable;
+    assert(currentDrawable);
+    if (retrace::debug &&
+        !currentDrawable->pbuffer &&
+        !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
+    }
+
+    if (curMetricBackend) {
+        curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
     }
 }
 
+void
+beforeContextSwitch()
+{
+    if (profilingContextAcquired && retrace::profilingWithBackends &&
+        curMetricBackend)
+    {
+        curMetricBackend->pausePass();
+    }
+}
 
-// Limit messages
-// TODO: expose this via a command line option.
-static const unsigned
-maxMessageCount = 100;
+void
+afterContextSwitch()
+{
+
+    if (retrace::profilingListMetrics) {
+        listMetricsCLI();
+        exit(0);
+    }
+
+    if (retrace::profilingWithBackends) {
+        if (!metricBackendsSetup) {
+            if (retrace::profilingCallsMetricsString) {
+                enableMetricsFromCLI(retrace::profilingCallsMetricsString,
+                                     QUERY_BOUNDARY_CALL);
+            }
+            if (retrace::profilingFramesMetricsString) {
+                enableMetricsFromCLI(retrace::profilingFramesMetricsString,
+                                     QUERY_BOUNDARY_FRAME);
+            }
+            if (retrace::profilingDrawCallsMetricsString) {
+                enableMetricsFromCLI(retrace::profilingDrawCallsMetricsString,
+                                     QUERY_BOUNDARY_DRAWCALL);
+            }
+            unsigned numPasses = 0;
+            for (auto &b : metricBackends) {
+                b->generatePasses();
+                numPasses += b->getNumPasses();
+            }
+            retrace::numPasses = numPasses > 0 ? numPasses : 1;
+            if (retrace::profilingNumPasses) {
+                std::cout << retrace::numPasses << std::endl;
+                exit(0);
+            }
+            metricBackendsSetup = true;
+        }
+
+        if (!profilingContextAcquired) {
+            unsigned numPasses = 0;
+            for (auto &b : metricBackends) {
+                numPasses += b->getNumPasses();
+                if (retrace::curPass < numPasses) {
+                    curMetricBackend = b;
+                    b->beginPass(); // begin pass
+                    break;
+                }
+            }
+
+            if (curMetricBackend) {
+                curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
+            }
+
+            profilingContextAcquired = true;
+            return;
+        }
+
+        if (curMetricBackend) {
+            curMetricBackend->continuePass();
+        }
+    }
+}
+
 
 static std::map< uint64_t, unsigned > messageCounts;
 
@@ -392,6 +652,11 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     /* Ignore application messages while dumping state. */
     if (retrace::dumpingState &&
         source == GL_DEBUG_SOURCE_APPLICATION) {
+        return;
+    }
+    if (retrace::markers &&
+        source == GL_DEBUG_SOURCE_THIRD_PARTY &&
+        id == APITRACE_MARKER_ID) {
         return;
     }
 
@@ -410,7 +675,7 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
                          + ((uint64_t)type     << 32)
                          + ((uint64_t)source   << 48);
     size_t messageCount = messageCounts[messageHash]++;
-    if (messageCount > maxMessageCount) {
+    if (messageCount > maxWarningCount) {
         return;
     }
 
@@ -437,23 +702,22 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         assert(0);
     }
 
-    std::cerr << *color << retrace::callNo << ": message:" << severityStr;
-
+    const char *sourceStr = "";
     switch (source) {
     case GL_DEBUG_SOURCE_API:
-        std::cerr << " api";
+        sourceStr = " api";
         break;
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-        std::cerr << " window system";
+        sourceStr = " window system";
         break;
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
-        std::cerr << " shader compiler";
+        sourceStr = " shader compiler";
         break;
     case GL_DEBUG_SOURCE_THIRD_PARTY:
-        std::cerr << " third party";
+        sourceStr = " third party";
         break;
     case GL_DEBUG_SOURCE_APPLICATION:
-        std::cerr << " application";
+        sourceStr = " application";
         break;
     case GL_DEBUG_SOURCE_OTHER:
         break;
@@ -461,44 +725,56 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         assert(0);
     }
 
+    const char *typeStr = "";
     switch (type) {
     case GL_DEBUG_TYPE_ERROR:
-        std::cerr << " error";
+        typeStr = " error";
         break;
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-        std::cerr << " deprecated behaviour";
+        typeStr = " deprecated behaviour";
         break;
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-        std::cerr << " undefined behaviour";
+        typeStr = " undefined behaviour";
         break;
     case GL_DEBUG_TYPE_PORTABILITY:
-        std::cerr << " portability issue";
+        typeStr = " portability issue";
         break;
     case GL_DEBUG_TYPE_PERFORMANCE:
-        std::cerr << " performance issue";
+        typeStr = " performance issue";
         break;
     default:
         assert(0);
         /* fall-through */
     case GL_DEBUG_TYPE_OTHER:
-        std::cerr << " issue";
+        typeStr = " issue";
         break;
     case GL_DEBUG_TYPE_MARKER:
-        std::cerr << " marker";
+        typeStr = " marker";
         break;
     case GL_DEBUG_TYPE_PUSH_GROUP:
-        std::cerr << " push group";
+        typeStr = " push group";
         break;
     case GL_DEBUG_TYPE_POP_GROUP:
-        std::cerr << " pop group";
+        typeStr = " pop group";
         break;
     }
+
+    std::cerr << *color << retrace::callNo << ": message:" << severityStr << sourceStr << typeStr;
 
     if (id) {
         std::cerr << " " << id;
     }
 
-    std::cerr << ": " << message;
+    std::cerr << ": ";
+
+    if (messageCount == maxWarningCount) {
+        std::cerr << "too many identical messages; ignoring"
+                  << highlighter.normal()
+                  << std::endl;
+        return;
+    }
+
+    std::cerr << message;
 
     std::cerr << highlighter.normal();
 
@@ -508,12 +784,6 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         (message[messageLen - 1] != '\n' &&
          message[messageLen - 1] != '\r')) {
        std::cerr << std::endl;
-    }
-
-    if (messageCount == maxMessageCount) {
-        std::cerr << retrace::callNo
-                  << ": warning: too many identical messages; ignoring"
-                  << std::endl;
     }
 }
 
@@ -531,26 +801,19 @@ public:
     }
 
     bool
-    dumpState(std::ostream &os) {
+    canDump(void) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
-        if (glretrace::insideGlBeginEnd ||
-            !currentContext) {
+        if (!currentContext ||
+            currentContext->insideBeginEnd) {
             return false;
         }
 
-        if (glretrace::supportsDebugOutput) {
-            // Our state dump generates lots of errors as it often tries to get
-            // state that's not supported, so silence debug messages temporarily.
-            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_FALSE);
-        }
-
-        glstate::dumpCurrentContext(os);
-
-        if (glretrace::supportsDebugOutput) {
-            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
-        }
-
         return true;
+    }
+
+    void
+    dumpState(StateWriter &writer) {
+        glstate::dumpCurrentContext(writer);
     }
 };
 
@@ -560,7 +823,7 @@ static GLDumper glDumper;
 void
 retrace::setFeatureLevel(const char *featureLevel)
 {
-    glretrace::defaultProfile = glws::PROFILE_3_2_CORE;
+    glretrace::defaultProfile = glprofile::Profile(glprofile::API_GL, 3, 2, true);
 }
 
 
@@ -592,9 +855,38 @@ retrace::flushRendering(void) {
 
 void
 retrace::finishRendering(void) {
+    if (profilingWithBackends && glretrace::curMetricBackend) {
+            (glretrace::curMetricBackend)->endQuery(QUERY_BOUNDARY_FRAME);
+    }
+    if (glretrace::profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+        if (glretrace::isLastPass() && glretrace::curMetricBackend) {
+            glretrace::profiler.addQuery(QUERY_BOUNDARY_FRAME,
+                    glretrace::profilingBoundariesIndex[QUERY_BOUNDARY_FRAME]++);
+        }
+    }
+
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (currentContext) {
         glFinish();
+    }
+
+    if (retrace::profilingWithBackends) {
+        if (glretrace::curMetricBackend) {
+            (glretrace::curMetricBackend)->endPass();
+            glretrace::profilingContextAcquired = false;
+        }
+
+        if (glretrace::isLastPass()) {
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_FRAME);
+            }
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_CALL);
+            }
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_DRAWCALL);
+            }
+        }
     }
 }
 

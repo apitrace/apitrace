@@ -38,6 +38,42 @@
 
 
 #include <windows.h>
+#include <sddl.h>
+
+
+static void
+#ifdef __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
+debugPrintf(const char *format, ...);
+
+
+static void
+logLastError(const char *szMsg)
+{
+    DWORD dwLastError = GetLastError();
+
+    // http://msdn.microsoft.com/en-gb/library/windows/desktop/ms680582.aspx
+    LPSTR lpErrorMsg = NULL;
+    DWORD cbWritten;
+    cbWritten = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dwLastError,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR) &lpErrorMsg,
+        0, NULL);
+
+    if (cbWritten) {
+        debugPrintf("inject: error: %s: %s", szMsg, lpErrorMsg);
+    } else {
+        debugPrintf("inject: error: %s: %lu\n", szMsg, dwLastError);
+    }
+
+    LocalFree(lpErrorMsg);
+}
 
 
 static inline const char *
@@ -97,6 +133,7 @@ getModuleName(char *szModuleName, size_t n, const char *szFilename) {
 struct SharedMem
 {
     BOOL bReplaced;
+    char cVerbosity;
     char szDllName[4096 - sizeof(BOOL)];
 };
 
@@ -106,20 +143,28 @@ static HANDLE hFileMapping = NULL;
 
 
 static SharedMem *
-OpenSharedMemory(void) {
+OpenSharedMemory(SECURITY_DESCRIPTOR *lpSecurityDescriptor)
+{
     if (pSharedMem) {
         return pSharedMem;
     }
 
+    SECURITY_ATTRIBUTES sa;
+    ZeroMemory(&sa, sizeof sa);
+    sa.nLength = sizeof sa;
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = lpSecurityDescriptor;
+
     hFileMapping = CreateFileMapping(
         INVALID_HANDLE_VALUE,   // system paging file
-        NULL,                   // lpAttributes
+        &sa,                    // lpAttributes
         PAGE_READWRITE,         // read/write access
         0,                      // dwMaximumSizeHigh
         sizeof(SharedMem),      // dwMaximumSizeLow
         TEXT("injectfilemap")); // name of map object
+
     if (hFileMapping == NULL) {
-        fprintf(stderr, "Failed to create file mapping\n");
+        logLastError("failed to create file mapping");
         return NULL;
     }
 
@@ -132,7 +177,7 @@ OpenSharedMemory(void) {
         0,              // dwFileOffsetLow
         0);             // dwNumberOfBytesToMap (entire file)
     if (pSharedMem == NULL) {
-        fprintf(stderr, "Failed to map view \n");
+        logLastError("failed to map view");
         return NULL;
     }
 
@@ -158,35 +203,84 @@ CloseSharedMem(void) {
 }
 
 
-static inline VOID
-SetSharedMem(LPCSTR lpszSrc) {
-    SharedMem *pSharedMem = OpenSharedMemory();
-    if (!pSharedMem) {
-        return;
+/*
+ * XXX: Mixed architecture don't quite work.  See also
+ * http://www.corsix.org/content/dll-injection-and-wow64
+ */
+static BOOL
+isDifferentArch(HANDLE hProcess)
+{
+    typedef BOOL (WINAPI *PFNISWOW64PROCESS)(HANDLE, PBOOL);
+    PFNISWOW64PROCESS pfnIsWow64Process;
+    pfnIsWow64Process = (PFNISWOW64PROCESS)
+        GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
+    if (!pfnIsWow64Process) {
+        return FALSE;
     }
 
-    LPSTR lpszDst = pSharedMem->szDllName;
-
-    size_t n = 1;
-    while (*lpszSrc && n < sizeof pSharedMem->szDllName) {
-        *lpszDst++ = *lpszSrc++;
-        n++;
+    // NOTE: IsWow64Process will return false on 32-bits Windows
+    BOOL isThisWow64;
+    BOOL isOtherWow64;
+    if (!pfnIsWow64Process(GetCurrentProcess(), &isThisWow64) ||
+        !pfnIsWow64Process(hProcess, &isOtherWow64)) {
+        logLastError("IsWow64Process failed");
+        return FALSE;
     }
-    *lpszDst = '\0';
+
+    return bool(isThisWow64) != bool(isOtherWow64);
 }
 
 
-static inline VOID
-GetSharedMem(LPSTR lpszDst, size_t n) {
-    SharedMem *pSharedMem = OpenSharedMemory();
-    if (!pSharedMem) {
-        return;
+static BOOL
+injectDll(HANDLE hProcess, const char *szDllPath)
+{
+    BOOL bRet = FALSE;
+    PTHREAD_START_ROUTINE lpStartAddress;
+    HANDLE hThread;
+    DWORD hModule;
+
+    // Allocate memory in the target process to hold the DLL name
+    size_t szDllPathLength = strlen(szDllPath) + 1;
+    void *lpMemory = VirtualAllocEx(hProcess, NULL, szDllPathLength, MEM_COMMIT, PAGE_READWRITE);
+    if (!lpMemory) {
+        logLastError("failed to allocate memory in the process");
+        goto no_memory;
     }
 
-    LPCSTR lpszSrc = pSharedMem->szDllName;
-
-    while (*lpszSrc && --n) {
-        *lpszDst++ = *lpszSrc++;
+    // Copy DLL name into the target process
+    if (!WriteProcessMemory(hProcess, lpMemory, szDllPath, szDllPathLength, NULL)) {
+        logLastError("failed to write into process memory");
+        goto no_thread;
     }
-    *lpszDst = '\0';
+
+    /*
+     * Get LoadLibraryA address from kernel32.dll.  It's the same for all the
+     * process (XXX: but only within the same architecture).
+     */
+    lpStartAddress =
+        (PTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("KERNEL32"), "LoadLibraryA");
+
+    // Create remote thread in another process
+    hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, lpMemory, 0, NULL);
+    if (!hThread) {
+        logLastError("failed to create remote thread");
+        goto no_thread;
+    }
+
+    // Wait for it to finish
+    WaitForSingleObject(hThread, INFINITE);
+
+    GetExitCodeThread(hThread, &hModule);
+    if (!hModule) {
+        debugPrintf("inject: error: failed to load %s into the remote process %lu\n",
+                    szDllPath, GetProcessId(hProcess));
+    } else {
+        bRet = TRUE;
+    }
+
+    CloseHandle(hThread);
+no_thread:
+    VirtualFreeEx(hProcess, lpMemory, 0, MEM_RELEASE);
+no_memory:
+    return bRet;
 }

@@ -1,5 +1,4 @@
-#ifndef IMAGEVIEWER_H
-#define IMAGEVIEWER_H
+#pragma once
 
 #include "ui_imageviewer.h"
 #include <QDialog>
@@ -18,7 +17,7 @@ public:
     ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
 
-    void setBase64Data(const QByteArray &base64);
+    void setData(const QByteArray &data);
 
     QSize sizeHint() const;
 
@@ -35,6 +34,3 @@ private:
     QImage m_convertedImage;
     PixelWidget *m_pixelWidget;
 };
-
-
-#endif

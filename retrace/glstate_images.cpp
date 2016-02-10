@@ -32,7 +32,7 @@
 #include <sstream>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "glproc.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"
@@ -96,33 +96,8 @@ struct ImageDesc
 };
 
 
-static bool
-getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type);
-
-
-/**
- * Sames as enumToString, but with special provision to handle formatsLUMINANCE_ALPHA.
- *
- * OpenGL 2.1 specification states that "internalFormat may (for backwards
- * compatibility with the 1.0 version of the GL) also take on the integer
- * values 1, 2, 3, and 4, which are equivalent to symbolic constants LUMINANCE,
- * LUMINANCE ALPHA, RGB, and RGBA respectively". 
- */
-const char *
-formatToString(GLenum internalFormat) {
-    switch (internalFormat) {
-    case 1:
-        return "GL_LUMINANCE";
-    case 2:
-        return "GL_LUMINANCE_ALPHA";
-    case 3:
-        return "GL_RGB";
-    case 4:
-        return "GL_RGBA";
-    default:
-        return enumToString(internalFormat);
-    }
-}
+static GLenum
+getTextureTarget(Context &context, GLuint texture);
 
 
 /**
@@ -131,12 +106,11 @@ formatToString(GLenum internalFormat) {
  * call.
  */
 static bool
-probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
-    while (glGetError() != GL_NO_ERROR)
-        ;
+probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3],
+                         GLenum internalFormat, GLenum type)
+{
+    flushErrors();
 
-    GLenum internalFormat = GL_RGBA;
-    GLenum type = GL_UNSIGNED_BYTE;
     GLint dummy = 0;
 
     switch (target) {
@@ -152,6 +126,7 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
         break;
     case GL_TEXTURE_3D_OES:
         glTexSubImage3DOES(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+        break;
     default:
         assert(0);
         return false;
@@ -167,8 +142,41 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
         return true;
     }
 
-    while (glGetError() != GL_NO_ERROR)
-        ;
+    flushErrors();
+
+    return false;
+}
+
+
+static bool
+probeTextureFormatOES(GLenum target, GLint level,
+                      GLenum *internalFormat, GLenum *type)
+{
+    static const struct {
+        GLenum internalFormat;
+        GLenum type;
+    } info[] = {
+        /* internalFormat */        /* type */
+        { GL_RGBA,                  GL_UNSIGNED_BYTE },
+        { GL_DEPTH_STENCIL,         GL_FLOAT_32_UNSIGNED_INT_24_8_REV },
+        { GL_DEPTH_STENCIL,         GL_UNSIGNED_INT_24_8 },
+        { GL_DEPTH_COMPONENT,       GL_FLOAT },
+        { GL_DEPTH_COMPONENT,       GL_UNSIGNED_SHORT },
+        { GL_STENCIL_INDEX,         GL_UNSIGNED_BYTE },
+        /* others? */
+        { 0, 0 },
+    };
+    static const GLint size[3] = {1, 1, 1};
+
+    for (int i = 0; info[i].internalFormat; i++) {
+        if (probeTextureLevelSizeOES(target, level, size,
+                                     info[i].internalFormat,
+                                     info[i].type)) {
+            *internalFormat = info[i].internalFormat;
+            *type = info[i].type;
+            return true;
+        }
+    }
 
     return false;
 }
@@ -180,7 +188,9 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
  * It is assumed that the texture exists.
  */
 static GLint
-bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max) {
+bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max,
+                          GLenum internalFormat, GLenum type)
+{
     GLint size[3] = {0, 0, 0};
 
     assert(axis < 3);
@@ -195,7 +205,7 @@ bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max) {
 
         size[axis] = test;
 
-        if (probeTextureLevelSizeOES(target, level, size)) {
+        if (probeTextureLevelSizeOES(target, level, size, internalFormat, type)) {
             min = test;
         } else {
             max = test;
@@ -215,21 +225,20 @@ getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, Image
         // OpenGL ES does not support 1D textures
         return false;
     }
+    GLenum internalFormat, type;
 
-    const GLint size[3] = {1, 1, 1}; 
-    if (!probeTextureLevelSizeOES(target, level, size)) {
+    if (!probeTextureFormatOES(target, level, &internalFormat, &type)) {
         return false;
     }
 
-    // XXX: mere guess
-    desc.internalFormat = GL_RGBA;
+    desc.internalFormat = internalFormat;
 
     GLint maxSize = 0;
     switch (target) {
     case GL_TEXTURE_2D:
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
-        desc.height = bisectTextureLevelSizeOES(target, level, 1, maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
+        desc.height = bisectTextureLevelSizeOES(target, level, 1, maxSize, internalFormat, type);
         desc.depth = 1;
         break;
     case GL_TEXTURE_CUBE_MAP:
@@ -240,15 +249,15 @@ getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, Image
     case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
         desc.height = desc.width;
         desc.depth = 1;
         break;
     case GL_TEXTURE_3D_OES:
         glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE_OES, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 1, maxSize);
-        desc.depth = bisectTextureLevelSizeOES(target, level, 2, maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
+        desc.width = bisectTextureLevelSizeOES(target, level, 1, maxSize, internalFormat, type);
+        desc.depth = bisectTextureLevelSizeOES(target, level, 2, maxSize, internalFormat, type);
         break;
     default:
         return false;
@@ -296,17 +305,14 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 
         glGetIntegerv(GL_TEXTURE_BUFFER_FORMAT_ARB, &desc.internalFormat);
 
-        GLenum format;
-        GLenum type;
-        if (!getInternalFormatType(desc.internalFormat, format, type)) {
+        const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+        if (formatDesc.type == GL_NONE) {
             assert(0);
             return false;
-        }
-        assert(type != GL_NONE);
 
-        unsigned bits_per_element;
-        unsigned bits_per_pixel;
-        _gl_format_size(format, type, bits_per_element, bits_per_pixel);
+        }
+
+        unsigned bits_per_pixel = _gl_format_size(formatDesc.format, formatDesc.type);
 
         desc.width = buffer_size * 8 / bits_per_pixel;
         desc.height = 1;
@@ -320,13 +326,17 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
     desc.width = 0;
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &desc.width);
 
-    if (target == GL_TEXTURE_1D) {
+    if (target == GL_TEXTURE_BUFFER ||
+        target == GL_TEXTURE_1D) {
         desc.height = 1;
         desc.depth = 1;
     } else {
         desc.height = 0;
         glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &desc.height);
-        if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        if (target != GL_TEXTURE_3D &&
+            target != GL_TEXTURE_2D_ARRAY &&
+            target != GL_TEXTURE_2D_MULTISAMPLE_ARRAY &&
+            target != GL_TEXTURE_CUBE_MAP_ARRAY) {
             desc.depth = 1;
         } else {
             desc.depth = 0;
@@ -403,7 +413,8 @@ getTextureBinding(GLenum target)
  * texture to a framebuffer.
  */
 static inline void
-getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
+getTexImageOES(GLenum target, GLint level, GLenum format, GLenum type,
+               ImageDesc &desc, GLubyte *pixels)
 {
     memset(pixels, 0x80, desc.height * desc.width * 4);
 
@@ -439,12 +450,12 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             std::cerr << __FUNCTION__ << ": " << enumToString(status) << "\n";
         }
-        glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, desc.width, desc.height, format, type, pixels);
         break;
     case GL_TEXTURE_3D_OES:
         for (int i = 0; i < desc.depth; i++) {
             glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, texture, level, i);
-            glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels + 4 * i * desc.width * desc.height);
+            glReadPixels(0, 0, desc.width, desc.height, format, type, pixels + 4 * i * desc.width * desc.height);
         }
         break;
     }
@@ -455,285 +466,139 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 }
 
 
-struct InternalFormatDesc
-{
-    GLenum internalFormat;
-    GLenum format;
-    GLenum type;
-};
-
-
-static const InternalFormatDesc
-internalFormatDescs[] = {
-
-    {1,	GL_RED,	GL_NONE},
-    {2,	GL_RG,	GL_NONE},
-    {3,	GL_RGB,	GL_NONE},
-    {4,	GL_RGBA,	GL_NONE},
-
-    {GL_RED,	GL_RED,	GL_NONE},
-    {GL_GREEN,	GL_GREEN,	GL_NONE},
-    {GL_BLUE,	GL_BLUE,	GL_NONE},
-    {GL_ALPHA,	GL_ALPHA,	GL_NONE},
-    {GL_RG,	GL_RG,	GL_NONE},
-    {GL_RGB,	GL_RGB,	GL_NONE},
-    {GL_BGR,	GL_RGB,	GL_NONE},
-    {GL_RGBA,	GL_RGBA,	GL_NONE},
-    {GL_BGRA,	GL_RGBA,	GL_NONE},
-    {GL_LUMINANCE,	GL_LUMINANCE,	GL_NONE},
-    {GL_LUMINANCE_ALPHA,	GL_LUMINANCE_ALPHA,	GL_NONE},
-    {GL_INTENSITY,	GL_INTENSITY,	GL_NONE},
- 
-    {GL_RG8,	GL_RG,	GL_UNSIGNED_BYTE},
-    {GL_RG16,	GL_RG,	GL_UNSIGNED_SHORT},
-    {GL_RGB8,	GL_RGB,	GL_UNSIGNED_BYTE},
-    {GL_RGB16,	GL_RGB,	GL_UNSIGNED_SHORT},
-    {GL_RGBA8,	GL_RGBA,	GL_UNSIGNED_BYTE},
-    {GL_RGBA16,	GL_RGBA,	GL_UNSIGNED_SHORT},
-    {GL_RGB10_A2,	GL_RGBA,	GL_NONE},
-    {GL_LUMINANCE8,	GL_LUMINANCE,	GL_UNSIGNED_BYTE},
-    {GL_LUMINANCE16,	GL_LUMINANCE,	GL_UNSIGNED_SHORT},
-    {GL_ALPHA8,	GL_ALPHA,	GL_UNSIGNED_BYTE},
-    {GL_ALPHA16,	GL_ALPHA,	GL_UNSIGNED_SHORT},
-    {GL_LUMINANCE8_ALPHA8,	GL_LUMINANCE_ALPHA,	GL_UNSIGNED_BYTE},
-    {GL_LUMINANCE16_ALPHA16,	GL_LUMINANCE_ALPHA,	GL_UNSIGNED_SHORT},
-    {GL_INTENSITY8,	GL_INTENSITY,	GL_UNSIGNED_BYTE},
-    {GL_INTENSITY16,	GL_INTENSITY,	GL_UNSIGNED_SHORT},
-    
-    {GL_RG16F,	GL_RG,	GL_HALF_FLOAT},
-    {GL_RG32F,	GL_RG,	GL_FLOAT},
-    {GL_RGB16F,	GL_RGB,	GL_HALF_FLOAT},
-    {GL_RGB32F,	GL_RGB,	GL_FLOAT},
-    {GL_RGBA16F,	GL_RGBA,	GL_HALF_FLOAT},
-    {GL_RGBA32F,	GL_RGBA,	GL_FLOAT},
-    {GL_RGB10_A2,	GL_RGBA,	GL_NONE},
-    {GL_LUMINANCE16F_ARB,	GL_LUMINANCE,	GL_HALF_FLOAT},
-    {GL_LUMINANCE32F_ARB,	GL_LUMINANCE,	GL_FLOAT},
-    {GL_ALPHA16F_ARB,	GL_ALPHA,	GL_HALF_FLOAT},
-    {GL_ALPHA32F_ARB,	GL_ALPHA,	GL_FLOAT},
-    {GL_LUMINANCE_ALPHA16F_ARB,	GL_LUMINANCE_ALPHA,	GL_HALF_FLOAT},
-    {GL_LUMINANCE_ALPHA32F_ARB,	GL_LUMINANCE_ALPHA,	GL_FLOAT},
-    {GL_INTENSITY16F_ARB,	GL_INTENSITY,	GL_HALF_FLOAT},
-    {GL_INTENSITY32F_ARB,	GL_INTENSITY,	GL_FLOAT},
-    
-    {GL_RED_INTEGER,	GL_RED_INTEGER,	GL_NONE},
-    {GL_GREEN_INTEGER,	GL_GREEN_INTEGER,	GL_NONE},
-    {GL_BLUE_INTEGER,	GL_BLUE_INTEGER,	GL_NONE},
-    {GL_ALPHA_INTEGER,	GL_ALPHA_INTEGER,	GL_NONE},
-    {GL_RG_INTEGER,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RGB_INTEGER,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_BGR_INTEGER,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGBA_INTEGER,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_BGRA_INTEGER,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_LUMINANCE_INTEGER_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
- 
-    {GL_R8I,	GL_RED_INTEGER,	GL_NONE},
-    {GL_R8UI,	GL_RED_INTEGER,	GL_NONE},
-    {GL_R16I,	GL_RED_INTEGER,	GL_NONE},
-    {GL_R16UI,	GL_RED_INTEGER,	GL_NONE},
-    {GL_R32I,	GL_RED_INTEGER,	GL_NONE},
-    {GL_R32UI,	GL_RED_INTEGER,	GL_NONE},
-    {GL_RG8I,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RG8UI,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RG16I,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RG16UI,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RG32I,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RG32UI,	GL_RG_INTEGER,	GL_NONE},
-    {GL_RGB8I,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGB8UI,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGB16I,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGB16UI,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGB32I,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGB32UI,	GL_RGB_INTEGER,	GL_NONE},
-    {GL_RGBA8I,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGBA8UI,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGBA16I,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGBA16UI,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGBA32I,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGBA32UI,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_RGB10_A2UI,	GL_RGBA_INTEGER,	GL_NONE},
-    {GL_LUMINANCE8I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE8UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE16I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE16UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE32I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE32UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA8I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA8UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA16I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA16UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA32I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_ALPHA32UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA8I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA8UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA16I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA16UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA32I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_LUMINANCE_ALPHA32UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
-    {GL_INTENSITY8I_EXT,	GL_RED_INTEGER,	GL_NONE},
-    {GL_INTENSITY8UI_EXT,	GL_RED_INTEGER,	GL_NONE},
-    {GL_INTENSITY16I_EXT,	GL_RED_INTEGER,	GL_NONE},
-    {GL_INTENSITY16UI_EXT,	GL_RED_INTEGER,	GL_NONE},
-    {GL_INTENSITY32I_EXT,	GL_RED_INTEGER,	GL_NONE},
-    {GL_INTENSITY32UI_EXT,	GL_RED_INTEGER,	GL_NONE},
-    
-    {GL_DEPTH_COMPONENT,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_COMPONENT16,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_COMPONENT24,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_COMPONENT32,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_COMPONENT32F,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_COMPONENT32F_NV,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH_STENCIL,	        GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH24_STENCIL8,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH32F_STENCIL8,	GL_DEPTH_COMPONENT,	GL_NONE},
-    {GL_DEPTH32F_STENCIL8_NV,	GL_DEPTH_COMPONENT,	GL_NONE},
-};
-
-
-static bool
-getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type)
-{
-    for (unsigned i = 0; i < sizeof internalFormatDescs / sizeof internalFormatDescs[0]; ++i) {
-        if (internalFormatDescs[i].internalFormat == internalFormat) {
-            format = internalFormatDescs[i].format;
-            type = internalFormatDescs[i].type;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-/**
- * Choose the glReadPixels/glGetTexImage format appropriate for the given
- * internalFormat.
- */
-static GLenum
-getFormat(GLenum internalFormat)
-{
-    GLenum format;
-    GLenum type;
-    if (getInternalFormatType(internalFormat, format, type)) {
-        return format;
-    }
-    return GL_RGBA;
-}
-
-
 static inline void
-dumpActiveTextureLevel(JSONWriter &json, Context &context,
-                       GLenum target, GLint level, const char *object_label)
+dumpActiveTextureLevel(StateWriter &writer, Context &context,
+                       GLenum target, GLint level,
+                       const std::string & label,
+                       const char *userLabel)
 {
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
     }
 
+    const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+
     GLenum format;
     GLenum type;
+    const PixelFormat *pixelFormat = nullptr;
 
-    if (!getInternalFormatType(desc.internalFormat, format, type)) {
+    if (target == GL_TEXTURE_BUFFER) {
+        pixelFormat = getPixelFormat(desc.internalFormat);
+        if (!pixelFormat) {
+            std::cerr << "warning: unsupported texture buffer internal format " << formatToString(desc.internalFormat) << "\n";
+            return;
+        }
         format = GL_RGBA;
-        type = GL_NONE;
+        type = GL_FLOAT;
+    } else {
+        chooseReadBackFormat(formatDesc, format, type);
     }
 
-    if (target == GL_TEXTURE_BUFFER && type != GL_UNSIGNED_BYTE) {
-        // FIXME: We rely on glGetTexImage to convert the pixels, but we can't use it with texture buffers.
-        return;
-    }
-
-    GLint active_texture = GL_TEXTURE0;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-
-    std::stringstream label;
-    label << enumToString(active_texture) << ", "
-          << enumToString(target);
-    if (object_label)
-        label << ", \"" << object_label << "\"";
-    if (target != GL_TEXTURE_BUFFER) {
-        label << ", level = " << level;
-    }
-
-    json.beginMember(label.str());
+    writer.beginMember(label);
 
     if (context.ES && format == GL_DEPTH_COMPONENT) {
         format = GL_RED;
     }
-    GLuint channels = _gl_format_channels(format);
 
-    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
+    GLuint channels;
+    image::ChannelType channelType;
+    getImageFormat(format, type, channels, channelType);
 
-    context.resetPixelPackState();
+    if (0) {
+        std::cerr << enumToString(desc.internalFormat) << " "
+                  << enumToString(format) << " "
+                  << enumToString(type) << "\n";
+    }
+
+    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
+
+    PixelPackState pps(context);
 
     if (target == GL_TEXTURE_BUFFER) {
         assert(desc.height == 1);
-        assert(type == GL_UNSIGNED_BYTE);
+        assert(desc.depth == 1);
+        assert(pixelFormat);
+        assert(format == GL_RGBA);
+        assert(type == GL_FLOAT);
+        assert(image->bytesPerPixel == sizeof(float[4]));
 
         GLint buffer = 0;
         glGetIntegerv(GL_TEXTURE_BUFFER_DATA_STORE_BINDING, &buffer);
         assert(buffer);
 
-        GLint active_buffer = 0;
-        glGetIntegerv(GL_TEXTURE_BUFFER, &active_buffer);
-        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+        BufferMapping bm;
 
-        glGetBufferSubData(GL_TEXTURE_BUFFER,
-                           0, image->width * image->bytesPerPixel,
-                           image->pixels);
-        
-        glBindBuffer(GL_TEXTURE_BUFFER, active_buffer);
+        const GLvoid *map = bm.map(GL_TEXTURE_BUFFER, buffer);
+        if (map) {
+            pixelFormat->unpackSpan(static_cast<const uint8_t *>(map),
+                                    reinterpret_cast<float *>(image->pixels), image->width);
+        }
     } else {
         if (context.ES) {
-            getTexImageOES(target, level, desc, image->pixels);
+            getTexImageOES(target, level, format, type, desc, image->pixels);
         } else {
-            glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
+            glGetTexImage(target, level, format, type, image->pixels);
         }
     }
 
-    context.restorePixelPackState();
+    if (userLabel) {
+        image->label = userLabel;
+    }
 
-    json.writeImage(image, formatToString(desc.internalFormat), desc.depth);
+    StateWriter::ImageDesc imageDesc;
+    imageDesc.depth = desc.depth;
+    imageDesc.format = formatToString(desc.internalFormat);
+    writer.writeImage(image, imageDesc);
 
     delete image;
 
-    json.endMember(); // label
+    writer.endMember(); // label
 }
 
 
 static inline void
-dumpTexture(JSONWriter &json, Context &context, GLenum target)
+dumpActiveTexture(StateWriter &writer, Context &context, GLenum target, GLuint texture)
 {
-    GLenum binding = getTextureBinding(target);
+    char *object_label = getObjectLabel(context, GL_TEXTURE, texture);
 
-    GLint texture_binding = 0;
-    glGetIntegerv(binding, &texture_binding);
-    if (!glIsEnabled(target) && !texture_binding) {
-        return;
+    GLint active_texture = GL_TEXTURE0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+    assert(active_texture >= GL_TEXTURE0);
+
+    GLenum start_subtarget;
+    GLenum stop_subtarget;
+    if (target == GL_TEXTURE_CUBE_MAP) {
+        start_subtarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        stop_subtarget = start_subtarget + 6;
+    } else {
+        start_subtarget = target;
+        stop_subtarget = start_subtarget + 1;
     }
 
-    char *object_label = getObjectLabel(context, GL_TEXTURE, texture_binding);
+    GLboolean allowMipmaps = target != GL_TEXTURE_RECTANGLE &&
+                             target != GL_TEXTURE_BUFFER;
 
     GLint level = 0;
     do {
         ImageDesc desc;
 
-        if (target == GL_TEXTURE_CUBE_MAP) {
-            for (GLint face = 0; face < 6; ++face) {
-                if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
-                    goto finished;
-                }
-                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, object_label);
+        for (GLenum subtarget = start_subtarget; subtarget < stop_subtarget; ++subtarget) {
+            std::stringstream label;
+            label << "GL_TEXTURE" << (active_texture - GL_TEXTURE0) << ", "
+                  << enumToString(subtarget);
+            if (allowMipmaps) {
+                label << ", level = " << level;
             }
-        } else {
-            if (!getActiveTextureLevelDesc(context, target, level, desc)) {
+
+            if (!getActiveTextureLevelDesc(context, subtarget, level, desc)) {
                 goto finished;
             }
-            dumpActiveTextureLevel(json, context, target, level, object_label);
+            dumpActiveTextureLevel(writer, context, subtarget, level, label.str(), object_label);
         }
 
-        if (target == GL_TEXTURE_BUFFER) {
+        if (!allowMipmaps) {
+            // no mipmaps
             break;
         }
 
@@ -744,27 +609,75 @@ finished:
     free(object_label);
 }
 
+static void
+dumpTextureImages(StateWriter &writer, Context &context)
+{
+    if (!context.ARB_shader_image_load_store) {
+        return;
+    }
+
+    GLint maxImageUnits = 0;
+    glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
+    glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+
+    for (GLint imageUnit = 0; imageUnit < maxImageUnits; ++imageUnit) {
+        GLint texture = 0;
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, imageUnit, &texture);
+        if (texture) {
+            GLint level = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LEVEL, imageUnit, &level);
+            GLint isLayered = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LAYERED, imageUnit, &isLayered);
+            GLint layer = 0;
+            glGetIntegeri_v(GL_IMAGE_BINDING_LAYER, imageUnit, &layer);
+            std::stringstream label;
+            label << "Image Unit " << imageUnit;
+            if (level) {
+                label << ", level = " << level;
+            }
+            if (isLayered) {
+                label << ", layer = " << layer;
+            }
+            GLenum target = getTextureTarget(context, texture);
+            GLint previousTexture = 0;
+            glGetIntegerv(getTextureBinding(target), &previousTexture);
+
+            glBindTexture(target, texture);
+            char *object_label = getObjectLabel(context, GL_TEXTURE, texture);
+            dumpActiveTextureLevel(writer, context, target, level, label.str(),
+                                   object_label);
+            free(object_label);
+            glBindTexture(target, previousTexture);
+        }
+    }
+}
+
 
 void
-dumpTextures(JSONWriter &json, Context &context)
+dumpTextures(StateWriter &writer, Context &context)
 {
-    json.beginMember("textures");
-    json.beginObject();
-    GLint active_texture = GL_TEXTURE0;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+    writer.beginMember("textures");
+    writer.beginObject();
 
     GLint max_texture_coords = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);
+    if (!context.core) {
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);
+    }
+
     GLint max_combined_texture_image_units = 0;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);
-    GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);
 
     /*
      * At least the Android software GL implementation doesn't return the
      * proper value for this, but rather returns 0. The GL(ES) specification
      * mandates a minimum value of 2, so use this as a fall-back value.
      */
-    max_units = std::max(max_units, 2);
+    max_combined_texture_image_units = std::max(max_combined_texture_image_units, 2);
+
+    GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);
+
+    GLint active_texture = GL_TEXTURE0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
 
     for (GLint unit = 0; unit < max_units; ++unit) {
         GLenum texture = GL_TEXTURE0 + unit;
@@ -772,19 +685,44 @@ dumpTextures(JSONWriter &json, Context &context)
 
         for (unsigned i = 0; i < numTextureTargets; ++i) {
             GLenum target = textureTargets[i];
-            dumpTexture(json, context, target);
+
+            // Whether this fixed-function stage is enabled
+            GLboolean enabled = GL_FALSE;
+            if (unit < max_texture_coords &&
+                (target == GL_TEXTURE_1D ||
+                 target == GL_TEXTURE_2D ||
+                 target == GL_TEXTURE_3D ||
+                 target == GL_TEXTURE_CUBE_MAP ||
+                 target == GL_TEXTURE_RECTANGLE)) {
+                glGetBooleanv(target, &enabled);
+            }
+
+            // Whether a texture object is bound
+            GLint texture = 0;
+            if (unit < max_combined_texture_image_units) {
+                GLenum binding = getTextureBinding(target);
+                glGetIntegerv(binding, &texture);
+            }
+
+            if (enabled || texture) {
+                dumpActiveTexture(writer, context, target, texture);
+            }
         }
     }
+
     glActiveTexture(active_texture);
-    json.endObject();
-    json.endMember(); // textures
+
+    dumpTextureImages(writer, context);
+
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
-static bool
+bool
 getDrawableBounds(GLint *width, GLint *height) {
 #if defined(__linux__)
-    if (dlsym(RTLD_DEFAULT, "eglGetCurrentContext")) {
+    if (_getPublicProcAddress("eglGetCurrentContext")) {
         EGLContext currentContext = eglGetCurrentContext();
         if (currentContext != EGL_NO_CONTEXT) {
             EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
@@ -853,10 +791,7 @@ getDrawableBounds(GLint *width, GLint *height) {
 #elif defined(HAVE_X11)
 
     Display *display;
-    Drawable drawable;
-    Window root;
-    int x, y;
-    unsigned int w, h, bw, depth;
+    GLXDrawable drawable;
 
     display = glXGetCurrentDisplay();
     if (!display) {
@@ -868,9 +803,11 @@ getDrawableBounds(GLint *width, GLint *height) {
         return false;
     }
 
-    if (!XGetGeometry(display, drawable, &root, &x, &y, &w, &h, &bw, &depth)) {
-        return false;
-    }
+    // XGetGeometry will fail for PBuffers, whereas glXQueryDrawable should not.
+    unsigned int w = 0;
+    unsigned int h = 0;
+    glXQueryDrawable(display, drawable, GLX_WIDTH, &w);
+    glXQueryDrawable(display, drawable, GLX_HEIGHT, &h);
 
     *width = w;
     *height = h;
@@ -885,33 +822,56 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 
 static GLenum
-getTextureTarget(GLint texture)
+getTextureTarget(Context &context, GLuint texture)
 {
     if (!glIsTexture(texture)) {
         return GL_NONE;
     }
 
-    for (unsigned i = 0; i < numTextureTargets; ++i) {
-        GLenum target = textureTargets[i];
-        GLenum binding = getTextureBinding(target);
+    GLint result = GL_NONE;
+    if (context.ARB_direct_state_access) {
 
-        while (glGetError() != GL_NO_ERROR)
-            ;
+        glGetTextureParameteriv(texture, GL_TEXTURE_TARGET, &result);
+        assert(result != GL_NONE);
 
-        GLint bound_texture = 0;
-        glGetIntegerv(binding, &bound_texture);
-        glBindTexture(target, texture);
+    } else {
+        flushErrors();
 
-        bool succeeded = glGetError() == GL_NO_ERROR;
+        // Temporarily disable debug messages
+        GLDEBUGPROC prevDebugCallbackFunction = 0;
+        void *prevDebugCallbackUserParam = 0;
+        if (context.KHR_debug) {
+            glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+            glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallback(NULL, NULL);
+        }
 
-        glBindTexture(target, bound_texture);
+        for (unsigned i = 0; i < numTextureTargets; ++i) {
+            GLenum target = textureTargets[i];
+            GLenum binding = getTextureBinding(target);
 
-        if (succeeded) {
-            return target;
+            GLint bound_texture = 0;
+            glGetIntegerv(binding, &bound_texture);
+            glBindTexture(target, texture);
+
+            bool succeeded = glGetError() == GL_NO_ERROR;
+
+            glBindTexture(target, bound_texture);
+
+            if (succeeded) {
+                result = target;
+                break;
+            }
+
+            flushErrors();
+        }
+
+        if (context.KHR_debug) {
+            glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
         }
     }
 
-    return GL_NONE;
+    return result;
 }
 
 
@@ -984,7 +944,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
             getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
             glBindTexture(GL_TEXTURE_CUBE_MAP, bound_texture);
         } else {
-            GLenum texture_target = getTextureTarget(object_name);
+            GLenum texture_target = getTextureTarget(context, object_name);
             GLenum texture_binding = getTextureBinding(texture_target);
             glGetIntegerv(texture_binding, &bound_texture);
             glBindTexture(texture_target, object_name);
@@ -994,7 +954,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 
         return desc.valid();
     } else {
-        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
+        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << enumToString(object_type) << "\n";
         return false;
     }
 }
@@ -1003,12 +963,6 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 
 image::Image *
 getDrawBufferImage() {
-    GLenum format = GL_RGB;
-    GLint channels = _gl_format_channels(format);
-    if (channels > 4) {
-        return NULL;
-    }
-
     Context context;
 
     GLenum framebuffer_binding;
@@ -1061,7 +1015,17 @@ getDrawBufferImage() {
         desc.depth = 1;
     }
 
+    GLenum format = GL_RGB;
     GLenum type = GL_UNSIGNED_BYTE;
+    if (context.ES) {
+        format = GL_RGBA;
+    }
+
+    GLint channels = _gl_format_channels(format);
+    if (channels > 4) {
+        return NULL;
+    }
+
     image::ChannelType channelType = image::TYPE_UNORM8;
 
     if (format == GL_DEPTH_COMPONENT) {
@@ -1075,7 +1039,7 @@ getDrawBufferImage() {
         return NULL;
     }
 
-    while (glGetError() != GL_NO_ERROR) {}
+    flushErrors();
 
     GLint read_framebuffer = 0;
     GLint read_buffer = GL_NONE;
@@ -1087,12 +1051,12 @@ getDrawBufferImage() {
         glReadBuffer(draw_buffer);
     }
 
-    // TODO: reset imaging state too
-    context.resetPixelPackState();
+    {
+        // TODO: reset imaging state too
+        PixelPackState pps(context);
+        glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
+    }
 
-    glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
-
-    context.restorePixelPackState();
 
     if (!context.ES) {
         glReadBuffer(read_buffer);
@@ -1117,36 +1081,67 @@ getDrawBufferImage() {
  * Dump the image of the currently bound read buffer.
  */
 static inline void
-dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
-                    GLint internalFormat = GL_NONE)
+dumpReadBufferImage(StateWriter &writer,
+                    Context & context,
+                    const char *label,
+                    const char *userLabel,
+                    GLint width, GLint height,
+                    GLenum format, GLenum type,
+                    GLenum internalFormat = GL_NONE)
 {
-    GLint channels = _gl_format_channels(format);
-
     if (internalFormat == GL_NONE) {
         internalFormat = format;
     }
 
-    Context context;
+    if (context.ES) {
+        switch (format) {
+        case GL_DEPTH_COMPONENT:
+        case GL_DEPTH_STENCIL:
+            if (!context.NV_read_depth_stencil) {
+                return;
+            }
+            /* FIXME: NV_read_depth_stencil states that type must match the
+             * internal format, whereas we always request GL_FLOAT, as that's
+             * what we want.  To fix this we should probe the adequate type
+             * here, and then manually convert the pixels to float after
+             * glReadPixels */
+            break;
+        case GL_STENCIL_INDEX:
+            if (!context.NV_read_depth_stencil) {
+                return;
+            }
+            type = GL_UNSIGNED_BYTE;
+            break;
+        default:
+            // Color formats -- GLES glReadPixels only supports the following combinations:
+            // - GL_RGBA and GL_UNSIGNED_BYTE
+            // - values of IMPLEMENTATION_COLOR_READ_FORMAT and IMPLEMENTATION_COLOR_READ_TYPE
+            format = GL_RGBA;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        }
+    }
 
-    GLenum type = GL_UNSIGNED_BYTE;
-    image::ChannelType channelType = image::TYPE_UNORM8;
+    GLuint channels;
+    image::ChannelType channelType;
+    getImageFormat(format, type, channels, channelType);
 
-    if (format == GL_DEPTH_COMPONENT) {
-        type = GL_FLOAT;
-        channels = 1;
-        channelType = image::TYPE_FLOAT;
+    if (0) {
+        std::cerr << enumToString(internalFormat) << " "
+                  << enumToString(format) << " "
+                  << enumToString(type) << "\n";
     }
 
     image::Image *image = new image::Image(width, height, channels, true, channelType);
 
-    while (glGetError() != GL_NO_ERROR) {}
+    flushErrors();
 
-    // TODO: reset imaging state too
-    context.resetPixelPackState();
+    {
+        // TODO: reset imaging state too
+        PixelPackState pps(context);
 
-    glReadPixels(0, 0, width, height, format, type, image->pixels);
-
-    context.restorePixelPackState();
+        glReadPixels(0, 0, width, height, format, type, image->pixels);
+    }
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -1154,9 +1149,16 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
             std::cerr << "warning: " << enumToString(error) << " while reading framebuffer\n";
             error = glGetError();
         } while(error != GL_NO_ERROR);
-        json.writeNull();
     } else {
-        json.writeImage(image, formatToString(internalFormat));
+        if (userLabel) {
+            image->label = userLabel;
+        }
+
+        StateWriter::ImageDesc imageDesc;
+        imageDesc.format = formatToString(internalFormat);
+        writer.beginMember(label);
+        writer.writeImage(image, imageDesc);
+        writer.endMember();
     }
 
     delete image;
@@ -1173,11 +1175,15 @@ downsampledFramebuffer(Context &context,
 {
     GLuint fbo;
 
-
     *numRbs = 0;
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    GLboolean scissor_test = glIsEnabled(GL_SCISSOR_TEST);
+    if (scissor_test) {
+        glDisable(GL_SCISSOR_TEST);
+    }
 
     {
         // color buffer
@@ -1248,6 +1254,10 @@ downsampledFramebuffer(Context &context,
         }
     }
 
+    if (scissor_test) {
+        glEnable(GL_SCISSOR_TEST);
+    }
+
     return fbo;
 }
 
@@ -1256,7 +1266,7 @@ downsampledFramebuffer(Context &context,
  * Dump images of current draw drawable/window.
  */
 static void
-dumpDrawableImages(JSONWriter &json, Context &context)
+dumpDrawableImages(StateWriter &writer, Context &context)
 {
     GLint width, height;
 
@@ -1299,9 +1309,9 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         glGetIntegerv(GL_ALPHA_BITS, &alpha_bits);
 #endif
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
-        json.beginMember(enumToString(draw_buffer));
-        dumpReadBufferImage(json, width, height, format);
-        json.endMember();
+        GLenum type = GL_UNSIGNED_BYTE;
+
+        dumpReadBufferImage(writer, context, enumToString(draw_buffer), NULL, width, height, format, type);
 
         // Restore original read buffer
         if (!context.ES) {
@@ -1309,21 +1319,26 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         }
     }
 
-    if (!context.ES) {
+    if (!context.ES || context.NV_read_depth_stencil) {
         GLint depth_bits = 0;
-        glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
+        if (context.core) {
+            glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &depth_bits);
+        } else {
+            glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
+        }
         if (depth_bits) {
-            json.beginMember("GL_DEPTH_COMPONENT");
-            dumpReadBufferImage(json, width, height, GL_DEPTH_COMPONENT);
-            json.endMember();
+            dumpReadBufferImage(writer, context, "GL_DEPTH_COMPONENT", NULL, width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
         }
 
         GLint stencil_bits = 0;
-        glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+        if (context.core) {
+            glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencil_bits);
+        } else {
+            glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+        }
         if (stencil_bits) {
-            json.beginMember("GL_STENCIL_INDEX");
-            dumpReadBufferImage(json, width, height, GL_STENCIL_INDEX);
-            json.endMember();
+            assert(stencil_bits <= 8);
+            dumpReadBufferImage(writer, context, "GL_STENCIL_INDEX", NULL, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
         }
     }
     
@@ -1342,7 +1357,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
  * In the case of a color attachment, it assumes it is already bound for read.
  */
 static void
-dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment, GLenum format = GL_NONE)
+dumpFramebufferAttachment(StateWriter &writer, Context &context, GLenum target, GLenum attachment)
 {
     ImageDesc desc;
     if (!getFramebufferAttachmentDesc(context, target, attachment, desc)) {
@@ -1351,9 +1366,21 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
 
     assert(desc.samples == 0);
 
-    if (format == GL_NONE) {
+    GLenum format;
+    GLenum type;
+    switch (attachment) {
+    case GL_DEPTH_ATTACHMENT:
+        format = GL_DEPTH_COMPONENT;
+        type = GL_FLOAT;
+        break;
+    case GL_STENCIL_ATTACHMENT:
+        format = GL_STENCIL_INDEX;
+        type = GL_UNSIGNED_BYTE;
+        break;
+    default:
         assert(desc.internalFormat != GL_NONE);
-        format = getFormat(desc.internalFormat);
+        const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+        chooseReadBackFormat(formatDesc, format, type);
     }
 
     GLint object_type = GL_NONE;
@@ -1366,22 +1393,62 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
                                           &object_name);
     char *object_label = getObjectLabel(context, object_type, object_name);
 
-    std::stringstream label;
-    label << enumToString(attachment);
-    if (object_label) {
-        label << ", \"" << object_label << "\"";
-        free(object_label);
+    const char *label = enumToString(attachment);
+
+    if (object_type == GL_TEXTURE) {
+        GLint layered = GL_FALSE;
+        glGetFramebufferAttachmentParameteriv(target, attachment,
+                                              GL_FRAMEBUFFER_ATTACHMENT_LAYERED,
+                                              &layered);
+        if (layered &&
+            isGeometryShaderBound(context)) {
+            /*
+             * Dump the whole texture array.
+             *
+             * Unfortunately we can't tell whether the bound GS writes or not gl_Layer.
+             */
+
+            GLint level = 0;
+            glGetFramebufferAttachmentParameteriv(target, attachment,
+                                                  GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+                                                  &level);
+
+            GLenum texture_target = getTextureTarget(context, object_name);
+            GLenum texture_binding = getTextureBinding(texture_target);
+
+            GLint bound_texture = 0;
+            glGetIntegerv(texture_binding, &bound_texture);
+            glBindTexture(texture_target, object_name);
+
+            dumpActiveTextureLevel(writer, context, texture_target, level, label, object_label);
+
+            glBindTexture(texture_target, bound_texture);
+
+            free(object_label);
+            return;
+        }
     }
 
-    json.beginMember(label.str());
-    dumpReadBufferImage(json, desc.width, desc.height, format, desc.internalFormat);
-    json.endMember();
+
+    dumpReadBufferImage(writer, context,
+                        label, object_label,
+                        desc.width, desc.height,
+                        format, type, desc.internalFormat);
+    free(object_label);
 }
 
 
 static void
-dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
+dumpFramebufferAttachments(StateWriter &writer, Context &context, GLenum target)
 {
+    GLenum status = glCheckFramebufferStatus(target);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr
+            << "warning: incomplete " << enumToString(target)
+            << " (" << enumToString(status) << ")\n";
+        return;
+    }
+
     GLint read_framebuffer = 0;
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
 
@@ -1405,15 +1472,15 @@ dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
                 std::cerr << "warning: unexpected GL_DRAW_BUFFER" << i << " = " << draw_buffer << "\n";
                 attachment = GL_COLOR_ATTACHMENT0;
             }
-            dumpFramebufferAttachment(json, context, target, attachment);
+            dumpFramebufferAttachment(writer, context, target, attachment);
         }
     }
 
     glReadBuffer(read_buffer);
 
-    if (!context.ES) {
-        dumpFramebufferAttachment(json, context, target, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT);
-        dumpFramebufferAttachment(json, context, target, GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX);
+    if (!context.ES || context.NV_read_depth_stencil) {
+        dumpFramebufferAttachment(writer, context, target, GL_DEPTH_ATTACHMENT);
+        dumpFramebufferAttachment(writer, context, target, GL_STENCIL_ATTACHMENT);
     }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
@@ -1421,18 +1488,18 @@ dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
 
 
 void
-dumpFramebuffer(JSONWriter &json, Context &context)
+dumpFramebuffer(StateWriter &writer, Context &context)
 {
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     GLint boundDrawFbo = 0, boundReadFbo = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &boundDrawFbo);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &boundReadFbo);
     if (!boundDrawFbo) {
-        dumpDrawableImages(json, context);
+        dumpDrawableImages(writer, context);
     } else if (context.ES) {
-        dumpFramebufferAttachments(json, context, GL_FRAMEBUFFER);
+        dumpFramebufferAttachments(writer, context, GL_FRAMEBUFFER);
     } else {
         GLint draw_buffer0 = GL_NONE;
         glGetIntegerv(GL_DRAW_BUFFER0, &draw_buffer0);
@@ -1477,7 +1544,7 @@ dumpFramebuffer(JSONWriter &json, Context &context)
             glBindFramebuffer(GL_READ_FRAMEBUFFER, boundDrawFbo);
         }
 
-        dumpFramebufferAttachments(json, context, GL_READ_FRAMEBUFFER);
+        dumpFramebufferAttachments(writer, context, GL_READ_FRAMEBUFFER);
 
         if (multisample) {
             glBindRenderbuffer(GL_RENDERBUFFER, boundRb);
@@ -1489,8 +1556,8 @@ dumpFramebuffer(JSONWriter &json, Context &context)
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundDrawFbo);
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

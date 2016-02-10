@@ -29,7 +29,7 @@
 
 #include "glsledit.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 class GLSLBlockData: public QTextBlockUserData
 {

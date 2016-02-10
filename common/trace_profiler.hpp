@@ -24,8 +24,7 @@
  *
  **************************************************************************/
 
-#ifndef TRACE_PROFILER_H
-#define TRACE_PROFILER_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -142,4 +141,3 @@ private:
 };
 }
 
-#endif // TRACE_PROFILER_H

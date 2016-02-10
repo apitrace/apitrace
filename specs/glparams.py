@@ -73,6 +73,7 @@ parameters = [
     ("",	X,	1,	"GL_DUP_FIRST_CUBIC_CURVE_TO_NV"),	# 0x00F2
     ("",	X,	1,	"GL_DUP_LAST_CUBIC_CURVE_TO_NV"),	# 0x00F4
     ("",	X,	1,	"GL_RECT_NV"),	# 0x00F6
+    ("",	X,	1,	"GL_RELATIVE_RECT_NV"),	# 0x00F7
     ("",	X,	1,	"GL_CIRCULAR_CCW_ARC_TO_NV"),	# 0x00F8
     ("",	X,	1,	"GL_CIRCULAR_CW_ARC_TO_NV"),	# 0x00FA
     ("",	X,	1,	"GL_CIRCULAR_TANGENT_ARC_TO_NV"),	# 0x00FC
@@ -121,6 +122,7 @@ parameters = [
     ("",	X,	1,	"GL_STACK_UNDERFLOW"),	# 0x0504
     ("",	X,	1,	"GL_OUT_OF_MEMORY"),	# 0x0505
     ("",	X,	1,	"GL_INVALID_FRAMEBUFFER_OPERATION"),	# 0x0506
+    ("",	X,	1,	"GL_CONTEXT_LOST"),	# 0x0507
     ("",	X,	1,	"GL_2D"),	# 0x0600
     ("",	X,	1,	"GL_3D"),	# 0x0601
     ("",	X,	1,	"GL_3D_COLOR"),	# 0x0602
@@ -343,8 +345,8 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAP1_GRID_SEGMENTS"),	# 0x0DD1
     ("glGet",	F,	4,	"GL_MAP2_GRID_DOMAIN"),	# 0x0DD2
     ("glGet",	I,	2,	"GL_MAP2_GRID_SEGMENTS"),	# 0x0DD3
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
+    ("",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
+    ("",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
     ("glGet",	P,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
     ("glGet",	I,	1,	"GL_FEEDBACK_BUFFER_SIZE"),	# 0x0DF1
     ("glGet",	E,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
@@ -355,6 +357,7 @@ parameters = [
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
     ("glGetTexParameter,glGetSamplerParameter",	F,	4,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
+    ("glGetTexParameter", E,	1,	"GL_TEXTURE_TARGET"),	# 0x1006
     ("",	X,	1,	"GL_DONT_CARE"),	# 0x1100
     ("",	X,	1,	"GL_FASTEST"),	# 0x1101
     ("",	X,	1,	"GL_NICEST"),	# 0x1102
@@ -383,7 +386,7 @@ parameters = [
     ("",	X,	1,	"GL_DOUBLE"),	# 0x140A
     ("",	X,	1,	"GL_HALF_FLOAT"),	# 0x140B
     ("",	X,	1,	"GL_FIXED"),	# 0x140C
-    ("",	X,	1,	"GL_INT64_NV"),	# 0x140E
+    ("",	X,	1,	"GL_INT64_ARB"),	# 0x140E
     ("",	X,	1,	"GL_UNSIGNED_INT64_ARB"),	# 0x140F
     ("",	X,	1,	"GL_CLEAR"),	# 0x1500
     ("",	X,	1,	"GL_AND"),	# 0x1501
@@ -611,7 +614,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_PACK_IMAGE_HEIGHT"),	# 0x806C
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_IMAGES"),	# 0x806D
     ("glGet",	F,	1,	"GL_UNPACK_IMAGE_HEIGHT"),	# 0x806E
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
+    ("",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
     ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
@@ -930,7 +933,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
     ("glGetBufferParameter",	B,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),	# 0x821F
     ("glGetBufferParameter",	I,	1,	"GL_BUFFER_STORAGE_FLAGS"),	# 0x8220
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED"),	# 0x8221
+    ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED"),	# 0x8221
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
     ("",	X,	1,	"GL_COMPRESSED_RED"),	# 0x8225
     ("",	X,	1,	"GL_COMPRESSED_RG"),	# 0x8226
@@ -960,8 +963,8 @@ parameters = [
     ("",	X,	1,	"GL_SYNC_CL_EVENT_COMPLETE_ARB"),	# 0x8241
     ("glGet",	B,	1,	"GL_DEBUG_OUTPUT_SYNCHRONOUS"),	# 0x8242
     ("glGet",	I,	1,	"GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH"),	# 0x8243
-    ("glGet",	P,	1,	"GL_DEBUG_CALLBACK_FUNCTION"),	# 0x8244
-    ("glGet",	P,	1,	"GL_DEBUG_CALLBACK_USER_PARAM"),	# 0x8245
+    ("_glGet",	P,	1,	"GL_DEBUG_CALLBACK_FUNCTION"),	# 0x8244
+    ("_glGet",	P,	1,	"GL_DEBUG_CALLBACK_USER_PARAM"),	# 0x8245
     ("",	X,	1,	"GL_DEBUG_SOURCE_API"),	# 0x8246
     ("",	X,	1,	"GL_DEBUG_SOURCE_WINDOW_SYSTEM"),	# 0x8247
     ("",	X,	1,	"GL_DEBUG_SOURCE_SHADER_COMPILER"),	# 0x8248
@@ -974,12 +977,12 @@ parameters = [
     ("",	X,	1,	"GL_DEBUG_TYPE_PORTABILITY"),	# 0x824F
     ("",	X,	1,	"GL_DEBUG_TYPE_PERFORMANCE"),	# 0x8250
     ("",	X,	1,	"GL_DEBUG_TYPE_OTHER"),	# 0x8251
-    ("",	X,	1,	"GL_LOSE_CONTEXT_ON_RESET_ARB"),	# 0x8252
-    ("",	X,	1,	"GL_GUILTY_CONTEXT_RESET_ARB"),	# 0x8253
-    ("",	X,	1,	"GL_INNOCENT_CONTEXT_RESET_ARB"),	# 0x8254
-    ("",	X,	1,	"GL_UNKNOWN_CONTEXT_RESET_ARB"),	# 0x8255
-    ("glGet",	E,	1,	"GL_RESET_NOTIFICATION_STRATEGY_ARB"),	# 0x8256
-    ("",	X,	1,	"GL_PROGRAM_BINARY_RETRIEVABLE_HINT"),	# 0x8257
+    ("",	X,	1,	"GL_LOSE_CONTEXT_ON_RESET"),	# 0x8252
+    ("",	X,	1,	"GL_GUILTY_CONTEXT_RESET"),	# 0x8253
+    ("",	X,	1,	"GL_INNOCENT_CONTEXT_RESET"),	# 0x8254
+    ("",	X,	1,	"GL_UNKNOWN_CONTEXT_RESET"),	# 0x8255
+    ("glGet",	E,	1,	"GL_RESET_NOTIFICATION_STRATEGY"),	# 0x8256
+    ("glGetProgram",	B,	1,	"GL_PROGRAM_BINARY_RETRIEVABLE_HINT"),	# 0x8257
     ("",	X,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
     ("glGet",	I,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
     ("glGet",	I,	1,	"GL_PROGRAM_PIPELINE_BINDING"),	# 0x825A
@@ -989,7 +992,7 @@ parameters = [
     ("glGet",	E,	1,	"GL_LAYER_PROVOKING_VERTEX"),	# 0x825E
     ("glGet",	E,	1,	"GL_VIEWPORT_INDEX_PROVOKING_VERTEX"),	# 0x825F
     ("",	X,	1,	"GL_UNDEFINED_VERTEX"),	# 0x8260
-    ("",	X,	1,	"GL_NO_RESET_NOTIFICATION_ARB"),	# 0x8261
+    ("",	X,	1,	"GL_NO_RESET_NOTIFICATION"),	# 0x8261
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_SHARED_MEMORY_SIZE"),	# 0x8262
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_UNIFORM_COMPONENTS"),	# 0x8263
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS"),	# 0x8264
@@ -1124,6 +1127,25 @@ parameters = [
     ("",	X,	1,	"GL_DISPLAY_LIST"),	# 0x82E7
     ("glGet",	I,	1,	"GL_MAX_LABEL_LENGTH"),	# 0x82E8
     ("",	X,	1,	"GL_NUM_SHADING_LANGUAGE_VERSIONS"),	# 0x82E9
+    ("",	X,	1,	"GL_QUERY_TARGET"),	# 0x82EA
+    #("",	X,	1,	"GL_TEXTURE_BINDING"),	# 0x82EB
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB"),	# 0x82EC
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB"),	# 0x82ED
+    ("",	X,	1,	"GL_VERTICES_SUBMITTED_ARB"),	# 0x82EE
+    ("",	X,	1,	"GL_PRIMITIVES_SUBMITTED_ARB"),	# 0x82EF
+    ("",	X,	1,	"GL_VERTEX_SHADER_INVOCATIONS_ARB"),	# 0x82F0
+    ("",	X,	1,	"GL_TESS_CONTROL_SHADER_PATCHES_ARB"),	# 0x82F1
+    ("",	X,	1,	"GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB"),	# 0x82F2
+    ("",	X,	1,	"GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB"),	# 0x82F3
+    ("",	X,	1,	"GL_FRAGMENT_SHADER_INVOCATIONS_ARB"),	# 0x82F4
+    ("",	X,	1,	"GL_COMPUTE_SHADER_INVOCATIONS_ARB"),	# 0x82F5
+    ("",	X,	1,	"GL_CLIPPING_INPUT_PRIMITIVES_ARB"),	# 0x82F6
+    ("",	X,	1,	"GL_CLIPPING_OUTPUT_PRIMITIVES_ARB"),	# 0x82F7
+    ("",	X,	1,	"GL_SPARSE_BUFFER_PAGE_SIZE_ARB"),	# 0x82F8
+    ("glGet",	I,	1,	"GL_MAX_CULL_DISTANCES"),	# 0x82F9
+    ("glGet",	I,	1,	"GL_MAX_COMBINED_CLIP_AND_CULL_DISTANCES"),	# 0x82FA
+    ("glGet",	E,	1,	"GL_CONTEXT_RELEASE_BEHAVIOR"),	# 0x82FB
+    ("glGet",	E,	1,	"GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH"),	# 0x82FC
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_SGIX"),	# 0x8310
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_COUNTERS_SGIX"),	# 0x8311
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_MAX_SGIX"),	# 0x8312
@@ -1206,7 +1228,7 @@ parameters = [
     ("",	X,	1,	"GL_PERFQUERY_DONOT_FLUSH_INTEL"),	# 0x83F9
     ("",	X,	1,	"GL_PERFQUERY_FLUSH_INTEL"),	# 0x83FA
     ("",	X,	1,	"GL_PERFQUERY_WAIT_INTEL"),	# 0x83FB
-    ("",	X,	1,	"GL_TEXTURE_MEMORY_LAYOUT_INTEL"),	# 0x83FF
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_MEMORY_LAYOUT_INTEL"),	# 0x83FF
     ("glGet",	I,	1,	"GL_FRAGMENT_LIGHTING_SGIX"),	# 0x8400
     ("glGet",	I,	1,	"GL_FRAGMENT_COLOR_MATERIAL_SGIX"),	# 0x8401
     ("glGet",	I,	1,	"GL_FRAGMENT_COLOR_MATERIAL_FACE_SGIX"),	# 0x8402
@@ -1227,11 +1249,11 @@ parameters = [
     ("",	X,	1,	"GL_FRAGMENT_LIGHT5_SGIX"),	# 0x8411
     ("",	X,	1,	"GL_FRAGMENT_LIGHT6_SGIX"),	# 0x8412
     ("",	X,	1,	"GL_FRAGMENT_LIGHT7_SGIX"),	# 0x8413
-    ("",	X,	1,	"GL_PACK_RESAMPLE_SGIX"),	# 0x842C
-    ("",	X,	1,	"GL_UNPACK_RESAMPLE_SGIX"),	# 0x842D
-    ("",	X,	1,	"GL_RESAMPLE_REPLICATE_SGIX"),	# 0x842E
-    ("",	X,	1,	"GL_RESAMPLE_ZERO_FILL_SGIX"),	# 0x842F
+    ("",	X,	1,	"GL_PACK_RESAMPLE_SGIX"),	# 0x842E
+    ("",	X,	1,	"GL_UNPACK_RESAMPLE_SGIX"),	# 0x842F
     ("",	X,	1,	"GL_RESAMPLE_DECIMATE_SGIX"),	# 0x8430
+    ("",	X,	1,	"GL_RESAMPLE_REPLICATE_SGIX"),	# 0x8433
+    ("",	X,	1,	"GL_RESAMPLE_ZERO_FILL_SGIX"),	# 0x8434
     ("",	X,	1,	"GL_TANGENT_ARRAY_EXT"),	# 0x8439
     ("",	X,	1,	"GL_BINORMAL_ARRAY_EXT"),	# 0x843A
     ("",	X,	1,	"GL_CURRENT_TANGENT_EXT"),	# 0x843B
@@ -1322,17 +1344,17 @@ parameters = [
     ("",	X,	1,	"GL_ALL_COMPLETED_NV"),	# 0x84F2
     ("",	X,	1,	"GL_FENCE_STATUS_NV"),	# 0x84F3
     ("",	X,	1,	"GL_FENCE_CONDITION_NV"),	# 0x84F4
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
+    ("",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_RECTANGLE"),	# 0x84F6
     ("",	X,	1,	"GL_PROXY_TEXTURE_RECTANGLE"),	# 0x84F7
     ("glGet",	I,	1,	"GL_MAX_RECTANGLE_TEXTURE_SIZE"),	# 0x84F8
     ("",	X,	1,	"GL_DEPTH_STENCIL"),	# 0x84F9
     ("",	X,	1,	"GL_UNSIGNED_INT_24_8"),	# 0x84FA
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
-    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
+    ("glGetTexParameter,glGetSamplerParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
     ("",	X,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
-    ("glGetTexParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
+    ("glGetTexParameter,glGetSamplerParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
     ("",	X,	1,	"GL_MODELVIEW1_STACK_DEPTH_EXT"),	# 0x8502
     ("",	X,	1,	"GL_COMBINE4_NV"),	# 0x8503
     ("glGet",	F,	1,	"GL_MAX_SHININESS_NV"),	# 0x8504
@@ -1350,7 +1372,7 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_WEIGHT_ARRAY_POINTER_EXT"),	# 0x8510
     ("",	X,	1,	"GL_NORMAL_MAP"),	# 0x8511
     ("",	X,	1,	"GL_REFLECTION_MAP"),	# 0x8512
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
+    ("",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_X"),	# 0x8515
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_NEGATIVE_X"),	# 0x8516
@@ -1419,8 +1441,8 @@ parameters = [
     ("",	X,	1,	"GL_COMBINER5_NV"),	# 0x8555
     ("",	X,	1,	"GL_COMBINER6_NV"),	# 0x8556
     ("",	X,	1,	"GL_COMBINER7_NV"),	# 0x8557
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_NV"),	# 0x8558
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_INDEX_NV"),	# 0x8559
+    ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART_NV"),	# 0x8558
+    ("glGet",	I,	1,	"GL_PRIMITIVE_RESTART_INDEX_NV"),	# 0x8559
     ("glGet",	E,	1,	"GL_FOG_DISTANCE_MODE_NV"),	# 0x855A
     ("",	X,	1,	"GL_EYE_RADIAL_NV"),	# 0x855B
     ("",	X,	1,	"GL_EYE_PLANE_ABSOLUTE_NV"),	# 0x855C
@@ -1474,7 +1496,7 @@ parameters = [
     ("",	X,	1,	"GL_BUFFER_OBJECT_APPLE"),	# 0x85B3
     ("",	X,	1,	"GL_STORAGE_CLIENT_APPLE"),	# 0x85B4
     ("glGet",	I,	1,	"GL_VERTEX_ARRAY_BINDING"),	# 0x85B5
-    ("glGetTexParameter",	X,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
+    ("glGetTexParameter",	I,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
     ("",	P,	1,	"GL_TEXTURE_RANGE_POINTER_APPLE"),	# 0x85B8
     ("",	X,	1,	"GL_YCBCR_422_APPLE"),	# 0x85B9
     ("",	X,	1,	"GL_UNSIGNED_SHORT_8_8_APPLE"),	# 0x85BA
@@ -1736,8 +1758,8 @@ parameters = [
     ("",	X,	1,	"GL_DOT3_RGB_EXT"),	# 0x8740
     # XXX: GL_DOT3_RGBA_EXT == GL_PROGRAM_BINARY_LENGTH, but you can't glGet GL_DOT3_RGBA_EXT
     ("glGetProgram",	I,	1,	"GL_PROGRAM_BINARY_LENGTH"),	# 0x8741,
-    ("",	X,	1,	"GL_MIRROR_CLAMP_ATI"),	# 0x8742
-    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE"),		# 0x8743
+    ("",	X,	1,	"GL_MIRROR_CLAMP_EXT"),	# 0x8742
+    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE"),	# 0x8743
     ("",	X,	1,	"GL_MODULATE_ADD_ATI"),	# 0x8744
     ("",	X,	1,	"GL_MODULATE_SIGNED_ADD_ATI"),	# 0x8745
     ("",	X,	1,	"GL_MODULATE_SUBTRACT_ATI"),	# 0x8746
@@ -1913,9 +1935,9 @@ parameters = [
     ("",	X,	1,	"GL_PN_TRIANGLES_NORMAL_MODE_QUADRATIC_ATI"),	# 0x87F8
     ("",	X,	1,	"GL_3DC_X_AMD"),	# 0x87F9
     ("",	X,	1,	"GL_3DC_XY_AMD"),	# 0x87FA
-    ("",	X,	1,	"GL_VBO_FREE_MEMORY_ATI"),	# 0x87FB
-    ("",	X,	1,	"GL_TEXTURE_FREE_MEMORY_ATI"),	# 0x87FC
-    ("",	X,	1,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
+    ("glGet",	I,	1,	"GL_VBO_FREE_MEMORY_ATI"),	# 0x87FB
+    ("glGet",	I,	1,	"GL_TEXTURE_FREE_MEMORY_ATI"),	# 0x87FC
+    ("glGet",	I,	1,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
     ("glGet",	I,	1,	"GL_NUM_PROGRAM_BINARY_FORMATS"),	# 0x87FE
     ("glGet",	E,	"_glGetInteger(GL_NUM_PROGRAM_BINARY_FORMATS)",	"GL_PROGRAM_BINARY_FORMATS"),	# 0x87FF
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FUNC"),	# 0x8800
@@ -2009,7 +2031,7 @@ parameters = [
     ("glGetQuery",	I,	1,	"GL_CURRENT_QUERY"),	# 0x8865
     ("glGetQueryObject",	I,	1,	"GL_QUERY_RESULT"),	# 0x8866
     ("glGetQueryObject",	B,	1,	"GL_QUERY_RESULT_AVAILABLE"),	# 0x8867
-    ("",	X,	1,	"GL_MAX_FRAGMENT_PROGRAM_LOCAL_PARAMETERS_NV"),	# 0x8868
+    ("glGet",	I,	1,	"GL_MAX_FRAGMENT_PROGRAM_LOCAL_PARAMETERS_NV"),	# 0x8868
     ("glGet",	I,	1,	"GL_MAX_VERTEX_ATTRIBS"),	# 0x8869
     ("glGetVertexAttrib",	B,	1,	"GL_VERTEX_ATTRIB_ARRAY_NORMALIZED"),	# 0x886A
     ("glGet",	I,	1,	"GL_MAX_TESS_CONTROL_INPUT_COMPONENTS"),	# 0x886C
@@ -2160,19 +2182,19 @@ parameters = [
     ("glGet",	F,	1,	"GL_MAX_PROGRAM_TEXEL_OFFSET"),	# 0x8905
     ("",	X,	1,	"GL_PROGRAM_ATTRIB_COMPONENTS_NV"),	# 0x8906
     ("",	X,	1,	"GL_PROGRAM_RESULT_COMPONENTS_NV"),	# 0x8907
-    ("",	X,	1,	"GL_MAX_PROGRAM_ATTRIB_COMPONENTS_NV"),	# 0x8908
-    ("",	X,	1,	"GL_MAX_PROGRAM_RESULT_COMPONENTS_NV"),	# 0x8909
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ATTRIB_COMPONENTS_NV"),	# 0x8908
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_RESULT_COMPONENTS_NV"),	# 0x8909
     ("glGet",	B,	1,	"GL_STENCIL_TEST_TWO_SIDE_EXT"),	# 0x8910
     ("glGet",	E,	1,	"GL_ACTIVE_STENCIL_FACE_EXT"),	# 0x8911
     ("",	X,	1,	"GL_MIRROR_CLAMP_TO_BORDER_EXT"),	# 0x8912
     ("",	X,	1,	"GL_SAMPLES_PASSED"),	# 0x8914
-    ("",	X,	1,	"GL_GEOMETRY_VERTICES_OUT"),	# 0x8916
-    ("",	X,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
-    ("",	X,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
+    ("glGetProgram",	I,	1,	"GL_GEOMETRY_VERTICES_OUT"),	# 0x8916
+    ("glGetProgram",	E,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
+    ("glGetProgram",	E,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
     ("_glGet",	I,	1,	"GL_SAMPLER_BINDING"),	# 0x8919
-    ("glGet",	B,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
-    ("glGet",	B,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
-    ("glGet",	B,	1,	"GL_CLAMP_READ_COLOR"),	# 0x891C
+    ("glGet",	E,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
+    ("glGet",	E,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
+    ("glGet",	E,	1,	"GL_CLAMP_READ_COLOR"),	# 0x891C
     ("",	X,	1,	"GL_FIXED_ONLY"),	# 0x891D
     ("",	X,	1,	"GL_TESS_CONTROL_PROGRAM_NV"),	# 0x891E
     ("",	X,	1,	"GL_TESS_EVALUATION_PROGRAM_NV"),	# 0x891F
@@ -2309,11 +2331,11 @@ parameters = [
     ("",	X,	1,	"GL_VOLATILE_APPLE"),	# 0x8A1A
     ("",	X,	1,	"GL_RETAINED_APPLE"),	# 0x8A1B
     ("",	X,	1,	"GL_UNDEFINED_APPLE"),	# 0x8A1C
-    ("",	X,	1,	"GL_PURGEABLE_APPLE"),	# 0x8A1D
+    ("",	B,	1,	"GL_PURGEABLE_APPLE"),	# 0x8A1D
     ("",	X,	1,	"GL_RGB_422_APPLE"),	# 0x8A1F
-    ("glGet",	I,	1,	"GL_UNIFORM_BUFFER_BINDING"),	# 0x8A28
-    ("glGet",	I,	1,	"GL_UNIFORM_BUFFER_START"),	# 0x8A29
-    ("glGet",	I,	1,	"GL_UNIFORM_BUFFER_SIZE"),	# 0x8A2A
+    ("glGet,glGet_i",	I,	1,	"GL_UNIFORM_BUFFER_BINDING"),	# 0x8A28
+    ("glGet_i",	I,	1,	"GL_UNIFORM_BUFFER_START"),	# 0x8A29
+    ("glGet_i",	I,	1,	"GL_UNIFORM_BUFFER_SIZE"),	# 0x8A2A
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNIFORM_BLOCKS"),	# 0x8A2B
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_UNIFORM_BLOCKS"),	# 0x8A2C
     ("glGet",	I,	1,	"GL_MAX_FRAGMENT_UNIFORM_BLOCKS"),	# 0x8A2D
@@ -2342,7 +2364,7 @@ parameters = [
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER"),	# 0x8A44
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x8A45
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x8A46
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
     ("",	X,	1,	"GL_DECODE_EXT"),	# 0x8A49
     ("",	X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
     ("",	X,	1,	"GL_PROGRAM_PIPELINE_OBJECT_EXT"),	# 0x8A4F
@@ -2419,14 +2441,14 @@ parameters = [
     ("glGet",	E,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
     ("",	X,	1,	"GL_POINT_SIZE_ARRAY_OES"),	# 0x8B9C
     ("glGetTexParameter",	I,	4,	"GL_TEXTURE_CROP_RECT_OES"),	# 0x8B9D
-    ("",	X,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
-    ("",	X,	1,	"GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9F
+    ("glGet",	I,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
+    ("",	I,	1,	"GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9F
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_POSITION_MESA"),	# 0x8BB0
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_CALLBACK_MESA"),	# 0x8BB1
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_CALLBACK_FUNC_MESA"),	# 0x8BB2
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_CALLBACK_DATA_MESA"),	# 0x8BB3
-    #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_MESA"),	# 0x8BB4
     #("",	X,	1,	"GL_VERTEX_PROGRAM_POSITION_MESA"),	# 0x8BB4
+    #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_MESA"),	# 0x8BB5
     #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_FUNC_MESA"),	# 0x8BB6
     #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_DATA_MESA"),	# 0x8BB7
     ("",	X,	1,	"GL_COUNTER_TYPE_AMD"),	# 0x8BC0
@@ -2447,6 +2469,7 @@ parameters = [
     #("",	X,	1,	"GL_TEXTURE_TARGET_QCOM"),	# 0x8BDA
     #("",	X,	1,	"GL_TEXTURE_OBJECT_VALID_QCOM"),	# 0x8BDB
     #("",	X,	1,	"GL_STATE_RESTORE"),	# 0x8BDC
+    ("",	X,	1,	"GL_SAMPLER_EXTERNAL_2D_Y2Y_EXT"),	# 0x8BE7
     #("",	X,	1,	"GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG"),	# 0x8C00
     #("",	X,	1,	"GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG"),	# 0x8C01
     #("",	X,	1,	"GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG"),	# 0x8C02
@@ -2466,9 +2489,9 @@ parameters = [
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTENSITY_TYPE"),	# 0x8C15
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_DEPTH_TYPE"),	# 0x8C16
     ("",	X,	1,	"GL_UNSIGNED_NORMALIZED"),	# 0x8C17
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_1D_ARRAY"),	# 0x8C18
+    ("",	B,	1,	"GL_TEXTURE_1D_ARRAY"),	# 0x8C18
     ("",	X,	1,	"GL_PROXY_TEXTURE_1D_ARRAY"),	# 0x8C19
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_2D_ARRAY"),	# 0x8C1A
+    ("",	B,	1,	"GL_TEXTURE_2D_ARRAY"),	# 0x8C1A
     ("",	X,	1,	"GL_PROXY_TEXTURE_2D_ARRAY"),	# 0x8C1B
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_1D_ARRAY"),	# 0x8C1C
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_2D_ARRAY"),	# 0x8C1D
@@ -2482,8 +2505,8 @@ parameters = [
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BUFFER_DATA_STORE_BINDING"),	# 0x8C2D
     ("glGet_texture",	E,	1,	"GL_TEXTURE_BUFFER_FORMAT_ARB"),	# 0x8C2E
     ("",	B,	1,	"GL_ANY_SAMPLES_PASSED"),	# 0x8C2F
-    ("",	X,	1,	"GL_SAMPLE_SHADING"),	# 0x8C36
-    ("",	X,	1,	"GL_MIN_SAMPLE_SHADING_VALUE"),	# 0x8C37
+    ("glGet",	B,	1,	"GL_SAMPLE_SHADING"),	# 0x8C36
+    ("glGet",	F,	1,	"GL_MIN_SAMPLE_SHADING_VALUE"),	# 0x8C37
     ("",	X,	1,	"GL_R11F_G11F_B10F"),	# 0x8C3A
     ("",	X,	1,	"GL_UNSIGNED_INT_10F_11F_11F_REV"),	# 0x8C3B
     ("",	X,	1,	"GL_RGBA_SIGNED_COMPONENTS_EXT"),	# 0x8C3C
@@ -2526,8 +2549,8 @@ parameters = [
     ("",	X,	1,	"GL_ACTIVE_VARYINGS_NV"),	# 0x8C81
     ("",	X,	1,	"GL_ACTIVE_VARYING_MAX_LENGTH_NV"),	# 0x8C82
     ("glGetProgram",	I,	1,	"GL_TRANSFORM_FEEDBACK_VARYINGS"),	# 0x8C83
-    ("",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_START"),	# 0x8C84
-    ("",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_SIZE"),	# 0x8C85
+    ("glGet_i",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_START"),	# 0x8C84
+    ("glGet_i",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_SIZE"),	# 0x8C85
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_RECORD_NV"),	# 0x8C86
     ("",	X,	1,	"GL_PRIMITIVES_GENERATED"),	# 0x8C87
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN"),	# 0x8C88
@@ -2537,7 +2560,7 @@ parameters = [
     ("",	X,	1,	"GL_INTERLEAVED_ATTRIBS"),	# 0x8C8C
     ("",	X,	1,	"GL_SEPARATE_ATTRIBS"),	# 0x8C8D
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER"),	# 0x8C8E
-    ("glGet",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_BINDING"),	# 0x8C8F
+    ("glGet,glGet_i",	I,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_BINDING"),	# 0x8C8F
     ("",	X,	1,	"GL_ATC_RGB_AMD"),	# 0x8C92
     ("",	X,	1,	"GL_ATC_RGBA_EXPLICIT_ALPHA_AMD"),	# 0x8C93
     ("glGet",	E,	1,	"GL_POINT_SPRITE_COORD_ORIGIN"),	# 0x8CA0
@@ -2584,6 +2607,22 @@ parameters = [
     ("",	X,	1,	"GL_COLOR_ATTACHMENT13"),	# 0x8CED
     ("",	X,	1,	"GL_COLOR_ATTACHMENT14"),	# 0x8CEE
     ("",	X,	1,	"GL_COLOR_ATTACHMENT15"),	# 0x8CEF
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT16"),	# 0x8CF0
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT17"),	# 0x8CF1
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT18"),	# 0x8CF2
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT19"),	# 0x8CF3
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT20"),	# 0x8CF4
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT21"),	# 0x8CF5
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT22"),	# 0x8CF6
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT23"),	# 0x8CF7
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT24"),	# 0x8CF8
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT25"),	# 0x8CF9
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT26"),	# 0x8CFA
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT27"),	# 0x8CFB
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT28"),	# 0x8CFC
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT29"),	# 0x8CFD
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT30"),	# 0x8CFE
+    ("",	X,	1,	"GL_COLOR_ATTACHMENT31"),	# 0x8CFF
     ("",	X,	1,	"GL_DEPTH_ATTACHMENT"),	# 0x8D00
     ("",	X,	1,	"GL_STENCIL_ATTACHMENT"),	# 0x8D20
     ("",	X,	1,	"GL_FRAMEBUFFER"),	# 0x8D40
@@ -2605,7 +2644,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_SAMPLES"),	# 0x8D57
     ("",	X,	1,	"GL_TEXTURE_GEN_STR_OES"),	# 0x8D60
     ("",	X,	1,	"GL_HALF_FLOAT_OES"),	# 0x8D61
-    ("",	X,	1,	"GL_RGB565_OES"),	# 0x8D62
+    ("",	X,	1,	"GL_RGB565"),	# 0x8D62
     ("",	X,	1,	"GL_ETC1_RGB8_OES"),	# 0x8D64
     ("",	X,	1,	"GL_TEXTURE_EXTERNAL_OES"),	# 0x8D65
     ("",	X,	1,	"GL_SAMPLER_EXTERNAL_OES"),	# 0x8D66
@@ -2663,13 +2702,13 @@ parameters = [
     ("",	X,	1,	"GL_LUMINANCE_ALPHA_INTEGER_EXT"),	# 0x8D9D
     ("glGet",	B,	1,	"GL_RGBA_INTEGER_MODE_EXT"),	# 0x8D9E
     ("",	X,	1,	"GL_INT_2_10_10_10_REV"),	# 0x8D9F
-    ("",	X,	1,	"GL_MAX_PROGRAM_PARAMETER_BUFFER_BINDINGS_NV"),	# 0x8DA0
-    ("",	X,	1,	"GL_MAX_PROGRAM_PARAMETER_BUFFER_SIZE_NV"),	# 0x8DA1
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_PARAMETER_BUFFER_BINDINGS_NV"),	# 0x8DA0
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_PARAMETER_BUFFER_SIZE_NV"),	# 0x8DA1
     ("",	X,	1,	"GL_VERTEX_PROGRAM_PARAMETER_BUFFER_NV"),	# 0x8DA2
     ("",	X,	1,	"GL_GEOMETRY_PROGRAM_PARAMETER_BUFFER_NV"),	# 0x8DA3
     ("",	X,	1,	"GL_FRAGMENT_PROGRAM_PARAMETER_BUFFER_NV"),	# 0x8DA4
-    ("",	X,	1,	"GL_MAX_PROGRAM_GENERIC_ATTRIBS_NV"),	# 0x8DA5
-    ("",	X,	1,	"GL_MAX_PROGRAM_GENERIC_RESULTS_NV"),	# 0x8DA6
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_GENERIC_ATTRIBS_NV"),	# 0x8DA5
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_GENERIC_RESULTS_NV"),	# 0x8DA6
     ("glGetFramebufferAttachmentParameter",	B,	1,	"GL_FRAMEBUFFER_ATTACHMENT_LAYERED"),	# 0x8DA7
     ("",	X,	1,	"GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"),	# 0x8DA8
     ("",	X,	1,	"GL_FRAMEBUFFER_INCOMPLETE_LAYER_COUNT_ARB"),	# 0x8DA9
@@ -2719,14 +2758,14 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_UNIFORM_COMPONENTS"),	# 0x8DDF
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_OUTPUT_VERTICES"),	# 0x8DE0
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS"),	# 0x8DE1
-    ("",	X,	1,	"GL_MAX_VERTEX_BINDABLE_UNIFORMS_EXT"),	# 0x8DE2
-    ("",	X,	1,	"GL_MAX_FRAGMENT_BINDABLE_UNIFORMS_EXT"),	# 0x8DE3
-    ("",	X,	1,	"GL_MAX_GEOMETRY_BINDABLE_UNIFORMS_EXT"),	# 0x8DE4
-    ("",	X,	1,	"GL_ACTIVE_SUBROUTINES"),	# 0x8DE5
-    ("",	X,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORMS"),	# 0x8DE6
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_BINDABLE_UNIFORMS_EXT"),	# 0x8DE2
+    ("glGet",	I,	1,	"GL_MAX_FRAGMENT_BINDABLE_UNIFORMS_EXT"),	# 0x8DE3
+    ("glGet",	I,	1,	"GL_MAX_GEOMETRY_BINDABLE_UNIFORMS_EXT"),	# 0x8DE4
+    ("",	I,	1,	"GL_ACTIVE_SUBROUTINES"),	# 0x8DE5
+    ("",	I,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORMS"),	# 0x8DE6
     ("glGet",	I,	1,	"GL_MAX_SUBROUTINES"),	# 0x8DE7
     ("glGet",	I,	1,	"GL_MAX_SUBROUTINE_UNIFORM_LOCATIONS"),	# 0x8DE8
-    ("glGetNamedString",	X,	1,	"GL_NAMED_STRING_LENGTH_ARB"),	# 0x8DE9
+    ("glGetNamedString",	I,	1,	"GL_NAMED_STRING_LENGTH_ARB"),	# 0x8DE9
     ("glGetNamedString",	E,	1,	"GL_NAMED_STRING_TYPE_ARB"),	# 0x8DEA
     ("glGet",	I,	1,	"GL_MAX_BINDABLE_UNIFORM_SIZE_EXT"),	# 0x8DED
     ("",	X,	1,	"GL_UNIFORM_BUFFER_EXT"),	# 0x8DEE
@@ -2746,12 +2785,17 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_VARYING_VECTORS"),	# 0x8DFC
     ("glGet",	I,	1,	"GL_MAX_FRAGMENT_UNIFORM_VECTORS"),	# 0x8DFD
     ("",	X,	1,	"GL_RENDERBUFFER_COLOR_SAMPLES_NV"),	# 0x8E10
-    ("",	X,	1,	"GL_MAX_MULTISAMPLE_COVERAGE_MODES_NV"),	# 0x8E11
+    ("glGet",	I,	1,	"GL_MAX_MULTISAMPLE_COVERAGE_MODES_NV"),	# 0x8E11
     ("",	X,	1,	"GL_MULTISAMPLE_COVERAGE_MODES_NV"),	# 0x8E12
     ("",	X,	1,	"GL_QUERY_WAIT"),	# 0x8E13
     ("",	X,	1,	"GL_QUERY_NO_WAIT"),	# 0x8E14
     ("",	X,	1,	"GL_QUERY_BY_REGION_WAIT"),	# 0x8E15
     ("",	X,	1,	"GL_QUERY_BY_REGION_NO_WAIT"),	# 0x8E16
+    ("",	X,	1,	"GL_QUERY_WAIT_INVERTED"),	# 0x8E17
+    ("",	X,	1,	"GL_QUERY_NO_WAIT_INVERTED"),	# 0x8E18
+    ("",	X,	1,	"GL_QUERY_BY_REGION_WAIT_INVERTED"),	# 0x8E19
+    ("",	X,	1,	"GL_QUERY_BY_REGION_NO_WAIT_INVERTED"),	# 0x8E1A
+    ("",	X,	1,	"GL_POLYGON_OFFSET_CLAMP_EXT"),	# 0x8E1B
     ("glGet",	I,	1,	"GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS"),	# 0x8E1E
     ("glGet",	I,	1,	"GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS"),	# 0x8E1F
     ("",	X,	1,	"GL_COLOR_SAMPLES_NV"),	# 0x8E20
@@ -2761,7 +2805,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_TRANSFORM_FEEDBACK_BINDING"),	# 0x8E25
     ("",	X,	1,	"GL_FRAME_NV"),	# 0x8E26
     ("",	X,	1,	"GL_FIELDS_NV"),	# 0x8E27
-    ("",	X,	1,	"GL_TIMESTAMP"),	# 0x8E28
+    ("_glGet",	I64,	1,	"GL_TIMESTAMP"),	# 0x8E28
     ("",	X,	1,	"GL_NUM_FILL_STREAMS_NV"),	# 0x8E29
     ("",	X,	1,	"GL_PRESENT_TIME_NV"),	# 0x8E2A
     ("",	X,	1,	"GL_PRESENT_DURATION_NV"),	# 0x8E2B
@@ -2774,16 +2818,16 @@ parameters = [
     ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_B"),	# 0x8E44
     ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_A"),	# 0x8E45
     ("glGetTexParameter",	E,	4,	"GL_TEXTURE_SWIZZLE_RGBA"),	# 0x8E46
-    ("",	X,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS"),	# 0x8E47
-    ("",	X,	1,	"GL_ACTIVE_SUBROUTINE_MAX_LENGTH"),	# 0x8E48
-    ("",	X,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_MAX_LENGTH"),	# 0x8E49
+    ("",	I,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS"),	# 0x8E47
+    ("",	I,	1,	"GL_ACTIVE_SUBROUTINE_MAX_LENGTH"),	# 0x8E48
+    ("",	I,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_MAX_LENGTH"),	# 0x8E49
     ("",	I,	1,	"GL_NUM_COMPATIBLE_SUBROUTINES"),	# 0x8E4A
     ("",	I,	1,	"GL_COMPATIBLE_SUBROUTINES"),	# 0x8E4B
     ("glGet",	B,	1,	"GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION"),	# 0x8E4C
     ("",	X,	1,	"GL_FIRST_VERTEX_CONVENTION"),	# 0x8E4D
     ("",	X,	1,	"GL_LAST_VERTEX_CONVENTION"),	# 0x8E4E
     ("glGet",	E,	1,	"GL_PROVOKING_VERTEX"),	# 0x8E4F
-    ("glGetMultisample",	I,	1,	"GL_SAMPLE_POSITION"),	# 0x8E50
+    ("glGetMultisample",	F,	2,	"GL_SAMPLE_POSITION"),	# 0x8E50
     ("glGet",	B,	1,	"GL_SAMPLE_MASK"),	# 0x8E51
     ("glGet",	I,	1,	"GL_SAMPLE_MASK_VALUE"),	# 0x8E52
     ("",	X,	1,	"GL_TEXTURE_BINDING_RENDERBUFFER_NV"),	# 0x8E53
@@ -2793,22 +2837,22 @@ parameters = [
     ("",	X,	1,	"GL_INT_SAMPLER_RENDERBUFFER_NV"),	# 0x8E57
     ("",	X,	1,	"GL_UNSIGNED_INT_SAMPLER_RENDERBUFFER_NV"),	# 0x8E58
     ("glGet",	I,	1,	"GL_MAX_SAMPLE_MASK_WORDS"),	# 0x8E59
-    ("",	X,	1,	"GL_MAX_GEOMETRY_SHADER_INVOCATIONS"),	# 0x8E5A
+    ("glGet",	I,	1,	"GL_MAX_GEOMETRY_SHADER_INVOCATIONS"),	# 0x8E5A
     ("glGet",	F,	1,	"GL_MIN_FRAGMENT_INTERPOLATION_OFFSET"),	# 0x8E5B
     ("glGet",	F,	1,	"GL_MAX_FRAGMENT_INTERPOLATION_OFFSET"),	# 0x8E5C
     ("glGet",	I,	1,	"GL_FRAGMENT_INTERPOLATION_OFFSET_BITS"),	# 0x8E5D
-    ("",	X,	1,	"GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET"),	# 0x8E5E
-    ("",	X,	1,	"GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET"),	# 0x8E5F
+    ("glGet",	I,	1,	"GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET"),	# 0x8E5E
+    ("glGet",	I,	1,	"GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET"),	# 0x8E5F
     ("glGet",	I,	1,	"GL_MAX_TRANSFORM_FEEDBACK_BUFFERS"),	# 0x8E70
     ("glGet",	I,	1,	"GL_MAX_VERTEX_STREAMS"),	# 0x8E71
     ("glGet",	I,	1,	"GL_PATCH_VERTICES"),	# 0x8E72
     ("glGet",	F,	2,	"GL_PATCH_DEFAULT_INNER_LEVEL"),	# 0x8E73
     ("glGet",	F,	4,	"GL_PATCH_DEFAULT_OUTER_LEVEL"),	# 0x8E74
-    ("glGet",	X,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
-    ("glGet",	E,	1,	"GL_TESS_GEN_MODE"),	# 0x8E76
-    ("glGet",	E,	1,	"GL_TESS_GEN_SPACING"),	# 0x8E77
-    ("glGet",	E,	1,	"GL_TESS_GEN_VERTEX_ORDER"),	# 0x8E78
-    ("glGet",	E,	1,	"GL_TESS_GEN_POINT_MODE"),	# 0x8E79
+    ("glGetProgram",	I,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_MODE"),	# 0x8E76
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_SPACING"),	# 0x8E77
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_VERTEX_ORDER"),	# 0x8E78
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_POINT_MODE"),	# 0x8E79
     ("",	X,	1,	"GL_ISOLINES"),	# 0x8E7A
     ("",	X,	1,	"GL_FRACTIONAL_ODD"),	# 0x8E7B
     ("",	X,	1,	"GL_FRACTIONAL_EVEN"),	# 0x8E7C
@@ -2826,10 +2870,10 @@ parameters = [
     ("glGetProgramPipeline",	I,	1,	"GL_TESS_CONTROL_SHADER"),	# 0x8E88
     ("glGet",	I,	1,	"GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS"),	# 0x8E89
     ("glGet",	I,	1,	"GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS"),	# 0x8E8A
-    ("",	X,	1,	"GL_COMPRESSED_RGBA_BPTC_UNORM_ARB"),	# 0x8E8C
-    ("",	X,	1,	"GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB"),	# 0x8E8D
-    ("",	X,	1,	"GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB"),	# 0x8E8E
-    ("",	X,	1,	"GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB"),	# 0x8E8F
+    ("",	X,	1,	"GL_COMPRESSED_RGBA_BPTC_UNORM"),	# 0x8E8C
+    ("",	X,	1,	"GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM"),	# 0x8E8D
+    ("",	X,	1,	"GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT"),	# 0x8E8E
+    ("",	X,	1,	"GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT"),	# 0x8E8F
     #("",	X,	1,	"GL_COVERAGE_COMPONENT_NV"),	# 0x8ED0
     #("",	X,	1,	"GL_COVERAGE_COMPONENT4_NV"),	# 0x8ED1
     #("",	X,	1,	"GL_COVERAGE_ATTACHMENT_NV"),	# 0x8ED2
@@ -2838,7 +2882,7 @@ parameters = [
     #("",	X,	1,	"GL_COVERAGE_ALL_FRAGMENTS_NV"),	# 0x8ED5
     #("",	X,	1,	"GL_COVERAGE_EDGE_FRAGMENTS_NV"),	# 0x8ED6
     #("",	X,	1,	"GL_COVERAGE_AUTOMATIC_NV"),	# 0x8ED7
-    ("GetBufferParameter",	I64,	1,	"GL_BUFFER_GPU_ADDRESS_NV"),	# 0x8F1D
+    ("_glGetBufferParameter",	I64,	1,	"GL_BUFFER_GPU_ADDRESS_NV"),	# 0x8F1D
     ("",	X,	1,	"GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV"),	# 0x8F1E
     ("",	X,	1,	"GL_ELEMENT_ARRAY_UNIFIED_NV"),	# 0x8F1F
     ("",	X,	1,	"GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV"),	# 0x8F20
@@ -2862,7 +2906,7 @@ parameters = [
     ("",	X,	1,	"GL_FOG_COORD_ARRAY_LENGTH_NV"),	# 0x8F32
     ("",	X,	1,	"GL_ELEMENT_ARRAY_LENGTH_NV"),	# 0x8F33
     ("",	X,	1,	"GL_GPU_ADDRESS_NV"),	# 0x8F34
-    ("",	X,	1,	"GL_MAX_SHADER_BUFFER_ADDRESS_NV"),	# 0x8F35
+    ("_glGet",	I64,	1,	"GL_MAX_SHADER_BUFFER_ADDRESS_NV"),	# 0x8F35
     ("glGet",	I,	1,	"GL_COPY_READ_BUFFER"),	# 0x8F36
     ("glGet",	I,	1,	"GL_COPY_WRITE_BUFFER"),	# 0x8F37
     ("glGet",	I,	1,	"GL_MAX_IMAGE_UNITS"),	# 0x8F38
@@ -2888,7 +2932,14 @@ parameters = [
     ("",	X,	1,	"GL_DOUBLE_MAT3x4"),	# 0x8F4C
     ("",	X,	1,	"GL_DOUBLE_MAT4x2"),	# 0x8F4D
     ("",	X,	1,	"GL_DOUBLE_MAT4x3"),	# 0x8F4E
+    ("",	X,	1,	"GL_VERTEX_BINDING_BUFFER"),	# 0x8F4F
     ("",	X,	1,	"GL_MALI_SHADER_BINARY_ARM"),	# 0x8F60
+    ("",	X,	1,	"GL_MALI_PROGRAM_BINARY_ARM"),	# 0x8F61
+    ("",	X,	1,	"GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_FAST_SIZE_EXT"),	# 0x8F63
+    ("",	X,	1,	"GL_SHADER_PIXEL_LOCAL_STORAGE_EXT"),	# 0x8F64
+    ("",	X,	1,	"GL_FETCH_PER_SAMPLE_ARM"),	# 0x8F65
+    ("",	X,	1,	"GL_FRAGMENT_SHADER_FRAMEBUFFER_FETCH_MRT_ARM"),	# 0x8F66
+    ("",	X,	1,	"GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_SIZE_EXT"),	# 0x8F67
     ("",	X,	1,	"GL_RED_SNORM"),	# 0x8F90
     ("",	X,	1,	"GL_RG_SNORM"),	# 0x8F91
     ("",	X,	1,	"GL_RGB_SNORM"),	# 0x8F92
@@ -2904,13 +2955,15 @@ parameters = [
     ("",	X,	1,	"GL_SIGNED_NORMALIZED"),	# 0x8F9C
     ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART"),	# 0x8F9D
     ("glGet",	I,	1,	"GL_PRIMITIVE_RESTART_INDEX"),	# 0x8F9E
-    ("",	X,	1,	"GL_MAX_PROGRAM_TEXTURE_GATHER_COMPONENTS_ARB"),	# 0x8F9F
+    ("glGet",	I,	1,	"GL_MAX_PROGRAM_TEXTURE_GATHER_COMPONENTS_ARB"),	# 0x8F9F
     ("",	X,	1,	"GL_PERFMON_GLOBAL_MODE_QCOM"),	# 0x8FA0
     ("",	X,	1,	"GL_BINNING_CONTROL_HINT_QCOM"),	# 0x8FB0
     ("",	X,	1,	"GL_CPU_OPTIMIZED_QCOM"),	# 0x8FB1
     ("",	X,	1,	"GL_GPU_OPTIMIZED_QCOM"),	# 0x8FB2
     ("",	X,	1,	"GL_RENDER_DIRECT_TO_FRAMEBUFFER_QCOM"),	# 0x8FB3
     ("",	X,	1,	"GL_GPU_DISJOINT_EXT"),	# 0x8FBB
+    ("",	X,	1,	"GL_SR8_EXT"),	# 0x8FBD
+    ("",	X,	1,	"GL_SRG8_EXT"),	# 0x8FBE
     ("",	X,	1,	"GL_SHADER_BINARY_VIV"),	# 0x8FC4
     ("",	X,	1,	"GL_INT8_NV"),	# 0x8FE0
     ("",	X,	1,	"GL_INT8_VEC2_NV"),	# 0x8FE1
@@ -2920,9 +2973,9 @@ parameters = [
     ("",	X,	1,	"GL_INT16_VEC2_NV"),	# 0x8FE5
     ("",	X,	1,	"GL_INT16_VEC3_NV"),	# 0x8FE6
     ("",	X,	1,	"GL_INT16_VEC4_NV"),	# 0x8FE7
-    ("",	X,	1,	"GL_INT64_VEC2_NV"),	# 0x8FE9
-    ("",	X,	1,	"GL_INT64_VEC3_NV"),	# 0x8FEA
-    ("",	X,	1,	"GL_INT64_VEC4_NV"),	# 0x8FEB
+    ("",	X,	1,	"GL_INT64_VEC2_ARB"),	# 0x8FE9
+    ("",	X,	1,	"GL_INT64_VEC3_ARB"),	# 0x8FEA
+    ("",	X,	1,	"GL_INT64_VEC4_ARB"),	# 0x8FEB
     ("",	X,	1,	"GL_UNSIGNED_INT8_NV"),	# 0x8FEC
     ("",	X,	1,	"GL_UNSIGNED_INT8_VEC2_NV"),	# 0x8FED
     ("",	X,	1,	"GL_UNSIGNED_INT8_VEC3_NV"),	# 0x8FEE
@@ -2931,9 +2984,9 @@ parameters = [
     ("",	X,	1,	"GL_UNSIGNED_INT16_VEC2_NV"),	# 0x8FF1
     ("",	X,	1,	"GL_UNSIGNED_INT16_VEC3_NV"),	# 0x8FF2
     ("",	X,	1,	"GL_UNSIGNED_INT16_VEC4_NV"),	# 0x8FF3
-    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC2_NV"),	# 0x8FF5
-    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC3_NV"),	# 0x8FF6
-    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC4_NV"),	# 0x8FF7
+    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC2_ARB"),	# 0x8FF5
+    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC3_ARB"),	# 0x8FF6
+    ("",	X,	1,	"GL_UNSIGNED_INT64_VEC4_ARB"),	# 0x8FF7
     ("",	X,	1,	"GL_FLOAT16_NV"),	# 0x8FF8
     ("",	X,	1,	"GL_FLOAT16_VEC2_NV"),	# 0x8FF9
     ("",	X,	1,	"GL_FLOAT16_VEC3_NV"),	# 0x8FFA
@@ -2948,7 +3001,7 @@ parameters = [
     ("",	X,	1,	"GL_TESSELLATION_FACTOR_AMD"),	# 0x9005
     ("",	X,	1,	"GL_DISCRETE_AMD"),	# 0x9006
     ("",	X,	1,	"GL_CONTINUOUS_AMD"),	# 0x9007
-    ("glGet_texture",	B,	1,	"GL_TEXTURE_CUBE_MAP_ARRAY"),	# 0x9009
+    ("",	B,	1,	"GL_TEXTURE_CUBE_MAP_ARRAY"),	# 0x9009
     ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP_ARRAY"),	# 0x900A
     ("",	X,	1,	"GL_PROXY_TEXTURE_CUBE_MAP_ARRAY"),	# 0x900B
     ("",	X,	1,	"GL_SAMPLER_CUBE_MAP_ARRAY"),	# 0x900C
@@ -3118,7 +3171,7 @@ parameters = [
     ("",	X,	1,	"GL_PATH_STENCIL_VALUE_MASK_NV"),	# 0x90B9
     ("",	X,	1,	"GL_SCALED_RESOLVE_FASTEST_EXT"),	# 0x90BA
     ("",	X,	1,	"GL_SCALED_RESOLVE_NICEST_EXT"),	# 0x90BB
-    ("",	X,	1,	"GL_MIN_MAP_BUFFER_ALIGNMENT"),	# 0x90BC
+    ("glGet",	I,	1,	"GL_MIN_MAP_BUFFER_ALIGNMENT"),	# 0x90BC
     ("",	X,	1,	"GL_PATH_STENCIL_DEPTH_OFFSET_FACTOR_NV"),	# 0x90BD
     ("",	X,	1,	"GL_PATH_STENCIL_DEPTH_OFFSET_UNITS_NV"),	# 0x90BE
     ("",	X,	1,	"GL_PATH_COVER_DEPTH_FUNC_NV"),	# 0x90BF
@@ -3134,9 +3187,9 @@ parameters = [
     ("",	X,	1,	"GL_MAX_DEEP_3D_TEXTURE_WIDTH_HEIGHT_NV"),	# 0x90D0
     ("",	X,	1,	"GL_MAX_DEEP_3D_TEXTURE_DEPTH_NV"),	# 0x90D1
     ("",	I,	1,	"GL_SHADER_STORAGE_BUFFER"),	# 0x90D2
-    ("",	I,	1,	"GL_SHADER_STORAGE_BUFFER_BINDING"),	# 0x90D3
-    ("",	I,	1,	"GL_SHADER_STORAGE_BUFFER_START"),	# 0x90D4
-    ("",	I,	1,	"GL_SHADER_STORAGE_BUFFER_SIZE"),	# 0x90D5
+    ("glGet,glGet_i",	I,	1,	"GL_SHADER_STORAGE_BUFFER_BINDING"),	# 0x90D3
+    ("glGet_i",	I,	1,	"GL_SHADER_STORAGE_BUFFER_START"),	# 0x90D4
+    ("glGet_i",	I,	1,	"GL_SHADER_STORAGE_BUFFER_SIZE"),	# 0x90D5
     ("",	I,	1,	"GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS"),	# 0x90D6
     ("",	I,	1,	"GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS"),	# 0x90D7
     ("",	I,	1,	"GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS"),	# 0x90D8
@@ -3157,7 +3210,7 @@ parameters = [
     ("",	X,	1,	"GL_COLOR_ATTACHMENT_EXT"),	# 0x90F0
     ("",	X,	1,	"GL_MULTIVIEW_EXT"),	# 0x90F1
     ("",	X,	1,	"GL_MAX_MULTIVIEW_BUFFERS_EXT"),	# 0x90F2
-    ("",	X,	1,	"GL_CONTEXT_ROBUST_ACCESS_EXT"),	# 0x90F3
+    ("",	X,	1,	"GL_CONTEXT_ROBUST_ACCESS"),	# 0x90F3
     ("",	X,	1,	"GL_COMPUTE_PROGRAM_NV"),	# 0x90FB
     ("",	X,	1,	"GL_COMPUTE_PROGRAM_PARAMETER_BUFFER_NV"),	# 0x90FC
     ("",	X,	1,	"GL_TEXTURE_2D_MULTISAMPLE"),	# 0x9100
@@ -3214,6 +3267,13 @@ parameters = [
     ("",	I,	1,	"GL_TEXTURE_SAMPLES_IMG"),	# 0x9136
     ("",	X,	1,	"GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG"),	# 0x9137
     ("",	X,	1,	"GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG"),	# 0x9138
+    ("",	X,	1,	"GL_CUBIC_IMG"),	# 0x9139
+    ("",	X,	1,	"GL_CUBIC_MIPMAP_NEAREST_IMG"),	# 0x913A
+    ("",	X,	1,	"GL_CUBIC_MIPMAP_LINEAR_IMG"),	# 0x913B
+    ("",	X,	1,	"GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_AND_DOWNSAMPLE_IMG"),	# 0x913C
+    ("",	X,	1,	"GL_NUM_DOWNSAMPLE_SCALES_IMG"),	# 0x913D
+    ("",	X,	1,	"GL_DOWNSAMPLE_SCALES_IMG"),	# 0x913E
+    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_SCALE_IMG"),	# 0x913F
     ("glGet",	I,	1,	"GL_MAX_DEBUG_MESSAGE_LENGTH"),	# 0x9143
     ("glGet",	I,	1,	"GL_MAX_DEBUG_LOGGED_MESSAGES"),	# 0x9144
     ("glGet",	I,	1,	"GL_DEBUG_LOGGED_MESSAGES"),	# 0x9145
@@ -3235,25 +3295,29 @@ parameters = [
     ("",	X,	1,	"GL_SAMPLER_OBJECT_AMD"),	# 0x9155
     ("",	X,	1,	"GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD"),	# 0x9160
     ("",	X,	1,	"GL_QUERY_BUFFER"),	# 0x9192
-    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING"),	# 0x9193
-    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT"),	# 0x9194
-    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_X_AMD"),	# 0x9195
-    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Y_AMD"),	# 0x9196
-    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Z_AMD"),	# 0x9197
-    ("",	X,	1,	"GL_MAX_SPARSE_TEXTURE_SIZE_AMD"),	# 0x9198
-    ("",	X,	1,	"GL_MAX_SPARSE_3D_TEXTURE_SIZE_AMD"),	# 0x9199
-    ("",	X,	1,	"GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS"),	# 0x919A
+    ("glGet",	I,	1,	"GL_QUERY_BUFFER_BINDING"),	# 0x9193
+    ("glGetQueryObject",	I,	1,	"GL_QUERY_RESULT_NO_WAIT"),	# 0x9194
+    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_X_ARB"),	# 0x9195
+    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Y_ARB"),	# 0x9196
+    ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Z_ARB"),	# 0x9197
+    ("glGet",	I,	1,	"GL_MAX_SPARSE_TEXTURE_SIZE_ARB"),	# 0x9198
+    ("glGet",	I,	1,	"GL_MAX_SPARSE_3D_TEXTURE_SIZE_ARB"),	# 0x9199
+    ("glGet",	I,	1,	"GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS"),	# 0x919A
     ("",	X,	1,	"GL_MIN_SPARSE_LEVEL_AMD"),	# 0x919B
     ("",	X,	1,	"GL_MIN_LOD_WARNING_AMD"),	# 0x919C
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET"),	# 0x919D
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_SIZE"),	# 0x919E
     ("glGet",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT"),	# 0x919F
+    ("",	X,	1,	"GL_STREAM_RASTERIZATION_AMD"),	# 0x91A0
     ("",	X,	1,	"GL_VERTEX_ELEMENT_SWIZZLE_AMD"),	# 0x91A4
     ("",	X,	1,	"GL_VERTEX_ID_SWIZZLE_AMD"),	# 0x91A5
     ("",	X,	1,	"GL_TEXTURE_SPARSE_ARB"),	# 0x91A6
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_INDEX_ARB"),	# 0x91A7
     ("",	X,	1,	"GL_NUM_VIRTUAL_PAGE_SIZES_ARB"),	# 0x91A8
-    ("",	X,	1,	"GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_ARB"),	# 0x91A9
+    ("glGet",	B,	1,	"GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_ARB"),	# 0x91A9
+    ("",	X,	1,	"GL_NUM_SPARSE_LEVELS_ARB"),	# 0x91AA
+    ("glGet",	I,	1,	"GL_MAX_SHADER_COMPILER_THREADS_ARB"),	# 0x91B0
+    ("glGetProgram,glGetShader",	B,	1,	"GL_COMPLETION_STATUS_ARB"),	# 0x91B1
     ("glGetProgramPipeline",	I,	1,	"GL_COMPUTE_SHADER"),	# 0x91B9
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_UNIFORM_BLOCKS"),	# 0x91BB
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS"),	# 0x91BC
@@ -3266,6 +3330,9 @@ parameters = [
     #("",	X,	1,	"GL_UNPACK_COLORSPACE_CONVERSION_WEBGL"),	# 0x9243
     #("",	X,	1,	"GL_BROWSER_DEFAULT_WEBGL"),	# 0x9244
     ("",	X,	1,	"GL_SHADER_BINARY_DMP"),	# 0x9250
+    ("",	X,	1,	"GL_SMAPHS30_PROGRAM_BINARY_DMP"),	# 0x9251
+    ("",	X,	1,	"GL_SMAPHS_PROGRAM_BINARY_DMP"),	# 0x9252
+    ("",	X,	1,	"GL_DMP_PROGRAM_BINARY_DMP"),	# 0x9253
     #("",	X,	1,	"GL_GCCSO_SHADER_BINARY_FJ"),	# 0x9260
     ("",	X,	1,	"GL_COMPRESSED_R11_EAC"),	# 0x9270
     ("",	X,	1,	"GL_COMPRESSED_SIGNED_R11_EAC"),	# 0x9271
@@ -3282,7 +3349,7 @@ parameters = [
     ("",	X,	1,	"GL_UNCORRELATED_NV"),	# 0x9282
     ("",	X,	1,	"GL_DISJOINT_NV"),	# 0x9283
     ("",	X,	1,	"GL_CONJOINT_NV"),	# 0x9284
-    ("",	X,	1,	"GL_BLEND_ADVANCED_COHERENT_NV"),	# 0x9285
+    ("",	X,	1,	"GL_BLEND_ADVANCED_COHERENT_KHR"),	# 0x9285
     ("",	X,	1,	"GL_SRC_NV"),	# 0x9286
     ("",	X,	1,	"GL_DST_NV"),	# 0x9287
     ("",	X,	1,	"GL_SRC_OVER_NV"),	# 0x9288
@@ -3295,18 +3362,18 @@ parameters = [
     ("",	X,	1,	"GL_DST_ATOP_NV"),	# 0x928F
     ("",	X,	1,	"GL_PLUS_NV"),	# 0x9291
     ("",	X,	1,	"GL_PLUS_DARKER_NV"),	# 0x9292
-    ("",	X,	1,	"GL_MULTIPLY_NV"),	# 0x9294
-    ("",	X,	1,	"GL_SCREEN_NV"),	# 0x9295
-    ("",	X,	1,	"GL_OVERLAY_NV"),	# 0x9296
-    ("",	X,	1,	"GL_DARKEN_NV"),	# 0x9297
-    ("",	X,	1,	"GL_LIGHTEN_NV"),	# 0x9298
-    ("",	X,	1,	"GL_COLORDODGE_NV"),	# 0x9299
-    ("",	X,	1,	"GL_COLORBURN_NV"),	# 0x929A
-    ("",	X,	1,	"GL_HARDLIGHT_NV"),	# 0x929B
-    ("",	X,	1,	"GL_SOFTLIGHT_NV"),	# 0x929C
-    ("",	X,	1,	"GL_DIFFERENCE_NV"),	# 0x929E
+    ("",	X,	1,	"GL_MULTIPLY_KHR"),	# 0x9294
+    ("",	X,	1,	"GL_SCREEN_KHR"),	# 0x9295
+    ("",	X,	1,	"GL_OVERLAY_KHR"),	# 0x9296
+    ("",	X,	1,	"GL_DARKEN_KHR"),	# 0x9297
+    ("",	X,	1,	"GL_LIGHTEN_KHR"),	# 0x9298
+    ("",	X,	1,	"GL_COLORDODGE_KHR"),	# 0x9299
+    ("",	X,	1,	"GL_COLORBURN_KHR"),	# 0x929A
+    ("",	X,	1,	"GL_HARDLIGHT_KHR"),	# 0x929B
+    ("",	X,	1,	"GL_SOFTLIGHT_KHR"),	# 0x929C
+    ("",	X,	1,	"GL_DIFFERENCE_KHR"),	# 0x929E
     ("",	X,	1,	"GL_MINUS_NV"),	# 0x929F
-    ("",	X,	1,	"GL_EXCLUSION_NV"),	# 0x92A0
+    ("",	X,	1,	"GL_EXCLUSION_KHR"),	# 0x92A0
     ("",	X,	1,	"GL_CONTRAST_NV"),	# 0x92A1
     ("",	X,	1,	"GL_INVERT_RGB_NV"),	# 0x92A3
     ("",	X,	1,	"GL_LINEARDODGE_NV"),	# 0x92A4
@@ -3315,18 +3382,20 @@ parameters = [
     ("",	X,	1,	"GL_LINEARLIGHT_NV"),	# 0x92A7
     ("",	X,	1,	"GL_PINLIGHT_NV"),	# 0x92A8
     ("",	X,	1,	"GL_HARDMIX_NV"),	# 0x92A9
-    ("",	X,	1,	"GL_HSL_HUE_NV"),	# 0x92AD
-    ("",	X,	1,	"GL_HSL_SATURATION_NV"),	# 0x92AE
-    ("",	X,	1,	"GL_HSL_COLOR_NV"),	# 0x92AF
-    ("",	X,	1,	"GL_HSL_LUMINOSITY_NV"),	# 0x92B0
+    ("",	X,	1,	"GL_HSL_HUE_KHR"),	# 0x92AD
+    ("",	X,	1,	"GL_HSL_SATURATION_KHR"),	# 0x92AE
+    ("",	X,	1,	"GL_HSL_COLOR_KHR"),	# 0x92AF
+    ("",	X,	1,	"GL_HSL_LUMINOSITY_KHR"),	# 0x92B0
     ("",	X,	1,	"GL_PLUS_CLAMPED_NV"),	# 0x92B1
     ("",	X,	1,	"GL_PLUS_CLAMPED_ALPHA_NV"),	# 0x92B2
     ("",	X,	1,	"GL_MINUS_CLAMPED_NV"),	# 0x92B3
     ("",	X,	1,	"GL_INVERT_OVG_NV"),	# 0x92B4
+    ("glGet",	F,	8,	"GL_PRIMITIVE_BOUNDING_BOX_EXT"),	# 0x92BE
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER"),	# 0x92C0
-    ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
-    ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_START"),	# 0x92C2
-    ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92C3
+    # FIXME: Causes Mesa to segfault (issue #332).  Disable for now.
+    ("_glGet,_glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
+    ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_START"),	# 0x92C2
+    ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92C3
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_DATA_SIZE"),	# 0x92C4
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_ACTIVE_ATOMIC_COUNTERS"),	# 0x92C5
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_ACTIVE_ATOMIC_COUNTER_INDICES"),	# 0x92C6
@@ -3341,17 +3410,19 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS"),	# 0x92CF
     ("glGet",	I,	1,	"GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS"),	# 0x92D0
     ("glGet",	I,	1,	"GL_MAX_COMBINED_ATOMIC_COUNTER_BUFFERS"),	# 0x92D1
-    ("",	X,	1,	"GL_MAX_VERTEX_ATOMIC_COUNTERS"),	# 0x92D2
-    ("",	X,	1,	"GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS"),	# 0x92D3
-    ("",	X,	1,	"GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS"),	# 0x92D4
-    ("",	X,	1,	"GL_MAX_GEOMETRY_ATOMIC_COUNTERS"),	# 0x92D5
-    ("",	X,	1,	"GL_MAX_FRAGMENT_ATOMIC_COUNTERS"),	# 0x92D6
-    ("",	X,	1,	"GL_MAX_COMBINED_ATOMIC_COUNTERS"),	# 0x92D7
-    ("",	X,	1,	"GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92D8
-    ("",	X,	1,	"GL_ACTIVE_ATOMIC_COUNTER_BUFFERS"),	# 0x92D9
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_ATOMIC_COUNTERS"),	# 0x92D2
+    ("glGet",	I,	1,	"GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS"),	# 0x92D3
+    ("glGet",	I,	1,	"GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS"),	# 0x92D4
+    ("glGet",	I,	1,	"GL_MAX_GEOMETRY_ATOMIC_COUNTERS"),	# 0x92D5
+    ("glGet",	I,	1,	"GL_MAX_FRAGMENT_ATOMIC_COUNTERS"),	# 0x92D6
+    ("glGet",	I,	1,	"GL_MAX_COMBINED_ATOMIC_COUNTERS"),	# 0x92D7
+    ("glGet",	I,	1,	"GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92D8
+    ("glGetProgram",	I,	1,	"GL_ACTIVE_ATOMIC_COUNTER_BUFFERS"),	# 0x92D9
     ("",	X,	1,	"GL_UNIFORM_ATOMIC_COUNTER_BUFFER_INDEX"),	# 0x92DA
     ("",	X,	1,	"GL_UNSIGNED_INT_ATOMIC_COUNTER"),	# 0x92DB
-    ("",	X,	1,	"GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS"),	# 0x92DC
+    ("glGet",	I,	1,	"GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS"),	# 0x92DC
+    ("",	X,	1,	"GL_FRAGMENT_COVERAGE_TO_COLOR_NV"),	# 0x92DD
+    ("",	X,	1,	"GL_FRAGMENT_COVERAGE_COLOR_NV"),	# 0x92DE
     ("glGet",	B,	1,	"GL_DEBUG_OUTPUT"),	# 0x92E0
     ("",	X,	1,	"GL_UNIFORM"),	# 0x92E1
     ("",	X,	1,	"GL_UNIFORM_BLOCK"),	# 0x92E2
@@ -3373,49 +3444,101 @@ parameters = [
     ("",	X,	1,	"GL_FRAGMENT_SUBROUTINE_UNIFORM"),	# 0x92F2
     ("",	X,	1,	"GL_COMPUTE_SUBROUTINE_UNIFORM"),	# 0x92F3
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_VARYING"),	# 0x92F4
-    ("",	I,	1,	"GL_ACTIVE_RESOURCES"),	# 0x92F5
-    ("",	I,	1,	"GL_MAX_NAME_LENGTH"),	# 0x92F6
-    ("",	I,	1,	"GL_MAX_NUM_ACTIVE_VARIABLES"),	# 0x92F7
-    ("",	I,	1,	"GL_MAX_NUM_COMPATIBLE_SUBROUTINES"),	# 0x92F8
-    ("",	I,	1,	"GL_NAME_LENGTH"),	# 0x92F9
-    ("",	I,	1,	"GL_TYPE"),	# 0x92FA
-    ("",	I,	1,	"GL_ARRAY_SIZE"),	# 0x92FB
-    ("",	I,	1,	"GL_OFFSET"),	# 0x92FC
-    ("",	I,	1,	"GL_BLOCK_INDEX"),	# 0x92FD
-    ("",	I,	1,	"GL_ARRAY_STRIDE"),	# 0x92FE
-    ("",	I,	1,	"GL_MATRIX_STRIDE"),	# 0x92FF
-    ("",	I,	1,	"GL_IS_ROW_MAJOR"),	# 0x9300
-    ("",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_INDEX"),	# 0x9301
-    ("",	I,	1,	"GL_BUFFER_BINDING"),	# 0x9302
-    ("",	I,	1,	"GL_BUFFER_DATA_SIZE"),	# 0x9303
-    ("",	I,	1,	"GL_NUM_ACTIVE_VARIABLES"),	# 0x9304
-    ("",	I,	1,	"GL_ACTIVE_VARIABLES"),	# 0x9305
-    ("",	I,	1,	"GL_REFERENCED_BY_VERTEX_SHADER"),	# 0x9306
-    ("",	I,	1,	"GL_REFERENCED_BY_TESS_CONTROL_SHADER"),	# 0x9307
-    ("",	I,	1,	"GL_REFERENCED_BY_TESS_EVALUATION_SHADER"),	# 0x9308
-    ("",	I,	1,	"GL_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x9309
-    ("",	I,	1,	"GL_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x930A
-    ("",	I,	1,	"GL_REFERENCED_BY_COMPUTE_SHADER"),	# 0x930B
-    ("",	I,	1,	"GL_TOP_LEVEL_ARRAY_SIZE"),	# 0x930C
-    ("",	I,	1,	"GL_TOP_LEVEL_ARRAY_STRIDE"),	# 0x930D
-    ("",	I,	1,	"GL_LOCATION"),	# 0x930E
-    ("",	I,	1,	"GL_LOCATION_INDEX"),	# 0x930F
-    ("",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_WIDTH"),	# 0x9310
-    ("",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_HEIGHT"),	# 0x9311
-    ("",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_LAYERS"),	# 0x9312
-    ("",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_SAMPLES"),	# 0x9313
-    ("",	B,	1,	"GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS"),	# 0x9314
-    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_WIDTH"),	# 0x9315
-    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_HEIGHT"),	# 0x9316
-    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_LAYERS"),	# 0x9317
-    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_SAMPLES"),	# 0x9318
-    ("",	X,	1,	"GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB"),	# 0x9344
-    ("",	X,	1,	"GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB"),	# 0x9345
-    ("",	X,	1,	"GL_LOCATION_COMPONENT"),		# 0x934A
+    ("",	X,	1,	"GL_ACTIVE_RESOURCES"),	# 0x92F5
+    ("",	X,	1,	"GL_MAX_NAME_LENGTH"),	# 0x92F6
+    ("",	X,	1,	"GL_MAX_NUM_ACTIVE_VARIABLES"),	# 0x92F7
+    ("",	X,	1,	"GL_MAX_NUM_COMPATIBLE_SUBROUTINES"),	# 0x92F8
+    ("",	X,	1,	"GL_NAME_LENGTH"),	# 0x92F9
+    ("",	X,	1,	"GL_TYPE"),	# 0x92FA
+    ("",	X,	1,	"GL_ARRAY_SIZE"),	# 0x92FB
+    ("",	X,	1,	"GL_OFFSET"),	# 0x92FC
+    ("",	X,	1,	"GL_BLOCK_INDEX"),	# 0x92FD
+    ("",	X,	1,	"GL_ARRAY_STRIDE"),	# 0x92FE
+    ("",	X,	1,	"GL_MATRIX_STRIDE"),	# 0x92FF
+    ("",	X,	1,	"GL_IS_ROW_MAJOR"),	# 0x9300
+    ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_INDEX"),	# 0x9301
+    ("",	X,	1,	"GL_BUFFER_BINDING"),	# 0x9302
+    ("",	X,	1,	"GL_BUFFER_DATA_SIZE"),	# 0x9303
+    ("",	X,	1,	"GL_NUM_ACTIVE_VARIABLES"),	# 0x9304
+    ("",	X,	1,	"GL_ACTIVE_VARIABLES"),	# 0x9305
+    ("",	X,	1,	"GL_REFERENCED_BY_VERTEX_SHADER"),	# 0x9306
+    ("",	X,	1,	"GL_REFERENCED_BY_TESS_CONTROL_SHADER"),	# 0x9307
+    ("",	X,	1,	"GL_REFERENCED_BY_TESS_EVALUATION_SHADER"),	# 0x9308
+    ("",	X,	1,	"GL_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x9309
+    ("",	X,	1,	"GL_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x930A
+    ("",	X,	1,	"GL_REFERENCED_BY_COMPUTE_SHADER"),	# 0x930B
+    ("",	X,	1,	"GL_TOP_LEVEL_ARRAY_SIZE"),	# 0x930C
+    ("",	X,	1,	"GL_TOP_LEVEL_ARRAY_STRIDE"),	# 0x930D
+    ("",	X,	1,	"GL_LOCATION"),	# 0x930E
+    ("",	X,	1,	"GL_LOCATION_INDEX"),	# 0x930F
+    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_WIDTH"),	# 0x9310
+    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_HEIGHT"),	# 0x9311
+    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_LAYERS"),	# 0x9312
+    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_SAMPLES"),	# 0x9313
+    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS"),	# 0x9314
+    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_WIDTH"),	# 0x9315
+    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_HEIGHT"),	# 0x9316
+    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_LAYERS"),	# 0x9317
+    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_SAMPLES"),	# 0x9318
+    ("",	X,	1,	"GL_RASTER_MULTISAMPLE_EXT"),	# 0x9327
+    ("",	X,	1,	"GL_RASTER_SAMPLES_EXT"),	# 0x9328
+    ("",	X,	1,	"GL_MAX_RASTER_SAMPLES_EXT"),	# 0x9329
+    ("",	X,	1,	"GL_RASTER_FIXED_SAMPLE_LOCATIONS_EXT"),	# 0x932A
+    ("",	X,	1,	"GL_MULTISAMPLE_RASTERIZATION_ALLOWED_EXT"),	# 0x932B
+    ("",	X,	1,	"GL_EFFECTIVE_RASTER_SAMPLES_EXT"),	# 0x932C
+    ("",	X,	1,	"GL_DEPTH_SAMPLES_NV"),	# 0x932D
+    ("",	X,	1,	"GL_STENCIL_SAMPLES_NV"),	# 0x932E
+    ("",	X,	1,	"GL_MIXED_DEPTH_SAMPLES_SUPPORTED_NV"),	# 0x932F
+    ("",	X,	1,	"GL_MIXED_STENCIL_SAMPLES_SUPPORTED_NV"),	# 0x9330
+    ("",	X,	1,	"GL_COVERAGE_MODULATION_TABLE_NV"),	# 0x9331
+    ("",	X,	1,	"GL_COVERAGE_MODULATION_NV"),	# 0x9332
+    ("",	X,	1,	"GL_COVERAGE_MODULATION_TABLE_SIZE_NV"),	# 0x9333
+    ("",	X,	1,	"GL_WARP_SIZE_NV"),	# 0x9339
+    ("",	X,	1,	"GL_WARPS_PER_SM_NV"),	# 0x933A
+    ("",	X,	1,	"GL_SM_COUNT_NV"),	# 0x933B
+    ("",	X,	1,	"GL_FILL_RECTANGLE_NV"),	# 0x933C
+    ("glGet",	I,	1,	"GL_SAMPLE_LOCATION_SUBPIXEL_BITS_ARB"),	# 0x933D
+    ("glGet",	I,	1,	"GL_SAMPLE_LOCATION_PIXEL_GRID_WIDTH_ARB"),	# 0x933E
+    ("glGet",	I,	1,	"GL_SAMPLE_LOCATION_PIXEL_GRID_HEIGHT_ARB"),	# 0x933F
+    ("",	X,	1,	"GL_PROGRAMMABLE_SAMPLE_LOCATION_TABLE_SIZE_ARB"),	# 0x9340
+    ("glGetMultisample",	F,	2,	"GL_PROGRAMMABLE_SAMPLE_LOCATION_ARB"),	# 0x9341
+    ("glGetFramebufferParameter",	B,	1,	"GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB"),	# 0x9342
+    ("glGetFramebufferParameter",	B,	1,	"GL_FRAMEBUFFER_SAMPLE_LOCATION_PIXEL_GRID_ARB"),	# 0x9343
+    ("glGet",	I,	1,	"GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB"),	# 0x9344
+    ("glGet",	I,	1,	"GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB"),	# 0x9345
+    ("",	X,	1,	"GL_CONSERVATIVE_RASTERIZATION_NV"),	# 0x9346
+    ("",	X,	1,	"GL_SUBPIXEL_PRECISION_BIAS_X_BITS_NV"),	# 0x9347
+    ("",	X,	1,	"GL_SUBPIXEL_PRECISION_BIAS_Y_BITS_NV"),	# 0x9348
+    ("",	X,	1,	"GL_MAX_SUBPIXEL_PRECISION_BIAS_BITS_NV"),	# 0x9349
+    ("",	X,	1,	"GL_LOCATION_COMPONENT"),	# 0x934A
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_INDEX"),	# 0x934B
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_STRIDE"),	# 0x934C
-    ("",	X,	1,	"GL_CLEAR_TEXTURE"),			# 0x9365
+    ("glGet",	E,	1,	"GL_CLIP_ORIGIN"),	# 0x935C
+    ("glGet",	E,	1,	"GL_CLIP_DEPTH_MODE"),	# 0x935D
+    ("",	X,	1,	"GL_NEGATIVE_ONE_TO_ONE"),	# 0x935E
+    ("",	X,	1,	"GL_ZERO_TO_ONE"),	# 0x935F
+    ("",	X,	1,	"GL_CLEAR_TEXTURE"),	# 0x9365
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_REDUCTION_MODE_ARB"),	# 0x9366
+    ("",	X,	1,	"GL_WEIGHTED_AVERAGE_ARB"),	# 0x9367
+    ("",	X,	1,	"GL_FONT_GLYPHS_AVAILABLE_NV"),	# 0x9368
+    ("",	X,	1,	"GL_FONT_TARGET_UNAVAILABLE_NV"),	# 0x9369
+    ("",	X,	1,	"GL_FONT_UNAVAILABLE_NV"),	# 0x936A
+    ("",	X,	1,	"GL_FONT_UNINTELLIGIBLE_NV"),	# 0x936B
+    ("",	X,	1,	"GL_STANDARD_FONT_FORMAT_NV"),	# 0x936C
+    ("",	X,	1,	"GL_FRAGMENT_INPUT_NV"),	# 0x936D
+    ("",	X,	1,	"GL_UNIFORM_BUFFER_UNIFIED_NV"),	# 0x936E
+    ("",	X,	1,	"GL_UNIFORM_BUFFER_ADDRESS_NV"),	# 0x936F
+    ("",	X,	1,	"GL_UNIFORM_BUFFER_LENGTH_NV"),	# 0x9370
+    ("",	X,	1,	"GL_MULTISAMPLES_NV"),	# 0x9371
+    ("",	X,	1,	"GL_SUPERSAMPLE_SCALE_X_NV"),	# 0x9372
+    ("",	X,	1,	"GL_SUPERSAMPLE_SCALE_Y_NV"),	# 0x9373
+    ("",	X,	1,	"GL_CONFORMANT_NV"),	# 0x9374
+    ("",	X,	1,	"GL_CONSERVATIVE_RASTER_DILATE_NV"),	# 0x9379
+    ("",	X,	1,	"GL_CONSERVATIVE_RASTER_DILATE_RANGE_NV"),	# 0x937A
+    ("",	X,	1,	"GL_CONSERVATIVE_RASTER_DILATE_GRANULARITY_NV"),	# 0x937B
     ("",	X,	1,	"GL_NUM_SAMPLE_COUNTS"),	# 0x9380
+    ("glGet",	F,	2,	"GL_MULTISAMPLE_LINE_WIDTH_RANGE_ARB"),	# 0x9381
+    ("glGet",	F,	1,	"GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY_ARB"),	# 0x9382
     ("",	X,	1,	"GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE"),	# 0x93A0
     ("",	X,	1,	"GL_BGRA8_EXT"),	# 0x93A1
     ("",	X,	1,	"GL_TEXTURE_USAGE_ANGLE"),	# 0x93A2
@@ -3470,6 +3593,8 @@ parameters = [
     #("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5x5_OES"),	# 0x93E7
     #("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x5_OES"),	# 0x93E8
     #("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6x6_OES"),	# 0x93E9
+    ("",	X,	1,	"GL_COMPRESSED_SRGB_ALPHA_PVRTC_2BPPV2_IMG"),	# 0x93F0
+    ("",	X,	1,	"GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV2_IMG"),	# 0x93F1
     ("",	X,	1,	"GL_PERFQUERY_COUNTER_EVENT_INTEL"),	# 0x94F0
     ("",	X,	1,	"GL_PERFQUERY_COUNTER_DURATION_NORM_INTEL"),	# 0x94F1
     ("",	X,	1,	"GL_PERFQUERY_COUNTER_DURATION_RAW_INTEL"),	# 0x94F2
@@ -3485,7 +3610,34 @@ parameters = [
     ("",	X,	1,	"GL_PERFQUERY_COUNTER_NAME_LENGTH_MAX_INTEL"),	# 0x94FE
     ("",	X,	1,	"GL_PERFQUERY_COUNTER_DESC_LENGTH_MAX_INTEL"),	# 0x94FF
     ("",	X,	1,	"GL_PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL"),	# 0x9500
+    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR"),	# 0x9630
+    ("",	X,	1,	"GL_MAX_VIEWS_OVR"),	# 0x9631
+    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR"),	# 0x9632
+    #("",	X,	1,	"GL_GS_SHADER_BINARY_MTK"),	# 0x9640
+    #("",	X,	1,	"GL_GS_PROGRAM_BINARY_MTK"),	# 0x9641
+    ("",	X,	1,	"GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_FAST_SIZE_EXT"),	# 0x9650
+    ("",	X,	1,	"GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_SIZE_EXT"),	# 0x9651
+    ("",	X,	1,	"GL_FRAMEBUFFER_INCOMPLETE_INSUFFICIENT_SHADER_COMBINED_LOCAL_STORAGE_EXT"),	# 0x9652
     ("_glGet",	B,	1,	"GL_RASTER_POSITION_UNCLIPPED_IBM"),	# 0x19262
+    ("",	X,	1,	"GL_CULL_VERTEX_IBM"),	# 0x1928A
+    ("",	X,	1,	"GL_ALL_STATIC_DATA_IBM"),	# 0x19294
+    ("",	X,	1,	"GL_STATIC_VERTEX_ARRAY_IBM"),	# 0x19295
+    ("",	X,	1,	"GL_VERTEX_ARRAY_LIST_IBM"),	# 0x1929E
+    ("",	X,	1,	"GL_NORMAL_ARRAY_LIST_IBM"),	# 0x1929F
+    ("",	X,	1,	"GL_COLOR_ARRAY_LIST_IBM"),	# 0x192A0
+    ("",	X,	1,	"GL_INDEX_ARRAY_LIST_IBM"),	# 0x192A1
+    ("",	X,	1,	"GL_TEXTURE_COORD_ARRAY_LIST_IBM"),	# 0x192A2
+    ("",	X,	1,	"GL_EDGE_FLAG_ARRAY_LIST_IBM"),	# 0x192A3
+    ("",	X,	1,	"GL_FOG_COORDINATE_ARRAY_LIST_IBM"),	# 0x192A4
+    ("",	X,	1,	"GL_SECONDARY_COLOR_ARRAY_LIST_IBM"),	# 0x192A5
+    ("",	X,	1,	"GL_VERTEX_ARRAY_LIST_STRIDE_IBM"),	# 0x192A8
+    ("",	X,	1,	"GL_NORMAL_ARRAY_LIST_STRIDE_IBM"),	# 0x192A9
+    ("",	X,	1,	"GL_COLOR_ARRAY_LIST_STRIDE_IBM"),	# 0x192AA
+    ("",	X,	1,	"GL_INDEX_ARRAY_LIST_STRIDE_IBM"),	# 0x192AB
+    ("",	X,	1,	"GL_TEXTURE_COORD_ARRAY_LIST_STRIDE_IBM"),	# 0x192AC
+    ("",	X,	1,	"GL_EDGE_FLAG_ARRAY_LIST_STRIDE_IBM"),	# 0x192AD
+    ("",	X,	1,	"GL_FOG_COORDINATE_ARRAY_LIST_STRIDE_IBM"),	# 0x192AE
+    ("",	X,	1,	"GL_SECONDARY_COLOR_ARRAY_LIST_STRIDE_IBM"),	# 0x192AF
     ("",	X,	1,	"GL_PREFER_DOUBLEBUFFER_HINT_PGI"),	# 0x1A1F8
     ("",	X,	1,	"GL_CONSERVE_MEMORY_HINT_PGI"),	# 0x1A1FD
     ("",	X,	1,	"GL_RECLAIM_MEMORY_HINT_PGI"),	# 0x1A1FE
@@ -3510,25 +3662,6 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_CONSISTENT_HINT_PGI"),	# 0x1A22B
     ("",	X,	1,	"GL_MATERIAL_SIDE_HINT_PGI"),	# 0x1A22C
     ("",	X,	1,	"GL_MAX_VERTEX_HINT_PGI"),	# 0x1A22D
-    ("",	X,	1,	"GL_CULL_VERTEX_IBM"),	# 0x103050
-    ("",	X,	1,	"GL_ALL_STATIC_DATA_IBM"),	# 0x103060
-    ("",	X,	1,	"GL_STATIC_VERTEX_ARRAY_IBM"),	# 0x103061
-    ("",	X,	1,	"GL_VERTEX_ARRAY_LIST_IBM"),	# 0x103070
-    ("",	X,	1,	"GL_NORMAL_ARRAY_LIST_IBM"),	# 0x103071
-    ("",	X,	1,	"GL_COLOR_ARRAY_LIST_IBM"),	# 0x103072
-    ("",	X,	1,	"GL_INDEX_ARRAY_LIST_IBM"),	# 0x103073
-    ("",	X,	1,	"GL_TEXTURE_COORD_ARRAY_LIST_IBM"),	# 0x103074
-    ("",	X,	1,	"GL_EDGE_FLAG_ARRAY_LIST_IBM"),	# 0x103075
-    ("",	X,	1,	"GL_FOG_COORDINATE_ARRAY_LIST_IBM"),	# 0x103076
-    ("",	X,	1,	"GL_SECONDARY_COLOR_ARRAY_LIST_IBM"),	# 0x103077
-    ("",	X,	1,	"GL_VERTEX_ARRAY_LIST_STRIDE_IBM"),	# 0x103080
-    ("",	X,	1,	"GL_NORMAL_ARRAY_LIST_STRIDE_IBM"),	# 0x103081
-    ("",	X,	1,	"GL_COLOR_ARRAY_LIST_STRIDE_IBM"),	# 0x103082
-    ("",	X,	1,	"GL_INDEX_ARRAY_LIST_STRIDE_IBM"),	# 0x103083
-    ("",	X,	1,	"GL_TEXTURE_COORD_ARRAY_LIST_STRIDE_IBM"),	# 0x103084
-    ("",	X,	1,	"GL_EDGE_FLAG_ARRAY_LIST_STRIDE_IBM"),	# 0x103085
-    ("",	X,	1,	"GL_FOG_COORDINATE_ARRAY_LIST_STRIDE_IBM"),	# 0x103086
-    ("",	X,	1,	"GL_SECONDARY_COLOR_ARRAY_LIST_STRIDE_IBM"),	# 0x103087
     ("",	X,	1,	"GL_INVALID_INDEX"),	# 0xFFFFFFFFu
     #("",	X,	1,	"GL_TIMEOUT_IGNORED"),	# 0xFFFFFFFFFFFFFFFFull
 ]

@@ -41,6 +41,31 @@ import re
 import cPickle as pickle
 
 
+# Same as trace_model.hpp's call flags
+CALL_FLAG_FAKE              = (1 << 0)
+CALL_FLAG_NON_REPRODUCIBLE  = (1 << 1)
+CALL_FLAG_NO_SIDE_EFFECTS   = (1 << 2)
+CALL_FLAG_RENDER            = (1 << 3)
+CALL_FLAG_SWAP_RENDERTARGET = (1 << 4)
+CALL_FLAG_END_FRAME         = (1 << 5)
+CALL_FLAG_INCOMPLETE        = (1 << 6)
+CALL_FLAG_VERBOSE           = (1 << 7)
+CALL_FLAG_MARKER            = (1 << 8)
+CALL_FLAG_MARKER_PUSH       = (1 << 9)
+CALL_FLAG_MARKER_POP        = (1 << 10)
+
+
+class Pointer(long):
+
+    def __str__(self):
+        if self == 0L:
+            return 'NULL'
+        else:
+            return hex(self).rstrip('L')
+
+    __repr__ = __str__
+
+
 class Visitor:
 
     def __init__(self):
@@ -55,9 +80,10 @@ class Visitor:
         self.dispatch[list] = self.visitList
         self.dispatch[dict] = self.visitDict
         self.dispatch[bytearray] = self.visitByteArray
+        self.dispatch[Pointer] = self.visitPointer
 
     def visit(self, obj):
-        method = self.dispatch.get(type(obj), self.visitObj)
+        method = self.dispatch.get(obj.__class__, self.visitObj)
         return method(obj)
 
     def visitObj(self, obj):
@@ -91,10 +117,13 @@ class Visitor:
         return self.visitIterable(obj)
 
     def visitDict(self, obj):
-        raise NotImplementedError
+        return self.visitIterable(obj)
 
     def visitByteArray(self, obj):
         raise NotImplementedError
+
+    def visitPointer(self, obj):
+        return self.visitAtom(obj)
 
 
 class Dumper(Visitor):
@@ -111,10 +140,18 @@ class Dumper(Visitor):
             return repr(obj)
 
     def visitTuple(self, obj):
-        return '[' + ', '.join(itertools.imap(self.visit, obj)) + ']'
+        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
 
     def visitList(self, obj):
-        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
+        if len(obj) == 1:
+            return '&' + self.visit(obj[0])
+        return '{' + ', '.join(itertools.imap(self.visit, obj)) + '}'
+
+    def visitItems(self, items):
+        return ', '.join(['%s = %s' % (name, self.visit(value)) for name, value in items])
+
+    def visitDict(self, obj):
+        return '{' + self.visitItems(obj.iteritems()) + '}'
 
     def visitByteArray(self, obj):
         return 'blob(%u)' % len(obj)
@@ -163,7 +200,7 @@ class Rebuilder(Visitor):
 class Call:
 
     def __init__(self, callTuple):
-        self.no, self.functionName, self.args, self.ret = callTuple
+        self.no, self.functionName, self.args, self.ret, self.flags = callTuple
         self._hash = None
 
     def __str__(self):
@@ -171,7 +208,7 @@ class Call:
         if self.no is not None:
             s = str(self.no) + ' ' + s
         dumper = Dumper()
-        s += '(' + ', '.join(itertools.imap(dumper.visit, self.args)) + ')'
+        s += '(' + dumper.visitItems(self.args) + ')'
         if self.ret is not None:
             s += ' = '
             s += dumper.visit(self.ret)
@@ -189,6 +226,17 @@ class Call:
             hashable = hasher.visit(self.functionName), hasher.visit(self.args), hasher.visit(self.ret)
             self._hash = hash(hashable)
         return self._hash
+
+    def arg(self, argName):
+        '''Lookup argument by name.'''
+        for name, value in self.args:
+            if name == argName:
+                return value
+        raise NameError(argName)
+
+    def argValues(self):
+        '''Return the arg values'''
+        return [value for name, value in self.args]
 
 
 class Unpickler:
@@ -209,8 +257,12 @@ class Unpickler:
             return False
         else:
             call = self.callFactory(callTuple)
-            self.handleCall(call)
-            return True
+            try:
+                self.handleCall(call)
+            except StopIteration:
+                return False
+            else:
+                return True
 
     def handleCall(self, call):
         pass

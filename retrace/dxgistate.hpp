@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _DXGISTATE_HPP_
-#define _DXGISTATE_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -63,7 +62,13 @@ ConvertImage(DXGI_FORMAT SrcFormat,
              UINT Width, UINT Height);
 
 
+image::Image *
+getRenderTargetImage(IDXGISwapChain *pSwapChain);
+
+std::string
+getDXGIFormatName(DXGI_FORMAT format);
+
+
 } /* namespace d3dstate */
 
 
-#endif // _DXGISTATE_HPP_

@@ -18,7 +18,7 @@ Q_DECLARE_METATYPE(QVector<ApiTraceCall*>);
 Q_DECLARE_METATYPE(Qt::CaseSensitivity);
 Q_DECLARE_METATYPE(ApiTrace::SearchResult);
 Q_DECLARE_METATYPE(ApiTrace::SearchRequest);
-Q_DECLARE_METATYPE(QList<QImage>);
+Q_DECLARE_METATYPE(ImageHash);
 
 static void usage(void)
 {
@@ -30,7 +30,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    QApplication::setGraphicsSystem("raster");
     QApplication app(argc, argv);
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
@@ -39,7 +38,7 @@ int main(int argc, char **argv)
     qRegisterMetaType<Qt::CaseSensitivity>();
     qRegisterMetaType<ApiTrace::SearchResult>();
     qRegisterMetaType<ApiTrace::SearchRequest>();
-    qRegisterMetaType<QList<QImage> >();
+    qRegisterMetaType<ImageHash>();
 
 #ifndef Q_OS_WIN
     os::String currentProcess = os::getProcessName();

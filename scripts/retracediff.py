@@ -350,6 +350,7 @@ def main():
 
                     height, width, channels = diffImage.shape
                     square_error = numpy.sum(diffImage)
+                    square_error += numpy.finfo(numpy.float32).eps
                     rel_error = square_error / float(height*width*channels)
                     bits = -math.log(rel_error)/math.log(2.0)
                     precision = bits

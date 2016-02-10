@@ -94,24 +94,21 @@ static DrawableMap drawable_map;
 // ctx -> Context* map
 static ContextMap context_map;
 
-// ctx -> Drawable* map
-static DrawableMap context_drawable_map;
-
 static Context *sharedContext = NULL;
 
 
 struct PixelFormat
 {
-    glws::Profile profile;
+    glprofile::Profile profile;
 
     PixelFormat() :
-        profile(glws::PROFILE_COMPAT)
+        profile(glprofile::API_GL, 1, 0)
     {}
 };
 
 
 static glws::Drawable *
-getDrawable(unsigned long drawable_id) {
+getDrawable(unsigned long drawable_id, glprofile::Profile profile) {
     if (drawable_id == 0) {
         return NULL;
     }
@@ -119,23 +116,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glretrace::createDrawable());
-    }
-
-    return it->second;
-}
-
-
-static glws::Drawable *
-getDrawableFromContext(unsigned long long ctx) {
-    if (ctx == 0) {
-        return NULL;
-    }
-
-    DrawableMap::const_iterator it;
-    it = context_drawable_map.find(ctx);
-    if (it == context_drawable_map.end()) {
-        return (context_drawable_map[ctx] = glretrace::createDrawable());
+        return (drawable_map[drawable_id] = glretrace::createDrawable(profile));
     }
 
     return it->second;
@@ -168,6 +149,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         return;
     }
 
+    bool singleBuffer = true;
     int profile = 0;
 
     const trace::Array * attribs = call.arg(0).toArray();
@@ -180,11 +162,11 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             }
 
             switch (param) {
+
+            // Boolean attributes
+
             case kCGLPFAAllRenderers:
-            case kCGLPFATripleBuffer:
-            case kCGLPFADoubleBuffer:
             case kCGLPFAStereo:
-            case kCGLPFAAuxBuffers:
             case kCGLPFAMinimumPolicy:
             case kCGLPFAMaximumPolicy:
             case kCGLPFAOffScreen:
@@ -212,10 +194,18 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFASupportsAutomaticGraphicsSwitching:
                 break;
 
+            case kCGLPFADoubleBuffer:
+            case kCGLPFATripleBuffer:
+                singleBuffer = false;
+                break;
+
+            // Valued attributes
+
             case kCGLPFAColorSize:
             case kCGLPFAAlphaSize:
             case kCGLPFADepthSize:
             case kCGLPFAStencilSize:
+            case kCGLPFAAuxBuffers:
             case kCGLPFAAccumSize:
             case kCGLPFASampleBuffers:
             case kCGLPFASamples:
@@ -245,18 +235,21 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
     case 0:
         break;
     case kCGLOGLPVersion_Legacy:
-        pixelFormat->profile = glws::PROFILE_COMPAT;
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 1, 0);
         break;
     case kCGLOGLPVersion_GL3_Core:
-        pixelFormat->profile = glws::PROFILE_3_2_CORE;
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 3, 2, true, true);
         break;
     case kCGLOGLPVersion_GL4_Core:
-        pixelFormat->profile = glws::PROFILE_4_1_CORE;
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 4, 1, true, true);
         break;
     default:
         retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
         break;
     }
+
+    // XXX: Generalize this, don't override command line options.
+    retrace::doubleBuffer = !singleBuffer;
 
     retrace::addObj(call, pix, pixelFormat);
 }
@@ -283,7 +276,7 @@ static void retrace_CGLCreateContext(trace::Call &call) {
 
     trace::Value & pix = call.argByName("pix");
     const PixelFormat *pixelFormat = retrace::asObjPointer<PixelFormat>(call, pix);
-    glws::Profile profile = pixelFormat ? pixelFormat->profile : glretrace::defaultProfile;
+    glprofile::Profile profile = pixelFormat ? pixelFormat->profile : glretrace::defaultProfile;
 
     unsigned long long share = call.arg(1).toUIntPtr();
     Context *sharedContext = getContext(share);
@@ -329,9 +322,11 @@ static void retrace_CGLSetSurface(trace::Call &call) {
     (void)cid;
     (void)wid;
 
-    glws::Drawable *drawable = getDrawable(sid);
-
-    context_drawable_map[ctx] = drawable;
+    Context *context = getContext(ctx);
+    if (context) {
+        glws::Drawable *drawable = getDrawable(sid, context->profile());
+        context->drawable = drawable;
+    }
 }
 
 
@@ -341,8 +336,10 @@ static void retrace_CGLClearDrawable(trace::Call &call) {
     }
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
-
-    context_drawable_map[ctx] = NULL;
+    Context *context = getContext(ctx);
+    if (context) {
+        context->drawable = NULL;
+    }
 }
 
 
@@ -353,8 +350,15 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
-    glws::Drawable *new_drawable = getDrawableFromContext(ctx);
     Context *new_context = getContext(ctx);
+    glws::Drawable *new_drawable = NULL;
+    if (new_context) {
+        if (!new_context->drawable) {
+            glprofile::Profile profile = new_context->profile();
+            new_context->drawable = glretrace::createDrawable(profile);
+        }
+        new_drawable = new_context->drawable;
+    }
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
@@ -369,7 +373,7 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
     Context *context = getContext(ctx);
 
     if (context) {
-        glws::Drawable *drawable = getDrawableFromContext(ctx);
+        glws::Drawable *drawable = context->drawable;
         if (drawable) {
             if (retrace::doubleBuffer) {
                 drawable->swapBuffers();
@@ -382,6 +386,18 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
                 retrace::warning(call) << "context has no drawable\n";
             }
         }
+    }
+}
+
+
+static void retrace_CGLSetVirtualScreen(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    GLint screen = call.arg(1).toSInt();
+    if (screen != 0) {
+        retrace::warning(call) << "multiple virtual screens unsupported\n";
     }
 }
 
@@ -430,15 +446,14 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
     GLvoid * pixels = NULL;
 
-    if (glretrace::getCurrentContext() != context) {
-        if (retrace::debug) {
-            retrace::warning(call) << "current context mismatch\n";
-        }
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (retrace::debug && currentContext != context) {
+        retrace::warning(call) << "current context mismatch\n";
     }
 
     glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 
-    if (retrace::debug && !glretrace::insideGlBeginEnd) {
+    if (retrace::debug && currentContext && !currentContext->insideBeginEnd) {
         glretrace::checkGlError(call);
     }
 }
@@ -457,15 +472,23 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLErrorString", &retrace::ignore},
     {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
     {"CGLGetCurrentContext", &retrace::ignore},
+    {"CGLGetGlobalOption", &retrace::ignore},
     {"CGLGetOption", &retrace::ignore},
     {"CGLGetParameter", &retrace::ignore},
+    {"CGLGetPixelFormat", &retrace::ignore},
+    {"CGLGetSurface", &retrace::ignore},
     {"CGLGetVersion", &retrace::ignore},
     {"CGLGetVirtualScreen", &retrace::ignore},
     {"CGLIsEnabled", &retrace::ignore},
+    {"CGLLockContext", &retrace::ignore},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLSetGlobalOption", &retrace::ignore},
+    {"CGLSetOption", &retrace::ignore},
     {"CGLSetSurface", &retrace_CGLSetSurface},
     {"CGLSetParameter", &retrace::ignore},
+    {"CGLSetVirtualScreen", &retrace_CGLSetVirtualScreen},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
+    {"CGLUnlockContext", &retrace::ignore},
     {"CGLUpdateContext", &retrace::ignore},
     {NULL, NULL},
 };

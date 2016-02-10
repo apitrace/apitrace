@@ -3,7 +3,7 @@ DIRECTX TEXTURE LIBRARY (DirectXTex)
 
 Copyright (c) Microsoft Corporation. All rights reserved.
 
-November 15, 2012
+July 29, 2015
 
 This package contains DirectXTex, a shared source library for reading and writing DDS
 files, and performing various texture content processing operations including
@@ -13,12 +13,11 @@ use of the Windows Image Component (WIC) APIs. It also includes a simple .TGA re
 writer since this image file format is commonly used for texture content processing pipelines,
 but is not currently supported by a built-in WIC codec.
 
-The source is written for Visual C++ 2010 using the Direct3D headers from either
-a current DirectX SDK or Windows SDK. It can also be compiled using Visual Studio 2012 and the
-Windows SDK 8.0 headers.
+The source is written for Visual Studio 2012, 2013, or 2015. It is recommended that
+you make use of the Windows 8.1 SDK and Windows 7 Service Pack 1 or later.
 
-It is recommended that you make use of Visual C++ 2010 Service Pack 1 or VS 2012, and
-Windows 7 Service Pack 1 or Windows 8.
+NOTE: DirectXTex is not supported on Windows phone 8.0 because WIC is not available on
+that platform. It is available on Windows phone starting in version 8.1.
 
 DDSTextureLoader\
     This contains a streamlined version of the DirectX SDK sample DDSWithoutD3DX11 texture
@@ -59,25 +58,25 @@ Texconv\
     It supports the same arguments as the Texture Conversion Tool Extended (texconvex.exe) DirectX
     SDK utility. See <http://msdn.microsoft.com/en-us/library/ee422506.aspx>. The primary differences
     are the -10 and -11 arguments are not applicable; the filter names (POINT, LINEAR, CUBIC,
-    FANT, POINT_DITHER, LINEAR_DITHER, CUBIC_DITHER, FANT_DITHER); and support for the .TGA file format.
+    FANT or BOX, TRIANGLE, *_DITHER, *_DITHER_DIFFUSION); and support for the .TGA file format.
     This also includes support for JPEG XR/HD Photo bitmap formats (see
     <http://blogs.msdn.com/b/chuckw/archive/2011/01/19/known-issue-texconvex.aspx>)
+
+Texassemble\
+    This DirectXTex sample is a command-line utility for creating cubemaps, volume maps, or
+    texture arrays from a set of individual input image files.
     
 DDSView\
     This DirectXTex sample is a simple Direct3D 11-based viewer for DDS files. For array textures
     or volume maps, the "<" and ">" keyboard keys will show different images contained in the DDS.
     The "1" through "0" keys can also be used to jump to a specific image index.
 
-XNAMath\
-    This contains a copy of XNA Math version 2.05, which is an updated version of the library. This is
-    required if building content with USE_XNAMATH (the default for the VS 2010 projects). The VS 2012
-    projects use DirectXMath in the Windows SDK 8.0 instead.
-    For details see
-    <http://blogs.msdn.com/b/chuckw/archive/2012/06/22/xna-math-version-2-05-smoothing-the-transition-to-directxmath.aspx>
+All content and source code for this package are subject to the terms of the MIT License.
+<http://opensource.org/licenses/MIT>.
 
-All content and source code for this package except XNA Math are bound to the Microsoft Public License (Ms-PL)
-<http://www.microsoft.com/en-us/openness/licenses.aspx#MPL>. The XNA Math library is subject
-to the DirectX SDK (June 2010) End-User License Agreement.
+Documentation is available at <https://github.com/Microsoft/DirectXTex/wiki>.
+
+For the latest version of DirectXTex, bug reports, etc. please visit the project site.
 
 http://go.microsoft.com/fwlink/?LinkId=248926
 
@@ -85,29 +84,17 @@ http://go.microsoft.com/fwlink/?LinkId=248926
 ------------------------------------
 RELEASE NOTES
 
-* The DirectXTex library does not support block compression or decompression of mipmapped non-power-of-2 textures,
-  although DDSTextureLoader will load these files correctly if the underlying device supports it.
+* The alpha mode specification for DDS files was updated between the March 2013 and April 2013 releases. Any
+  DDS files created using the DDS_FLAGS_FORCE_DX10_EXT_MISC2 flag or the texconv -dx10 switch using the
+  March 2013 release should be refreshed.
 
-* The DirectXTex library only supports CLAMP filtering, and does not yet support MIRROR or WRAP filtering
-  (WIC operations only support CLAMP filtering).
-
-* The DirectXTex library only supports box and POINT filtering, and does not support LINEAR or CUBIC filtering,
-  for 3D volume mipmap-generation.
-
-* Due to the underlying Windows BMP WIC codec, alpha channels are not supported for 16bpp or 32bpp BMP pixel format files. The Windows 8
+* Due to the underlying Windows BMP WIC codec, alpha channels are not supported for 16bpp or 32bpp BMP pixel format files. The Windows 8.x
   version of the Windows BMP WIC codec does support 32bpp pixel formats with alpha when using the BITMAPV5HEADER file header. Note the updated
   WIC is available on Windows 7 SP1 with KB 2670838 installed.
 
-* The WIC conversion cases currently ignore TEX_FILTER_SRGB_IN and TEX_FILTER_SRGB_OUT out.
-
-* For the DXGI 1.1 version of DirectXTex, 4:4:4:4 pixel format DDS files are always expanded to 8:8:8:8 upon load since DXGI 1.0
-  and DXGI 1.1 versions of Direct3D do not support these resource formats. The DXGI 1.2 versions of DirectXTex and DDSTextureLoader
-  make use of the DXGI_FORMAT_B4G4R4A4_UNORM format instead.
-
 * While DXGI 1.0 and DXGI 1.1 include 5:6:5 (DXGI_FORMAT_B5G6R5_UNORM) and 5:5:5:1 (DXGI_FORMAT_B5G5R5A1_UNORM)
   pixel format enumerations, the DirectX 10.x and 11.0 Runtimes do not support these formats for use with Direct3D. The DirectX 11.1 runtime,
-  DXGI 1.2, and the WDDM 1.2 driver model fully support 16bpp formats (5:6:5, 5:5:5:1, and 4:4:4:4). The DXGI 1.2 version of WICTextureLoader
-  will load 16bpp pixel images as 5:6:5 or 5:5:5:1 rather than expand them to 32bpp RGBA.
+  DXGI 1.2, and the WDDM 1.2 driver model fully support 16bpp formats (5:6:5, 5:5:5:1, and 4:4:4:4).
 
 * WICTextureLoader cannot load .TGA files unless the system has a 3rd party WIC codec installed. You must use the DirectXTex
   library for TGA file format support without relying on an add-on WIC codec.
@@ -118,6 +105,129 @@ RELEASE NOTES
 
 ------------------------------------
 RELEASE HISTORY
+
+July 29, 2015
+    Fixed rounding problem with 32-bit RGBA/BGRA format conversions
+    texconv: use CPU parallel compression for BC1-BC5 (-singleproc disables)
+    Updated for VS 2015 and Windows 10 SDK RTM
+    Retired VS 2010 and Windows 8.0 Store projects
+
+June 18, 2015
+    New BC_FLAGS_USE_3SUBSETS option for BC7 compressors; now defaults to skipping 3 subset blocks
+    Fixed bug with MakeTypeless and A8_UNORM
+    Fixed file length validation problem in LoadDDSFromFile
+
+March 27, 2015
+    Added projects for Windows apps Technical Preview
+    Fixed bug with WIC-based mipmap generation for non-WIC supported formats
+    Fixed bug with WIC multiframe loader when resizing required
+    texconv: Added -nmap/-nmapamp for generating normal maps from height maps
+    texconv/texassemble: Updated to load multiframe WIC files (tiff, gif)
+    Minor code cleanup
+
+November 24, 2014
+    Updates for Visual Studio 2015 Technical Preview
+    Minor code cleanup
+
+September 22, 2014
+    Format conversion improvements and bug fixes (depth/stencil, alpha-only, float16, RGB -> 1 channel)
+    Fixed issue when BC decompressing non-standard compressed rowPitch images
+    Explicit calling-convention annotation for all 'public' functions
+    Code cleanup
+    Xbox One platform updates
+
+July 15, 2014
+    texconv command-line tool fixes
+    Fixed problem with 'wide' images with CPU Compress
+    Updates to Xbox One platform support
+
+April 3, 2014
+    Windows phone 8.1 platform support
+
+February 24, 2014
+    Direct3D 11 video and Xbox One extended format support
+    New APIs: IsPlanar, IsPalettized, IsDepthStencil, ConvertToSinglePlane
+    Added 'alphaWeight' parameter to GPU Compress [breaking change]
+    texconv '-aw' switch to control the alpha weighting for the BC7 GPU compressor
+    Fixed bug with ordered dithering in non-WIC conversion codepaths
+    Fixed SaveToDDS* functions when using arbitrary row pitch values
+
+January 24, 2014
+    Added sRGB flags for Compress (TEX_COMPRESS_SRGB*)
+    Added 'compress' flag parameter to GPU versions of Compress [breaking change]
+    Minor fix for potential rounding problem in GPU Compress
+    Code cleanup (removed DXGI_1_2_FORMATS control define; ScopedObject typedef removed)
+    Dropped VS 2010 support without the Windows 8.1 SDK (removed USE_XNAMATH control define)
+
+December 24, 2013
+    texconv updated with -fl and -pow2 command-line switches
+    Fixed bug in Resize when doing custom filtering which occurred when exactly doubling the image size
+    Added move operators to ScratchImage and Blob classes
+    Xbox One platform support
+
+October 21, 2013
+    Updated for Visual Studio 2013 and Windows 8.1 SDK RTM
+    PremultiplyAlpha updated with new 'flags' parameter and to use sRGB correct blending
+    Fixed colorspace conversion issue with DirectCompute compressor when compressing for BC7 SRGB
+
+August 13, 2013
+    DirectCompute 4.0 BC6H/BC7 compressor integration
+    texconv utility uses DirectCompute compression by default for BC6H/BC7, -nogpu disables use of DirectCompute
+
+August 1, 2013
+    Support for BC compression/decompression of non-power-of-2 mipmapped textures
+    Fixes for BC6H / BC7 codecs to better match published standard
+    Fix for BC4 / BC5 codecs when compressing RGB images
+    Minor fix for the BC1-3 codec
+    New optional flags for ComputeMSE to compare UNORM vs. SNORM images
+    New WIC loading flag added to control use of WIC metadata to return sRGB vs. non-sRGB formats
+    Code cleanup and /analyze fixes
+    Project file cleanup
+    Texconv utility uses parallel BC compression by default for BC6H/BC7, -singleproc disables multithreaded behavior
+
+July 1, 2013
+    VS 2013 Preview projects added
+    SaveToWIC functions updated with new optional setCustomProps parameter
+
+June 15, 2013
+    Custom filtering implementation for Resize & GenerateMipMaps(3D) - Point, Box, Linear, Cubic, and Triangle
+        TEX_FILTER_TRIANGLE finite low-pass triangle filter
+        TEX_FILTER_WRAP, TEX_FILTER_MIRROR texture semantics for custom filtering
+        TEX_FILTER_BOX alias for TEX_FILTER_FANT WIC
+    Ordered and error diffusion dithering for non-WIC conversion
+    sRGB gamma correct custom filtering and conversion
+    DDS_FLAGS_EXPAND_LUMINANCE - Reader conversion option for L8, L16, and A8L8 legacy DDS files
+    Added use of WIC metadata for sRGB pixel formats
+    Added BitsPerColor utility function
+    Fixed Convert threshold parameter usage
+    Non-power-of-2 volume map support, fixed bug with non-square volume maps
+    Texconv utility update with -xlum, -wrap, and -mirror options; reworked -if options for improved dithering
+    Texassemble utility for creating cubemaps, volume maps, and texture arrays
+    DDSTextureLoader and WICTextureLoader sync'd with DirectXTK versions
+
+April 16, 2013
+    Updated alpha-mode metadata details in .DDS files
+    Added new control flags for Convert
+    Added new optional flags for ComputeMSE
+    Fixed conversion handling for sRGB formats
+    Fixed internal routines for handling R10G10B10_XR_BIAS_A2_UNORM, R9G9B9E5_SHAREDEXP, and FORMAT_R1_UNORM
+    Fixed WIC I/O for GUID_WICPixelFormat32bppRGBE pixel format files (HD Photo)
+    Fixed non-square image handling in GenerateMipMaps3D
+    Fixed some error handling in the DDS load code
+
+March 22, 2013
+    Supports reading and writing alpha-mode (straight, premultiplied, etc.) metadata in .DDS files
+    Added build option to use WICCreateImagingFactory_Proxy instead of CoCreateInstance to obtain WIC factory
+
+January 29, 2013
+    Added PremultiplyAlpha to DirectXTex; -pmalpha switch for texconv command-line tool
+    Fixed problem with forceSRGB implementation for Ex versions of CreateTexture, CreateShaderResourceView, DDSTextureLoader and WICTextureLoader
+ 
+December 11, 2012 
+    Ex versions of CreateTexture, CreateShaderResourceView, DDSTextureLoader and WICTextureLoader
+    Fixed BC2 and BC3 decompression issue for unusual color encoding case
+    Converted annotation to SAL2 for improved VS 2012 /analyze experience
+    Updated DirectXTex, DDSView, and Texconv with VS 2010 + Windows 8.0 SDK project using official 'property sheets'
 
 November 15, 2012
     Added support for WIC2 when available on Windows 8 and Windows 7 with KB 2670838

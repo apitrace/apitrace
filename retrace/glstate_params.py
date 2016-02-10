@@ -84,7 +84,7 @@ class StateGetter(Visitor):
     It will declare any temporary variable
     '''
 
-    def __init__(self, radical=None, inflections=None, suffix='', inflector=None, key=None):
+    def __init__(self, radical=None, inflections=None, suffix='', inflector=None, key=None, pnameIdx=-1):
         if inflector is None:
             assert radical is not None
             assert inflections is not None
@@ -98,6 +98,7 @@ class StateGetter(Visitor):
             self.key = self.inflector.key()
         else:
             self.key = key
+        self.pnameIdx = pnameIdx
 
     def iter(self):
         for function, type, count, name in parameters:
@@ -108,12 +109,12 @@ class StateGetter(Visitor):
             yield type, count, name
 
     def __call__(self, *args):
-        pname = args[-1]
+        pname = args[self.pnameIdx]
 
         for type, count, name in self.iter():
             if name == pname:
                 if count != 1:
-                    type = Array(type, str(count))
+                    type = Array(type, count)
 
                 return type, self.visit(type, args)
 
@@ -121,7 +122,7 @@ class StateGetter(Visitor):
 
     def temp_name(self, args):
         '''Return the name of a temporary variable to hold the state.'''
-        pname = args[-1]
+        pname = args[self.pnameIdx]
 
         return pname[3:].lower()
 
@@ -163,7 +164,7 @@ class StateGetter(Visitor):
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v' + self.inflector.suffix)
         array_length = array.length
-        if array_length.isdigit():
+        if isinstance(array_length, int):
             # Static integer length
             print '    %s %s[%s + 1];' % (elem_type, temp_name, array_length)
         else:
@@ -205,6 +206,14 @@ glGet = StateGetter(inflector = glGet_inflector)
 glGet_texture = StateGetter(inflector = glGet_inflector, key = 'glGet_texture')
 
 
+glGet_i = StateGetter('glGet', {
+    B: 'Booleani_v',
+    I: 'Integeri_v',
+    F: 'Floati_v',
+    D: 'Doublei_v',
+}, key = 'glGet_i', pnameIdx=0)
+
+
 glGetMaterial = StateGetter('glGetMaterial', {I: 'iv', F: 'fv'})
 glGetLight = StateGetter('glGetLight', {I: 'iv', F: 'fv'})
 glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv', P: 'Pointerv'})
@@ -223,30 +232,30 @@ class JsonWriter(Visitor):
     '''Type visitor that will dump a value of the specified type through the
     JSON writer.
     
-    It expects a previously declared JSONWriter instance named "json".'''
+    It expects a previously declared StateWriter instance named "writer".'''
 
     def visitLiteral(self, literal, instance):
         if literal.kind == 'Bool':
-            print '    json.writeBool(%s);' % instance
+            print '    writer.writeBool(%s);' % instance
         elif literal.kind in ('SInt', 'Uint'):
-            print '    json.writeInt(%s);' % instance
+            print '    writer.writeInt(%s);' % instance
         elif literal.kind in ('Float', 'Double'):
-            print '    json.writeFloat(%s);' % instance
+            print '    writer.writeFloat(%s);' % instance
         else:
             raise NotImplementedError
 
     def visitString(self, string, instance):
         assert string.length is None
-        print '    json.writeString((const char *)%s);' % instance
+        print '    writer.writeString((const char *)%s);' % instance
 
     def visitEnum(self, enum, instance):
         if enum is GLboolean:
-            print '    dumpBoolean(json, %s);' % instance
+            print '    dumpBoolean(writer, %s);' % instance
         elif enum is GLenum:
-            print '    dumpEnum(json, %s);' % instance
+            print '    dumpEnum(writer, %s);' % instance
         else:
             assert False
-            print '    json.writeInt(%s);' % instance
+            print '    writer.writeInt(%s);' % instance
 
     def visitBitmask(self, bitmask, instance):
         raise NotImplementedError
@@ -255,18 +264,18 @@ class JsonWriter(Visitor):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    json.writeInt((size_t)%s);' % instance
+        print '    writer.writeInt((size_t)%s);' % instance
 
     __index = 0
 
     def visitArray(self, array, instance):
         index = '_i%u' % JsonWriter.__index
         JsonWriter.__index += 1
-        print '    json.beginArray();'
+        print '    writer.beginArray();'
         print '    for (unsigned %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
         self.visit(array.type, '%s[%s]' % (instance, index))
         print '    }'
-        print '    json.endArray();'
+        print '    writer.endArray();'
 
 
 
@@ -281,7 +290,7 @@ class StateDumper:
         print '#include <assert.h>'
         print '#include <string.h>'
         print
-        print '#include "json.hpp"'
+        print '#include "state_writer.hpp"'
         print '#include "scoped_allocator.hpp"'
         print '#include "glproc.hpp"'
         print '#include "glsize.hpp"'
@@ -289,29 +298,6 @@ class StateDumper:
         print '#include "glstate_internal.hpp"'
         print
         print 'namespace glstate {'
-        print
-
-        print 'static void'
-        print 'flushErrors(void) {'
-        print '    while (glGetError() != GL_NO_ERROR) {}'
-        print '}'
-        print
-
-        print 'void'
-        print 'dumpBoolean(JSONWriter &json, GLboolean value)'
-        print '{'
-        print '    switch (value) {'
-        print '    case GL_FALSE:'
-        print '        json.writeString("GL_FALSE");'
-        print '        break;'
-        print '    case GL_TRUE:'
-        print '        json.writeString("GL_TRUE");'
-        print '        break;'
-        print '    default:'
-        print '        json.writeInt(static_cast<GLint>(value));'
-        print '        break;'
-        print '    }'
-        print '}'
         print
 
         print 'const char *'
@@ -327,71 +313,49 @@ class StateDumper:
         print '}'
         print
 
-        print 'void'
-        print 'dumpEnum(JSONWriter &json, GLenum pname)'
-        print '{'
-        print '    const char *s = enumToString(pname);'
-        print '    if (s) {'
-        print '        json.writeString(s);'
-        print '    } else {'
-        print '        json.writeInt(pname);'
-        print '    }'
-        print '}'
-        print
-
         print 'static void'
-        print 'dumpTextureTargetParameters(JSONWriter &json, Context &context, GLenum target)'
+        print 'dumpTextureTargetParameters(StateWriter &writer, Context &context, GLenum target, GLuint texture)'
         print '{'
-        print '    GLenum binding_param = getTextureBinding(target);'
-        print '    GLboolean enabled = GL_FALSE;'
-        print '    GLint binding = 0;'
-        print '    if (target != GL_TEXTURE_BUFFER) {'
-        print '       // GL_TEXTURE_BUFFER is not a boolean, but a buffer binding parameter...'
-        print '       glGetBooleanv(target, &enabled);'
-        print '    }'
-        print '    glGetIntegerv(binding_param, &binding);'
-        print '    if (enabled || binding) {'
-        print '        json.beginMember(enumToString(target));'
-        print '        json.beginObject();'
-        print '        dumpObjectLabel(json, context, GL_TEXTURE, binding, "GL_TEXTURE_LABEL");'
+        print '    writer.beginMember(enumToString(target));'
+        print '    writer.beginObject();'
+        print '    dumpObjectLabel(writer, context, GL_TEXTURE, texture, "GL_TEXTURE_LABEL");'
         # ARB_texture_buffer forbids glGetTexParameter and
         # glGetTexLevelParameter for TEXTURE_BUFFER, but
         # ARB_texture_buffer_range introduced parameters which can be queries
         # with glGetTexLevelParameter...
-        print '        if (target != GL_TEXTURE_BUFFER) {'
+        print '    if (target != GL_TEXTURE_BUFFER) {'
         self.dump_atoms(glGetTexParameter, 'target')
-        print '        }'
-        print '        if (!context.ES) {'
-        print '            GLenum levelTarget;'
-        print '            if (target == GL_TEXTURE_CUBE_MAP ||'
-        print '                target == GL_TEXTURE_CUBE_MAP_ARRAY) {'
-        print '                // Must pick a face'
-        print '                levelTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;'
-        print '            } else {'
-        print '                levelTarget = target;'
-        print '            }'
-        self.dump_atoms(glGetTexLevelParameter, 'levelTarget', '0')
-        print '        }'
-        print '        json.endObject();'
-        print '        json.endMember(); // target'
         print '    }'
+        print '    if (!context.ES) {'
+        print '        GLenum levelTarget;'
+        print '        if (target == GL_TEXTURE_CUBE_MAP ||'
+        print '            target == GL_TEXTURE_CUBE_MAP_ARRAY) {'
+        print '            // Must pick a face'
+        print '            levelTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;'
+        print '        } else {'
+        print '            levelTarget = target;'
+        print '        }'
+        self.dump_atoms(glGetTexLevelParameter, 'levelTarget', '0')
+        print '    }'
+        print '    writer.endObject();'
+        print '    writer.endMember(); // target'
         print '}'
         print
 
         print 'static void'
-        print 'dumpFramebufferAttachementParameters(JSONWriter &json, Context &context, GLenum target, GLenum attachment)'
+        print 'dumpFramebufferAttachementParameters(StateWriter &writer, Context &context, GLenum target, GLenum attachment)'
         print '{'
         self.dump_attachment_parameters('target', 'attachment')
         print '}'
         print
 
-        print 'void dumpParameters(JSONWriter &json, Context &context)'
+        print 'void dumpParameters(StateWriter &writer, Context &context)'
         print '{'
         print '    ScopedAllocator _allocator;'
         print '    (void)_allocator;'
         print
-        print '    json.beginMember("parameters");'
-        print '    json.beginObject();'
+        print '    writer.beginMember("parameters");'
+        print '    writer.beginObject();'
         
         self.dump_atoms(glGet)
         
@@ -404,8 +368,8 @@ class StateDumper:
         self.dump_framebuffer_parameters()
         self.dump_labels()
 
-        print '    json.endObject();'
-        print '    json.endMember(); // parameters'
+        print '    writer.endObject();'
+        print '    writer.endMember(); // parameters'
         print '}'
         print
         
@@ -414,10 +378,10 @@ class StateDumper:
     def dump_material_params(self):
         print '    if (!context.ES) {'
         for face in ['GL_FRONT', 'GL_BACK']:
-            print '    json.beginMember("%s");' % face
-            print '    json.beginObject();'
+            print '    writer.beginMember("%s");' % face
+            print '    writer.beginObject();'
             self.dump_atoms(glGetMaterial, face)
-            print '    json.endObject();'
+            print '    writer.endObject();'
         print '    }'
         print
 
@@ -429,11 +393,11 @@ class StateDumper:
         print '        if (glIsEnabled(light)) {'
         print '            char name[32];'
         print '            snprintf(name, sizeof name, "GL_LIGHT%i", index);'
-        print '            json.beginMember(name);'
-        print '            json.beginObject();'
+        print '            writer.beginMember(name);'
+        print '            writer.beginObject();'
         self.dump_atoms(glGetLight, '    GL_LIGHT0 + index')
-        print '            json.endObject();'
-        print '            json.endMember(); // GL_LIGHTi'
+        print '            writer.endObject();'
+        print '            writer.endMember(); // GL_LIGHTi'
         print '        }'
         print '    }'
         print
@@ -443,17 +407,17 @@ class StateDumper:
         print '    if (context.ARB_sampler_objects) {'
         print '        GLint sampler_binding = 0;'
         print '        glGetIntegerv(GL_SAMPLER_BINDING, &sampler_binding);'
-        print '        json.beginMember("GL_SAMPLER_BINDING");'
-        print '        json.writeInt(sampler_binding);'
-        print '        json.endMember();'
+        print '        writer.beginMember("GL_SAMPLER_BINDING");'
+        print '        writer.writeInt(sampler_binding);'
+        print '        writer.endMember();'
         print '        if (sampler_binding) {'
-        print '            json.beginMember("GL_SAMPLER");'
-        print '            json.beginObject();'
-        print '            dumpObjectLabel(json, context, GL_SAMPLER, sampler_binding, "GL_SAMPLER_LABEL");'
+        print '            writer.beginMember("GL_SAMPLER");'
+        print '            writer.beginObject();'
+        print '            dumpObjectLabel(writer, context, GL_SAMPLER, sampler_binding, "GL_SAMPLER_LABEL");'
         for _, _, name in glGetSamplerParameter.iter():
             self.dump_atom(glGetSamplerParameter, 'sampler_binding', name)
-        print '           json.endObject();'
-        print '           json.endMember(); // GL_SAMPLER'
+        print '           writer.endObject();'
+        print '           writer.endMember(); // GL_SAMPLER'
         print '       }'
         print '    }'
 
@@ -468,12 +432,12 @@ class StateDumper:
     def dump_texenv_params(self):
         for target in ['GL_TEXTURE_ENV', 'GL_TEXTURE_FILTER_CONTROL', 'GL_POINT_SPRITE']:
             print '    if (!context.ES) {'
-            print '        json.beginMember("%s");' % target
-            print '        json.beginObject();'
+            print '        writer.beginMember("%s");' % target
+            print '        writer.beginObject();'
             for _, _, name in glGetTexEnv.iter():
                 if self.texenv_param_target(name) == target:
                     self.dump_atom(glGetTexEnv, target, name) 
-            print '        json.endObject();'
+            print '        writer.endObject();'
             print '    }'
 
     def dump_vertex_attribs(self):
@@ -482,17 +446,17 @@ class StateDumper:
         print '    for (GLint index = 0; index < max_vertex_attribs; ++index) {'
         print '        char name[32];'
         print '        snprintf(name, sizeof name, "GL_VERTEX_ATTRIB_ARRAY%i", index);'
-        print '        json.beginMember(name);'
-        print '        json.beginObject();'
+        print '        writer.beginMember(name);'
+        print '        writer.beginObject();'
         self.dump_atoms(glGetVertexAttrib, 'index')
         
         # Dump vertex attrib buffer label
         print '        GLint buffer_binding = 0;'
         print '        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer_binding);'
-        print '        dumpObjectLabel(json, context, GL_BUFFER, buffer_binding, "GL_VERTEX_ATTRIB_ARRAY_BUFFER_LABEL");'
+        print '        dumpObjectLabel(writer, context, GL_BUFFER, buffer_binding, "GL_VERTEX_ATTRIB_ARRAY_BUFFER_LABEL");'
 
-        print '        json.endObject();'
-        print '        json.endMember(); // GL_VERTEX_ATTRIB_ARRAYi'
+        print '        writer.endObject();'
+        print '        writer.endMember(); // GL_VERTEX_ATTRIB_ARRAYi'
         print '    }'
         print
 
@@ -527,7 +491,7 @@ class StateDumper:
             print '    {'
             print '        GLint binding = 0;'
             print '        glGetIntegerv(%s, &binding);' % object_binding
-            print '        dumpObjectLabel(json, context, %s, binding, "%s");' % (object_type, member_name)
+            print '        dumpObjectLabel(writer, context, %s, binding, "%s");' % (object_type, member_name)
             print '    }'
 
     program_targets = [
@@ -538,41 +502,63 @@ class StateDumper:
     def dump_program_params(self):
         for target in self.program_targets:
             print '    if (glIsEnabled(%s)) {' % target
-            print '        json.beginMember("%s");' % target
-            print '        json.beginObject();'
+            print '        writer.beginMember("%s");' % target
+            print '        writer.beginObject();'
             self.dump_atoms(glGetProgramARB, target)
-            print '        json.endObject();'
+            print '        writer.endObject();'
             print '    }'
 
     buffer_targets = [
-        ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING'),
-        # FIXME: Causes Mesa to segfault.  Disable for now.
-        #('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING'),
-        ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING'),
-        ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING'),
-        ('GL_DRAW_INDIRECT_BUFFER', 'GL_DRAW_INDIRECT_BUFFER_BINDING'),
-        ('GL_DISPATCH_INDIRECT_BUFFER', 'GL_DISPATCH_INDIRECT_BUFFER_BINDING'),
-        ('GL_ELEMENT_ARRAY_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING'),
-        ('GL_PIXEL_PACK_BUFFER', 'GL_PIXEL_PACK_BUFFER_BINDING'),
-        ('GL_PIXEL_UNPACK_BUFFER', 'GL_PIXEL_UNPACK_BUFFER_BINDING'),
-        ('GL_QUERY_BUFFER', 'GL_QUERY_BUFFER_BINDING'),
-        ('GL_SHADER_STORAGE_BUFFER', 'GL_SHADER_STORAGE_BUFFER_BINDING'),
-        ('GL_TEXTURE_BUFFER', 'GL_TEXTURE_BUFFER'),
-        ('GL_TRANSFORM_FEEDBACK_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING'),
-        ('GL_UNIFORM_BUFFER', 'GL_UNIFORM_BUFFER_BINDING'),
+        ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING', None),
+        # FIXME: Causes Mesa to segfault (issue #332).  Disable for now.
+        #('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING', 'GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS'),
+        ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING', None),
+        ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING', None),
+        ('GL_DRAW_INDIRECT_BUFFER', 'GL_DRAW_INDIRECT_BUFFER_BINDING', None),
+        ('GL_DISPATCH_INDIRECT_BUFFER', 'GL_DISPATCH_INDIRECT_BUFFER_BINDING', None),
+        ('GL_ELEMENT_ARRAY_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING', None),
+        ('GL_PIXEL_PACK_BUFFER', 'GL_PIXEL_PACK_BUFFER_BINDING', None),
+        ('GL_PIXEL_UNPACK_BUFFER', 'GL_PIXEL_UNPACK_BUFFER_BINDING', None),
+        ('GL_QUERY_BUFFER', 'GL_QUERY_BUFFER_BINDING', None),
+        ('GL_SHADER_STORAGE_BUFFER', 'GL_SHADER_STORAGE_BUFFER_BINDING', 'GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS'),
+        ('GL_TEXTURE_BUFFER', 'GL_TEXTURE_BUFFER', None),
+        ('GL_TRANSFORM_FEEDBACK_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING', 'GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS'),
+        ('GL_UNIFORM_BUFFER', 'GL_UNIFORM_BUFFER_BINDING', 'GL_MAX_UNIFORM_BUFFER_BINDINGS'),
     ]
 
     def dump_buffer_parameters(self):
-        for target, binding in self.buffer_targets:
+        # general binding points
+        for target, binding, max_bindings in self.buffer_targets:
+            print '    // %s' % target
             print '    {'
+            print '        writer.beginMember("%s");' % target
+            print '        writer.beginObject();'
             print '        GLint buffer = 0;'
             print '        glGetIntegerv(%s, &buffer);' % binding
             print '        if (buffer) {'
-            print '            json.beginMember("%s");' % target
-            print '            json.beginObject();'
             self.dump_atoms(glGetBufferParameter, target)
-            print '            json.endObject();'
             print '        }'
+            if max_bindings is not None:
+                # indexed binding points
+                start = target + '_START'
+                size = target + '_SIZE'
+                print '        GLint max_bindings = 0;'
+                print '        glGetIntegerv(%s, &max_bindings);' % max_bindings
+                print '        if (max_bindings) {'
+                print '            writer.beginMember("i");'
+                print '            writer.beginArray();'
+                print '            for (GLint i = 0; i < max_bindings; ++i) {'
+                print '                writer.beginObject();'
+                for pname in [binding, start, size]:
+                    self.dump_atom(glGet_i, pname, 'i')
+                print '                writer.endObject();'
+                print '            }'
+                print '            writer.endArray();'
+                print '            writer.endMember();'
+                print '        }'
+
+            print '        writer.endObject();'
+            print '        writer.endMember();'
             print '    }'
             print
 
@@ -581,22 +567,42 @@ class StateDumper:
         print '        GLint active_texture = GL_TEXTURE0;'
         print '        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
         print '        GLint max_texture_coords = 0;'
-        print '        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+        print '        if (!context.core) {'
+        print '            glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+        print '        }'
         print '        GLint max_combined_texture_image_units = 0;'
         print '        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);'
-        print '        GLint max_units = std::max(std::max(max_combined_texture_image_units, max_texture_coords), 2);'
+        print '        max_combined_texture_image_units = std::max(max_combined_texture_image_units, 2);'
+        print '        GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);'
         print '        for (GLint unit = 0; unit < max_units; ++unit) {'
         print '            char name[32];'
         print '            snprintf(name, sizeof name, "GL_TEXTURE%i", unit);'
-        print '            json.beginMember(name);'
+        print '            writer.beginMember(name);'
         print '            glActiveTexture(GL_TEXTURE0 + unit);'
-        print '            json.beginObject();'
+        print '            writer.beginObject();'
         print
         self.dump_atoms(glGet_texture)
         print
         print '            for (unsigned i = 0; i < numTextureTargets; ++i) {'
         print '                GLenum target = textureTargets[i];'
-        print '                dumpTextureTargetParameters(json, context, target);'
+        print '                GLboolean enabled = GL_FALSE;'
+        print '                if (unit < max_texture_coords &&'
+        print '                    (target == GL_TEXTURE_1D ||'
+        print '                     target == GL_TEXTURE_2D ||'
+        print '                     target == GL_TEXTURE_3D ||'
+        print '                     target == GL_TEXTURE_CUBE_MAP ||'
+        print '                     target == GL_TEXTURE_RECTANGLE)) {'
+        print '                    glGetBooleanv(target, &enabled);'
+        print '                    writer.beginMember(enumToString(target));'
+        print '                    dumpBoolean(writer, enabled);'
+        print '                    writer.endMember();'
+        print '                }'
+        print '                GLint texture = 0;'
+        print '                GLenum binding = getTextureBinding(target);'
+        print '                glGetIntegerv(binding, &texture);'
+        print '                if (enabled || texture) {'
+        print '                    dumpTextureTargetParameters(writer, context, target, texture);'
+        print '                }'
         print '            }'
         print
         self.dump_sampler_params()
@@ -604,8 +610,8 @@ class StateDumper:
         print '            if (unit < max_texture_coords) {'
         self.dump_texenv_params()
         print '            }'
-        print '            json.endObject();'
-        print '            json.endMember(); // GL_TEXTUREi'
+        print '            writer.endObject();'
+        print '            writer.endMember(); // GL_TEXTUREi'
         print '        }'
         print '        glActiveTexture(active_texture);'
         print '    }'
@@ -621,17 +627,17 @@ class StateDumper:
             print '            framebuffer = 0;'
             print '            glGetIntegerv(%s, &framebuffer);' % binding
             print '            if (framebuffer) {'
-            print '                json.beginMember("%s");' % target
-            print '                json.beginObject();'
-            print '                dumpObjectLabel(json, context, GL_FRAMEBUFFER, framebuffer, "GL_FRAMEBUFFER_LABEL");'
+            print '                writer.beginMember("%s");' % target
+            print '                writer.beginObject();'
+            print '                dumpObjectLabel(writer, context, GL_FRAMEBUFFER, framebuffer, "GL_FRAMEBUFFER_LABEL");'
             print '                for (GLint i = 0; i < max_color_attachments; ++i) {'
             print '                    GLint color_attachment = GL_COLOR_ATTACHMENT0 + i;'
-            print '                    dumpFramebufferAttachementParameters(json, context, %s, color_attachment);' % target
+            print '                    dumpFramebufferAttachementParameters(writer, context, %s, color_attachment);' % target
             print '                }'
-            print '                dumpFramebufferAttachementParameters(json, context, %s, GL_DEPTH_ATTACHMENT);' % target
-            print '                dumpFramebufferAttachementParameters(json, context, %s, GL_STENCIL_ATTACHMENT);' % target
-            print '                json.endObject();'
-            print '                json.endMember(); // %s' % target
+            print '                dumpFramebufferAttachementParameters(writer, context, %s, GL_DEPTH_ATTACHMENT);' % target
+            print '                dumpFramebufferAttachementParameters(writer, context, %s, GL_STENCIL_ATTACHMENT);' % target
+            print '                writer.endObject();'
+            print '                writer.endMember(); // %s' % target
             print '            }'
             print
         print '    }'
@@ -642,14 +648,14 @@ class StateDumper:
         print '                GLint object_type = GL_NONE;'
         print '                glGetFramebufferAttachmentParameteriv(%s, %s, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &object_type);' % (target, attachment)
         print '                if (object_type != GL_NONE) {'
-        print '                    json.beginMember(enumToString(%s));' % attachment
-        print '                    json.beginObject();'
+        print '                    writer.beginMember(enumToString(%s));' % attachment
+        print '                    writer.beginObject();'
         self.dump_atoms(glGetFramebufferAttachmentParameter, target, attachment)
         print '                    GLint object_name = 0;'
         print '                    glGetFramebufferAttachmentParameteriv(%s, %s, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &object_name);' % (target, attachment)
-        print '                    dumpObjectLabel(json, context, object_type, object_name, "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_LABEL");'
-        print '                    json.endObject();'
-        print '                    json.endMember(); // GL_x_ATTACHMENT'
+        print '                    dumpObjectLabel(writer, context, object_type, object_name, "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_LABEL");'
+        print '                    writer.endObject();'
+        print '                    writer.endMember(); // GL_x_ATTACHMENT'
         print '                }'
         print '            }'
 
@@ -658,7 +664,7 @@ class StateDumper:
             self.dump_atom(getter, *(args + (name,)))
 
     def dump_atom(self, getter, *args):
-        name = args[-1]
+        name = args[getter.pnameIdx]
 
         print '        // %s' % name
         print '        {'
@@ -668,9 +674,9 @@ class StateDumper:
         #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
         print '                flushErrors();'
         print '            } else {'
-        print '                json.beginMember("%s");' % name
+        print '                writer.beginMember("%s");' % name
         JsonWriter().visit(type, value)
-        print '                json.endMember();'
+        print '                writer.endMember();'
         print '            }'
         print '        }'
         print

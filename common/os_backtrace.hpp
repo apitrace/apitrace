@@ -24,8 +24,7 @@
  *
  **************************************************************************/
 
-#ifndef _OS_BACKTRACE_HPP_
-#define _OS_BACKTRACE_HPP_
+#pragma once
 
 #include <vector>
 
@@ -43,5 +42,3 @@ void dump_backtrace();
 
 
 } /* namespace os */
-
-#endif

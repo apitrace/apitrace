@@ -12,7 +12,8 @@
 #include <QList>
 #include <QImage>
 
-#include <qjson/parser.h>
+#include "qubjson.h"
+
 
 /**
  * Wrapper around a QProcess which enforces IO to block .
@@ -137,7 +138,8 @@ Retracer::Retracer(QObject *parent)
       m_captureCall(0),
       m_profileGpu(false),
       m_profileCpu(false),
-      m_profilePixels(false)
+      m_profilePixels(false),
+      m_profileMemory(false)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
 }
@@ -222,16 +224,22 @@ bool Retracer::isProfilingPixels() const
     return m_profilePixels;
 }
 
-bool Retracer::isProfiling() const
+bool Retracer::isProfilingMemory() const
 {
-    return m_profileGpu || m_profileCpu || m_profilePixels;
+    return m_profileMemory;
 }
 
-void Retracer::setProfiling(bool gpu, bool cpu, bool pixels)
+bool Retracer::isProfiling() const
+{
+    return m_profileGpu || m_profileCpu || m_profilePixels | m_profileMemory;
+}
+
+void Retracer::setProfiling(bool gpu, bool cpu, bool pixels, bool memory)
 {
     m_profileGpu = gpu;
     m_profileCpu = cpu;
     m_profilePixels = pixels;
+    m_profileMemory = memory;
 }
 
 void Retracer::setCaptureAtCallNumber(qlonglong num)
@@ -262,6 +270,94 @@ bool Retracer::captureThumbnails() const
 void Retracer::setCaptureThumbnails(bool enable)
 {
     m_captureThumbnails = enable;
+}
+
+void Retracer::addThumbnailToCapture(qlonglong num)
+{
+    if (!m_thumbnailsToCapture.contains(num)) {
+        m_thumbnailsToCapture.append(num);
+    }
+}
+
+void Retracer::resetThumbnailsToCapture()
+{
+    m_thumbnailsToCapture.clear();
+}
+
+QString Retracer::thumbnailCallSet() const
+{
+    QString callSet;
+
+    bool isFirst = true;
+
+    foreach (qlonglong callIndex, m_thumbnailsToCapture) {
+        // TODO: detect contiguous ranges
+        if (!isFirst) {
+            callSet.append(QLatin1String(","));
+        } else {
+            isFirst = false;
+        }
+
+        //emit "callIndex"
+        callSet.append(QString::number(callIndex));
+    }
+
+    //qDebug() << QLatin1String("debug: call set to capture: ") << callSet;
+    return callSet;
+}
+
+QStringList Retracer::retraceArguments() const
+{
+    QStringList arguments;
+
+    if (m_singlethread) {
+        arguments << QLatin1String("--singlethread");
+    }
+
+    if (m_useCoreProfile) {
+        arguments << QLatin1String("--core");
+    }
+
+    if (m_captureState) {
+        arguments << QLatin1String("-D");
+        arguments << QString::number(m_captureCall);
+        arguments << QLatin1String("--dump-format");
+        arguments << QLatin1String("ubjson");
+    } else if (m_captureThumbnails) {
+        if (!m_thumbnailsToCapture.isEmpty()) {
+            arguments << QLatin1String("-S");
+            arguments << thumbnailCallSet();
+        }
+        arguments << QLatin1String("-s"); // emit snapshots
+        arguments << QLatin1String("-"); // emit to stdout
+    } else if (isProfiling()) {
+        if (m_profileGpu) {
+            arguments << QLatin1String("--pgpu");
+        }
+
+        if (m_profileCpu) {
+            arguments << QLatin1String("--pcpu");
+        }
+
+        if (m_profilePixels) {
+            arguments << QLatin1String("--ppd");
+        }
+
+        if (m_profileMemory) {
+            arguments << QLatin1String("--pmem");
+        }
+    } else {
+        if (!m_doubleBuffered) {
+            arguments << QLatin1String("--sb");
+        }
+
+        if (m_benchmarking) {
+            arguments << QLatin1String("-b");
+        } else {
+            arguments << QLatin1String("-d");
+        }
+    }
+    return arguments;
 }
 
 /**
@@ -304,45 +400,7 @@ void Retracer::run()
         return;
     }
 
-    if (m_singlethread) {
-        arguments << QLatin1String("--singlethread");
-    }
-
-    if (m_useCoreProfile) {
-        arguments << QLatin1String("--core");
-    }
-
-    if (m_captureState) {
-        arguments << QLatin1String("-D");
-        arguments << QString::number(m_captureCall);
-    } else if (m_captureThumbnails) {
-        arguments << QLatin1String("-s"); // emit snapshots
-        arguments << QLatin1String("-"); // emit to stdout
-    } else if (isProfiling()) {
-        if (m_profileGpu) {
-            arguments << QLatin1String("--pgpu");
-        }
-
-        if (m_profileCpu) {
-            arguments << QLatin1String("--pcpu");
-        }
-
-        if (m_profilePixels) {
-            arguments << QLatin1String("--ppd");
-        }
-    } else {
-        if (m_doubleBuffered) {
-            arguments << QLatin1String("--db");
-        } else {
-            arguments << QLatin1String("--sb");
-        }
-
-        if (m_benchmarking) {
-            arguments << QLatin1String("-b");
-        }
-    }
-
-    arguments << m_fileName;
+    arguments << retraceArguments() << m_fileName;
 
     /*
      * Support remote execution on a separate target.
@@ -358,6 +416,15 @@ void Retracer::run()
      * Start the process.
      */
 
+    {
+        QDebug debug(QtDebugMsg);
+        debug << "Running:";
+        debug << prog;
+        foreach (const QString &argument, arguments) {
+            debug << argument;
+        }
+    }
+
     QProcess process;
 
     process.start(prog, arguments, QIODevice::ReadOnly);
@@ -370,7 +437,7 @@ void Retracer::run()
      * Process standard output
      */
 
-    QList<QImage> thumbnails;
+    ImageHash thumbnails;
     QVariantMap parsedJson;
     trace::Profile* profile = NULL;
 
@@ -379,32 +446,8 @@ void Retracer::run()
         BlockingIODevice io(&process);
 
         if (m_captureState) {
-            /*
-             * Parse JSON from the output.
-             *
-             * XXX: QJSON's scanner is inneficient as it abuses single
-             * character QIODevice::peek (not cheap), instead of maintaining a
-             * lookahead character on its own.
-             */
-
-            bool ok = false;
-            QJson::Parser jsonParser;
-
-            // Allow Nan/Infinity
-            jsonParser.allowSpecialNumbers(true);
-#if 0
-            parsedJson = jsonParser.parse(&io, &ok).toMap();
-#else
-            /*
-             * XXX: QJSON expects blocking IO, and it looks like
-             * BlockingIODevice does not work reliably in all cases.
-             */
+            parsedJson = decodeUBJSONObject(&io).toMap();
             process.waitForFinished(-1);
-            parsedJson = jsonParser.parse(&process, &ok).toMap();
-#endif
-            if (!ok) {
-                msg = QLatin1String("failed to parse JSON");
-            }
         } else if (m_captureThumbnails) {
             /*
              * Parse concatenated PNM images from output.
@@ -454,7 +497,7 @@ void Retracer::run()
                 }
 
                 QImage thumb = thumbnail(snapshot);
-                thumbnails.append(thumb);
+                thumbnails.insert(info.commentNumber, thumb);
             }
 
             Q_ASSERT(process.state() != QProcess::Running);

@@ -99,7 +99,7 @@ upperBound(unsigned long long address) {
 }
 
 void
-addRegion(unsigned long long address, void *buffer, unsigned long long size)
+addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned long long size)
 {
     if (retrace::verbosity >= 2) {
         std::cout
@@ -118,21 +118,28 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
         return;
     }
 
-#ifndef NDEBUG
-    RegionMap::iterator start = lowerBound(address);
-    RegionMap::iterator stop = upperBound(address + size - 1);
-    if (0) {
-        // Forget all regions that intersect this new one.
-        regionMap.erase(start, stop);
-    } else {
-        for (RegionMap::iterator it = start; it != stop; ++it) {
-            std::cerr << std::hex << "warning: "
-                "region 0x" << address << "-0x" << (address + size) << " "
-                "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
-            assert(intersects(it, address, size));
+    const bool debug =
+#ifdef NDEBUG
+        false
+#else
+        true
+#endif
+    ;
+    if (debug) {
+        RegionMap::iterator start = lowerBound(address);
+        RegionMap::iterator stop = upperBound(address + size - 1);
+        if (0) {
+            // Forget all regions that intersect this new one.
+            regionMap.erase(start, stop);
+        } else {
+            for (RegionMap::iterator it = start; it != stop; ++it) {
+                warning(call) << std::hex <<
+                    "region 0x" << address << "-0x" << (address + size) << " "
+                    "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
+                assert(intersects(it, address, size));
+            }
         }
     }
-#endif
 
     assert(buffer);
 
@@ -182,13 +189,15 @@ delRegionByPointer(void *ptr) {
     assert(0);
 }
 
-void *
-lookupAddress(unsigned long long address) {
+static void
+lookupAddress(unsigned long long address, void * & ptr, size_t & len) {
     RegionMap::iterator it = lookupRegion(address);
     if (it != regionMap.end()) {
         unsigned long long offset = address - it->first;
         assert(offset < it->second.size);
-        void *addr = (char *)it->second.buffer + offset;
+
+        ptr = (char *)it->second.buffer + offset;
+        len = it->second.size - offset;
 
         if (retrace::verbosity >= 2) {
             std::cout
@@ -196,12 +205,12 @@ lookupAddress(unsigned long long address) {
                 << std::hex
                 << "0x" << address
                 << " <- "
-                << "0x" << (uintptr_t)addr
+                << "0x" << (uintptr_t)ptr
                 << std::dec
                 << "\n";
         }
 
-        return addr;
+        return;
     }
 
     if (retrace::debug && address >= 64 * 1024 * 1024) {
@@ -209,45 +218,63 @@ lookupAddress(unsigned long long address) {
         std::cerr << "warning: passing high address 0x" << std::hex << address << std::dec << " as uintptr_t\n";
     }
 
-    return (void *)(uintptr_t)address;
+    ptr = (void *)(uintptr_t)address;
+    len = 0;
 }
 
 
 class Translator : protected trace::Visitor
 {
 protected:
-    bool bind;
+    const bool bind;
 
-    void *result;
+    void *ptr;
+    size_t len;
 
+protected:
     void visit(trace::Null *) {
-        result = NULL;
+        ptr = NULL;
+        len = 0;
     }
 
     void visit(trace::Blob *blob) {
-        result = blob->toPointer(bind);
+        ptr = blob->toPointer(bind);
+        len = blob->size;
     }
 
     void visit(trace::Pointer *p) {
-        result = lookupAddress(p->value);
+        lookupAddress(p->value, ptr, len);
     }
 
 public:
     Translator(bool _bind) :
         bind(_bind),
-        result(NULL)
+        ptr(NULL),
+        len(0)
     {}
 
-    void * operator() (trace::Value *node) {
+    void
+    operator() (trace::Value *node, void * & _ptr, size_t & _len) {
         _visit(node);
-        return result;
+        _ptr = ptr;
+        _len = len;
     }
 };
 
 
+void
+toRange(trace::Value &value, void * & ptr, size_t & len) {
+    Translator(false) (&value, ptr, len);
+}
+
 void *
 toPointer(trace::Value &value, bool bind) {
-    return Translator(bind) (&value);
+    void * ptr;
+    size_t len;
+    Translator translator(bind);
+    translator(&value, ptr, len);
+    (void)len;
+    return ptr;
 }
 
 
@@ -281,7 +308,7 @@ delObj(trace::Value &value) {
     unsigned long long address = value.toUIntPtr();
     _obj_map.erase(address);
     if (retrace::verbosity >= 2) {
-        std::cout << std::hex << "obj 0x" << address << " del\n";
+        std::cout << std::hex << "obj 0x" << address << std::dec << " del\n";
     }
 }
 

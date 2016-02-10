@@ -17,7 +17,7 @@ EXPORTS
         DSoundHelp
         GetDDSurfaceLocal
         GetOLEThunkData
-        GetSurfaceFromDC
+        ;GetSurfaceFromDC
         RegisterSpecialCase
         ReleaseDDThreadLock
         ;SetAppCompatData

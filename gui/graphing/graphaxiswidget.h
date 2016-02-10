@@ -1,5 +1,4 @@
-#ifndef GRAPHAXISWIDGET_H
-#define GRAPHAXISWIDGET_H
+#pragma once
 
 #include "graphing.h"
 
@@ -69,5 +68,3 @@ protected:
     QPoint m_mousePressPosition;
     qint64 m_mousePressValue;
 };
-
-#endif

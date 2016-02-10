@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2014 VMware, Inc.
  * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
@@ -30,135 +31,189 @@
 #include <algorithm>
 
 #include "os.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "image.hpp"
+#include "com_ptr.hpp"
 #include "d3d11imports.hpp"
+#include "d3d11state.hpp"
 #include "d3d10state.hpp"
 #include "dxgistate.hpp"
 
 
 namespace d3dstate {
 
-static HRESULT
-stageResource(ID3D11DeviceContext *pDeviceContext,
-              ID3D11Resource *pResource,
-              ID3D11Resource **ppStagingResource,
-              UINT *pWidth, UINT *pHeight, UINT *pDepth,
-              UINT *pMipLevels) {
-    D3D11_USAGE Usage = D3D11_USAGE_STAGING;
-    UINT BindFlags = 0;
-    UINT CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    UINT MiscFlags = 0;
-    union {
-         ID3D11Resource *pStagingResource;
-         ID3D11Buffer *pStagingBuffer;
-         ID3D11Texture1D *pStagingTexture1D;
-         ID3D11Texture2D *pStagingTexture2D;
-         ID3D11Texture3D *pStagingTexture3D;
-    };
-    HRESULT hr;
 
-    ID3D11Device *pDevice = NULL;
-    pDeviceContext->GetDevice(&pDevice);
+struct ResourceDesc
+{
+    D3D11_RESOURCE_DIMENSION Type;
+    UINT Width;
+    UINT Height;
+    UINT Depth;
+    UINT MipLevels;
+    UINT ArraySize;
+    DXGI_FORMAT Format;
+    DXGI_SAMPLE_DESC SampleDesc;
+    D3D11_USAGE Usage;
+    UINT BindFlags;
+    UINT CPUAccessFlags;
+    UINT MiscFlags;
+};
 
-    D3D11_RESOURCE_DIMENSION Type = D3D11_RESOURCE_DIMENSION_UNKNOWN;
-    pResource->GetType(&Type);
-    switch (Type) {
+
+static void
+getResourceDesc(ID3D11Resource *pResource, ResourceDesc *pDesc)
+{
+    pDesc->Type = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+    pDesc->Width = 0;
+    pDesc->Height = 1;
+    pDesc->Depth = 1;
+    pDesc->MipLevels = 1;
+    pDesc->ArraySize = 1;
+    pDesc->Format = DXGI_FORMAT_UNKNOWN;
+    pDesc->SampleDesc.Count = 1;
+    pDesc->SampleDesc.Quality = 0;
+    pDesc->Usage = D3D11_USAGE_DEFAULT;
+    pDesc->BindFlags = 0;
+    pDesc->CPUAccessFlags = 0;
+    pDesc->MiscFlags = 0;
+
+    pResource->GetType(&pDesc->Type);
+    switch (pDesc->Type) {
     case D3D11_RESOURCE_DIMENSION_BUFFER:
         {
             D3D11_BUFFER_DESC Desc;
             static_cast<ID3D11Buffer *>(pResource)->GetDesc(&Desc);
-            Desc.Usage = Usage;
-            Desc.BindFlags = BindFlags;
-            Desc.CPUAccessFlags = CPUAccessFlags;
-            Desc.MiscFlags = MiscFlags;
-
-            *pWidth = Desc.ByteWidth;
-            *pHeight = 1;
-            *pDepth = 1;
-            *pMipLevels = 1;
-
-            hr = pDevice->CreateBuffer(&Desc, NULL, &pStagingBuffer);
+            pDesc->Width = Desc.ByteWidth;
+            pDesc->Usage = Desc.Usage;
+            pDesc->BindFlags = Desc.BindFlags;
+            pDesc->CPUAccessFlags = Desc.CPUAccessFlags;
+            pDesc->MiscFlags = Desc.MiscFlags;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
         {
             D3D11_TEXTURE1D_DESC Desc;
             static_cast<ID3D11Texture1D *>(pResource)->GetDesc(&Desc);
-            Desc.Usage = Usage;
-            Desc.BindFlags = BindFlags;
-            Desc.CPUAccessFlags = CPUAccessFlags;
-            Desc.MiscFlags = MiscFlags;
-
-            *pWidth = Desc.Width;
-            *pHeight = 1;
-            *pDepth = 1;
-            *pMipLevels = Desc.MipLevels;
-
-            hr = pDevice->CreateTexture1D(&Desc, NULL, &pStagingTexture1D);
+            pDesc->Width = Desc.Width;
+            pDesc->MipLevels = Desc.MipLevels;
+            pDesc->ArraySize = Desc.ArraySize;
+            pDesc->Format = Desc.Format;
+            pDesc->Usage = Desc.Usage;
+            pDesc->BindFlags = Desc.BindFlags;
+            pDesc->CPUAccessFlags = Desc.CPUAccessFlags;
+            pDesc->MiscFlags = Desc.MiscFlags;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
         {
             D3D11_TEXTURE2D_DESC Desc;
             static_cast<ID3D11Texture2D *>(pResource)->GetDesc(&Desc);
-            Desc.Usage = Usage;
-            Desc.BindFlags = BindFlags;
-            Desc.CPUAccessFlags = CPUAccessFlags;
-            Desc.MiscFlags &= D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-            *pWidth = Desc.Width;
-            *pHeight = Desc.Height;
-            *pDepth = 1;
-            *pMipLevels = Desc.MipLevels;
-
-            hr = pDevice->CreateTexture2D(&Desc, NULL, &pStagingTexture2D);
+            pDesc->Width = Desc.Width;
+            pDesc->Height = Desc.Height;
+            pDesc->MipLevels = Desc.MipLevels;
+            pDesc->ArraySize = Desc.ArraySize;
+            pDesc->Format = Desc.Format;
+            pDesc->SampleDesc = Desc.SampleDesc;
+            pDesc->Usage = Desc.Usage;
+            pDesc->BindFlags = Desc.BindFlags;
+            pDesc->CPUAccessFlags = Desc.CPUAccessFlags;
+            pDesc->MiscFlags = Desc.MiscFlags;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
         {
             D3D11_TEXTURE3D_DESC Desc;
             static_cast<ID3D11Texture3D *>(pResource)->GetDesc(&Desc);
-            Desc.Usage = Usage;
-            Desc.BindFlags = BindFlags;
-            Desc.CPUAccessFlags = CPUAccessFlags;
-            Desc.MiscFlags = MiscFlags;
-
-            *pWidth = Desc.Width;
-            *pHeight = Desc.Height;
-            *pDepth = Desc.Depth;
-            *pMipLevels = Desc.MipLevels;
-
-            hr = pDevice->CreateTexture3D(&Desc, NULL, &pStagingTexture3D);
+            pDesc->Width = Desc.Width;
+            pDesc->Height = Desc.Height;
+            pDesc->Depth = Desc.Depth;
+            pDesc->MipLevels = Desc.MipLevels;
+            pDesc->Format = Desc.Format;
+            pDesc->Usage = Desc.Usage;
+            pDesc->BindFlags = Desc.BindFlags;
+            pDesc->CPUAccessFlags = Desc.CPUAccessFlags;
+            pDesc->MiscFlags = Desc.MiscFlags;
         }
         break;
     default:
         assert(0);
-        hr = E_NOTIMPL;
         break;
     }
-
-    if (SUCCEEDED(hr)) {
-        *ppStagingResource = pStagingResource;
-        pDeviceContext->CopyResource(pStagingResource, pResource);
-    }
-    
-    pDevice->Release();
-
-    return hr;
 }
 
-static image::Image *
-getSubResourceImage(ID3D11DeviceContext *pDevice,
+
+static HRESULT
+createResource(ID3D11Device *pDevice, const ResourceDesc *pDesc, ID3D11Resource **ppResource)
+{
+    switch (pDesc->Type) {
+    case D3D11_RESOURCE_DIMENSION_BUFFER:
+        {
+            D3D11_BUFFER_DESC Desc;
+            Desc.ByteWidth = pDesc->Width;
+            Desc.Usage = pDesc->Usage;
+            Desc.BindFlags = pDesc->BindFlags;
+            Desc.CPUAccessFlags = pDesc->CPUAccessFlags;
+            Desc.MiscFlags = pDesc->MiscFlags;
+            return pDevice->CreateBuffer(&Desc, NULL, reinterpret_cast<ID3D11Buffer **>(ppResource));
+        }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            D3D11_TEXTURE1D_DESC Desc;
+            Desc.Width = pDesc->Width;
+            Desc.MipLevels = pDesc->MipLevels;
+            Desc.ArraySize = pDesc->ArraySize;
+            Desc.Format = pDesc->Format;
+            Desc.Usage = pDesc->Usage;
+            Desc.BindFlags = pDesc->BindFlags;
+            Desc.CPUAccessFlags = pDesc->CPUAccessFlags;
+            Desc.MiscFlags = pDesc->MiscFlags;
+            return pDevice->CreateTexture1D(&Desc, NULL, reinterpret_cast<ID3D11Texture1D **>(ppResource));
+        }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            D3D11_TEXTURE2D_DESC Desc;
+            Desc.Width = pDesc->Width;
+            Desc.Height = pDesc->Height;
+            Desc.MipLevels = pDesc->MipLevels;
+            Desc.ArraySize = pDesc->ArraySize;
+            Desc.Format = pDesc->Format;
+            Desc.SampleDesc = pDesc->SampleDesc;
+            Desc.Usage = pDesc->Usage;
+            Desc.BindFlags = pDesc->BindFlags;
+            Desc.CPUAccessFlags = pDesc->CPUAccessFlags;
+            Desc.MiscFlags = pDesc->MiscFlags;
+            return pDevice->CreateTexture2D(&Desc, NULL, reinterpret_cast<ID3D11Texture2D **>(ppResource));
+        }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            D3D11_TEXTURE3D_DESC Desc;
+            Desc.Width = pDesc->Width;
+            Desc.Height = pDesc->Height;
+            Desc.Depth = pDesc->Depth;
+            Desc.MipLevels = pDesc->MipLevels;
+            Desc.Format = pDesc->Format;
+            Desc.Usage = pDesc->Usage;
+            Desc.BindFlags = pDesc->BindFlags;
+            Desc.CPUAccessFlags = pDesc->CPUAccessFlags;
+            Desc.MiscFlags = pDesc->MiscFlags;
+            return pDevice->CreateTexture3D(&Desc, NULL, reinterpret_cast<ID3D11Texture3D **>(ppResource));
+        }
+    default:
+        assert(0);
+        *ppResource = NULL;
+        return E_NOTIMPL;
+    }
+}
+
+
+image::Image *
+getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
                     ID3D11Resource *pResource,
                     DXGI_FORMAT Format,
                     UINT ArraySlice,
                     UINT MipSlice)
 {
     image::Image *image = NULL;
-    ID3D11Resource *pStagingResource = NULL;
-    UINT Width, Height, Depth;
-    UINT MipLevels;
     UINT SubResource;
     D3D11_MAPPED_SUBRESOURCE MappedSubResource;
     HRESULT hr;
@@ -167,18 +222,68 @@ getSubResourceImage(ID3D11DeviceContext *pDevice,
         return NULL;
     }
 
-    hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth, &MipLevels);
-    if (FAILED(hr)) {
-        goto no_staging;
+    com_ptr<ID3D11Device> pDevice;
+    pDeviceContext->GetDevice(&pDevice);
+
+    ResourceDesc Desc;
+    getResourceDesc(pResource, &Desc);
+    assert(ArraySlice < Desc.ArraySize);
+    assert(MipSlice < Desc.MipLevels);
+    assert(Desc.SampleDesc.Count > 0);
+
+    SubResource = ArraySlice*Desc.MipLevels + MipSlice;
+
+    /*
+     * Resolve the subresource.
+     */
+
+    ResourceDesc ResolvedDesc = Desc;
+    ResolvedDesc.Width  = std::max(Desc.Width  >> MipSlice, 1U);
+    ResolvedDesc.Height = std::max(Desc.Height >> MipSlice, 1U);
+    ResolvedDesc.Depth  = std::max(Desc.Depth  >> MipSlice, 1U);
+    ResolvedDesc.ArraySize = 1;
+    ResolvedDesc.MipLevels = 1;
+    ResolvedDesc.SampleDesc.Count = 1;
+    ResolvedDesc.SampleDesc.Quality = 0;
+    ResolvedDesc.Usage = D3D11_USAGE_DEFAULT;
+    ResolvedDesc.BindFlags = 0;
+    ResolvedDesc.CPUAccessFlags = 0;
+    ResolvedDesc.MiscFlags = 0;
+
+    com_ptr<ID3D11Resource> pResolvedResource;
+    if (Desc.SampleDesc.Count == 1) {
+        pResolvedResource = pResource;
+    } else {
+        hr = createResource(pDevice, &ResolvedDesc, &pResolvedResource);
+        if (FAILED(hr)) {
+            return NULL;
+        }
+
+        pDeviceContext->ResolveSubresource(pResolvedResource, 0, pResource, SubResource, Format);
+        SubResource = 0;
     }
 
-    SubResource = ArraySlice*MipLevels + MipSlice;
+    /*
+     * Stage the subresource.
+     */
 
-    Width  = std::max(Width  >> MipSlice, 1U);
-    Height = std::max(Height >> MipSlice, 1U);
-    Depth  = std::max(Depth  >> MipSlice, 1U);
+    ResourceDesc StagingDesc = ResolvedDesc;
+    StagingDesc.Usage = D3D11_USAGE_STAGING;
+    StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-    hr = pDevice->Map(pStagingResource, SubResource, D3D11_MAP_READ, 0, &MappedSubResource);
+    com_ptr<ID3D11Resource> pStagingResource;
+    hr = createResource(pDevice, &StagingDesc, &pStagingResource);
+    if (FAILED(hr)) {
+        return NULL;
+    }
+
+    pDeviceContext->CopySubresourceRegion(pStagingResource, 0, 0, 0, 0, pResolvedResource, SubResource, NULL);
+
+    /*
+     * Map and read the subresource.
+     */
+
+    hr = pDeviceContext->Map(pStagingResource, 0, D3D11_MAP_READ, 0, &MappedSubResource);
     if (FAILED(hr)) {
         goto no_map;
     }
@@ -186,62 +291,67 @@ getSubResourceImage(ID3D11DeviceContext *pDevice,
     image = ConvertImage(Format,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
-                         Width, Height);
+                         StagingDesc.Width, StagingDesc.Height);
 
-    pDevice->Unmap(pStagingResource, SubResource);
+    pDeviceContext->Unmap(pStagingResource, 0);
+
+    if (image) {
+        image->label = getObjectName(pResource);
+        std::cerr << image->label << "\n";
+    }
+
 no_map:
-    if (pStagingResource) {
-        pStagingResource->Release();
-    }
-no_staging:
-    if (pResource) {
-        pResource->Release();
-    }
     return image;
 }
 
 
 static void
-dumpShaderResourceViewImage(JSONWriter &json,
+dumpShaderResourceViewImage(StateWriter &writer,
                             ID3D11DeviceContext *pDevice,
                             ID3D11ShaderResourceView *pShaderResourceView,
                             const char *shader,
-                            UINT stage) {
-    D3D11_SHADER_RESOURCE_VIEW_DESC Desc;
-    ID3D11Resource *pResource = NULL;
-
+                            UINT stage)
+{
     if (!pShaderResourceView) {
         return;
     }
 
+    com_ptr<ID3D11Resource> pResource;
     pShaderResourceView->GetResource(&pResource);
     assert(pResource);
 
+    D3D11_SHADER_RESOURCE_VIEW_DESC Desc;
     pShaderResourceView->GetDesc(&Desc);
 
     UINT MipSlice = 0;
     UINT FirstArraySlice = 0;
     UINT ArraySize = 1;
 
-    // TODO: Take the slice in consideration
     switch (Desc.ViewDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
+    case D3D11_SRV_DIMENSION_BUFFEREX:
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MostDetailedMip;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
         MipSlice = Desc.Texture1DArray.MostDetailedMip;
+        FirstArraySlice = Desc.Texture1DArray.FirstArraySlice;
+        ArraySize = Desc.Texture1DArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MostDetailedMip;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MostDetailedMip;
+        FirstArraySlice = Desc.Texture2DArray.FirstArraySlice;
+        ArraySize = Desc.Texture2DArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMS:
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:
+        FirstArraySlice = Desc.Texture2DMSArray.FirstArraySlice;
+        ArraySize = Desc.Texture2DMSArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE3D:
         MipSlice = Desc.Texture3D.MostDetailedMip;
@@ -249,6 +359,11 @@ dumpShaderResourceViewImage(JSONWriter &json,
     case D3D11_SRV_DIMENSION_TEXTURECUBE:
         MipSlice = Desc.TextureCube.MostDetailedMip;
         ArraySize = 6;
+        break;
+    case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
+        MipSlice = Desc.TextureCubeArray.MostDetailedMip;
+        FirstArraySlice = Desc.TextureCubeArray.First2DArrayFace;
+        ArraySize = 6 * Desc.TextureCubeArray.NumCubes;
         break;
     case D3D11_SRV_DIMENSION_UNKNOWN:
     default:
@@ -265,9 +380,12 @@ dumpShaderResourceViewImage(JSONWriter &json,
             _snprintf(label, sizeof label,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
-            json.beginMember(label);
-            json.writeImage(image, "UNKNOWN");
-            json.endMember(); // *_RESOURCE_*
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(Desc.Format);
+            writer.beginMember(label);
+            writer.writeImage(image, imgDesc);
+            writer.endMember(); // *_RESOURCE_*
             delete image;
         }
 
@@ -277,21 +395,26 @@ dumpShaderResourceViewImage(JSONWriter &json,
 
 static image::Image *
 getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
-                         ID3D11RenderTargetView *pRenderTargetView) {
-    D3D11_RENDER_TARGET_VIEW_DESC Desc;
-    ID3D11Resource *pResource = NULL;
-    UINT MipSlice;
-
+                         ID3D11RenderTargetView *pRenderTargetView,
+                         DXGI_FORMAT *dxgiFormat)
+{
     if (!pRenderTargetView) {
         return NULL;
     }
 
+    com_ptr<ID3D11Resource> pResource;
     pRenderTargetView->GetResource(&pResource);
     assert(pResource);
 
+    D3D11_RENDER_TARGET_VIEW_DESC Desc;
     pRenderTargetView->GetDesc(&Desc);
 
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
+
     // TODO: Take the slice in consideration
+    UINT MipSlice;
     switch (Desc.ViewDimension) {
     case D3D11_RTV_DIMENSION_BUFFER:
         MipSlice = 0;
@@ -329,21 +452,26 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
 
 static image::Image *
 getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
-                         ID3D11DepthStencilView *pDepthStencilView) {
-    D3D11_DEPTH_STENCIL_VIEW_DESC Desc;
-    ID3D11Resource *pResource = NULL;
-    UINT MipSlice;
-
+                         ID3D11DepthStencilView *pDepthStencilView,
+                         DXGI_FORMAT *dxgiFormat)
+{
     if (!pDepthStencilView) {
         return NULL;
     }
 
+    com_ptr<ID3D11Resource> pResource;
     pDepthStencilView->GetResource(&pResource);
     assert(pResource);
 
+    D3D11_DEPTH_STENCIL_VIEW_DESC Desc;
     pDepthStencilView->GetDesc(&Desc);
 
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
+
     // TODO: Take the slice in consideration
+    UINT MipSlice;
     switch (Desc.ViewDimension) {
     case D3D11_DSV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MipSlice;
@@ -374,7 +502,7 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
 
 
 static void
-dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *stageName,
+dumpStageTextures(StateWriter &writer, ID3D11DeviceContext *pDevice, const char *stageName,
                   UINT NumViews,
                   ID3D11ShaderResourceView **ppShaderResourceViews)
 {
@@ -383,7 +511,7 @@ dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *st
             continue;
         }
 
-        dumpShaderResourceViewImage(json, pDevice, ppShaderResourceViews[i], stageName, i);
+        dumpShaderResourceViewImage(writer, pDevice, ppShaderResourceViews[i], stageName, i);
 
         ppShaderResourceViews[i]->Release();
     }
@@ -391,36 +519,42 @@ dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *st
 
 
 void
-dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
+dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDevice)
 {
-    json.beginMember("textures");
-    json.beginObject();
+    writer.beginMember("textures");
+    writer.beginObject();
 
     ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
-    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-
     pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    pDevice->HSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    pDevice->DSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    json.endObject();
-    json.endMember(); // textures
+    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
 image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDevice) {
-    ID3D11RenderTargetView *pRenderTargetView = NULL;
+getRenderTargetImage(ID3D11DeviceContext *pDevice,
+                     DXGI_FORMAT *dxgiFormat) {
+    com_ptr<ID3D11RenderTargetView> pRenderTargetView;
     pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
 
     image::Image *image = NULL;
     if (pRenderTargetView) {
-        image = getRenderTargetViewImage(pDevice, pRenderTargetView);
-        pRenderTargetView->Release();
+        image = getRenderTargetViewImage(pDevice, pRenderTargetView, dxgiFormat);
     }
 
     return image;
@@ -428,10 +562,10 @@ getRenderTargetImage(ID3D11DeviceContext *pDevice) {
 
 
 void
-dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
+dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
 {
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
     ID3D11DepthStencilView *pDepthStencilView;
@@ -444,13 +578,18 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
         }
 
         image::Image *image;
-        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
+        DXGI_FORMAT dxgiFormat;
+        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
+                                         &dxgiFormat);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
-            json.beginMember(label);
-            json.writeImage(image, "UNKNOWN");
-            json.endMember(); // RENDER_TARGET_*
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
+            writer.beginMember(label);
+            writer.writeImage(image, imgDesc);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
 
@@ -459,20 +598,24 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
 
     if (pDepthStencilView) {
         image::Image *image;
-        image = getDepthStencilViewImage(pDevice, pDepthStencilView);
+        DXGI_FORMAT dxgiFormat;
+        image = getDepthStencilViewImage(pDevice, pDepthStencilView,
+                                         &dxgiFormat);
         if (image) {
-            json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image, "UNKNOWN");
-            json.endMember();
+            StateWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
+            writer.beginMember("DEPTH_STENCIL");
+            writer.writeImage(image, imgDesc);
+            writer.endMember();
             delete image;
         }
 
         pDepthStencilView->Release();
-
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

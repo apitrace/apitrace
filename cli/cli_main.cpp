@@ -71,12 +71,14 @@ static const Command * commands[] = {
     &diff_images_command,
     &dump_command,
     &dump_images_command,
+    &leaks_command,
     &pickle_command,
     &sed_command,
     &repack_command,
     &retrace_command,
     &trace_command,
     &trim_command,
+    &trim_auto_command,
     &help_command
 };
 

@@ -65,7 +65,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
             outChannels = 1;
         } else if (channels <= 3) {
             identifier = "PF";
-            outChannels = 4;
+            outChannels = 3;
         } else {
             // Non-standard extension for 4 floats
             identifier = "PX";
@@ -74,6 +74,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
         break;
     default:
         assert(0);
+        return;
     }
 
     os << identifier << "\n";
@@ -211,6 +212,7 @@ readPNMHeader(const char *buffer, size_t bufferSize, PNMInfo &info)
     info.channels = 0;
     info.width = 0;
     info.height = 0;
+    info.commentNumber = -1;
 
     const char *currentBuffer = buffer;
     const char *nextBuffer;
@@ -255,6 +257,13 @@ readPNMHeader(const char *buffer, size_t bufferSize, PNMInfo &info)
 
     // skip over optional comment
     if (*currentBuffer == '#') {
+       // advance past '#'
+        currentBuffer += 1;
+        bufferSize += 1;
+
+        // actually try to read a number
+        sscanf(currentBuffer, "%d", &info.commentNumber);
+
         // advance past comment line
         nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
         bufferSize -= nextBuffer - currentBuffer;

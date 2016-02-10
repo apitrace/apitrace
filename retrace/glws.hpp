@@ -27,49 +27,37 @@
  * Abstraction for GL window system specific APIs (GLX, WGL).
  */
 
-#ifndef _GLWS_HPP_
-#define _GLWS_HPP_
+#pragma once
 
 
 #include <assert.h>
 
 #include <vector>
-#include <set>
 #include <string>
+
+#include "glprofile.hpp"
 
 
 namespace glws {
 
 
-enum Profile {
-    PROFILE_COMPAT      = 0x000,
-    PROFILE_3_0         = 0x030,
-    PROFILE_3_1         = 0x031,
-    PROFILE_3_2_CORE    = 0x132,
-    PROFILE_3_3_CORE    = 0x133,
-    PROFILE_4_0_CORE    = 0x140,
-    PROFILE_4_1_CORE    = 0x141,
-    PROFILE_4_2_CORE    = 0x142,
-    PROFILE_4_3_CORE    = 0x143,
-    PROFILE_4_4_CORE    = 0x144,
-    PROFILE_ES1         = 0x210,
-    PROFILE_ES2         = 0x220,
-    PROFILE_MAX
-};
+using glprofile::Profile;
 
-
-static inline bool
-isCoreProfile(Profile profile) {
-    return (profile & 0x100) == 0x100;
-}
-
-
-void
-getProfileVersion(Profile profile, unsigned &major, unsigned &minor, bool &core);
+class Drawable;
 
 
 bool
 checkExtension(const char *extName, const char *extString);
+
+// Extra info for creating PBuffers
+struct pbuffer_info
+{
+    int texFormat;  // GL_RGB, GL_RGBA, or GL_NONE
+    int texTarget;  // GL_TEXTURE_1D/2D/CUBE_MAP or GL_NONE
+    bool texMipmap; // 0 or 1 (false/true)
+
+    Drawable *hdc_drawable;  // Needed for WGL Pbuffers
+};
 
 
 template< class T >
@@ -132,12 +120,18 @@ public:
     bool pbuffer;
     bool visible;
 
+    // For WGL_ARB_render_texture
+    glws::pbuffer_info pbInfo;
+    int mipmapLevel, cubeFace;
+
     Drawable(const Visual *vis, int w, int h, bool pb) :
         visual(vis),
         width(w),
         height(h),
         pbuffer(pb),
-        visible(false)
+        visible(false),
+        mipmapLevel(0),
+        cubeFace(0)
     {}
 
     virtual ~Drawable() {}
@@ -164,20 +158,35 @@ class Context
 {
 public:
     const Visual *visual;
+
+    // Requested profile
     Profile profile;
-    
-    std::set<std::string> extensions;
+
+    // Created profile
+    Profile actualProfile;
+    glprofile::Extensions actualExtensions;
 
     Context(const Visual *vis) :
         visual(vis),
-        profile(vis->profile)
+        profile(vis->profile),
+        actualProfile(profile),
+        initialized(false)
     {}
 
     virtual ~Context() {}
 
-    // Context must be current
-    bool
-    hasExtension(const char *extension);
+    // Context must have been made current once
+    inline bool
+    hasExtension(const char *extension) const {
+        assert(initialized);
+        return actualExtensions.has(extension);
+    }
+
+private:
+    bool initialized;
+    void initialize(void);
+
+    friend bool makeCurrent(Drawable *, Context *);
 };
 
 
@@ -188,22 +197,41 @@ void
 cleanup(void);
 
 Visual *
-createVisual(bool doubleBuffer = false, unsigned samples = 1, Profile profile = PROFILE_COMPAT);
+createVisual(bool doubleBuffer, unsigned samples, Profile profile);
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo = NULL);
 
 Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);
 
 bool
-makeCurrent(Drawable *drawable, Context *context);
+makeCurrentInternal(Drawable *drawable, Context *context);
+
+inline bool
+makeCurrent(Drawable *drawable, Context *context)
+{
+    bool success = makeCurrentInternal(drawable, context);
+    if (success && context && !context->initialized) {
+        context->initialize();
+    }
+    return success;
+}
 
 bool
 processEvents(void);
 
+// iBuffer is one of GL_FRONT/BACK_LEFT/RIGHT, GL_AUX0...
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer);
+
+// iBuffer is one of GL_FRONT/BACK_LEFT/RIGHT, GL_AUX0...
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer);
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList);
+
 
 } /* namespace glws */
-
-
-#endif /* _GLWS_HPP_ */

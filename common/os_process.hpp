@@ -27,8 +27,7 @@
  * Sub-process abstraction.
  */
 
-#ifndef _OS_PROCESS_HPP_
-#define _OS_PROCESS_HPP_
+#pragma once
 
 
 #ifdef _WIN32
@@ -88,4 +87,3 @@ int execute(char * const * args);
 
 } /* namespace os */
 
-#endif /* _OS_PROCESS_HPP_ */

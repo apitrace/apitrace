@@ -32,13 +32,11 @@
 using namespace trace;
 
 
-File::File(const std::string &filename,
-           File::Mode mode)
-    : m_mode(mode),
-      m_isOpened(false)
+File::File(const std::string &filename)
+    : m_isOpened(false)
 {
     if (!filename.empty()) {
-        open(filename, m_mode);
+        open(filename);
     }
 }
 

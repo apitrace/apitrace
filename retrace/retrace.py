@@ -69,10 +69,10 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, array.type, rvalue, lvalue)
+        print '    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue)
 
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, pointer.type, rvalue, lvalue)
+        print '    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue)
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         pass
@@ -124,13 +124,26 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         self.visit(bitmask.type, lvalue, rvalue)
 
     def visitArray(self, array, lvalue, rvalue):
-
         tmp = '_a_' + array.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    if (%s) {' % (lvalue,)
-        print '        const trace::Array *%s = (%s).toArray();' % (tmp, rvalue)
+        print '    const trace::Array *%s = (%s).toArray();' % (tmp, rvalue)
+        print '    if (%s) {' % (tmp,)
+
         length = '%s->values.size()' % (tmp,)
+        if self.insideStruct:
+            if isinstance(array.length, int):
+                # Member is an array
+                print r'    static_assert( std::is_array< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be an array" );' % lvalue
+                print r'    static_assert( std::extent< std::remove_reference< decltype( %s ) >::type >::value == %s, "array size mismatch" );' % (lvalue, array.length)
+                print r'    assert( %s );' % (tmp,)
+                print r'    assert( %s->size() == %s );' % (tmp, array.length)
+                length = str(array.length)
+            else:
+                # Member is a pointer to an array, hence must be allocated
+                print r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue
+                print r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue)
+
         index = '_j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
@@ -154,7 +167,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s>(retrace::toObjPointer(call, %s));' % (lvalue, pointer, rvalue)
+        print '    %s = retrace::asObjPointer<%s>(call, %s);' % (lvalue, pointer.type, rvalue)
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
@@ -186,15 +199,21 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
     seq = 0
 
+    insideStruct = 0
+
     def visitStruct(self, struct, lvalue, rvalue):
         tmp = '_s_' + struct.tag + '_' + str(self.seq)
         self.seq += 1
+
+        self.insideStruct += 1
 
         print '    const trace::Struct *%s = (%s).toStruct();' % (tmp, rvalue)
         print '    assert(%s);' % (tmp)
         for i in range(len(struct.members)):
             member = struct.members[i]
             self.visitMember(member, lvalue, '*%s->members[%s]' % (tmp, i))
+
+        self.insideStruct -= 1
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
         if polymorphic.defaultType is None:
@@ -279,7 +298,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
         if pointer.size is not None:
-            print r'    retrace::addRegion((%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
+            print r'    retrace::addRegion(call, (%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
 
     def visitReference(self, reference, lvalue, rvalue):
         pass
@@ -396,7 +415,7 @@ class Retracer:
 
     def deserializeThisPointer(self, interface):
         print r'    %s *_this;' % (interface.name,)
-        print r'    _this = static_cast<%s *>(retrace::toObjPointer(call, call.arg(0)));' % (interface.name,)
+        print r'    _this = retrace::asObjPointer<%s>(call, call.arg(0));' % (interface.name,)
         print r'    if (!_this) {'
         print r'        return;'
         print r'    }'
@@ -472,33 +491,80 @@ class Retracer:
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
-            print '    (void)_result;'
-            self.checkResult(function.type)
+            self.checkResult(None, function)
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
     def invokeInterfaceMethod(self, interface, method):
-        # On release our reference when we reach Release() == 0 call in the
-        # trace.
-        if method.name == 'Release':
-            print '    if (call.ret->toUInt() == 0) {'
-            print '        retrace::delObj(call.arg(0));'
-            print '    }'
-
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
-            print '    (void)_result;'
-            self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
 
-    def checkResult(self, resultType):
-        if str(resultType) == 'HRESULT':
+        # Adjust reference count when QueryInterface fails.  This is
+        # particularly useful when replaying traces on older Direct3D runtimes
+        # which might miss newer versions of interfaces, yet none of those
+        # methods are actually used.
+        #
+        # TODO: Generalize to other methods that return interfaces
+        if method.name == 'QueryInterface':
             print r'    if (FAILED(_result)) {'
-            print '         static char szMessageBuffer[128];'
-            print r'        retrace::warning(call) << "call returned 0x" << std::hex << _result << std::dec << ": " << (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, _result, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szMessageBuffer, sizeof szMessageBuffer, NULL) ? szMessageBuffer : "???") << "\n";'
+            print r'        IUnknown *pObj = retrace::asObjPointer<IUnknown>(call, *call.arg(2).toArray()->values[0]);'
+            print r'        if (pObj) {'
+            print r'            pObj->AddRef();'
+            print r'        }'
             print r'    }'
+
+        if method.type is not stdapi.Void:
+            self.checkResult(interface, method)
+
+        # Debug COM reference counting.  Disabled by default as reported
+        # reference counts depend on internal implementation details.
+        if method.name in ('AddRef', 'Release'):
+            print r'    if (0) retrace::checkMismatch(call, "cRef", call.ret, _result);'
+
+        # On release our reference when we reach Release() == 0 call in the
+        # trace.
+        if method.name == 'Release':
+            print r'    ULONG _orig_result = call.ret->toUInt();'
+            print r'    if (_orig_result == 0 || _result == 0) {'
+            print r'        if (_orig_result != 0) {'
+            print r'            retrace::warning(call) << "unexpected object destruction\n";'
+            print r'        }'
+            print r'        retrace::delObj(call.arg(0));'
+            print r'    }'
+
+    def checkResult(self, interface, methodOrFunction):
+        assert methodOrFunction.type is not stdapi.Void
+        if str(methodOrFunction.type) == 'HRESULT':
+            print r'    if (FAILED(_result)) {'
+            print r'        retrace::failed(call, _result);'
+            print r'        return;'
+            print r'    }'
+        else:
+            print r'    (void)_result;'
+
+    def checkPitchMismatch(self, method):
+        # Warn for mismatches in 2D/3D mappings.
+        # FIXME: We should try to swizzle them.  It's a bit of work, but possible.
+        for outArg in method.args:
+            if outArg.output \
+               and isinstance(outArg.type, stdapi.Pointer) \
+               and isinstance(outArg.type.type, stdapi.Struct):
+                print r'        const trace::Array *_%s = call.arg(%u).toArray();' % (outArg.name, outArg.index)
+                print r'        if (%s) {' % outArg.name
+                print r'            const trace::Struct *_struct = _%s->values[0]->toStruct();' % (outArg.name)
+                print r'            if (_struct) {'
+                struct = outArg.type.type
+                for memberIndex in range(len(struct.members)):
+                    memberType, memberName = struct.members[memberIndex]
+                    if memberName.endswith('Pitch'):
+                        print r'                if (%s->%s) {' % (outArg.name, memberName)
+                        print r'                    retrace::checkMismatch(call, "%s", _struct->members[%u], %s->%s);' % (memberName, memberIndex, outArg.name, memberName)
+                        print r'                }'
+                print r'            }'
+                print r'        }'
 
     def filterFunction(self, function):
         return True
@@ -532,7 +598,7 @@ class Retracer:
                 self.retraceFunction(function)
         interfaces = api.getAllInterfaces()
         for interface in interfaces:
-            for method in interface.iterMethods():
+            for method in interface.methods:
                 if method.sideeffects and not method.internal:
                     self.retraceInterfaceMethod(interface, method)
 
@@ -544,9 +610,9 @@ class Retracer:
                 else:
                     print '    {"%s", &retrace::ignore},' % (function.name,)
         for interface in interfaces:
-            for method in interface.iterMethods():                
+            for base, method in interface.iterBaseMethods():
                 if method.sideeffects:
-                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, interface.name, method.name)
+                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, base.name, method.name)
                 else:
                     print '    {"%s::%s", &retrace::ignore},' % (interface.name, method.name)
         print '    {NULL, NULL}'

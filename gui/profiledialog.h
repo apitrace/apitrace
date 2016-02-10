@@ -1,5 +1,4 @@
-#ifndef PROFILEDIALOG_H
-#define PROFILEDIALOG_H
+#pragma once
 
 #include "ui_profiledialog.h"
 #include <QDialog>
@@ -27,5 +26,3 @@ signals:
 private:
     trace::Profile *m_profile;
 };
-
-#endif

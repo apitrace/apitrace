@@ -40,18 +40,30 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+
+#include <algorithm>
+#include <set>
+#include <map>
+#include <functional>
 
 #include <windows.h>
 #include <tlhelp32.h>
+#include <delayimp.h>
 
 #include "inject.h"
 
 
-#define VERBOSITY 0
+static int VERBOSITY = 0;
 #define NOOP 0
 
 
-static CRITICAL_SECTION Mutex = {(PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0};
+static CRITICAL_SECTION g_Mutex;
+
+
+
+static HMODULE g_hThisModule = NULL;
+static HMODULE g_hHookModule = NULL;
 
 
 static void
@@ -65,6 +77,22 @@ debugPrintf(const char *format, ...)
     va_end(ap);
 
     OutputDebugStringA(buf);
+}
+
+
+EXTERN_C void
+_assert(const char *_Message, const char *_File, unsigned _Line)
+{
+    debugPrintf("Assertion failed: %s, file %s, line %u\n", _Message, _File, _Line);
+    TerminateProcess(GetCurrentProcess(), 1);
+}
+
+
+EXTERN_C void
+_wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
+{
+    debugPrintf("Assertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
+    TerminateProcess(GetCurrentProcess(), 1);
 }
 
 
@@ -84,50 +112,261 @@ static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
 
-static const char *
-getImportDescriptionName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
-    const char* szName = (const char*)((PBYTE)hModule + pImportDescriptor->Name);
-    return szName;
+static void
+MyCreateProcessCommon(BOOL bRet,
+                      DWORD dwCreationFlags,
+                      LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (!bRet) {
+        debugPrintf("inject: warning: failed to create child process\n");
+        return;
+    }
+
+    DWORD dwLastError = GetLastError();
+
+    if (isDifferentArch(lpProcessInformation->hProcess)) {
+        debugPrintf("inject: error: child process %lu has different architecture\n",
+                    GetProcessId(lpProcessInformation->hProcess));
+    } else {
+        char szDllPath[MAX_PATH];
+        GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
+
+        if (!injectDll(lpProcessInformation->hProcess, szDllPath)) {
+            debugPrintf("inject: warning: failed to inject into child process %lu\n",
+                        GetProcessId(lpProcessInformation->hProcess));
+        }
+    }
+
+    if (!(dwCreationFlags & CREATE_SUSPENDED)) {
+        ResumeThread(lpProcessInformation->hThread);
+    }
+
+    SetLastError(dwLastError);
+}
+
+static BOOL WINAPI
+MyCreateProcessA(LPCSTR lpApplicationName,
+                 LPSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCSTR lpCurrentDirectory,
+                 LPSTARTUPINFOA lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%s\", \"%s\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessA(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessW(LPCWSTR lpApplicationName,
+                 LPWSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCWSTR lpCurrentDirectory,
+                 LPSTARTUPINFOW lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessW(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+typedef BOOL
+(WINAPI *PFNCREATEPROCESSASUSERW) (HANDLE, LPCWSTR, LPWSTR,
+        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
+        LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
+
+static PFNCREATEPROCESSASUSERW pfnCreateProcessAsUserW;
+
+static BOOL WINAPI
+MyCreateProcessAsUserW(HANDLE hToken,
+                       LPCWSTR lpApplicationName,
+                       LPWSTR lpCommandLine,
+                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       BOOL bInheritHandles,
+                       DWORD dwCreationFlags,
+                       LPVOID lpEnvironment,
+                       LPCWSTR lpCurrentDirectory,
+                       LPSTARTUPINFOW lpStartupInfo,
+                       LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    // Certain WINE versions (at least 1.6.2) don't export
+    // kernel32.dll!CreateProcessAsUserW
+    assert(pfnCreateProcessAsUserW);
+
+    BOOL bRet;
+    bRet = pfnCreateProcessAsUserW(hToken,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   lpProcessAttributes,
+                                   lpThreadAttributes,
+                                   bInheritHandles,
+                                   dwCreationFlags,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
 }
 
 
-static PIMAGE_IMPORT_DESCRIPTOR
-getImportDescriptor(HMODULE hModule,
-                    const char *szModule,
-                    const char *pszDllName)
+template< class T, class I >
+inline T *
+rvaToVa(HMODULE hModule, I rva)
+{
+    assert(rva != 0);
+    return reinterpret_cast<T *>(reinterpret_cast<PBYTE>(hModule) + rva);
+}
+
+
+static const char *
+getDescriptorName(HMODULE hModule,
+                        const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor)
+{
+    return rvaToVa<const char>(hModule, pImportDescriptor->Name);
+}
+
+static const char *
+getDescriptorName(HMODULE hModule,
+                  const PImgDelayDescr pDelayDescriptor)
+{
+    if (pDelayDescriptor->grAttrs & dlattrRva) {
+        return rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
+    } else {
+        // old-stye, with ImgDelayDescr::szName being a LPCSTR
+        return reinterpret_cast<LPCSTR>(pDelayDescriptor->rvaDLLName);
+    }
+}
+
+
+static PIMAGE_OPTIONAL_HEADER
+getOptionalHeader(HMODULE hModule,
+                  const char *szModule)
+{
+    PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
+    if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+        debugPrintf("inject: warning: %s: unexpected DOS header magic (0x%04x)\n",
+                    szModule, pDosHeader->e_magic);
+        return NULL;
+    }
+    PIMAGE_NT_HEADERS pNtHeaders = rvaToVa<IMAGE_NT_HEADERS>(hModule, pDosHeader->e_lfanew);
+    if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE) {
+        debugPrintf("inject: warning: %s: unexpected NT header signature (0x%08lx)\n",
+                    szModule, pNtHeaders->Signature);
+        return NULL;
+    }
+    assert(pNtHeaders->OptionalHeader.NumberOfRvaAndSizes > 0);
+    PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
+    return pOptionalHeader;
+}
+
+static PVOID
+getImageDirectoryEntry(HMODULE hModule,
+                       const char *szModule,
+                       UINT Entry)
 {
     MEMORY_BASIC_INFORMATION MemoryInfo;
     if (VirtualQuery(hModule, &MemoryInfo, sizeof MemoryInfo) != sizeof MemoryInfo) {
-        debugPrintf("%s: %s: VirtualQuery failed\n", __FUNCTION__, szModule);
+        debugPrintf("inject: warning: %s: VirtualQuery failed\n", szModule);
         return NULL;
     }
     if (MemoryInfo.Protect & (PAGE_NOACCESS | PAGE_EXECUTE)) {
-        debugPrintf("%s: %s: no read access (Protect = 0x%08x)\n", __FUNCTION__, szModule, MemoryInfo.Protect);
+        debugPrintf("inject: warning: %s: no read access (Protect = 0x%08lx)\n", szModule, MemoryInfo.Protect);
         return NULL;
     }
 
-    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
-    PIMAGE_NT_HEADERS pNtHeaders = (PIMAGE_NT_HEADERS)((PBYTE)hModule + pDosHeader->e_lfanew);
+    PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule, szModule);
+    if (!pOptionalHeader ||
+        pOptionalHeader->DataDirectory[Entry].Size == 0) {
+        return NULL;
+    }
 
-    PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
-
-    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
-
+    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[Entry].VirtualAddress;
     if (!ImportAddress) {
         return NULL;
     }
 
-    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)((PBYTE)hModule + ImportAddress);
+    return rvaToVa<VOID>(hModule, ImportAddress);
+}
 
-    while (pImportDescriptor->FirstThunk) {
-        const char* szName = getImportDescriptionName(hModule, pImportDescriptor);
-        if (stricmp(pszDllName, szName) == 0) {
-            return pImportDescriptor;
-        }
-        ++pImportDescriptor;
-    }
 
-    return NULL;
+static PIMAGE_IMPORT_DESCRIPTOR
+getFirstImportDescriptor(HMODULE hModule, const char *szModule)
+{
+    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_IMPORT);
+    return reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pEntry);
+}
+
+
+static PImgDelayDescr
+getDelayImportDescriptor(HMODULE hModule, const char *szModule)
+{
+    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
+    return reinterpret_cast<PImgDelayDescr>(pEntry);
+}
+
+
+static PIMAGE_EXPORT_DIRECTORY
+getExportDescriptor(HMODULE hModule)
+{
+    PVOID pEntry = getImageDirectoryEntry(hModule, "(wrapper)", IMAGE_DIRECTORY_ENTRY_EXPORT);
+    return reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(pEntry);
 }
 
 
@@ -140,195 +379,337 @@ replaceAddress(LPVOID *lpOldAddress, LPVOID lpNewAddress)
         return TRUE;
     }
 
-    EnterCriticalSection(&Mutex);
+    EnterCriticalSection(&g_Mutex);
 
     if (!(VirtualProtect(lpOldAddress, sizeof *lpOldAddress, PAGE_READWRITE, &flOldProtect))) {
-        LeaveCriticalSection(&Mutex);
+        LeaveCriticalSection(&g_Mutex);
         return FALSE;
     }
 
     *lpOldAddress = lpNewAddress;
 
     if (!(VirtualProtect(lpOldAddress, sizeof *lpOldAddress, flOldProtect, &flOldProtect))) {
-        LeaveCriticalSection(&Mutex);
+        LeaveCriticalSection(&g_Mutex);
         return FALSE;
     }
 
-    LeaveCriticalSection(&Mutex);
+    LeaveCriticalSection(&g_Mutex);
     return TRUE;
 }
 
 
+/* Return pointer to patcheable function address.
+ *
+ * See also:
+ *
+ * - An In-Depth Look into the Win32 Portable Executable File Format, Part 2, Matt Pietrek,
+ *   http://msdn.microsoft.com/en-gb/magazine/cc301808.aspx
+ *
+ * - http://www.microsoft.com/msj/1298/hood/hood1298.aspx
+ *
+ */
 static LPVOID *
-getOldFunctionAddress(HMODULE hModule,
-                    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
-                    const char* pszFunctionName)
+getPatchAddress(HMODULE hModule,
+                const char *szDescriptorName,
+                DWORD OriginalFirstThunk,
+                DWORD FirstThunk,
+                const char* pszFunctionName,
+                LPVOID lpOldAddress)
 {
-    PIMAGE_THUNK_DATA pOriginalFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->OriginalFirstThunk);
-    PIMAGE_THUNK_DATA pFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->FirstThunk);
-
-    //debugPrintf("  %s\n", __FUNCTION__);
-
-    while (pOriginalFirstThunk->u1.Function) {
-        PIMAGE_IMPORT_BY_NAME pImport = (PIMAGE_IMPORT_BY_NAME)((PBYTE)hModule + pOriginalFirstThunk->u1.AddressOfData);
-        const char* szName = (const char* )pImport->Name;
-        //debugPrintf("    %s\n", szName);
-        if (strcmp(pszFunctionName, szName) == 0) {
-            //debugPrintf("  %s succeeded\n", __FUNCTION__);
-            return (LPVOID *)(&pFirstThunk->u1.Function);
-        }
-        ++pOriginalFirstThunk;
-        ++pFirstThunk;
+    if (VERBOSITY >= 4) {
+        debugPrintf("inject: %s(%s, %s)\n", __FUNCTION__,
+                    szDescriptorName,
+                    pszFunctionName);
     }
 
-    //debugPrintf("  %s failed\n", __FUNCTION__);
+    PIMAGE_THUNK_DATA pThunkIAT = rvaToVa<IMAGE_THUNK_DATA>(hModule, FirstThunk);
+
+    UINT_PTR pOldFunction = (UINT_PTR)lpOldAddress;
+
+    PIMAGE_THUNK_DATA pThunk;
+    if (OriginalFirstThunk) {
+        pThunk = rvaToVa<IMAGE_THUNK_DATA>(hModule, OriginalFirstThunk);
+    } else {
+        pThunk = pThunkIAT;
+    }
+
+    while (pThunk->u1.Function) {
+        if (OriginalFirstThunk == 0 ||
+            pThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG) {
+            // No name -- search by the real function address
+            if (!pOldFunction) {
+                return NULL;
+            }
+            if (pThunkIAT->u1.Function == pOldFunction) {
+                return (LPVOID *)(&pThunkIAT->u1.Function);
+            }
+        } else {
+            // Search by name
+            PIMAGE_IMPORT_BY_NAME pImport = rvaToVa<IMAGE_IMPORT_BY_NAME>(hModule, pThunk->u1.AddressOfData);
+            const char* szName = (const char* )pImport->Name;
+            if (strcmp(pszFunctionName, szName) == 0) {
+                return (LPVOID *)(&pThunkIAT->u1.Function);
+            }
+        }
+        ++pThunk;
+        ++pThunkIAT;
+    }
 
     return NULL;
 }
 
 
-static void
-replaceModule(HMODULE hModule,
-              const char *szModule,
-              PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
-              HMODULE hNewModule)
+static LPVOID *
+getPatchAddress(HMODULE hModule,
+                PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
+                const char* pszFunctionName,
+                LPVOID lpOldAddress)
 {
-    PIMAGE_THUNK_DATA pOriginalFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->OriginalFirstThunk);
-    PIMAGE_THUNK_DATA pFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->FirstThunk);
+    assert(pImportDescriptor->TimeDateStamp != 0 || pImportDescriptor->Name != 0);
 
-    while (pOriginalFirstThunk->u1.Function) {
-        PIMAGE_IMPORT_BY_NAME pImport = (PIMAGE_IMPORT_BY_NAME)((PBYTE)hModule + pOriginalFirstThunk->u1.AddressOfData);
-        const char* szFunctionName = (const char* )pImport->Name;
-        if (VERBOSITY > 0) {
-            debugPrintf("      hooking %s->%s!%s\n", szModule,
-                    getImportDescriptionName(hModule, pImportDescriptor),
-                    szFunctionName);
-        }
+    return getPatchAddress(hModule,
+                           getDescriptorName(hModule, pImportDescriptor),
+                           pImportDescriptor->OriginalFirstThunk,
+                           pImportDescriptor->FirstThunk,
+                           pszFunctionName,
+                           lpOldAddress);
+}
 
-        PROC pNewProc = GetProcAddress(hNewModule, szFunctionName);
-        if (!pNewProc) {
-            debugPrintf("warning: no replacement for %s\n", szFunctionName);
-        } else {
-            LPVOID *lpOldAddress = (LPVOID *)(&pFirstThunk->u1.Function);
-            replaceAddress(lpOldAddress, (LPVOID)pNewProc);
-            if (pSharedMem) {
+
+// See
+// http://www.microsoft.com/msj/1298/hood/hood1298.aspx
+// http://msdn.microsoft.com/en-us/library/16b2dyk5.aspx
+static LPVOID *
+getPatchAddress(HMODULE hModule,
+                PImgDelayDescr pDelayDescriptor,
+                const char* pszFunctionName,
+                LPVOID lpOldAddress)
+{
+    assert(pDelayDescriptor->rvaDLLName != 0);
+
+    return getPatchAddress(hModule,
+                           getDescriptorName(hModule, pDelayDescriptor),
+                           pDelayDescriptor->rvaINT,
+                           pDelayDescriptor->rvaIAT,
+                           pszFunctionName,
+                           lpOldAddress);
+}
+
+
+template< class T >
+static BOOL
+patchFunction(HMODULE hModule,
+              const char *szModule,
+              const char *pszDllName,
+              T pImportDescriptor,
+              const char *pszFunctionName,
+              LPVOID lpOldAddress,
+              LPVOID lpNewAddress)
+{
+    LPVOID* lpPatchAddress = getPatchAddress(hModule, pImportDescriptor, pszFunctionName, lpOldAddress);
+    if (lpPatchAddress == NULL) {
+        return FALSE;
+    }
+
+    if (*lpPatchAddress == lpNewAddress) {
+        return TRUE;
+    }
+
+    DWORD Offset = (DWORD)(UINT_PTR)lpPatchAddress - (UINT_PTR)hModule;
+    if (VERBOSITY > 0) {
+        debugPrintf("inject: patching %s!0x%lx -> %s!%s\n", szModule, Offset, pszDllName, pszFunctionName);
+    }
+
+    BOOL bRet;
+    bRet = replaceAddress(lpPatchAddress, lpNewAddress);
+    if (!bRet) {
+        debugPrintf("inject: failed to patch %s!0x%lx -> %s!%s\n", szModule, Offset, pszDllName, pszFunctionName);
+    }
+
+    return bRet;
+}
+
+
+
+struct StrCompare : public std::binary_function<const char *, const char *, bool> {
+    bool operator() (const char * s1, const char * s2) const {
+        return strcmp(s1, s2) < 0;
+    }
+};
+
+typedef std::map<const char *, LPVOID, StrCompare> FunctionMap;
+
+struct StrICompare : public std::binary_function<const char *, const char *, bool> {
+    bool operator() (const char * s1, const char * s2) const {
+        return stricmp(s1, s2) < 0;
+    }
+};
+
+struct Module {
+    bool bInternal;
+    FunctionMap functionMap;
+};
+
+typedef std::map<const char *, Module, StrICompare> ModulesMap;
+
+/* This is only modified at DLL_PROCESS_ATTACH time. */
+static ModulesMap modulesMap;
+
+
+static inline bool
+isMatchModuleName(const char *szModuleName)
+{
+    ModulesMap::const_iterator modIt = modulesMap.find(szModuleName);
+    return modIt != modulesMap.end();
+}
+
+
+/* Set of previously hooked modules */
+static std::set<HMODULE>
+g_hHookedModules;
+
+
+enum Action {
+    ACTION_HOOK,
+    ACTION_UNHOOK,
+
+};
+
+
+template< class T >
+void
+patchDescriptor(HMODULE hModule,
+                const char *szModule,
+                T pImportDescriptor,
+                Action action)
+{
+    const char* szDescriptorName = getDescriptorName(hModule, pImportDescriptor);
+
+    ModulesMap::const_iterator modIt = modulesMap.find(szDescriptorName);
+    if (modIt != modulesMap.end()) {
+        const char *szMatchModule = modIt->first; // same as szDescriptorName
+        const Module & module = modIt->second;
+
+        const FunctionMap & functionMap = module.functionMap;
+        FunctionMap::const_iterator fnIt;
+        for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
+            const char *szFunctionName = fnIt->first;
+            LPVOID lpHookAddress = fnIt->second;
+
+            // Knowning the real address is useful when patching imports by ordinal
+            LPVOID lpRealAddress = NULL;
+            HMODULE hRealModule = GetModuleHandleA(szDescriptorName);
+            if (hRealModule) {
+                // FIXME: this assertion can fail when the wrapper name is the same as the original DLL
+                //assert(hRealModule != g_hHookModule);
+                if (hRealModule != g_hHookModule) {
+                    lpRealAddress = (LPVOID)GetProcAddress(hRealModule, szFunctionName);
+                }
+            }
+            
+            LPVOID lpOldAddress = lpRealAddress;
+            LPVOID lpNewAddress = lpHookAddress;
+
+            if (action == ACTION_UNHOOK) {
+                std::swap(lpOldAddress, lpNewAddress);
+            }
+
+            BOOL bPatched;
+            bPatched = patchFunction(hModule, szModule, szMatchModule, pImportDescriptor, szFunctionName, lpOldAddress, lpNewAddress);
+            if (action == ACTION_HOOK && bPatched && !module.bInternal && pSharedMem) {
                 pSharedMem->bReplaced = TRUE;
             }
         }
-
-        ++pOriginalFirstThunk;
-        ++pFirstThunk;
     }
 }
-
-
-static BOOL
-hookFunction(HMODULE hModule,
-             const char *szModule,
-             const char *pszDllName,
-             const char *pszFunctionName,
-             LPVOID lpNewAddress)
-{
-    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = getImportDescriptor(hModule, szModule, pszDllName);
-    if (pImportDescriptor == NULL) {
-        return FALSE;
-    }
-    LPVOID* lpOldFunctionAddress = getOldFunctionAddress(hModule, pImportDescriptor, pszFunctionName);
-    if (lpOldFunctionAddress == NULL) {
-        return FALSE;
-    }
-
-    if (*lpOldFunctionAddress == lpNewAddress) {
-        return TRUE;
-    }
-
-    if (VERBOSITY >= 3) {
-        debugPrintf("      hooking %s->%s!%s\n", szModule, pszDllName, pszFunctionName);
-    }
-
-    return replaceAddress(lpOldFunctionAddress, lpNewAddress);
-}
-
-
-static BOOL
-replaceImport(HMODULE hModule,
-              const char *szModule,
-              const char *pszDllName,
-              HMODULE hNewModule)
-{
-    if (NOOP) {
-        return TRUE;
-    }
-
-    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = getImportDescriptor(hModule, szModule, pszDllName);
-    if (pImportDescriptor == NULL) {
-        return TRUE;
-    }
-
-    replaceModule(hModule, szModule, pImportDescriptor, hNewModule);
-
-    return TRUE;
-}
-
-static HMODULE g_hThisModule = NULL;
-
-
-struct Replacement {
-    const char *szMatchModule;
-    HMODULE hReplaceModule;
-};
-
-static unsigned numReplacements = 0;
-static Replacement replacements[32];
-
 
 
 static void
-hookModule(HMODULE hModule,
-           const char *szModule)
+patchModule(HMODULE hModule,
+            const char *szModule,
+            Action action)
 {
+    /* Never patch this module */
     if (hModule == g_hThisModule) {
         return;
     }
 
-    for (unsigned i = 0; i < numReplacements; ++i) {
-        if (hModule == replacements[i].hReplaceModule) {
-            return;
-        }
-    }
-
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryA", (LPVOID)MyLoadLibraryA);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryW", (LPVOID)MyLoadLibraryW);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryExA", (LPVOID)MyLoadLibraryExA);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryExW", (LPVOID)MyLoadLibraryExW);
-    hookFunction(hModule, szModule, "kernel32.dll", "GetProcAddress", (LPVOID)MyGetProcAddress);
-
-    const char *szBaseName = getBaseName(szModule);
-    for (unsigned i = 0; i < numReplacements; ++i) {
-        if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
-            return;
-        }
-    }
-
-    /* Don't hook internal dependencies */
-    if (stricmp(szBaseName, "d3d10core.dll") == 0 ||
-        stricmp(szBaseName, "d3d10level9.dll") == 0 ||
-        stricmp(szBaseName, "d3d10sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d10_1core.dll") == 0 ||
-        stricmp(szBaseName, "d3d11sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d11_1sdklayers.dll") == 0) {
+    /* Never patch our hook module */
+    if (hModule == g_hHookModule) {
         return;
     }
 
-    for (unsigned i = 0; i < numReplacements; ++i) {
-        replaceImport(hModule, szModule, replacements[i].szMatchModule, replacements[i].hReplaceModule);
-        replaceImport(hModule, szModule, replacements[i].szMatchModule, replacements[i].hReplaceModule);
-        replaceImport(hModule, szModule, replacements[i].szMatchModule, replacements[i].hReplaceModule);
+    /* Hook modules only once */
+    if (action == ACTION_HOOK) {
+        std::pair< std::set<HMODULE>::iterator, bool > ret;
+        EnterCriticalSection(&g_Mutex);
+        ret = g_hHookedModules.insert(hModule);
+        LeaveCriticalSection(&g_Mutex);
+        if (!ret.second) {
+            return;
+        }
+    }
+
+    const char *szBaseName = getBaseName(szModule);
+
+    /* Don't hook our replacement modules to avoid tracing internal APIs */
+    /* XXX: is this really a good idea? */
+    if (isMatchModuleName(szBaseName)) {
+        return;
+    }
+
+    /* Leave these modules alone.
+     *
+     * Hooking other injection DLLs easily leads to infinite recursion (and
+     * stack overflow), especially when those libraries use techniques like
+     * modifying the hooked functions prolog (instead of patching IAT like we
+     * do).
+     *
+     * See also:
+     * - http://www.nynaeve.net/?p=62
+     */
+    if (stricmp(szBaseName, "kernel32.dll") == 0 ||
+        stricmp(szBaseName, "AcLayers.dll") == 0 ||
+        stricmp(szBaseName, "ConEmuHk.dll") == 0 ||
+        stricmp(szBaseName, "gameoverlayrenderer.dll") == 0 ||
+        stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0) {
+        return;
+    }
+
+    if (VERBOSITY > 0) {
+        debugPrintf("inject: found module %s\n", szModule);
+    }
+
+    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = getFirstImportDescriptor(hModule, szModule);
+    if (pImportDescriptor) {
+        while (pImportDescriptor->FirstThunk) {
+
+            patchDescriptor(hModule, szModule, pImportDescriptor, action);
+
+            ++pImportDescriptor;
+        }
+    }
+
+    PImgDelayDescr pDelayDescriptor = getDelayImportDescriptor(hModule, szModule);
+    if (pDelayDescriptor) {
+        while (pDelayDescriptor->rvaDLLName) {
+            if (VERBOSITY > 1) {
+                const char* szName = getDescriptorName(hModule, pDelayDescriptor);
+                debugPrintf("inject: found %sdelay-load import entry for module %s\n",
+                            pDelayDescriptor->grAttrs & dlattrRva ? "" : "old-style ",
+                            szName);
+            }
+
+            patchDescriptor(hModule, szModule, pDelayDescriptor, action);
+
+            ++pDelayDescriptor;
+        }
     }
 }
 
+
 static void
-hookAllModules(void)
+patchAllModules(Action action)
 {
     HANDLE hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (hModuleSnap == INVALID_HANDLE_VALUE) {
@@ -337,23 +718,9 @@ hookAllModules(void)
 
     MODULEENTRY32 me32;
     me32.dwSize = sizeof me32;
-
-    if (VERBOSITY > 0) {
-        static bool first = true;
-        if (first) {
-            if (Module32First(hModuleSnap, &me32)) {
-                debugPrintf("  modules:\n");
-                do  {
-                    debugPrintf("     %s\n", me32.szExePath);
-                } while (Module32Next(hModuleSnap, &me32));
-            }
-            first = false;
-        }
-    }
-
     if (Module32First(hModuleSnap, &me32)) {
         do  {
-            hookModule(me32.hModule, me32.szExePath);
+            patchModule(me32.hModule, me32.szExePath, action);
         } while (Module32Next(hModuleSnap, &me32));
     }
 
@@ -361,133 +728,214 @@ hookAllModules(void)
 }
 
 
-
-
-static HMODULE WINAPI
-MyLoadLibrary(LPCSTR lpLibFileName, HANDLE hFile = NULL, DWORD dwFlags = 0)
-{
-    // To Send the information to the server informing that,
-    // LoadLibrary is invoked.
-    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, dwFlags);
-
-    //hookModule(hModule, lpLibFileName);
-    hookAllModules();
-
-    return hModule;
-}
-
 static HMODULE WINAPI
 MyLoadLibraryA(LPCSTR lpLibFileName)
 {
+    HMODULE hModule = LoadLibraryA(lpLibFileName);
+    DWORD dwLastError = GetLastError();
+
     if (VERBOSITY >= 2) {
-        debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(\"%s\") = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hModule);
     }
 
     if (VERBOSITY > 0) {
         const char *szBaseName = getBaseName(lpLibFileName);
-        for (unsigned i = 0; i < numReplacements; ++i) {
-            if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
-                debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
-#ifdef __GNUC__
-                void *caller = __builtin_return_address (0);
-
-                HMODULE hModule = 0;
-                BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                         (LPCTSTR)caller,
-                                         &hModule);
-                assert(bRet);
-                char szCaller[256];
-                DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
-                assert(dwRet);
-                debugPrintf("  called from %s\n", szCaller);
-#endif
-                break;
+        if (isMatchModuleName(szBaseName)) {
+            if (VERBOSITY < 2) {
+                debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpLibFileName);
             }
+#ifdef __GNUC__
+            void *caller = __builtin_return_address (0);
+
+            HMODULE hModule = 0;
+            BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                          GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                          (LPCTSTR)caller,
+                                          &hModule);
+            assert(bRet);
+            char szCaller[MAX_PATH];
+            DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
+            assert(dwRet);
+            debugPrintf("inject: called from %s\n", szCaller);
+#endif
         }
     }
 
-    return MyLoadLibrary(lpLibFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules(ACTION_HOOK);
+
+    SetLastError(dwLastError);
+    return hModule;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryW(LPCWSTR lpLibFileName)
 {
+    HMODULE hModule = LoadLibraryW(lpLibFileName);
+    DWORD dwLastError = GetLastError();
+
     if (VERBOSITY >= 2) {
-        debugPrintf("%s(L\"%S\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(L\"%S\") = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hModule);
     }
 
-    char szFileName[256];
-    wcstombs(szFileName, lpLibFileName, sizeof szFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules(ACTION_HOOK);
 
-    return MyLoadLibrary(szFileName);
+    SetLastError(dwLastError);
+    return hModule;
+}
+
+#ifndef LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR    0x00000100
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_APPLICATION_DIR
+#define LOAD_LIBRARY_SEARCH_APPLICATION_DIR 0x00000200
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_USER_DIRS
+#define LOAD_LIBRARY_SEARCH_USER_DIRS       0x00000400
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_SYSTEM32
+#define LOAD_LIBRARY_SEARCH_SYSTEM32        0x00000800
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS    0x00001000
+#endif
+
+static inline DWORD
+adjustFlags(DWORD dwFlags)
+{
+    /*
+     * XXX: LoadLibraryEx seems to interpret "application directory" in respect
+     * to the module that's calling it.  So when the application restricts the
+     * search path to application directory via
+     * LOAD_LIBRARY_SEARCH_APPLICATION_DIR or LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+     * flags, kernel32.dll ends up searching on the directory of the inject.dll
+     * module.
+     *
+     * XXX: What about SetDefaultDllDirectories?
+     *
+     */
+    if (dwFlags & (LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                   LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)) {
+        dwFlags &= ~(LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR |
+                     LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                     LOAD_LIBRARY_SEARCH_USER_DIRS |
+                     LOAD_LIBRARY_SEARCH_SYSTEM32 |
+                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    }
+
+    return dwFlags;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
+    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
+    DWORD dwLastError = GetLastError();
+
     if (VERBOSITY >= 2) {
-        debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hFile, dwFlags, hModule);
     }
-    return MyLoadLibrary(lpLibFileName, hFile, dwFlags);
+
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules(ACTION_HOOK);
+
+    SetLastError(dwLastError);
+    return hModule;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
+    HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, adjustFlags(dwFlags));
+    DWORD dwLastError = GetLastError();
+
     if (VERBOSITY >= 2) {
-        debugPrintf("%s(L\"%S\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(L\"%S\", 0x%p, 0x%lx) = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hFile, dwFlags, hModule);
     }
 
-    char szFileName[256];
-    wcstombs(szFileName, lpLibFileName, sizeof szFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules(ACTION_HOOK);
 
-    return MyLoadLibrary(szFileName, hFile, dwFlags);
+    SetLastError(dwLastError);
+    return hModule;
+}
+
+
+static void
+logGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
+    if (HIWORD(lpProcName) == 0) {
+        debugPrintf("inject: intercepting %s(%u)\n", "GetProcAddress", LOWORD(lpProcName));
+    } else {
+        debugPrintf("inject: intercepting %s(\"%s\")\n", "GetProcAddress", lpProcName);
+    }
 }
 
 static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 
-    if (VERBOSITY >= 99) {
+    if (VERBOSITY >= 3) {
         /* XXX this can cause segmentation faults */
-        debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpProcName);
-    }
-
-    assert(hModule != g_hThisModule);
-    for (unsigned i = 0; i < numReplacements; ++i) {
-        if (hModule == replacements[i].hReplaceModule) {
-            if (pSharedMem) {
-                pSharedMem->bReplaced = TRUE;
-            }
-            return GetProcAddress(hModule, lpProcName);
-        }
+        logGetProcAddress(hModule, lpProcName);
     }
 
     if (!NOOP) {
-        char szModule[256];
+        char szModule[MAX_PATH];
         DWORD dwRet = GetModuleFileNameA(hModule, szModule, sizeof szModule);
         assert(dwRet);
         const char *szBaseName = getBaseName(szModule);
 
-        for (unsigned i = 0; i < numReplacements; ++i) {
+        ModulesMap::const_iterator modIt;
+        modIt = modulesMap.find(szBaseName);
+        if (modIt != modulesMap.end()) {
+            if (VERBOSITY > 1 && VERBOSITY < 3) {
+                logGetProcAddress(hModule, lpProcName);
+            }
 
-            if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
-                if (VERBOSITY > 0) {
-                    debugPrintf("  %s(\"%s\", \"%s\")\n", __FUNCTION__, szModule, lpProcName);
+            const Module & module = modIt->second;
+            const FunctionMap & functionMap = module.functionMap;
+            FunctionMap::const_iterator fnIt;
+
+            if (HIWORD(lpProcName) == 0) {
+                FARPROC proc = GetProcAddress(hModule, lpProcName);
+                if (!proc) {
+                    return proc;
                 }
-                FARPROC pProcAddress = GetProcAddress(replacements[i].hReplaceModule, lpProcName);
-                if (pProcAddress) {
-                    if (VERBOSITY >= 2) {
-                        debugPrintf("      replacing %s!%s\n", szBaseName, lpProcName);
+
+                for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
+                    FARPROC pRealProc = GetProcAddress(hModule, fnIt->first);
+                    if (proc == pRealProc) {
+                        if (VERBOSITY > 0) {
+                            debugPrintf("inject: replacing %s!%s\n", szBaseName, lpProcName);
+                        }
+                        return (FARPROC)fnIt->second;
                     }
-                    if (pSharedMem) {
-                        pSharedMem->bReplaced = TRUE;
-                    }
-                    return pProcAddress;
-                } else {
-                    if (VERBOSITY > 0) {
-                        debugPrintf("      ignoring %s!%s\n", szBaseName, lpProcName);
-                    }
-                    break;
+
+                }
+                
+                debugPrintf("inject: ignoring %s!@%u\n", szBaseName, LOWORD(lpProcName));
+
+                return proc;
+            }
+
+            fnIt = functionMap.find(lpProcName);
+
+            if (fnIt != functionMap.end()) {
+                LPVOID pProcAddress = fnIt->second;
+                if (VERBOSITY > 0) {
+                    debugPrintf("inject: replacing %s!%s\n", szBaseName, lpProcName);
+                }
+                if (!module.bInternal && pSharedMem) {
+                    pSharedMem->bReplaced = TRUE;
+                }
+                return (FARPROC)pProcAddress;
+            } else {
+                if (VERBOSITY > 0 && !module.bInternal) {
+                    debugPrintf("inject: ignoring %s!%s\n", szBaseName, lpProcName);
                 }
             }
         }
@@ -497,28 +945,105 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 }
 
 
+static BOOL WINAPI
+MyFreeLibrary(HMODULE hModule)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(0x%p)\n", __FUNCTION__, hModule);
+    }
+
+    BOOL bRet = FreeLibrary(hModule);
+    DWORD dwLastError = GetLastError();
+
+    EnterCriticalSection(&g_Mutex);
+    // TODO: Only clear the modules that have been freed
+    g_hHookedModules.clear();
+    LeaveCriticalSection(&g_Mutex);
+
+    SetLastError(dwLastError);
+    return bRet;
+}
+
+
+static void
+registerLibraryLoaderHooks(const char *szMatchModule)
+{
+    Module & module = modulesMap[szMatchModule];
+    module.bInternal = true;
+    FunctionMap & functionMap = module.functionMap;
+    functionMap["LoadLibraryA"]   = (LPVOID)MyLoadLibraryA;
+    functionMap["LoadLibraryW"]   = (LPVOID)MyLoadLibraryW;
+    functionMap["LoadLibraryExA"] = (LPVOID)MyLoadLibraryExA;
+    functionMap["LoadLibraryExW"] = (LPVOID)MyLoadLibraryExW;
+    functionMap["GetProcAddress"] = (LPVOID)MyGetProcAddress;
+    functionMap["FreeLibrary"]    = (LPVOID)MyFreeLibrary;
+}
+
+static void
+registerProcessThreadsHooks(const char *szMatchModule)
+{
+    Module & module = modulesMap[szMatchModule];
+    module.bInternal = true;
+    FunctionMap & functionMap = module.functionMap;
+    functionMap["CreateProcessA"]       = (LPVOID)MyCreateProcessA;
+    functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
+    // NOTE: CreateProcessAsUserA is implemented by advapi32.dll
+    functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
+    // TODO: CreateProcessWithTokenW
+}
+
+static void
+registerModuleHooks(const char *szMatchModule, HMODULE hReplaceModule)
+{
+    Module & module = modulesMap[szMatchModule];
+    module.bInternal = false;
+    FunctionMap & functionMap = module.functionMap;
+
+    PIMAGE_EXPORT_DIRECTORY pExportDescriptor = getExportDescriptor(hReplaceModule);
+    assert(pExportDescriptor);
+
+    DWORD *pAddressOfNames = (DWORD *)((BYTE *)hReplaceModule + pExportDescriptor->AddressOfNames);
+    for (DWORD i = 0; i < pExportDescriptor->NumberOfNames; ++i) {
+        const char *szFunctionName = (const char *)((BYTE *)hReplaceModule + pAddressOfNames[i]);
+        LPVOID lpNewAddress = (LPVOID)GetProcAddress(hReplaceModule, szFunctionName);
+        assert(lpNewAddress);
+
+        functionMap[szFunctionName] = lpNewAddress;
+    }
+}
+
+static void
+dumpRegisteredHooks(void)
+{
+    if (VERBOSITY > 1) {
+        ModulesMap::const_iterator modIt;
+        for (modIt = modulesMap.begin(); modIt != modulesMap.end(); ++modIt) {
+            const char *szMatchModule = modIt->first;
+            const Module & module = modIt->second;
+            const FunctionMap & functionMap = module.functionMap;
+            FunctionMap::const_iterator fnIt;
+            for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
+                const char *szFunctionName = fnIt->first;
+                debugPrintf("inject: registered hook for %s!%s%s\n",
+                            szMatchModule, szFunctionName,
+                            module.bInternal ? " (internal)" : "");
+            }
+        }
+    }
+}
+
+
 EXTERN_C BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     const char *szNewDllName = NULL;
-    HMODULE hNewModule = NULL;
     const char *szNewDllBaseName;
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        if (VERBOSITY > 0) {
-            debugPrintf("DLL_PROCESS_ATTACH\n");
-        }
+        InitializeCriticalSection(&g_Mutex);
 
         g_hThisModule = hinstDLL;
-
-        {
-            char szProcess[MAX_PATH];
-            GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
-            if (VERBOSITY > 0) {
-                debugPrintf("  attached to %s\n", szProcess);
-            }
-        }
 
         /*
          * Calling LoadLibrary inside DllMain is strongly discouraged.  But it
@@ -530,51 +1055,94 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
          * - http://msdn.microsoft.com/en-us/library/ms682583
          */
 
-#if !USE_SHARED_MEM
-        szNewDllName = getenv("INJECT_DLL");
-        if (!szNewDllName) {
-            debugPrintf("warning: INJECT_DLL not set\n");
-            return FALSE;
-        }
-#else
-        static char szSharedMemCopy[MAX_PATH];
-        GetSharedMem(szSharedMemCopy, sizeof szSharedMemCopy);
-        szNewDllName = szSharedMemCopy;
-#endif
-        if (VERBOSITY > 0) {
-            debugPrintf("  injecting %s\n", szNewDllName);
+        if (!USE_SHARED_MEM) {
+            szNewDllName = getenv("INJECT_DLL");
+            if (!szNewDllName) {
+                debugPrintf("inject: warning: INJECT_DLL not set\n");
+                return FALSE;
+            }
+        } else {
+            SharedMem *pSharedMem = OpenSharedMemory(NULL);
+            if (!pSharedMem) {
+                debugPrintf("inject: error: failed to open shared memory\n");
+                return FALSE;
+            }
+
+            VERBOSITY = pSharedMem->cVerbosity;
+
+            static char szSharedMemCopy[MAX_PATH];
+            strncpy(szSharedMemCopy, pSharedMem->szDllName, _countof(szSharedMemCopy) - 1);
+            szSharedMemCopy[_countof(szSharedMemCopy) - 1] = '\0';
+
+            szNewDllName = szSharedMemCopy;
         }
 
-        hNewModule = LoadLibraryA(szNewDllName);
-        if (!hNewModule) {
-            debugPrintf("warning: failed to load %s\n", szNewDllName);
+        if (VERBOSITY > 0) {
+            debugPrintf("inject: DLL_PROCESS_ATTACH\n");
+        }
+
+        if (VERBOSITY > 0) {
+            char szProcess[MAX_PATH];
+            GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
+            debugPrintf("inject: attached to process %s\n", szProcess);
+        }
+
+        if (VERBOSITY > 0) {
+            debugPrintf("inject: loading %s\n", szNewDllName);
+        }
+
+        g_hHookModule = LoadLibraryA(szNewDllName);
+        if (!g_hHookModule) {
+            debugPrintf("inject: warning: failed to load %s\n", szNewDllName);
             return FALSE;
         }
+
+        // Ensure we use kernel32.dll's CreateProcessAsUserW, and not advapi32.dll's.
+        {
+            HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+            assert(hKernel32);
+            pfnCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)GetProcAddress(hKernel32, "CreateProcessAsUserW");
+        }
+
+        /*
+         * Hook kernel32.dll functions, and its respective Windows API Set.
+         *
+         * http://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
+         * http://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+         */
+
+        registerLibraryLoaderHooks("kernel32.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-1.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-1.dll");
+
+        registerProcessThreadsHooks("kernel32.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-0.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-1.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-2.dll");
 
         szNewDllBaseName = getBaseName(szNewDllName);
         if (stricmp(szNewDllBaseName, "dxgitrace.dll") == 0) {
-            replacements[numReplacements].szMatchModule = "dxgi.dll";
-            replacements[numReplacements].hReplaceModule = hNewModule;
-            ++numReplacements;
-
-            replacements[numReplacements].szMatchModule = "d3d10.dll";
-            replacements[numReplacements].hReplaceModule = hNewModule;
-            ++numReplacements;
-
-            replacements[numReplacements].szMatchModule = "d3d10_1.dll";
-            replacements[numReplacements].hReplaceModule = hNewModule;
-            ++numReplacements;
-
-            replacements[numReplacements].szMatchModule = "d3d11.dll";
-            replacements[numReplacements].hReplaceModule = hNewModule;
-            ++numReplacements;
+            registerModuleHooks("dxgi.dll",    g_hHookModule);
+            registerModuleHooks("d3d10.dll",   g_hHookModule);
+            registerModuleHooks("d3d10_1.dll", g_hHookModule);
+            registerModuleHooks("d3d11.dll",   g_hHookModule);
+            registerModuleHooks("d3d9.dll",    g_hHookModule); // for D3DPERF_*
+        } else if (stricmp(szNewDllBaseName, "d3d9.dll") == 0) {
+            registerModuleHooks("d3d9.dll",    g_hHookModule);
+            registerModuleHooks("dxva2.dll",   g_hHookModule);
+        } else if (stricmp(szNewDllBaseName, "d2d1trace.dll") == 0) {
+            registerModuleHooks("d2d1.dll",    g_hHookModule);
+            registerModuleHooks("dwrite.dll",  g_hHookModule);
         } else {
-            replacements[numReplacements].szMatchModule = szNewDllBaseName;
-            replacements[numReplacements].hReplaceModule = hNewModule;
-            ++numReplacements;
+            registerModuleHooks(szNewDllBaseName, g_hHookModule);
         }
 
-        hookAllModules();
+        dumpRegisteredHooks();
+
+        patchAllModules(ACTION_HOOK);
         break;
 
     case DLL_THREAD_ATTACH:
@@ -585,9 +1153,52 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
     case DLL_PROCESS_DETACH:
         if (VERBOSITY > 0) {
-            debugPrintf("DLL_PROCESS_DETACH\n");
+            debugPrintf("inject: DLL_PROCESS_DETACH\n");
+        }
+
+        assert(!lpvReserved);
+
+        patchAllModules(ACTION_UNHOOK);
+
+        if (g_hHookModule) {
+            FreeLibrary(g_hHookModule);
         }
         break;
     }
     return TRUE;
+}
+
+
+/*
+ * Prevent the C/C++ runtime from destroying things when the program
+ * terminates.
+ *
+ * There is no effective way to control the order DLLs receive
+ * DLL_PROCESS_DETACH -- patched DLLs might get detacched after we are --, and
+ * unpatching our hooks doesn't always work.  So instead just do nothing (and
+ * prevent C/C++ runtime from doing anything too), so our hooks can still work
+ * after we are dettached.
+ */
+
+#ifdef _MSC_VER
+#  define DLLMAIN_CRT_STARTUP _DllMainCRTStartup
+#else
+#  define DLLMAIN_CRT_STARTUP DllMainCRTStartup
+#  pragma GCC optimize ("no-stack-protector")
+#endif
+
+EXTERN_C BOOL WINAPI
+DLLMAIN_CRT_STARTUP(HANDLE hDllHandle, DWORD dwReason, LPVOID lpvReserved);
+
+EXTERN_C BOOL WINAPI
+DllMainStartup(HANDLE hDllHandle, DWORD dwReason, LPVOID lpvReserved)
+{
+    if (dwReason == DLL_PROCESS_DETACH && lpvReserved) {
+        if (VERBOSITY > 0) {
+            debugPrintf("inject: DLL_PROCESS_DETACH\n");
+        }
+        return TRUE;
+    }
+
+    return DLLMAIN_CRT_STARTUP(hDllHandle, dwReason, lpvReserved);
 }

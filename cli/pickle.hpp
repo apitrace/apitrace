@@ -27,12 +27,12 @@
  * Python pickle writer
  */
 
-#ifndef _PICKLE_HPP_
-#define _PICKLE_HPP_
+#pragma once
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <wchar.h>
 
 #include <ostream>
 #include <string>
@@ -162,6 +162,23 @@ public:
         os.put(TUPLE);
     }
 
+    inline void beginTuple(unsigned length) {
+        if (length >= 4) {
+            os.put(MARK);
+        }
+    }
+
+    inline void endTuple(unsigned length) {
+        static const Opcode ops[4] = {
+            EMPTY_TUPLE,
+            TUPLE1,
+            TUPLE2,
+            TUPLE3,
+        };
+        Opcode op = length < 4 ? ops[length] : TUPLE;
+        os.put(op);
+    }
+
     inline void writeString(const char *s, size_t length) {
         if (!s) {
             writeNone();
@@ -192,6 +209,34 @@ public:
 
     inline void writeString(const std::string &s) {
         writeString(s.c_str(), s.size());
+    }
+
+    inline void writeWString(const wchar_t *s, size_t length) {
+        if (!s) {
+            writeNone();
+            return;
+        }
+
+        /* FIXME: emit UTF-8 */
+        os.put(BINUNICODE);
+        putInt32(length);
+        for (size_t i = 0; i < length; ++i) {
+            wchar_t wc = s[i];
+            char c = wc >= 0 && wc < 0x80 ? (char)wc : '?';
+            os.put(c);
+        }
+
+        os.put(BINPUT);
+        os.put(1);
+    }
+
+    inline void writeWString(const wchar_t *s) {
+        if (!s) {
+            writeNone();
+            return;
+        }
+
+        writeWString(s, wcslen(s));
     }
 
     inline void writeNone(void) {
@@ -255,7 +300,7 @@ public:
             char c[8];
         } u;
 
-        assert(sizeof u.f == sizeof u.c);
+        static_assert(sizeof u.f == sizeof u.c, "double is not 8 bytes");
         u.f = f;
 
         os.put(BINFLOAT);
@@ -275,6 +320,16 @@ public:
         os.put(BINPUT);
         os.put(1);
         writeString(static_cast<const char *>(buf), length);
+        os.put(TUPLE1);
+        os.put(REDUCE);
+    }
+
+    inline void writePointer(unsigned long long addr) {
+        os.put(GLOBAL);
+        os << "unpickle\nPointer\n";
+        os.put(BINPUT);
+        os.put(1);
+        writeInt(addr);
         os.put(TUPLE1);
         os.put(REDUCE);
     }
@@ -330,4 +385,3 @@ protected:
     }
 };
 
-#endif /* _Pickle_HPP_ */

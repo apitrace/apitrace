@@ -141,6 +141,15 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="lowerSpinBox">
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>-999.999000000000024</double>
+       </property>
+       <property name="maximum">
+        <double>999.999000000000024</double>
+       </property>
        <property name="singleStep">
         <double>0.050000000000000</double>
        </property>
@@ -155,6 +164,15 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="upperSpinBox">
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>-999.999000000000024</double>
+       </property>
+       <property name="maximum">
+        <double>999.999000000000024</double>
+       </property>
        <property name="singleStep">
         <double>0.050000000000000</double>
        </property>

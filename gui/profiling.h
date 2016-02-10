@@ -1,5 +1,4 @@
-#ifndef PROFILING_H
-#define PROFILING_H
+#pragma once
 
 #include <QString>
 #include <QLocale>
@@ -124,5 +123,3 @@ public:
         }
     }
 };
-
-#endif

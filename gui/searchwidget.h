@@ -1,5 +1,4 @@
-#ifndef SEARCHWIDGET_H
-#define SEARCHWIDGET_H
+#pragma once
 
 #include "ui_searchwidget.h"
 #include <QPalette>
@@ -34,5 +33,3 @@ private:
     Ui_SearchWidget m_ui;
     QPalette m_origPalette;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TRACEDIALOG_H
-#define TRACEDIALOG_H
+#pragma once
 
 #include "ui_tracedialog.h"
 #include <QDialog>
@@ -22,5 +21,3 @@ private slots:
 private:
     bool isFileOk(const QString &fileName);
 };
-
-#endif

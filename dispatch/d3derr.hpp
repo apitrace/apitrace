@@ -24,7 +24,7 @@
  **************************************************************************/
 
 /*
- * D3DERR return codes.
+ * Direct3D error codes.
  *
  * These were defined in d3dx10.h/d3dx11.h on DirectX SDK, and moved to
  * winerror.h on Windows 8 SDK.
@@ -35,12 +35,14 @@
  * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb172554.aspx
  */
 
-#ifndef _D3DERR_HPP_
-#define _D3DERR_HPP_
+#pragma once
+
+
+#include <windows.h>
 
 
 #ifndef _FACD3D
-#define _FACD3D  0x876
+#define _FACD3D 0x876
 #endif
 
 #ifndef MAKE_D3DHRESULT
@@ -60,4 +62,38 @@
 #endif
 
 
-#endif /* _D3DERR_HPP_ */
+#ifndef DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED
+#define DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED MAKE_DXGI_HRESULT(35)
+#endif
+
+#ifndef DXGI_ERROR_REMOTE_OUTOFMEMORY
+#define DXGI_ERROR_REMOTE_OUTOFMEMORY MAKE_DXGI_HRESULT(36)
+#endif
+
+
+#ifndef D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
+#define D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS MAKE_D3D10_HRESULT(1)
+#endif
+
+#ifndef D3D10_ERROR_FILE_NOT_FOUND
+#define D3D10_ERROR_FILE_NOT_FOUND MAKE_D3D10_HRESULT(2)
+#endif
+
+
+#ifndef D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
+#define D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS MAKE_D3D11_HRESULT(1)
+#endif
+
+#ifndef D3D11_ERROR_FILE_NOT_FOUND
+#define D3D11_ERROR_FILE_NOT_FOUND MAKE_D3D11_HRESULT(2)
+#endif
+
+#ifndef D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS
+#define D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS MAKE_D3D11_HRESULT(3)
+#endif
+
+#ifndef D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD
+#define D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD MAKE_D3D11_HRESULT(4)
+#endif
+
+

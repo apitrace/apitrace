@@ -48,10 +48,10 @@ class Differ:
         self.apitrace = apitrace
         self.isatty = sys.stdout.isatty()
 
-    def setRefTrace(self, ref_trace, ref_calls):
+    def setRefTrace(self, refTrace, ref_calls):
         raise NotImplementedError
 
-    def setSrcTrace(self, src_trace, src_calls):
+    def setSrcTrace(self, srcTrace, src_calls):
         raise NotImplementedError
 
     def diff(self):
@@ -99,25 +99,41 @@ class ExternalDiffer(Differ):
         start_insert = '\33[32m'
         end_insert   = '\33[0m'
 
-    def __init__(self, apitrace, tool, width=None, callNos = False):
+    def __init__(self, apitrace, options):
         Differ.__init__(self, apitrace)
+        tool = options.tool
+        callNos = options.callNos
+
         self.diff_args = [tool]
         if tool == 'diff':
             self.diff_args += [
                 '--speed-large-files',
             ]
             if self.isatty:
+                if options.suppressCommonLines:
+                    self.diff_args += ['--unchanged-line-format=']
+                else:
+                    self.diff_args += ['--unchanged-line-format=%l\n']
                 self.diff_args += [
                     '--old-line-format=' + self.start_delete + '%l' + self.end_delete + '\n',
                     '--new-line-format=' + self.start_insert + '%l' + self.end_insert + '\n',
                 ]
+            else:
+                if options.suppressCommonLines:
+                    self.diff_args += ['--unchanged-line-format=']
+                else:
+                    self.diff_args += ['--unchanged-line-format=  %l\n']
+                self.diff_args += [
+                    '--old-line-format=- %l\n',
+                    '--new-line-format=+ %l\n',
+                ]
         elif tool == 'sdiff':
-            if width is None:
+            if options.width is None:
                 import curses
                 curses.setupterm()
-                width = curses.tigetnum('cols')
+                options.width = curses.tigetnum('cols')
             self.diff_args += [
-                '--width=%u' % width,
+                '--width=%u' % options.width,
                 '--speed-large-files',
             ]
         elif tool == 'wdiff':
@@ -136,11 +152,11 @@ class ExternalDiffer(Differ):
             assert False
         self.callNos = callNos
 
-    def setRefTrace(self, ref_trace, ref_calls):
-        self.ref_dumper = AsciiDumper(self.apitrace, ref_trace, ref_calls, self.callNos)
+    def setRefTrace(self, refTrace, ref_calls):
+        self.ref_dumper = AsciiDumper(self.apitrace, refTrace, ref_calls, self.callNos)
 
-    def setSrcTrace(self, src_trace, src_calls):
-        self.src_dumper = AsciiDumper(self.apitrace, src_trace, src_calls, self.callNos)
+    def setSrcTrace(self, srcTrace, src_calls):
+        self.src_dumper = AsciiDumper(self.apitrace, srcTrace, src_calls, self.callNos)
 
     def diff(self):
         diff_args = self.diff_args + [
@@ -240,7 +256,7 @@ class Loader(Unpickler):
 
 class PythonDiffer(Differ):
 
-    def __init__(self, apitrace, callNos = False):
+    def __init__(self, apitrace, options):
         Differ.__init__(self, apitrace)
         self.a = None
         self.b = None
@@ -250,16 +266,17 @@ class PythonDiffer(Differ):
             self.highlighter = PlainHighlighter()
         self.delete_color = self.highlighter.red
         self.insert_color = self.highlighter.green
-        self.callNos = callNos
+        self.callNos = options.callNos
+        self.suppressCommonLines = options.suppressCommonLines
         self.aSpace = 0
         self.bSpace = 0
         self.dumper = Dumper()
 
-    def setRefTrace(self, ref_trace, ref_calls):
-        self.a = self.readTrace(ref_trace, ref_calls)
+    def setRefTrace(self, refTrace, ref_calls):
+        self.a = self.readTrace(refTrace, ref_calls)
 
-    def setSrcTrace(self, src_trace, src_calls):
-        self.b = self.readTrace(src_trace, src_calls)
+    def setSrcTrace(self, srcTrace, src_calls):
+        self.b = self.readTrace(srcTrace, src_calls)
 
     def readTrace(self, trace, calls):
         p = subprocess.Popen(
@@ -341,14 +358,16 @@ class PythonDiffer(Differ):
             for j in xrange(numArgs):
                 self.highlighter.write(sep)
                 try:
-                    a_arg = a_call.args[j]
+                    a_argName, a_argVal = a_call.args[j]
                 except IndexError:
                     pass
                 try:
-                    b_arg = b_call.args[j]
+                    b_argName, b_argVal = b_call.args[j]
                 except IndexError:
                     pass
-                self.replace_value(a_arg, b_arg)
+                self.replace_value(a_argName, b_argName)
+                self.highlighter.write(' = ')
+                self.replace_value(a_argVal, b_argVal)
                 sep = ', '
             self.highlighter.write(')')
             if a_call.ret is not None or b_call.ret is not None:
@@ -373,7 +392,7 @@ class PythonDiffer(Differ):
             self.highlighter.color(self.delete_color)
             self.highlighter.write(self.dumper.visit(a))
             self.highlighter.normal()
-            self.highlighter.write(" ")
+            self.highlighter.write(" -> ")
             self.highlighter.color(self.insert_color)
             self.highlighter.write(self.dumper.visit(b))
             self.highlighter.normal()
@@ -402,6 +421,8 @@ class PythonDiffer(Differ):
             self.dumpCall(call)
 
     def equal(self, alo, ahi, blo, bhi):
+        if self.suppressCommonLines:
+            return
         assert alo < ahi and blo < bhi
         assert ahi - alo == bhi - blo
         for i in xrange(0, bhi - blo):
@@ -449,7 +470,7 @@ class PythonDiffer(Differ):
         self.highlighter.bold(True)
         self.highlighter.write(call.functionName)
         self.highlighter.bold(False)
-        self.highlighter.write('(' + ', '.join(itertools.imap(self.dumper.visit, call.args)) + ')')
+        self.highlighter.write('(' + self.dumper.visitItems(call.args) + ')')
         if call.ret is not None:
             self.highlighter.write(' = ' + self.dumper.visit(call.ret))
         self.highlighter.normal()
@@ -502,17 +523,22 @@ def main():
         help="calls to compare [default: %default]")
     optparser.add_option(
         '--ref-calls', metavar='CALLSET',
-        type="string", dest="ref_calls", default=None,
+        type="string", dest="refCalls", default=None,
         help="calls to compare from reference trace")
     optparser.add_option(
         '--src-calls', metavar='CALLSET',
-        type="string", dest="src_calls", default=None,
+        type="string", dest="srcCalls", default=None,
         help="calls to compare from source trace")
     optparser.add_option(
         '--call-nos',
         action="store_true",
-        dest="call_nos", default=False,
+        dest="callNos", default=False,
         help="dump call numbers")
+    optparser.add_option(
+        '--suppress-common-lines',
+        action="store_true",
+        dest="suppressCommonLines", default=False,
+        help="do not output common lines")
     optparser.add_option(
         '-w', '--width', metavar='NUM',
         type="int", dest="width",
@@ -536,19 +562,20 @@ def main():
                     sys.stderr.write('warning: sdiff not found\n')
                     options.tool = 'diff'
 
-    if options.ref_calls is None:
-        options.ref_calls = options.calls
-    if options.src_calls is None:
-        options.src_calls = options.calls
+    if options.refCalls is None:
+        options.refCalls = options.calls
+    if options.srcCalls is None:
+        options.srcCalls = options.calls
 
-    ref_trace, src_trace = args
+    refTrace, srcTrace = args
 
     if options.tool == 'python':
-        differ = PythonDiffer(options.apitrace, options.call_nos)
+        factory = PythonDiffer
     else:
-        differ = ExternalDiffer(options.apitrace, options.tool, options.width, options.call_nos)
-    differ.setRefTrace(ref_trace, options.ref_calls)
-    differ.setSrcTrace(src_trace, options.src_calls)
+        factory = ExternalDiffer
+    differ = factory(options.apitrace, options)
+    differ.setRefTrace(refTrace, options.refCalls)
+    differ.setSrcTrace(srcTrace, options.srcCalls)
     differ.diff()
 
 

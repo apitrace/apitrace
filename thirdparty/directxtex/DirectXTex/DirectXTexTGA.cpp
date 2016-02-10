@@ -19,7 +19,7 @@
 // The implementation here has the following limitations:
 //      * Does not support files that contain color maps (these are rare in practice)
 //      * Interleaved files are not supported (deprecated aspect of TGA format)
-//      * Only supports 8-bit greyscale; 16-, 24-, and 32-bit truecolor images
+//      * Only supports 8-bit grayscale; 16-, 24-, and 32-bit truecolor images
 //      * Always writes uncompressed files (i.e. can read RLE compression, but does not write it)
 //
 
@@ -116,7 +116,7 @@ namespace DirectX
 //-------------------------------------------------------------------------------------
 // Decodes TGA header
 //-------------------------------------------------------------------------------------
-static HRESULT _DecodeTGAHeader( _In_bytecount_(size) LPCVOID pSource, size_t size, _Out_ TexMetadata& metadata, size_t& offset,
+static HRESULT _DecodeTGAHeader( _In_reads_bytes_(size) LPCVOID pSource, size_t size, _Out_ TexMetadata& metadata, size_t& offset,
                                  _Inout_opt_ DWORD* convFlags )
 {
     if ( !pSource )
@@ -129,8 +129,7 @@ static HRESULT _DecodeTGAHeader( _In_bytecount_(size) LPCVOID pSource, size_t si
         return HRESULT_FROM_WIN32( ERROR_INVALID_DATA );
     }
 
-    const TGA_HEADER* pHeader = reinterpret_cast<const TGA_HEADER*>( pSource );
-    assert( pHeader );
+    auto pHeader = reinterpret_cast<const TGA_HEADER*>( pSource );
 
     if ( pHeader->bColorMapType != 0
          || pHeader->wColorMapLength != 0 )
@@ -236,7 +235,7 @@ static HRESULT _SetAlphaChannelToOpaque( _In_ const Image* image )
 {
     assert( image );
 
-    uint8_t* pPixels = reinterpret_cast<uint8_t*>( image->pixels );
+    auto pPixels = reinterpret_cast<uint8_t*>( image->pixels );
     if ( !pPixels )
         return E_POINTER;
 
@@ -253,7 +252,7 @@ static HRESULT _SetAlphaChannelToOpaque( _In_ const Image* image )
 //-------------------------------------------------------------------------------------
 // Uncompress pixel data from a TGA into the target image
 //-------------------------------------------------------------------------------------
-static HRESULT _UncompressPixels( _In_bytecount_(size) LPCVOID pSource, size_t size, _In_ const Image* image, DWORD convFlags )
+static HRESULT _UncompressPixels( _In_reads_bytes_(size) LPCVOID pSource, size_t size, _In_ const Image* image, _In_ DWORD convFlags )
 {
     assert( pSource && size > 0 );
 
@@ -272,7 +271,7 @@ static HRESULT _UncompressPixels( _In_bytecount_(size) LPCVOID pSource, size_t s
         ComputePitch( image->format, image->width, image->height, rowPitch, slicePitch, CP_FLAGS_NONE );
     }
 
-    const uint8_t* sPtr = reinterpret_cast<const uint8_t*>( pSource );
+    auto sPtr = reinterpret_cast<const uint8_t*>( pSource );
     const uint8_t* endPtr = sPtr + size;
 
     switch( image->format )
@@ -573,7 +572,7 @@ static HRESULT _UncompressPixels( _In_bytecount_(size) LPCVOID pSource, size_t s
 //-------------------------------------------------------------------------------------
 // Copies pixel data from a TGA into the target image
 //-------------------------------------------------------------------------------------
-static HRESULT _CopyPixels( _In_bytecount_(size) LPCVOID pSource, size_t size, _In_ const Image* image, DWORD convFlags )
+static HRESULT _CopyPixels( _In_reads_bytes_(size) LPCVOID pSource, size_t size, _In_ const Image* image, _In_ DWORD convFlags )
 {
     assert( pSource && size > 0 );
 
@@ -737,10 +736,8 @@ static HRESULT _CopyPixels( _In_bytecount_(size) LPCVOID pSource, size_t size, _
 //-------------------------------------------------------------------------------------
 // Encodes TGA file header
 //-------------------------------------------------------------------------------------
-static HRESULT _EncodeTGAHeader( _In_ const Image& image, _Out_ TGA_HEADER& header, DWORD& convFlags )
+static HRESULT _EncodeTGAHeader( _In_ const Image& image, _Out_ TGA_HEADER& header, _Inout_ DWORD& convFlags )
 {
-    assert( IsValid( image.format ) && !IsVideo( image.format ) );
-
     memset( &header, 0, sizeof(TGA_HEADER) );
 
     if ( (image.width > 0xFFFF)
@@ -802,8 +799,8 @@ static HRESULT _EncodeTGAHeader( _In_ const Image& image, _Out_ TGA_HEADER& head
 // Copies BGRX data to form BGR 24bpp data
 //-------------------------------------------------------------------------------------
 #pragma warning(suppress: 6001 6101) // In the case where outSize is insufficient we do not write to pDestination
-static void _Copy24bppScanline( _Out_bytecap_(outSize) LPVOID pDestination, _In_ size_t outSize, 
-                                _In_bytecount_(inSize) LPCVOID pSource, _In_ size_t inSize )
+static void _Copy24bppScanline( _Out_writes_bytes_(outSize) LPVOID pDestination, _In_ size_t outSize, 
+                                _In_reads_bytes_(inSize) LPCVOID pSource, _In_ size_t inSize )
 {
     assert( pDestination && outSize > 0 );
     assert( pSource && inSize > 0 );
@@ -813,18 +810,21 @@ static void _Copy24bppScanline( _Out_bytecap_(outSize) LPVOID pDestination, _In_
     const uint32_t * __restrict sPtr = reinterpret_cast<const uint32_t*>(pSource);
     uint8_t * __restrict dPtr = reinterpret_cast<uint8_t*>(pDestination);
 
-    const uint8_t* endPtr = dPtr + outSize;
-
-    for( size_t count = 0; count < inSize; count += 4 )
+    if ( inSize >= 4 && outSize >= 3 )
     {
-        uint32_t t = *(sPtr++);
+        const uint8_t* endPtr = dPtr + outSize;
 
-        if ( dPtr+2 > endPtr )
-            return;
+        for( size_t count = 0; count < ( inSize - 3 ); count += 4 )
+        {
+            uint32_t t = *(sPtr++);
 
-        *(dPtr++) = uint8_t(t & 0xFF);              // Blue
-        *(dPtr++) = uint8_t((t & 0xFF00) >> 8);     // Green
-        *(dPtr++) = uint8_t((t & 0xFF0000) >> 16);  // Red
+            if ( dPtr+3 > endPtr )
+                return;
+
+            *(dPtr++) = uint8_t(t & 0xFF);              // Blue
+            *(dPtr++) = uint8_t((t & 0xFF00) >> 8);     // Green
+            *(dPtr++) = uint8_t((t & 0xFF0000) >> 16);  // Red
+        }
     }
 }
 
@@ -836,6 +836,7 @@ static void _Copy24bppScanline( _Out_bytecap_(outSize) LPVOID pDestination, _In_
 //-------------------------------------------------------------------------------------
 // Obtain metadata from TGA file in memory/on disk
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT GetMetadataFromTGAMemory( LPCVOID pSource, size_t size, TexMetadata& metadata )
 {
     if ( !pSource || size == 0 )
@@ -845,12 +846,13 @@ HRESULT GetMetadataFromTGAMemory( LPCVOID pSource, size_t size, TexMetadata& met
     return _DecodeTGAHeader( pSource, size, metadata, offset, 0 );
 }
 
+_Use_decl_annotations_
 HRESULT GetMetadataFromTGAFile( LPCWSTR szFile, TexMetadata& metadata )
 {
     if ( !szFile )
         return E_INVALIDARG;
 
-#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     ScopedHandle hFile( safe_handle( CreateFile2( szFile, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0 ) ) );
 #else
     ScopedHandle hFile( safe_handle( CreateFileW( szFile, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
@@ -906,6 +908,7 @@ HRESULT GetMetadataFromTGAFile( LPCWSTR szFile, TexMetadata& metadata )
 //-------------------------------------------------------------------------------------
 // Load a TGA file in memory
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT LoadFromTGAMemory( LPCVOID pSource, size_t size, TexMetadata* metadata, ScratchImage& image )
 {
     if ( !pSource || size == 0 )
@@ -923,8 +926,7 @@ HRESULT LoadFromTGAMemory( LPCVOID pSource, size_t size, TexMetadata* metadata, 
     if ( offset > size )
         return E_FAIL;
 
-    LPCVOID pPixels = reinterpret_cast<LPCVOID>( reinterpret_cast<const uint8_t*>(pSource) + offset );
-    assert( pPixels );
+    auto pPixels = reinterpret_cast<LPCVOID>( reinterpret_cast<const uint8_t*>(pSource) + offset );
 
     size_t remaining = size - offset;
     if ( remaining == 0 )
@@ -959,6 +961,7 @@ HRESULT LoadFromTGAMemory( LPCVOID pSource, size_t size, TexMetadata* metadata, 
 //-------------------------------------------------------------------------------------
 // Load a TGA file from disk
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT LoadFromTGAFile( LPCWSTR szFile, TexMetadata* metadata, ScratchImage& image )
 {
     if ( !szFile )
@@ -966,7 +969,7 @@ HRESULT LoadFromTGAFile( LPCWSTR szFile, TexMetadata* metadata, ScratchImage& im
 
     image.Release();
 
-#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     ScopedHandle hFile( safe_handle( CreateFile2( szFile, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0 ) ) );
 #else
     ScopedHandle hFile( safe_handle( CreateFileW( szFile, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
@@ -1105,7 +1108,6 @@ HRESULT LoadFromTGAFile( LPCWSTR szFile, TexMetadata* metadata, ScratchImage& im
                 for( size_t h = 0; h < img->height; ++h )
                 {
                     _SwizzleScanline( pPixels, rowPitch, pPixels, rowPitch, mdata.format, tflags );
-
                     pPixels += rowPitch;
                 }
             }
@@ -1163,7 +1165,7 @@ HRESULT LoadFromTGAFile( LPCWSTR szFile, TexMetadata* metadata, ScratchImage& im
     }
     else // RLE || EXPAND || INVERTX || !INVERTY
     {
-        std::unique_ptr<uint8_t[]> temp( new uint8_t[ remaining ] );
+        std::unique_ptr<uint8_t[]> temp( new (std::nothrow) uint8_t[ remaining ] );
         if ( !temp )
         {
             image.Release();
@@ -1208,6 +1210,7 @@ HRESULT LoadFromTGAFile( LPCWSTR szFile, TexMetadata* metadata, ScratchImage& im
 //-------------------------------------------------------------------------------------
 // Save a TGA file to memory
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT SaveToTGAMemory( const Image& image, Blob& blob )
 {
     if ( !image.pixels )
@@ -1238,12 +1241,12 @@ HRESULT SaveToTGAMemory( const Image& image, Blob& blob )
         return hr;
 
     // Copy header
-    uint8_t* dPtr = reinterpret_cast<uint8_t*>( blob.GetBufferPointer() );
+    auto dPtr = reinterpret_cast<uint8_t*>( blob.GetBufferPointer() );
     assert( dPtr != 0 );
     memcpy_s( dPtr, blob.GetBufferSize(), &tga_header, sizeof(TGA_HEADER) );
     dPtr += sizeof(TGA_HEADER);
 
-    const uint8_t* pPixels = reinterpret_cast<const uint8_t*>( image.pixels );
+    auto pPixels = reinterpret_cast<const uint8_t*>( image.pixels );
     assert( pPixels );
 
     for( size_t y = 0; y < image.height; ++y )
@@ -1273,6 +1276,7 @@ HRESULT SaveToTGAMemory( const Image& image, Blob& blob )
 //-------------------------------------------------------------------------------------
 // Save a TGA file to disk
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT SaveToTGAFile( const Image& image, LPCWSTR szFile )
 {
     if ( !szFile )
@@ -1288,7 +1292,7 @@ HRESULT SaveToTGAFile( const Image& image, LPCWSTR szFile )
         return hr;
 
     // Create file and write header
-#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     ScopedHandle hFile( safe_handle( CreateFile2( szFile, GENERIC_WRITE, 0, CREATE_ALWAYS, 0 ) ) );
 #else
     ScopedHandle hFile( safe_handle( CreateFileW( szFile, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0 ) ) );
@@ -1336,7 +1340,7 @@ HRESULT SaveToTGAFile( const Image& image, LPCWSTR szFile )
     else
     {
         // Otherwise, write the image one scanline at a time...
-        std::unique_ptr<uint8_t[]> temp( new uint8_t[ rowPitch ] );
+        std::unique_ptr<uint8_t[]> temp( new (std::nothrow) uint8_t[ rowPitch ] );
         if ( !temp )
             return E_OUTOFMEMORY;
 
@@ -1351,7 +1355,7 @@ HRESULT SaveToTGAFile( const Image& image, LPCWSTR szFile )
             return E_FAIL;
 
         // Write pixels
-        const uint8_t* pPixels = reinterpret_cast<const uint8_t*>( image.pixels );
+        auto pPixels = reinterpret_cast<const uint8_t*>( image.pixels );
 
         for( size_t y = 0; y < image.height; ++y )
         {

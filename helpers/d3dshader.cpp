@@ -142,7 +142,7 @@ DisassembleShader(const void *pShaderBytecode, SIZE_T BytecodeLength, IDisassemb
         char szFilename[MAX_PATH];
         HMODULE hModule = NULL;
         int version;
-        for (version = 44; version >= 33; --version) {
+        for (version = 47; version >= 33; --version) {
             _snprintf(szFilename, sizeof(szFilename), "d3dcompiler_%i.dll", version);
             hModule = LoadLibraryA(szFilename);
             if (hModule) {
@@ -154,6 +154,8 @@ DisassembleShader(const void *pShaderBytecode, SIZE_T BytecodeLength, IDisassemb
             }
         }
         if (!pfnD3DDisassemble) {
+            os::log("apitrace: warning: failed to load d3dcompiler_xx.dll\n");
+
             /*
              * Fallback to D3D10DisassembleShader, which should be always present.
              */

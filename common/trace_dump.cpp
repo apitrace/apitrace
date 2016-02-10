@@ -26,8 +26,12 @@
 
 #include <limits>
 
+#include <assert.h>
+#include <string.h>
+
 #include "highlight.hpp"
 #include "trace_dump.hpp"
+#include "guids.hpp"
 
 
 namespace trace {
@@ -93,24 +97,30 @@ public:
         os.precision(oldPrecision);
     }
 
-    void visit(String *node) {
+    template< typename C >
+    void visitString(const C *value) {
         os << literal << "\"";
-        for (const char *it = node->value; *it; ++it) {
-            unsigned char c = (unsigned char) *it;
+        for (const C *it = value; *it; ++it) {
+            unsigned c = (unsigned) *it;
             if (c == '\"')
                 os << "\\\"";
             else if (c == '\\')
                 os << "\\\\";
             else if (c >= 0x20 && c <= 0x7e)
-                os << c;
+                os << (char)c;
             else if (c == '\t') {
                 os << "\t";
             } else if (c == '\r') {
                 // Ignore carriage-return
             } else if (c == '\n') {
-                // Reset formatting so that it looks correct with 'less -R'
-                os << normal << '\n' << literal;
+                if (dumpFlags & DUMP_FLAG_NO_MULTILINE) {
+                    os << "\\n";
+                } else {
+                    // Reset formatting so that it looks correct with 'less -R'
+                    os << normal << '\n' << literal;
+                }
             } else {
+                // FIXME: handle wchar_t octals properly
                 unsigned octal0 = c & 0x7;
                 unsigned octal1 = (c >> 3) & 0x7;
                 unsigned octal2 = (c >> 3) & 0x7;
@@ -123,6 +133,15 @@ public:
             }
         }
         os << "\"" << normal;
+    }
+
+    void visit(String *node) {
+        visitString(node->value);
+    }
+
+    void visit(WString *node) {
+        os << literal << "L";
+        visitString(node->value);
     }
 
     void visit(Enum *node) {
@@ -185,6 +204,25 @@ public:
     }
 
     void visit(Struct *s) {
+        // Replace GUIDs with their symbolic name
+        // TODO: Move this to parsing, so it can be shared everywhere
+        if (s->members.size() == 4 &&
+            strcmp(s->sig->name, "GUID") == 0) {
+            GUID guid;
+            guid.Data1 = s->members[0]->toUInt();
+            guid.Data2 = s->members[1]->toUInt();
+            guid.Data3 = s->members[2]->toUInt();
+            Array *data4 = s->members[3]->toArray();
+            assert(data4);
+            assert(data4->values.size() == 8);
+            for (int i = 0; i < sizeof guid.Data4; ++i) {
+                guid.Data4[i] = data4->values[i]->toUInt();
+            }
+            const char *name = getGuidName(guid);
+            os << literal << name << normal;
+            return;
+        }
+
         os << "{";
         visitMembers(s);
         os << "}";
@@ -274,14 +312,16 @@ public:
             os << " // " << red << "incomplete" << normal;
         }
         
-        os << "\n";
-
-        if (call->backtrace != NULL) {
-            os << bold << red << "Backtrace:\n" << normal;
-            visit(*call->backtrace);
-        }
-        if (callFlags & CALL_FLAG_END_FRAME) {
+        if (!(dumpFlags & DUMP_FLAG_NO_MULTILINE)) {
             os << "\n";
+
+            if (call->backtrace != NULL) {
+                os << bold << red << "Backtrace:\n" << normal;
+                visit(*call->backtrace);
+            }
+            if (callFlags & CALL_FLAG_END_FRAME) {
+                os << "\n";
+            }
         }
     }
 };

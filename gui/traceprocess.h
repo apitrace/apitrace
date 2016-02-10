@@ -1,5 +1,4 @@
-#ifndef TRACEPROCESS_H
-#define TRACEPROCESS_H
+#pragma once
 
 #include <QObject>
 #include <QProcess>
@@ -40,5 +39,3 @@ private:
 
     bool m_canTrace;
 };
-
-#endif

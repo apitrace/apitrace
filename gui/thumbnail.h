@@ -1,5 +1,4 @@
-#ifndef THUMBNAIL_H
-#define THUMBNAIL_H
+#pragma once
 
 #define THUMBNAIL_SIZE 64
 
@@ -9,5 +8,3 @@ inline QImage
 thumbnail(const QImage &image, Qt::TransformationMode transformationMode = Qt::FastTransformation) {
     return image.scaled(THUMBNAIL_SIZE, THUMBNAIL_SIZE, Qt::KeepAspectRatio, transformationMode);
 }
-
-#endif

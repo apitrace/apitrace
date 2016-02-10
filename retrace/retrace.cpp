@@ -30,6 +30,10 @@
 #include "os_time.hpp"
 #include "retrace.hpp"
 
+#ifdef _WIN32
+#include <dxerr.h>
+#endif
+
 
 namespace retrace {
 
@@ -56,6 +60,41 @@ std::ostream &warning(trace::Call &call) {
     std::cerr << "warning: ";
 
     return std::cerr;
+}
+
+
+#ifdef _WIN32
+void
+failed(trace::Call &call, HRESULT hr)
+{
+    std::ostream &os = warning(call);
+
+    os << "failed with 0x" << std::hex << hr << std::dec;
+
+    LPCSTR lpszErrorString = DXGetErrorStringA(hr);
+    assert(lpszErrorString);
+    os << " (" << lpszErrorString << "): ";
+
+    char szErrorDesc[512];
+    DXGetErrorDescriptionA(hr, szErrorDesc, sizeof szErrorDesc);
+    os << szErrorDesc;
+
+    os << "\n";
+}
+#endif /* _WIN32 */
+
+
+void
+checkMismatch(trace::Call &call, const char *expr, trace::Value *traceValue, long actualValue)
+{
+    assert(traceValue);
+    long traceIntValue = traceValue->toSInt();
+    if (traceIntValue == actualValue) {
+        return;
+    }
+
+    std::ostream &os = warning(call);
+    os << "mismatch in " << expr << ": expected " << traceIntValue << " but got " << actualValue << "\n";
 }
 
 

@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _RETRACE_SWIZZLE_HPP_
-#define _RETRACE_SWIZZLE_HPP_
+#pragma once
 
 
 #include <map>
@@ -56,6 +55,15 @@ private:
     base_type base;
 
 public:
+    typedef typename base_type::const_iterator const_iterator;
+
+    const_iterator end(void) const {
+        return base.end();
+    }
+
+    const_iterator find(const T & key) const {
+        return base.find(key);
+    }
 
     T & operator[] (const T &key) {
         typename base_type::iterator it;
@@ -99,10 +107,13 @@ public:
 
 
 void
-addRegion(unsigned long long address, void *buffer, unsigned long long size);
+addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned long long size);
 
 void
 delRegionByPointer(void *ptr);
+
+void
+toRange(trace::Value &value, void * & ptr, size_t & len);
 
 void *
 toPointer(trace::Value &value, bool bind = false);
@@ -120,11 +131,10 @@ toObjPointer(trace::Call &call, trace::Value &value);
 template< class T >
 inline T *
 asObjPointer(trace::Call &call, trace::Value &value) {
-    return reinterpret_cast<T *>(toObjPointer(call, value));
+    return static_cast<T *>(toObjPointer(call, value));
 }
 
 
 } /* namespace retrace */
 
-#endif /* _RETRACE_SWIZZLE_HPP_ */
 

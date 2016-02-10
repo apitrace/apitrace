@@ -1,5 +1,4 @@
-#ifndef GRAPHVIEW_H
-#define GRAPHVIEW_H
+#pragma once
 
 #include "graphing.h"
 
@@ -89,5 +88,3 @@ protected:
         qint64 m_graphTop;
     } m_previous;
 };
-
-#endif

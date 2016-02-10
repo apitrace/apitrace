@@ -28,9 +28,6 @@
 #include <assert.h>
 
 #include <map>
-#if defined(HAVE_TR1_MEMORY)
-#include <tr1/memory>
-#endif
 #include <memory>
 
 #include <os_thread.hpp>
@@ -39,11 +36,7 @@
 
 namespace gltrace {
 
-#if !defined(HAVE_TR1_MEMORY)
 typedef std::shared_ptr<Context> context_ptr_t;
-#else
-typedef std::tr1::shared_ptr<Context> context_ptr_t;
-#endif
 static std::map<uintptr_t, context_ptr_t> context_map;
 static os::recursive_mutex context_map_mutex;
 
@@ -148,6 +141,8 @@ void setContext(uintptr_t context_id)
     ts->current_context = ctx;
 
     if (!ctx->bound) {
+        ctx->profile = glprofile::getCurrentContextProfile();
+
         /*
          * The default viewport and scissor state is set when a context is
          * first made current, with values matching the bound drawable.  Many

@@ -1,5 +1,5 @@
 /* mmap.c -- Memory allocation with mmap.
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,8 @@ backtrace_free_locked (struct backtrace_state *state, void *addr, size_t size)
     }
 }
 
-/* Allocate memory like malloc.  */
+/* Allocate memory like malloc.  If ERROR_CALLBACK is NULL, don't
+   report an error.  */
 
 void *
 backtrace_alloc (struct backtrace_state *state,
@@ -139,8 +140,11 @@ backtrace_alloc (struct backtrace_state *state,
       asksize = (size + pagesize - 1) & ~ (pagesize - 1);
       page = mmap (NULL, asksize, PROT_READ | PROT_WRITE,
 		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if (page == NULL)
-	error_callback (data, "mmap", errno);
+      if (page == MAP_FAILED)
+	{
+	  if (error_callback)
+	    error_callback (data, "mmap", errno);
+	}
       else
 	{
 	  size = (size + 7) & ~ (size_t) 7;
@@ -163,6 +167,26 @@ backtrace_free (struct backtrace_state *state, void *addr, size_t size,
 		void *data ATTRIBUTE_UNUSED)
 {
   int locked;
+
+  /* If we are freeing a large aligned block, just release it back to
+     the system.  This case arises when growing a vector for a large
+     binary with lots of debug info.  Calling munmap here may cause us
+     to call mmap again if there is also a large shared library; we
+     just live with that.  */
+  if (size >= 16 * 4096)
+    {
+      size_t pagesize;
+
+      pagesize = getpagesize ();
+      if (((uintptr_t) addr & (pagesize - 1)) == 0
+	  && (size & (pagesize - 1)) == 0)
+	{
+	  /* If munmap fails for some reason, just add the block to
+	     the freelist.  */
+	  if (munmap (addr, size) == 0)
+	    return;
+	}
+    }
 
   /* If we can acquire the lock, add the new space to the free list.
      If we can't acquire the lock, just leak the memory.
@@ -209,14 +233,18 @@ backtrace_vector_grow (struct backtrace_state *state,size_t size,
 	    alc = pagesize;
 	}
       else
-	alc = (alc + pagesize - 1) & ~ (pagesize - 1);
+	{
+	  alc *= 2;
+	  alc = (alc + pagesize - 1) & ~ (pagesize - 1);
+	}
       base = backtrace_alloc (state, alc, error_callback, data);
       if (base == NULL)
 	return NULL;
       if (vec->base != NULL)
 	{
 	  memcpy (base, vec->base, vec->size);
-	  backtrace_free (state, vec->base, vec->alc, error_callback, data);
+	  backtrace_free (state, vec->base, vec->size + vec->alc,
+			  error_callback, data);
 	}
       vec->base = base;
       vec->alc = alc - vec->size;
@@ -230,12 +258,19 @@ backtrace_vector_grow (struct backtrace_state *state,size_t size,
 
 /* Finish the current allocation on VEC.  */
 
-void
-backtrace_vector_finish (struct backtrace_state *state ATTRIBUTE_UNUSED,
-			 struct backtrace_vector *vec)
+void *
+backtrace_vector_finish (
+  struct backtrace_state *state ATTRIBUTE_UNUSED,
+  struct backtrace_vector *vec,
+  backtrace_error_callback error_callback ATTRIBUTE_UNUSED,
+  void *data ATTRIBUTE_UNUSED)
 {
+  void *ret;
+
+  ret = vec->base;
   vec->base = (char *) vec->base + vec->size;
   vec->size = 0;
+  return ret;
 }
 
 /* Release any extra space allocated for VEC.  */

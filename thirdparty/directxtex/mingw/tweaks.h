@@ -37,16 +37,6 @@
 #include <malloc.h>
 
 
-/*
- * Several of the defines in compat.h clash with libstdc++ internal variables,
- * so include the headers now, before they are re-defined.
- */
-#include <algorithm>
-#include <iostream>
-#include <memory>
-#include <vector>
-
-
 #include <string.h>
 #define memcpy_s(dest, numberOfElements, src, count) memcpy(dest, src, count)
 

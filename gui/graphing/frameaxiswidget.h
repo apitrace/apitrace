@@ -1,5 +1,4 @@
-#ifndef FRAMEAXISWIDGET_H
-#define FRAMEAXISWIDGET_H
+#pragma once
 
 #include "graphaxiswidget.h"
 
@@ -30,5 +29,3 @@ public:
 protected:
     FrameDataProvider* m_data;
 };
-
-#endif

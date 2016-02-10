@@ -17,10 +17,12 @@
 
 namespace DirectX
 {
+static const XMVECTORF32 g_Gamma22 = { 2.2f, 2.2f, 2.2f, 1.f };
 
 //-------------------------------------------------------------------------------------
 static HRESULT _ComputeMSE( _In_ const Image& image1, _In_ const Image& image2,
-                            _Out_ float& mse, _Out_opt_cap_c_(4) float* mseV )
+                            _Out_ float& mse, _Out_writes_opt_(4) float* mseV,
+                            _In_ DWORD flags )
 {
     if ( !image1.pixels || !image2.pixels )
         return E_POINTER;
@@ -34,13 +36,55 @@ static HRESULT _ComputeMSE( _In_ const Image& image1, _In_ const Image& image2,
     if ( !scanline )
         return E_OUTOFMEMORY;
 
+    // Flags implied from image formats
+    switch( image1.format )
+    {
+    case DXGI_FORMAT_B8G8R8X8_UNORM:
+        flags |= CMSE_IGNORE_ALPHA;
+        break;
+
+    case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+        flags |= CMSE_IMAGE1_SRGB | CMSE_IGNORE_ALPHA;
+        break;
+
+    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        flags |= CMSE_IMAGE1_SRGB;
+        break;
+    }
+
+    switch( image2.format )
+    {
+    case DXGI_FORMAT_B8G8R8X8_UNORM:
+        flags |= CMSE_IGNORE_ALPHA;
+        break;
+
+    case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+        flags |= CMSE_IMAGE2_SRGB | CMSE_IGNORE_ALPHA;
+        break;
+
+    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        flags |= CMSE_IMAGE2_SRGB;
+        break;
+    }
+
     const uint8_t *pSrc1 = image1.pixels;
     const size_t rowPitch1 = image1.rowPitch;
 
     const uint8_t *pSrc2 = image2.pixels;
     const size_t rowPitch2 = image2.rowPitch;
 
-    XMVECTOR acc = XMVectorZero();
+    XMVECTOR acc = g_XMZero;
+    static XMVECTORF32 two = { 2.0f, 2.0f, 2.0f, 2.0f };
 
     for( size_t h = 0; h < image1.height; ++h )
     {
@@ -52,10 +96,47 @@ static HRESULT _ComputeMSE( _In_ const Image& image1, _In_ const Image& image2,
         if ( !_LoadScanline( ptr2, width, pSrc2, rowPitch2, image2.format ) )
             return E_FAIL;
 
-        for( size_t i = 0; i < width; ++i, ++ptr1, ++ptr2 )
+        for( size_t i = 0; i < width; ++i )
         {
+            XMVECTOR v1 = *(ptr1++);
+            if ( flags & CMSE_IMAGE1_SRGB )
+            {
+                v1 = XMVectorPow( v1, g_Gamma22 );
+            }
+            if ( flags & CMSE_IMAGE1_X2_BIAS )
+            {
+                v1 = XMVectorMultiplyAdd( v1, two, g_XMNegativeOne );
+            }
+
+            XMVECTOR v2 = *(ptr2++);
+            if ( flags & CMSE_IMAGE2_SRGB )
+            {
+                v2 = XMVectorPow( v2, g_Gamma22 );
+            }
+            if ( flags & CMSE_IMAGE2_X2_BIAS )
+            {
+                v1 = XMVectorMultiplyAdd( v2, two, g_XMNegativeOne );
+            }
+
             // sum[ (I1 - I2)^2 ]
-            XMVECTOR v = XMVectorSubtract( *ptr1, *ptr2 );
+            XMVECTOR v = XMVectorSubtract( v1, v2 );
+            if ( flags & CMSE_IGNORE_RED )
+            {
+                v = XMVectorSelect( v, g_XMZero, g_XMMaskX );
+            }
+            if ( flags & CMSE_IGNORE_GREEN )
+            {
+                v = XMVectorSelect( v, g_XMZero, g_XMMaskY );
+            }
+            if ( flags & CMSE_IGNORE_BLUE )
+            {
+                v = XMVectorSelect( v, g_XMZero, g_XMMaskZ );
+            }
+            if ( flags & CMSE_IGNORE_ALPHA )
+            {
+                v = XMVectorSelect( v, g_XMZero, g_XMMaskW );
+            }
+
             acc = XMVectorMultiplyAdd( v, v, acc );
         }
 
@@ -89,12 +170,15 @@ static HRESULT _ComputeMSE( _In_ const Image& image1, _In_ const Image& image2,
 //-------------------------------------------------------------------------------------
 // Copies a rectangle from one image into another
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 HRESULT CopyRectangle( const Image& srcImage, const Rect& srcRect, const Image& dstImage, DWORD filter, size_t xOffset, size_t yOffset )
 {
     if ( !srcImage.pixels || !dstImage.pixels )
         return E_POINTER;
 
-    if ( IsCompressed( srcImage.format ) || IsCompressed( dstImage.format ) )
+    if ( IsCompressed( srcImage.format ) || IsCompressed( dstImage.format )
+         || IsPlanar( srcImage.format ) || IsPlanar( dstImage.format )
+         || IsPalettized( srcImage.format ) || IsPalettized( dstImage.format ) )
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     // Validate rectangle/offset
@@ -193,13 +277,18 @@ HRESULT CopyRectangle( const Image& srcImage, const Rect& srcRect, const Image& 
 //-------------------------------------------------------------------------------------
 // Computes the Mean-Squared-Error (MSE) between two images
 //-------------------------------------------------------------------------------------
-HRESULT ComputeMSE( const Image& image1, const Image& image2, float& mse, float* mseV  )
+_Use_decl_annotations_
+HRESULT ComputeMSE( const Image& image1, const Image& image2, float& mse, float* mseV, DWORD flags )
 {
     if ( !image1.pixels || !image2.pixels )
         return E_POINTER;
 
     if ( image1.width != image2.width || image1.height != image2.height )
         return E_INVALIDARG;
+
+    if ( IsPlanar( image1.format ) || IsPlanar( image2.format )
+         || IsPalettized( image1.format ) || IsPalettized( image2.format ) )
+        return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );
 
     if ( IsCompressed(image1.format) )
     {
@@ -221,7 +310,7 @@ HRESULT ComputeMSE( const Image& image1, const Image& image2, float& mse, float*
             if ( !img1 || !img2 )
                 return E_POINTER;
 
-            return _ComputeMSE( *img1, *img2, mse, mseV );
+            return _ComputeMSE( *img1, *img2, mse, mseV, flags );
         }
         else
         {
@@ -235,7 +324,7 @@ HRESULT ComputeMSE( const Image& image1, const Image& image2, float& mse, float*
             if ( !img )
                 return E_POINTER;
 
-            return _ComputeMSE( *img, image2, mse, mseV );
+            return _ComputeMSE( *img, image2, mse, mseV, flags );
         }
     }
     else
@@ -252,12 +341,12 @@ HRESULT ComputeMSE( const Image& image1, const Image& image2, float& mse, float*
             if ( !img )
                 return E_POINTER;
 
-            return _ComputeMSE( image1, *img, mse, mseV );
+            return _ComputeMSE( image1, *img, mse, mseV, flags );
         }
         else
         {
             // Case 4: neither image is compressed
-            return _ComputeMSE( image1, image2, mse, mseV );
+            return _ComputeMSE( image1, image2, mse, mseV, flags );
         }
     }
 }

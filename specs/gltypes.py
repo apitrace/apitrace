@@ -55,6 +55,9 @@ GLdouble = Alias("GLdouble", Double)
 GLclampd = Alias("GLclampd", Double)
 GLchar = Alias("GLchar", Char)
 
+GLfixed = Alias("GLfixed", Int32)
+GLclampx = Alias("GLclampx", Int32)
+
 GLcharARB = Alias("GLcharARB", SChar)
 GLintptrARB = Alias("GLintptrARB", Int)
 GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
@@ -64,6 +67,7 @@ GLhalfNV = Alias("GLhalfNV", UShort)
 GLint64EXT = Alias("GLint64EXT", Int64)
 GLuint64EXT = Alias("GLuint64EXT", UInt64)
 GLDEBUGPROC = Opaque("GLDEBUGPROC")
+GLDEBUGPROCKHR = Opaque("GLDEBUGPROCKHR")
 GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
 GLDEBUGPROCAMD = Opaque("GLDEBUGPROCAMD")
 
@@ -101,7 +105,7 @@ GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
 GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
 
 # TODO: Symbolic representation of GL_INVALID_INDEX
-GLuniformBlock = Handle("location", GLuint, key=('program', GLprogram))
+GLuniformBlock = Handle("uniformBlock", GLuint, key=('program', GLprogram))
 
 contextKey = ('reinterpret_cast<uintptr_t>(glretrace::getCurrentContext())', UIntPtr)
 
@@ -117,6 +121,8 @@ GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
 GLfence = Handle("fence", GLuint)
 GLtextureHandle = Handle("textureHandle", GLuint64)
+GLsubroutine = Handle("subroutine", GLuint, key=('program', GLhandleARB))
+
 
 # GL mappings are pointers to linear memory regions.
 #

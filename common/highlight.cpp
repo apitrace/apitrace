@@ -32,6 +32,7 @@
 
 #include <windows.h>
 #include <io.h> // _isatty
+#include <stdio.h> // _fileno
 
 #ifndef COMMON_LVB_LEADING_BYTE
 #define COMMON_LVB_LEADING_BYTE    0x0100
@@ -229,7 +230,7 @@ haveAnsi(void)
     static bool result = false;
 
     if (!checked) {
-        // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#Environment_variable
+        // https://conemu.github.io/en/ConEmuEnvironment.html
         // XXX: Didn't quite work for me
         if (0) {
             const char *conEmuANSI = getenv("ConEmuANSI");
@@ -241,11 +242,21 @@ haveAnsi(void)
             }
         }
 
+        // Cygwin shell
+        if (1) {
+            const char *term = getenv("TERM");
+            if (term &&
+                strcmp(term, "xterm") == 0) {
+                result = true;
+                checked = true;
+                return result;
+            }
+        }
+
         // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        HMODULE hNtDll = LoadLibraryA("ntdll");
+        HMODULE hNtDll = GetModuleHandleA("ntdll");
         if (hNtDll) {
             result = GetProcAddress(hNtDll, "wine_get_version") != NULL;
-            FreeLibrary(hNtDll);
         }
 
         checked = true;

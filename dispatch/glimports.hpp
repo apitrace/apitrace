@@ -27,8 +27,7 @@
  * Central place for all GL includes, and respective OS dependent headers.
  */
 
-#ifndef _GLIMPORTS_HPP_
-#define _GLIMPORTS_HPP_
+#pragma once
 
 
 #if defined(_WIN32)
@@ -77,6 +76,7 @@
 #define GL_DEPTH_PASS_INSTRUMENT_COUNTERS_SGIX 0x8311
 #define GL_DEPTH_PASS_INSTRUMENT_MAX_SGIX 0x8312
 #define GL_PATH_SAMPLE_QUALITY_NV         0x9085
+#define GL_PATH_STROKE_BOUND_NV           0x9086
 #define GL_PATH_STROKE_OVERSAMPLE_COUNT_NV 0x9087
 #define GL_MULTI_HULLS_NV                 0x908C
 #define GL_PROJECTIVE_2D_NV               0x9093
@@ -85,12 +85,19 @@
 #define GL_TRANSPOSE_PROJECTIVE_3D_NV     0x9099
 
 
+// GL_VMWX_map_buffer_debug
+#define GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX 0x80000000
+
+
 #if defined(_WIN32)
 
 #include <GL/wglext.h>
 
 #ifndef PFD_SUPPORT_DIRECTDRAW
 #define PFD_SUPPORT_DIRECTDRAW 0x00002000
+#endif
+#ifndef PFD_DIRECT3D_ACCELERATED
+#define PFD_DIRECT3D_ACCELERATED 0x00004000
 #endif
 #ifndef PFD_SUPPORT_COMPOSITION
 #define PFD_SUPPORT_COMPOSITION 0x00008000
@@ -160,6 +167,53 @@ typedef struct __IOSurface *IOSurfaceRef;
 #define kCGLRPMajorGLVersion 133
 #endif
 
+// OpenGL/CGLProfiler.h seems to no longer be included with XCode
+#define kCGLCPComment                        ((CGLContextParameter)1232)
+#define kCGLCPDumpState                      ((CGLContextParameter)1233)
+#define kCGLCPEnableForceFlush               ((CGLContextParameter)1234)
+#define kCGLGOComment                        ((CGLGlobalOption)1506)
+#define kCGLGOEnableFunctionTrace            ((CGLGlobalOption)1507)
+#define kCGLGOEnableFunctionStatistics       ((CGLGlobalOption)1508)
+#define kCGLGOResetFunctionTrace             ((CGLGlobalOption)1509)
+#define kCGLGOPageBreak                      ((CGLGlobalOption)1510)
+#define kCGLGOResetFunctionStatistics        ((CGLGlobalOption)1511)
+#define kCGLGOEnableDebugAttach              ((CGLGlobalOption)1512)
+#define kCGLGOHideObjects                    ((CGLGlobalOption)1513)
+#define kCGLGOEnableBreakpoint               ((CGLGlobalOption)1514)
+#define kCGLGOForceSlowRenderingPath         ((CGLGlobalOption)1609)
+#define kCGLGODisableImmediateRenderPath     ((CGLGlobalOption)1610)
+#define kCGLGODisableCVARenderPath           ((CGLGlobalOption)1611)
+#define kCGLGODisableVARRenderPath           ((CGLGlobalOption)1612)
+#define kCGLGOForceWireframeRendering        ((CGLGlobalOption)1613)
+#define kCGLGOSubmitOnImmediateRenderCommand ((CGLGlobalOption)1614)
+#define kCGLGOSubmitOnCVARenderCommand       ((CGLGlobalOption)1615)
+#define kCGLGOSubmitOnVAORenderCommand       ((CGLGlobalOption)1616)
+#define kCGLGOSubmitOnClearCommand           ((CGLGlobalOption)1617)
+#define kCGLGOForceSoftwareTransformLighting ((CGLGlobalOption)1618)
+#define kCGLGOForceSoftwareTexgen            ((CGLGlobalOption)1619)
+#define kCGLGOForceSoftwareTRUFORM_ATI       ((CGLGlobalOption)1620)
+#define kCGLGOForceSoftwareVertexShaders     ((CGLGlobalOption)1621)
+#define kCGLGODisableFragmentShaders_ATI     ((CGLGlobalOption)1622)
+#define kCGLGODisableTexturing               ((CGLGlobalOption)1623)
+#define kCGLGOOutlineTexture                 ((CGLGlobalOption)1624)
+#define kCGLGOOutlineTextureColor            ((CGLGlobalOption)1625)
+#define kCGLGOForceSlowBitmapPath            ((CGLGlobalOption)1626)
+#define kCGLGODisableBitmap                  ((CGLGlobalOption)1627)
+#define kCGLGOForceSlowReadPixelsPath        ((CGLGlobalOption)1630)
+#define kCGLGODisableReadPixels              ((CGLGlobalOption)1631)
+#define kCGLGOOutlineReadPixelsBuffer        ((CGLGlobalOption)1632)
+#define kCGLGOOutlineReadPixelsBufferColor   ((CGLGlobalOption)1633)
+#define kCGLGOForceSlowDrawPixelsPath        ((CGLGlobalOption)1634)
+#define kCGLGODisableDrawPixels              ((CGLGlobalOption)1635)
+#define kCGLGOOutlineDrawPixelsBuffer        ((CGLGlobalOption)1636)
+#define kCGLGOOutlineDrawPixelsBufferColor   ((CGLGlobalOption)1637)
+#define kCGLGOForceSlowCopyPixelsPath        ((CGLGlobalOption)1638)
+#define kCGLGODisableCopyPixels              ((CGLGlobalOption)1639)
+#define kCGLGOOutlineCopyPixelsBuffer        ((CGLGlobalOption)1640)
+#define kCGLGOOutlineCopyPixelsBufferColor   ((CGLGlobalOption)1641)
+#define kCGLGOMakeAllGLObjectsRequireUpdate  ((CGLGlobalOption)1642)
+#define kCGLGOMakeAllGLStateRequireUpdate    ((CGLGlobalOption)1643)
+
 extern "C" {
 
 // From http://www.opensource.apple.com/source/gdb/gdb-954/libcheckpoint/cpcg.c
@@ -190,4 +244,3 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 #include "eglimports.hpp"
 
 
-#endif /* _GLIMPORTS_HPP_ */

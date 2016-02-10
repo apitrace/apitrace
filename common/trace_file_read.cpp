@@ -28,6 +28,7 @@
 
 #include "os.hpp"
 #include "trace_file.hpp"
+#include "trace_snappy.hpp"
 
 
 using namespace trace;
@@ -59,7 +60,7 @@ File::createForRead(const char *filename)
         return NULL;
     }
 
-    if (!file->open(filename, File::Read)) {
+    if (!file->open(filename)) {
         os::log("error: could not open %s for reading\n", filename);
         delete file;
         return NULL;

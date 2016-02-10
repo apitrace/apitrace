@@ -49,7 +49,12 @@ MY_APITRACE_ROOT := $(TOPDIR)external/apitrace
 MY_APITRACE_BUILD_ROOT_HOST := out/host/apitrace
 MY_APITRACE_BUILD_ROOT_TARGET := out/target/apitrace
 
-apitrace_private_target:
+MY_ANDROID_CMAKE_COMMIT := 556cc14296c226f753a3778d99d8b60778b7df4f
+
+android.toolchain.cmake:
+	curl -s -O https://raw.githubusercontent.com/taka-no-me/android-cmake/$(MY_ANDROID_CMAKE_COMMIT)/android.toolchain.cmake
+
+apitrace_private_target: android.toolchain.cmake
 	$(hide) # apitrace: run cmake for the host if it has not been run
 	$(hide) if [ ! -e $(MY_APITRACE_BUILD_ROOT_HOST)/Makefile ] ; then \
 		cd $(MY_APITRACE_ROOT) && \
@@ -61,7 +66,7 @@ apitrace_private_target:
 	$(hide) if [ ! -e $(MY_APITRACE_BUILD_ROOT_TARGET)/Makefile ] ; then \
 		cd $(MY_APITRACE_ROOT) && \
 		cmake \
-		-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
+		-DCMAKE_TOOLCHAIN_FILE=android.toolchain.cmake \
 		-DANDROID_NDK=../../$(NDK) \
 		-DANDROID_NDK_LAYOUT=LINARO \
 		-DANDROID_TOOLCHAIN_NAME=$(TOOLCHAIN) \

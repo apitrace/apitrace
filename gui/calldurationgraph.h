@@ -1,5 +1,4 @@
-#ifndef CALLDURATIONGRAPH_H
-#define CALLDURATIONGRAPH_H
+#pragma once
 
 #include "graphing/graphwidget.h"
 #include "trace_profiler.hpp"
@@ -170,4 +169,3 @@ private:
     SelectionState* m_selectionState;
 };
 
-#endif

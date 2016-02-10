@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_HPP_
-#define _GLSTATE_HPP_
+#pragma once
 
 
 #include <ostream>
@@ -40,6 +39,8 @@
 namespace image {
     class Image;
 }
+
+class StateWriter;
 
 
 namespace glstate {
@@ -57,7 +58,11 @@ getTextureBinding(GLenum target);
 
 const char *enumToString(GLenum pname);
 
-void dumpCurrentContext(std::ostream &os);
+void
+dumpCurrentContext(StateWriter &writer);
+
+bool
+getDrawableBounds(GLint *width, GLint *height);
 
 image::Image *
 getDrawBufferImage(void);
@@ -66,4 +71,3 @@ getDrawBufferImage(void);
 } /* namespace glstate */
 
 
-#endif /* _GLSTATE_HPP_ */

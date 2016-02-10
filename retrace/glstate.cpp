@@ -30,7 +30,7 @@
 #include <iostream>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "glproc.hpp"
 #include "glws.hpp"
 #include "glsize.hpp"
@@ -44,64 +44,30 @@ namespace glstate {
 Context::Context(void) {
     memset(this, 0, sizeof *this);
 
-    const char *version = (const char *)glGetString(GL_VERSION);
-    unsigned version_major = 0;
-    unsigned version_minor = 0;
-    unsigned version_release = 0;
-    if (version) {
-        if (version[0] == 'O' &&
-            version[1] == 'p' &&
-            version[2] == 'e' &&
-            version[3] == 'n' &&
-            version[4] == 'G' &&
-            version[5] == 'L' &&
-            version[6] == ' ' &&
-            version[7] == 'E' &&
-            version[8] == 'S' &&
-            (version[9] == ' ' || version[9] == '-')) {
-            ES = true;
-        }
-        if (version[0] >= '0' && version[0] <= '9') {
-            sscanf(version, "%u.%u.%u", &version_major, &version_minor, &version_release);
-        }
-    }
+    glprofile::Profile profile = glprofile::getCurrentContextProfile();
+    glprofile::Extensions ext;
+
+    ext.getCurrentContextExtensions(profile);
+
+    ES = profile.es();
+    core = profile.core;
 
     ARB_draw_buffers = !ES;
 
     // Check extensions we use.
+    ARB_sampler_objects = ext.has("GL_ARB_sampler_objects");
+    ARB_get_program_binary = ext.has("GL_ARB_get_program_binary");
+    KHR_debug = !ES && ext.has("GL_KHR_debug");
+    EXT_debug_label = ext.has("GL_EXT_debug_label");
+    ARB_direct_state_access = ext.has("GL_ARB_direct_state_access");
+    ARB_shader_image_load_store = ext.has("GL_ARB_shader_image_load_store");
 
-    if (!ES) {
-        if (version_major > 3 ||
-            (version_major == 3 && version_minor >= 2)) {
-            GLint num_extensions = 0;
-            glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-            for (GLint i = 0; i < num_extensions; ++i) {
-               const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
-               if (extension) {
-                   if (strcmp(extension, "GL_ARB_sampler_objects") == 0) {
-                       ARB_sampler_objects = true;
-                   } else if (strcmp(extension, "GL_KHR_debug") == 0) {
-                       KHR_debug = true;
-                   } else if (strcmp(extension, "GL_EXT_debug_label") == 0) {
-                       EXT_debug_label = true;
-                   }
-               }
-            }
-        } else {
-            const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
-            ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
-            KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
-            EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
-        }
-    } else {
-        const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
-        KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
-        EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
-    }
+    NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 }
 
-void
-Context::resetPixelPackState(void) {
+PixelPackState::PixelPackState(const Context &context) {
+    ES = context.ES;
+
     // Start with default state
     pack_alignment = 4;
     pack_image_height = 0;
@@ -140,8 +106,7 @@ Context::resetPixelPackState(void) {
     }
 }
 
-void
-Context::restorePixelPackState(void) {
+PixelPackState::~PixelPackState() {
     glPixelStorei(GL_PACK_ALIGNMENT, pack_alignment);
     if (!ES) {
         glPixelStorei(GL_PACK_IMAGE_HEIGHT, pack_image_height);
@@ -152,6 +117,155 @@ Context::restorePixelPackState(void) {
         glPixelStorei(GL_PACK_SKIP_ROWS, pack_skip_rows);
         glPixelStorei(GL_PACK_SWAP_BYTES, pack_swap_bytes);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_pack_buffer_binding);
+    }
+}
+
+
+static GLenum
+getBufferBinding(GLenum target) {
+    switch (target) {
+    case GL_ARRAY_BUFFER:
+        return GL_ARRAY_BUFFER_BINDING;
+    case GL_ATOMIC_COUNTER_BUFFER:
+        return GL_ATOMIC_COUNTER_BUFFER_BINDING;
+    case GL_COPY_READ_BUFFER:
+        return GL_COPY_READ_BUFFER_BINDING;
+    case GL_COPY_WRITE_BUFFER:
+        return GL_COPY_WRITE_BUFFER_BINDING;
+    case GL_DRAW_INDIRECT_BUFFER:
+        return GL_DRAW_INDIRECT_BUFFER_BINDING;
+    case GL_DISPATCH_INDIRECT_BUFFER:
+        return GL_DISPATCH_INDIRECT_BUFFER_BINDING;
+    case GL_ELEMENT_ARRAY_BUFFER:
+        return GL_ELEMENT_ARRAY_BUFFER_BINDING;
+    case GL_PIXEL_PACK_BUFFER:
+        return GL_PIXEL_PACK_BUFFER_BINDING;
+    case GL_PIXEL_UNPACK_BUFFER:
+        return GL_PIXEL_UNPACK_BUFFER_BINDING;
+    case GL_QUERY_BUFFER:
+        return GL_QUERY_BUFFER_BINDING;
+    case GL_SHADER_STORAGE_BUFFER:
+        return GL_SHADER_STORAGE_BUFFER_BINDING;
+    case GL_TEXTURE_BUFFER:
+        return GL_TEXTURE_BUFFER;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        return GL_TRANSFORM_FEEDBACK_BUFFER_BINDING;
+    case GL_UNIFORM_BUFFER:
+        return GL_UNIFORM_BUFFER_BINDING;
+    default:
+        assert(false);
+        return GL_NONE;
+    }
+}
+
+
+BufferBinding::BufferBinding(GLenum _target, GLuint _buffer) :
+    target(_target),
+    buffer(_buffer),
+    prevBuffer(0)
+{
+    GLenum binding = getBufferBinding(target);
+    glGetIntegerv(binding, (GLint *) &prevBuffer);
+
+    if (prevBuffer != buffer) {
+        glBindBuffer(target, buffer);
+    }
+}
+
+BufferBinding::~BufferBinding() {
+    if (prevBuffer != buffer) {
+        glBindBuffer(target, prevBuffer);
+    }
+}
+
+
+BufferMapping::BufferMapping() :
+    target(GL_NONE),
+    buffer(0),
+    map_pointer(NULL),
+    unmap(false)
+{
+}
+
+GLvoid *
+BufferMapping::map(GLenum _target, GLuint _buffer)
+{
+    if (target == _target && buffer == _buffer) {
+        return map_pointer;
+    }
+
+    target = _target;
+    buffer = _buffer;
+    map_pointer = NULL;
+    unmap = false;
+
+    BufferBinding bb(target, buffer);
+
+    // Recursive mappings of the same buffer are not allowed.  And with the
+    // pursuit of persistent mappings for performance this will become more
+    // and more common.
+    GLint mapped = GL_FALSE;
+    glGetBufferParameteriv(target, GL_BUFFER_MAPPED, &mapped);
+    if (mapped) {
+        glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map_pointer);
+        assert(map_pointer != NULL);
+
+        GLint map_offset = 0;
+        glGetBufferParameteriv(target, GL_BUFFER_MAP_OFFSET, &map_offset);
+        if (map_offset != 0) {
+            std::cerr << "warning: " << enumToString(target) << " buffer " << buffer << " is already mapped with offset " << map_offset << "\n";
+            // FIXME: This most likely won't work.  We should remap the
+            // buffer with the full range, then re-map when done.  This
+            // should never happen in practice with persistent mappings
+            // though.
+            map_pointer = (GLubyte *)map_pointer - map_offset;
+        }
+    } else {
+        map_pointer = glMapBuffer(target, GL_READ_ONLY);
+        if (map_pointer) {
+            unmap = true;
+        }
+    }
+
+    return map_pointer;
+}
+
+BufferMapping::~BufferMapping() {
+    if (unmap) {
+        BufferBinding bb(target, buffer);
+
+        GLenum ret = glUnmapBuffer(target);
+        assert(ret == GL_TRUE);
+        (void)ret;
+    }
+}
+
+
+void
+dumpBoolean(StateWriter &writer, GLboolean value)
+{
+    switch (value) {
+    case GL_FALSE:
+        writer.writeString("GL_FALSE");
+        break;
+    case GL_TRUE:
+        writer.writeString("GL_TRUE");
+        break;
+    default:
+        writer.writeInt(static_cast<GLint>(value));
+        break;
+    }
+}
+
+
+void
+dumpEnum(StateWriter &writer, GLenum pname)
+{
+    const char *s = enumToString(pname);
+    if (s) {
+        writer.writeString(s);
+    } else {
+        writer.writeInt(pname);
     }
 }
 
@@ -223,13 +337,13 @@ getObjectLabel(Context &context, GLenum identifier, GLuint name)
  * Dump a GL_KHR_debug/GL_EXT_debug_label object label.
  */
 void
-dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member) {
+dumpObjectLabel(StateWriter &writer, Context &context, GLenum identifier, GLuint name, const char *member) {
     char *label = getObjectLabel(context, identifier, name);
     if (!label) {
         return;
     }
 
-    json.writeStringMember(member, label);
+    writer.writeStringMember(member, label);
     free(label);
 }
 
@@ -260,15 +374,112 @@ static const GLenum bindings[] = {
     GL_DRAW_BUFFER5,
     GL_DRAW_BUFFER6,
     GL_DRAW_BUFFER7,
+    GL_TRANSFORM_FEEDBACK_BUFFER_BINDING,
+    GL_UNIFORM_BUFFER_BINDING,
 };
 
 
 #define NUM_BINDINGS sizeof(bindings)/sizeof(bindings[0])
 
 
-void dumpCurrentContext(std::ostream &os)
+static void APIENTRY
+debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                     GLsizei length, const GLchar* message, const void *userParam)
 {
-    JSONWriter json(os);
+    const char *severityStr = "";
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityStr = " high";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        severityStr = " low";
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        /* ignore */
+        return;
+    default:
+        assert(0);
+    }
+
+    const char *sourceStr = "";
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceStr = " window system";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceStr = " shader compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceStr = " third party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceStr = " application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        break;
+    default:
+        assert(0);
+    }
+
+    const char *typeStr = "";
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        typeStr = " error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeStr = " deprecated behaviour";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeStr = " undefined behaviour";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeStr = " portability issue";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        return;
+    default:
+        assert(0);
+        /* fall-through */
+    case GL_DEBUG_TYPE_OTHER:
+        typeStr = " issue";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+    case GL_DEBUG_TYPE_POP_GROUP:
+        return;
+    }
+
+    std::cerr << "warning: message:" << severityStr << sourceStr << typeStr;
+
+    if (id) {
+        std::cerr << " " << id;
+    }
+
+    std::cerr << ": ";
+
+    std::cerr << message;
+
+    // Write new line if not included in the message already.
+    size_t messageLen = strlen(message);
+    if (!messageLen ||
+        (message[messageLen - 1] != '\n' &&
+         message[messageLen - 1] != '\r')) {
+       std::cerr << std::endl;
+    }
+
+    /* To help debug bugs in glstate. */
+    if (0) {
+        os::breakpoint();
+    }
+}
+
+
+void dumpCurrentContext(StateWriter &writer)
+{
 
 #ifndef NDEBUG
     GLint old_bindings[NUM_BINDINGS];
@@ -280,10 +491,27 @@ void dumpCurrentContext(std::ostream &os)
 
     Context context;
 
-    dumpParameters(json, context);
-    dumpShadersUniforms(json, context);
-    dumpTextures(json, context);
-    dumpFramebuffer(json, context);
+    /* Temporarily disable messages, as dumpParameters blindlessly tries to
+     * get state, regardless the respective extension is supported or not.
+     */
+    GLDEBUGPROC prevDebugCallbackFunction = 0;
+    void *prevDebugCallbackUserParam = 0;
+    if (context.KHR_debug) {
+        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+        glDebugMessageCallback(NULL, NULL);
+    }
+
+    dumpParameters(writer, context);
+
+    // Use our own debug-message callback.
+    if (context.KHR_debug) {
+        glDebugMessageCallback(debugMessageCallback, NULL);
+    }
+
+    dumpShadersUniforms(writer, context);
+    dumpTextures(writer, context);
+    dumpFramebuffer(writer, context);
 
 #ifndef NDEBUG
     for (unsigned i = 0; i < NUM_BINDINGS; ++i) {
@@ -295,6 +523,10 @@ void dumpCurrentContext(std::ostream &os)
     }
 #endif
 
+    // Restore debug message callback
+    if (context.KHR_debug) {
+        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+    }
 }
 
 

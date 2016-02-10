@@ -28,8 +28,10 @@
 
 #include <iostream>
 
+#include "com_ptr.hpp"
 #include "d3d10imports.hpp"
 #include "d3d10state.hpp"
+#include "dxgistate_so.hpp"
 
 
 namespace d3dstate {
@@ -40,52 +42,152 @@ GUID_D3DSTATE = {0x7D71CAC9,0x7F58,0x432C,{0xA9,0x75,0xA1,0x9F,0xCF,0xCE,0xFD,0x
 
 
 static void
-dumpShaders(JSONWriter &json, ID3D10Device *pDevice)
+dumpRasterizerState(StateWriter &writer, ID3D10Device *pDevice)
 {
-    json.beginMember("shaders");
-    json.beginObject();
+    com_ptr<ID3D10RasterizerState> pRasterizerState;
 
-    ID3D10VertexShader *pVertexShader = NULL;
+    pDevice->RSGetState(&pRasterizerState);
+    writer.beginMember("RasterizerState");
+    dumpStateObjectDesc(writer, pRasterizerState);
+    writer.endMember(); // RasterizerState
+}
+
+
+static void
+dumpBlendState(StateWriter &writer, ID3D10Device *pDevice)
+{
+    com_ptr<ID3D10BlendState> pBlendState;
+    FLOAT BlendFactor[4];
+    UINT SampleMask;
+
+    pDevice->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
+
+    writer.beginMember("BlendState");
+    dumpStateObjectDesc(writer, pBlendState);
+    writer.endMember(); // BlendState
+    
+    writer.beginMember("BlendFactor");
+    writer.beginArray();
+    writer.writeFloat(BlendFactor[0]);
+    writer.writeFloat(BlendFactor[1]);
+    writer.writeFloat(BlendFactor[2]);
+    writer.writeFloat(BlendFactor[3]);
+    writer.endArray();
+    writer.endMember(); // BlendFactor
+
+    writer.writeIntMember("SampleMask", SampleMask);
+}
+
+
+static void
+dumpDepthStencilState(StateWriter &writer, ID3D10Device *pDevice)
+{
+    com_ptr<ID3D10DepthStencilState> pDepthStencilState;
+    UINT stencilRef;
+
+    pDevice->OMGetDepthStencilState(&pDepthStencilState, &stencilRef);
+    writer.beginMember("DepthStencilState");
+    dumpStateObjectDesc(writer, pDepthStencilState);
+    writer.endMember(); // DepthStencilState
+    writer.writeIntMember("StencilRef", stencilRef);
+}
+
+
+static void
+dumpViewports(StateWriter &writer, ID3D10Device *pDevice)
+{
+   D3D10_VIEWPORT vps[D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numViewports = 0, i;
+
+   pDevice->RSGetViewports(&numViewports, NULL);
+   pDevice->RSGetViewports(&numViewports, vps);
+
+   writer.beginMember("Viewports");
+   writer.beginArray();
+   for (i = 0; i < numViewports; ++i) {
+      dumpStateObject(writer, vps[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
+dumpScissors(StateWriter &writer, ID3D10Device *pDevice)
+{
+   D3D10_RECT rects[D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numRects = 0, i;
+
+   pDevice->RSGetScissorRects(&numRects, NULL);
+   pDevice->RSGetScissorRects(&numRects, rects);
+
+   writer.beginMember("Scissors");
+   writer.beginArray();
+   for (i = 0; i < numRects; ++i) {
+      dumpStateObject(writer, rects[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
+dumpParameters(StateWriter &writer, ID3D10Device *pDevice)
+{
+    // TODO: dump description of current bound state
+    writer.beginMember("parameters");
+    writer.beginObject();
+
+    dumpRasterizerState(writer, pDevice);
+    dumpBlendState(writer, pDevice);
+    dumpDepthStencilState(writer, pDevice);
+    dumpViewports(writer, pDevice);
+    dumpScissors(writer, pDevice);
+
+    writer.endObject();
+    writer.endMember(); // parameters
+}
+
+
+static void
+dumpShaders(StateWriter &writer, ID3D10Device *pDevice)
+{
+    writer.beginMember("shaders");
+    writer.beginObject();
+
+    com_ptr<ID3D10VertexShader> pVertexShader;
     pDevice->VSGetShader(&pVertexShader);
     if (pVertexShader) {
-        dumpShader<ID3D10DeviceChild>(json, "VS", pVertexShader);
-        pVertexShader->Release();
+        dumpShader<ID3D10DeviceChild>(writer, "VS", pVertexShader);
     }
 
-    ID3D10GeometryShader *pGeometryShader = NULL;
+    com_ptr<ID3D10GeometryShader> pGeometryShader;
     pDevice->GSGetShader(&pGeometryShader);
     if (pGeometryShader) {
-        dumpShader<ID3D10DeviceChild>(json, "GS", pGeometryShader);
-        pGeometryShader->Release();
+        dumpShader<ID3D10DeviceChild>(writer, "GS", pGeometryShader);
     }
 
-    ID3D10PixelShader *pPixelShader = NULL;
+    com_ptr<ID3D10PixelShader> pPixelShader;
     pDevice->PSGetShader(&pPixelShader);
     if (pPixelShader) {
-        dumpShader<ID3D10DeviceChild>(json, "PS", pPixelShader);
+        dumpShader<ID3D10DeviceChild>(writer, "PS", pPixelShader);
     }
 
-    json.endObject();
-    json.endMember(); // shaders
+    writer.endObject();
+    writer.endMember(); // shaders
 }
 
 
 void
-dumpDevice(std::ostream &os, ID3D10Device *pDevice)
+dumpDevice(StateWriter &writer, ID3D10Device *pDevice)
 {
-    JSONWriter json(os);
+    dumpParameters(writer, pDevice);
 
-    /* TODO */
-    json.beginMember("parameters");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // parameters
+    dumpShaders(writer, pDevice);
 
-    dumpShaders(json, pDevice);
+    dumpTextures(writer, pDevice);
 
-    dumpTextures(json, pDevice);
-
-    dumpFramebuffer(json, pDevice);
+    dumpFramebuffer(writer, pDevice);
 }
 
 

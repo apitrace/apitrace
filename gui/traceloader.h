@@ -1,5 +1,4 @@
-#ifndef TRACELOADER_H
-#define TRACELOADER_H
+#pragma once
 
 
 #include "apitrace.h"
@@ -22,8 +21,7 @@ public:
     ApiTraceCallSignature *signature(unsigned id);
     void addSignature(unsigned id, ApiTraceCallSignature *signature);
 
-    ApiTraceEnumSignature *enumSignature(unsigned id);
-    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
+    trace::EnumSig *enumSignature(unsigned id);
 
 private:
     class FrameContents
@@ -58,6 +56,7 @@ public slots:
     void search(const ApiTrace::SearchRequest &request);
 
 signals:
+    void parseProblem(const QString &message);
     void startedParsing();
     void parsed(int percent);
     void guessedApi(int api);
@@ -94,7 +93,6 @@ private:
     void loadHelpFile();
     void guessApi(const trace::Call *call);
     void scanTrace();
-    void parseTrace();
 
     void searchNext(const ApiTrace::SearchRequest &request);
     void searchPrev(const ApiTrace::SearchRequest &request);
@@ -118,7 +116,4 @@ private:
     QHash<QString, QUrl> m_helpHash;
 
     QVector<ApiTraceCallSignature*> m_signatures;
-    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
-
-#endif

@@ -30,6 +30,7 @@
 #
 
 
+import optparse
 import sys
 import xml.etree.ElementTree as ET
 
@@ -70,7 +71,12 @@ def getType(node):
     typeExpr = parser.parse_type()
 
     if lenExpr is not None:
-        typeExpr = 'Array(%s, "%s")' % (typeExpr, lenExpr)
+        if lenExpr == "1":
+            typeExpr = 'Pointer(%s)' % (typeExpr)
+        else:
+            if not lenExpr.isdigit():
+                lenExpr = '"' + lenExpr + '"'
+            typeExpr = 'Array(%s, %s)' % (typeExpr, lenExpr)
 
     return typeExpr
 
@@ -102,36 +108,90 @@ def processCommand(prototypes, command):
     prototypes[functionName] = prototype
 
 
-def processRequire(prototypes, node):
-    requireNode = node.find('require')
-    if requireNode is None:
+def processRequire(node, filterName):
+    nodeName = node.get('name')
+    if filterName is not None and nodeName != filterName:
         return
-    commands = requireNode.findall('command')
+
+    commands = []
+    for requireNode in node.findall('require'):
+        commands.extend(requireNode.findall('command'))
     if not commands:
         return
-    print '    # %s' % node.get('name')
-    for command in commands:
-        functionName = command.get('name')
-        prototype = prototypes[functionName]
-        print '    %s,' % prototype
+
+    functionNames = [command.get('name') for command in commands]
+
+    return nodeName, functionNames
+
+
+
+def printPrototypes(prototypes, extensionName, functionNames, skip=set()):
+    print '    # %s' % extensionName
+
+    if extensionName == 'GL_EXT_direct_state_access':
+        functionNames.sort()
+
+    for functionName in functionNames:
+        if functionName not in skip:
+            prototype = prototypes[functionName]
+            print '    %s,' % prototype
+
     print
 
 
-for arg in sys.argv[1:]:
-    tree = ET.parse(arg)
-    root = tree.getroot()
+def main():
+    optparser = optparse.OptionParser(
+        usage='\n\t%prog [options] <xml> ...',
+        version='%%prog')
+    optparser.add_option(
+        '--filter', metavar='NAME',
+        type='string', dest='filter',
+        help='filter feature/extension')
+    (options, args) = optparser.parse_args(sys.argv[1:])
 
-    prototypes = {}
+    global prototypes
+    global namespace
 
-    for commands in root.findall('commands'):
-        namespace = commands.get('namespace')
-        for command in commands.findall('command'):
-            processCommand(prototypes, command)
+    for arg in args:
+        tree = ET.parse(arg)
+        root = tree.getroot()
 
-    for feature in root.findall('feature'):
-        processRequire(prototypes, feature)
+        prototypes = {}
 
-    extensions = root.find('extensions')
-    for extension in extensions.findall('extension'):
-        processRequire(prototypes, extension)
+        for commands in root.findall('commands'):
+            namespace = commands.get('namespace')
+            for command in commands.findall('command'):
+                processCommand(prototypes, command)
 
+        # Extract features
+        features = []
+        for feature in root.findall('feature'):
+            ret = processRequire(feature, options.filter)
+            if ret is not None:
+                features.append(ret)
+
+        # Extract extensions
+        extensions = []
+        for extension in root.find('extensions').findall('extension'):
+            ret = processRequire(extension, options.filter)
+            if ret is not None:
+                extensions.append(ret)
+
+        # Eliminate the functions from features that are in extensions
+        for extensionName, extensionFunctionNames in extensions:
+            for featureName, featureFunctionNames in features:
+                for functionName in extensionFunctionNames:
+                    try:
+                        featureFunctionNames.remove(functionName)
+                    except ValueError:
+                        pass
+
+        # Print all
+        skip = set()
+        for extensionName, functionNames in features + extensions:
+            printPrototypes(prototypes, extensionName, functionNames, skip)
+            skip.update(functionNames)
+
+
+if __name__ == '__main__':
+    main()

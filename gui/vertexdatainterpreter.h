@@ -1,5 +1,4 @@
-#ifndef VERTEXDATAINTERPRETER_H
-#define VERTEXDATAINTERPRETER_H
+#pragma once
 
 #include <QObject>
 
@@ -49,5 +48,3 @@ private:
     int m_components;
     int m_startingOffset;
 };
-
-#endif

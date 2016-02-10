@@ -1,5 +1,4 @@
-#ifndef SAVERTHREAD_H
-#define SAVERTHREAD_H
+#pragma once
 
 
 #include "apitrace.h"
@@ -31,6 +30,3 @@ private:
     QString m_writeFileName;
     QSet<ApiTraceCall*> m_editedCalls;
 };
-
-
-#endif

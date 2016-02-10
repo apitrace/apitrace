@@ -1,5 +1,4 @@
-#ifndef APITRACEFILTER_H
-#define APITRACEFILTER_H
+#pragma once
 
 #include <QRegExp>
 #include <QSortFilterProxyModel>
@@ -40,5 +39,3 @@ private:
     FilterOptions m_filters;
     QRegExp m_customRegexp;
 };
-
-#endif

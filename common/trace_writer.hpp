@@ -27,8 +27,7 @@
  * Trace writing functions.
  */
 
-#ifndef _TRACE_WRITER_HPP_
-#define _TRACE_WRITER_HPP_
+#pragma once
 
 
 #include <stddef.h>
@@ -38,11 +37,11 @@
 #include "trace_model.hpp"
 
 namespace trace {
-    class File;
+    class OutStream;
 
     class Writer {
     protected:
-        File *m_file;
+        OutStream *m_file;
         unsigned call_no;
 
         std::vector<bool> functions;
@@ -94,6 +93,7 @@ namespace trace {
         void writeString(const char *str);
         void writeString(const char *str, size_t size);
         void writeWString(const wchar_t *str);
+        void writeWString(const wchar_t *str, size_t size);
         void writeBlob(const void *data, size_t size);
         void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
@@ -114,4 +114,3 @@ namespace trace {
 
 } /* namespace trace */
 
-#endif /* _TRACE_WRITER_HPP_ */

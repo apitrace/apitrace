@@ -29,8 +29,7 @@
  * See FORMAT.markdown for details.
  */
 
-#ifndef _TRACE_FORMAT_HPP_
-#define _TRACE_FORMAT_HPP_
+#pragma once
 
 namespace trace {
 
@@ -67,6 +66,7 @@ enum Type {
     TYPE_STRUCT,
     TYPE_OPAQUE,
     TYPE_REPR,
+    TYPE_WSTRING,
 };
 
 enum BacktraceDetail {
@@ -81,4 +81,3 @@ enum BacktraceDetail {
 
 } /* namespace trace */
 
-#endif /* _TRACE_FORMAT_HPP_ */

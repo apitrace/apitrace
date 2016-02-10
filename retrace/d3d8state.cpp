@@ -28,10 +28,11 @@
 
 #include <iostream>
 
+#include "state_writer.hpp"
+#include "com_ptr.hpp"
 #include "d3d8imports.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
-#include "json.hpp"
 
 
 namespace d3dstate {
@@ -62,7 +63,7 @@ struct PixelShaderGetter
 
 template<class Getter>
 inline void
-dumpShader(JSONWriter &json, IDirect3DDevice8 *pDevice, const char *name) {
+dumpShader(StateWriter &writer, IDirect3DDevice8 *pDevice, const char *name) {
     Getter getter;
     HRESULT hr;
 
@@ -81,15 +82,13 @@ dumpShader(JSONWriter &json, IDirect3DDevice8 *pDevice, const char *name) {
         if (pData) {
             hr = getter.GetShaderFunction(pDevice, dwShader, pData, &SizeOfData);
             if (SUCCEEDED(hr)) {
-                IDisassemblyBuffer *pDisassembly = NULL;
+                com_ptr<IDisassemblyBuffer> pDisassembly;
                 hr = DisassembleShader((const DWORD *)pData, &pDisassembly);
                 if (SUCCEEDED(hr)) {
-                    json.beginMember(name);
-                    json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-                    json.endMember();
-                    pDisassembly->Release();
+                    writer.beginMember(name);
+                    writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+                    writer.endMember();
                 }
-
             }
             free(pData);
         }
@@ -97,37 +96,35 @@ dumpShader(JSONWriter &json, IDirect3DDevice8 *pDevice, const char *name) {
 }
 
 static void
-dumpShaders(JSONWriter &json, IDirect3DDevice8 *pDevice)
+dumpShaders(StateWriter &writer, IDirect3DDevice8 *pDevice)
 {
-    json.beginMember("shaders");
-    json.beginObject();
+    writer.beginMember("shaders");
+    writer.beginObject();
 
-    dumpShader<VertexShaderGetter>(json, pDevice, "vertex");
-    dumpShader<PixelShaderGetter>(json, pDevice, "pixel");
+    dumpShader<VertexShaderGetter>(writer, pDevice, "vertex");
+    dumpShader<PixelShaderGetter>(writer, pDevice, "pixel");
 
-    json.endObject();
-    json.endMember(); // shaders
+    writer.endObject();
+    writer.endMember(); // shaders
 }
 
 void
-dumpDevice(std::ostream &os, IDirect3DDevice8 *pDevice)
+dumpDevice(StateWriter &writer, IDirect3DDevice8 *pDevice)
 {
-    JSONWriter json(os);
-
     /* TODO */
-    json.beginMember("parameters");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // parameters
+    writer.beginMember("parameters");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // parameters
 
-    dumpShaders(json, pDevice);
+    dumpShaders(writer, pDevice);
 
-    json.beginMember("textures");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // textures
+    writer.beginMember("textures");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // textures
 
-    dumpFramebuffer(json, pDevice);
+    dumpFramebuffer(writer, pDevice);
 }
 
 

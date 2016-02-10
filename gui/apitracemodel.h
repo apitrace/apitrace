@@ -1,5 +1,4 @@
-#ifndef APITRACEMODEL_H
-#define APITRACEMODEL_H
+#pragma once
 
 
 #include <QAbstractItemModel>
@@ -67,5 +66,3 @@ private:
     ApiTrace *m_trace;
     QSet<ApiTraceFrame*> m_loadingFrames;
 };
-
-#endif

@@ -193,7 +193,7 @@ IDirect3DDevice9.methods += [
     StdMethod(HRESULT, "GetDepthStencilSurface", [Out(Pointer(PDIRECT3DSURFACE9), "ppZStencilSurface")]),
     StdMethod(HRESULT, "BeginScene", []),
     StdMethod(HRESULT, "EndScene", []),
-    StdMethod(HRESULT, "Clear", [(DWORD, "Count"), (ConstPointer(D3DRECT), "pRects"), (D3DCLEAR, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
+    StdMethod(HRESULT, "Clear", [(DWORD, "Count"), (Array(Const(D3DRECT), "Count"), "pRects"), (D3DCLEAR, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
     StdMethod(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
     StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "State"), Out(Pointer(D3DMATRIX), "pMatrix")], sideeffects=False),
     StdMethod(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
@@ -205,8 +205,8 @@ IDirect3DDevice9.methods += [
     StdMethod(HRESULT, "GetLight", [(DWORD, "Index"), Out(Pointer(D3DLIGHT9), "pLight")], sideeffects=False),
     StdMethod(HRESULT, "LightEnable", [(DWORD, "Index"), (BOOL, "Enable")]),
     StdMethod(HRESULT, "GetLightEnable", [(DWORD, "Index"), Out(Pointer(BOOL), "pEnable")], sideeffects=False),
-    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "Index"), (ConstPointer(Float), "pPlane")]),
-    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "Index"), Out(Pointer(Float), "pPlane")], sideeffects=False),
+    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "Index"), (Array(Const(Float), 4), "pPlane")]),
+    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "Index"), Out(Array(Float, 4), "pPlane")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "State"), (D3DRENDERSTATEVALUE, "Value")]),
     StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "State"), Out(Pointer(D3DRENDERSTATEVALUE), "pValue")], sideeffects=False),
     StdMethod(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "Type"), Out(Pointer(PDIRECT3DSTATEBLOCK9), "ppSB")]),
@@ -221,8 +221,8 @@ IDirect3DDevice9.methods += [
     StdMethod(HRESULT, "GetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), Out(Pointer(D3DSAMPLERSTATEVALUE), "pValue")], sideeffects=False),
     StdMethod(HRESULT, "SetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), (D3DSAMPLERSTATEVALUE, "Value")]),
     StdMethod(HRESULT, "ValidateDevice", [Out(Pointer(DWORD), "pNumPasses")]),
-    StdMethod(HRESULT, "SetPaletteEntries", [(UINT, "PaletteNumber"), (ConstPointer(PALETTEENTRY), "pEntries")]),
-    StdMethod(HRESULT, "GetPaletteEntries", [(UINT, "PaletteNumber"), Out(Pointer(PALETTEENTRY), "pEntries")], sideeffects=False),
+    StdMethod(HRESULT, "SetPaletteEntries", [(UINT, "PaletteNumber"), (Array(Const(PALETTEENTRY), 256), "pEntries")]),
+    StdMethod(HRESULT, "GetPaletteEntries", [(UINT, "PaletteNumber"), Out(Array(PALETTEENTRY, 256), "pEntries")], sideeffects=False),
     StdMethod(HRESULT, "SetCurrentTexturePalette", [(UINT, "PaletteNumber")]),
     StdMethod(HRESULT, "GetCurrentTexturePalette", [Out(Pointer(UINT), "PaletteNumber")], sideeffects=False),
     StdMethod(HRESULT, "SetScissorRect", [(ConstPointer(RECT), "pRect")]),
@@ -290,7 +290,7 @@ IDirect3DSwapChain9.methods += [
 IDirect3DResource9.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), InOut(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
     StdMethod(D3D9_RESOURCE_PRIORITY, "SetPriority", [(D3D9_RESOURCE_PRIORITY, "PriorityNew")]),
     StdMethod(D3D9_RESOURCE_PRIORITY, "GetPriority", [], sideeffects=False),
@@ -300,7 +300,7 @@ IDirect3DResource9.methods += [
 
 IDirect3DVertexDeclaration9.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
-    StdMethod(HRESULT, "GetDeclaration", [Out(Array(D3DVERTEXELEMENT9, "*pNumElements"), "pElement"), Out(Pointer(UINT), "pNumElements")], sideeffects=False),
+    StdMethod(HRESULT, "GetDeclaration", [Out(Array(D3DVERTEXELEMENT9, "*pNumElements"), "pElement"), InOut(Pointer(UINT), "pNumElements")], sideeffects=False),
 ]
 
 IDirect3DVertexShader9.methods += [
@@ -363,14 +363,14 @@ IDirect3DSurface9.methods += [
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "UnlockRect", []),
-    StdMethod(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")]),
-    StdMethod(HRESULT, "ReleaseDC", [(HDC, "hdc")]),
+    StdMethod(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")], sideeffects=False),
+    StdMethod(HRESULT, "ReleaseDC", [(HDC, "hdc")], sideeffects=False),
 ]
 
 IDirect3DVolume9.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), InOut(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
     StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")], sideeffects=False),
@@ -422,6 +422,16 @@ d3d9 = Module("d3d9")
 d3d9.addFunctions([
     StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
     StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
+])
+d3d9.addInterfaces([
+    IDirect3DSwapChain9Ex,
+])
+
+# D3DPERF_* functions can also be used by D3D10 applications, so keep them in a
+# separate module to be merged as necessary
+# See http://web.archive.org/web/20110510070258/http://msdn.microsoft.com/en-us/library/ee417071%28v=VS.85%29.aspx
+d3dperf = Module("d3d9")
+d3dperf.addFunctions([
     StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1', sideeffects=False),
     StdFunction(Int, "D3DPERF_EndEvent", [], fail='-1', sideeffects=False),
     StdFunction(Void, "D3DPERF_SetMarker", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], sideeffects=False),
@@ -429,7 +439,4 @@ d3d9.addFunctions([
     StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE', sideeffects=False),
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], sideeffects=False),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0', sideeffects=False),
-])
-d3d9.addInterfaces([
-    IDirect3DSwapChain9Ex,
 ])

@@ -5,6 +5,7 @@ all: \
 	glparams.py \
 	glxapi.py \
 	wglapi.py \
+	eglapi.py \
 	glxenum.py \
 	wglenum.py \
 	eglenum.py
@@ -27,13 +28,13 @@ download: \
 
 
 %.xml:
-	wget -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
+	wget -nv -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
 
 %.spec:
-	wget -N http://www.opengl.org/registry/oldspecs/$@
+	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
 
 %.tm:
-	wget -N http://www.opengl.org/registry/oldspecs/$@
+	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
 
 glapi.py: xml2api.py gl.xml
 	python $^ > $@
@@ -42,6 +43,9 @@ glxapi.py: xml2api.py glx.xml
 	python $^ > $@
 
 wglapi.py: xml2api.py wgl.xml
+	python $^ > $@
+
+eglapi.py: xml2api.py egl.xml
 	python $^ > $@
 
 glparams.py: xml2glparams.py gl.xml

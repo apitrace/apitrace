@@ -75,6 +75,13 @@ class Type:
         visitor = MutableRebuilder()
         return visitor.visit(self)
 
+    def depends(self, other):
+        '''Whether this type depends on another.'''
+
+        collector = Collector()
+        collector.visit(self)
+        return other in collector.types
+
 
 class _Void(Type):
     """Singleton void type."""
@@ -261,10 +268,19 @@ Flags = Bitmask
 
 class Array(Type):
 
-    def __init__(self, type, length):
-        Type.__init__(self, type.expr + " *")
-        self.type = type
+    def __init__(self, type_, length):
+        Type.__init__(self, type_.expr + " *")
+        self.type = type_
         self.length = length
+        if not isinstance(length, int):
+            assert isinstance(length, basestring)
+            # Check if length is actually a valid constant expression
+            try:
+                eval(length, {}, {})
+            except:
+                pass
+            else:
+                raise ValueError("length %r should be an integer" % length)
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitArray(self, *args, **kwargs)
@@ -404,6 +420,12 @@ class Function:
     def getArgByName(self, name):
         for arg in self.args:
             if arg.name == name:
+                return arg
+        return None
+
+    def getArgByType(self, type):
+        for arg in self.args:
+            if arg.type is type:
                 return arg
         return None
 

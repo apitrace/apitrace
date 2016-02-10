@@ -1,5 +1,5 @@
 /* backtrace-supported.h.in -- Whether stack backtrace is supported.
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -59,3 +59,8 @@ POSSIBILITY OF SUCH DAMAGE.  */
    as 0.  */
 
 #define BACKTRACE_SUPPORTS_THREADS @BACKTRACE_SUPPORTS_THREADS@
+
+/* BACKTRACE_SUPPORTS_DATA will be #defined'd as 1 if the backtrace_syminfo
+   will work for variables.  It will always work for functions.  */
+
+#define BACKTRACE_SUPPORTS_DATA @BACKTRACE_SUPPORTS_DATA@

@@ -27,8 +27,7 @@
  * Object hierarchy for describing the traces in memory.
  */
 
-#ifndef _TRACE_MODEL_HPP_
-#define _TRACE_MODEL_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -240,6 +239,19 @@ public:
 };
 
 
+class WString : public Value
+{
+public:
+    WString(const wchar_t * _value) : value(_value) {}
+    ~WString();
+
+    bool toBool(void) const;
+    void visit(Visitor &visitor);
+
+    const wchar_t * value;
+};
+
+
 class Enum : public SInt
 {
 public:
@@ -424,6 +436,7 @@ public:
     virtual void visit(Float *);
     virtual void visit(Double *);
     virtual void visit(String *);
+    virtual void visit(WString *);
     virtual void visit(Enum *);
     virtual void visit(Bitmask *);
     virtual void visit(Struct *);
@@ -570,4 +583,3 @@ public:
 
 } /* namespace trace */
 
-#endif /* _TRACE_MODEL_HPP_ */

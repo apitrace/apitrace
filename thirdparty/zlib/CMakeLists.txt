@@ -7,7 +7,7 @@ else ()
     add_definitions (-DHAVE_UNISTD_H)
 endif ()
 
-add_library (z_bundled STATIC EXCLUDE_FROM_ALL
+add_convenience_library (z_bundled EXCLUDE_FROM_ALL
     adler32.c
     compress.c
     crc32.c
@@ -23,10 +23,6 @@ add_library (z_bundled STATIC EXCLUDE_FROM_ALL
     trees.c
     uncompr.c
     zutil.c
-)
-
-set_target_properties (z_bundled PROPERTIES
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )
 
 install (

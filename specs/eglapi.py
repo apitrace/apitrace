@@ -87,11 +87,11 @@ EGLSurfaceFlags = Flags(Int, [
 ])
 
 EGLConformantFlags = Flags(Int, [
-    'EGL_OPENGL_BIT',
-    'EGL_OPENGL_ES_BIT',
-    'EGL_OPENGL_ES2_BIT',
-    'EGL_OPENGL_ES3_BIT_KHR',
-    'EGL_OPENVG_BIT',
+    'EGL_OPENGL_ES_BIT',  # 0x0001
+    'EGL_OPENVG_BIT',     # 0x0002
+    'EGL_OPENGL_ES2_BIT', # 0x0004
+    'EGL_OPENGL_BIT',     # 0x0008
+    'EGL_OPENGL_ES3_BIT', # 0x0040
 ])
 
 EGLVGAlphaFormat = FakeEnum(Int, ['EGL_VG_ALPHA_FORMAT_NONPRE', 'EGL_VG_ALPHA_FORMAT_PRE'])
@@ -191,6 +191,10 @@ EGLFenceSyncNVAttribs = EGLAttribArray([
     ('EGL_SYNC_STATUS_NV', Flags(Int, ['EGL_SIGNALED_NV', 'EGL_UNSIGNALED_NV']))
 ])
 
+EGLPlatformDisplayAttribs = EGLAttribArray([
+    ('EGL_PLATFORM_X11_SCREEN_EXT', Int),
+])
+
 EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
 
 def GlFunction(*args, **kwargs):
@@ -207,8 +211,8 @@ eglapi.addFunctions([
 
     Function(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLint_enum, "name")], sideeffects=False),
 
-    Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), Out(Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
-    Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLConfigAttribs, "attrib_list"), Out(Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
+    Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), Out(Array(EGLConfig, "*num_config"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
+    Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLConfigAttribs, "attrib_list"), Out(Array(EGLConfig, "*num_config"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     Function(EGLBoolean, "eglGetConfigAttrib", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     Function(EGLSurface, "eglCreateWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativeWindowType, "win"), (EGLWindowsSurfaceAttribs, "attrib_list")]),
@@ -248,6 +252,11 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglCopyBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLNativePixmapType, "target")]),
 
     Function(EGLProc, "eglGetProcAddress", [(ConstCString, "procname")]),
+
+    # EGL_EXT_platform_base
+    GlFunction(EGLDisplay, "eglGetPlatformDisplayEXT", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribs, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformWindowSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLAttribArray([]), "attrib_list")]),
 
     # EGL_KHR_lock_surface
     # EGL_KHR_lock_surface2

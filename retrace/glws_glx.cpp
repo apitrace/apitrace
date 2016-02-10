@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include <iostream>
 
@@ -36,9 +37,11 @@
 namespace glws {
 
 
-static unsigned glxVersion = 0;
 static const char *extensions = 0;
 static bool has_GLX_ARB_create_context = false;
+static bool has_GLX_ARB_create_context_profile = false;
+static bool has_GLX_EXT_create_context_es_profile = false;
+static bool has_GLX_EXT_create_context_es2_profile = false;
 
 
 class GlxVisual : public Visual
@@ -62,27 +65,43 @@ public:
 class GlxDrawable : public Drawable
 {
 public:
-    Window window;
-    bool ever_current;
+    Window window = 0;
+    GLXDrawable drawable = 0;
 
-    GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
-        ever_current(false)
+    GlxDrawable(const Visual *vis, int w, int h,
+                const glws::pbuffer_info *pbInfo) :
+        Drawable(vis, w, h, pbInfo ? true : false)
     {
-        XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
+        const GlxVisual *glxvisual = static_cast<const GlxVisual *>(visual);
+        XVisualInfo *visinfo = glxvisual->visinfo;
 
         const char *name = "glretrace";
-        window = createWindow(visinfo, name, width, height);
+        if (pbInfo) {
+            drawable = createPbuffer(display, glxvisual, pbInfo, w, h);
+        }
+        else {
+            window = createWindow(visinfo, name, width, height);
+            drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
+        }
 
         glXWaitX();
     }
 
     ~GlxDrawable() {
-        XDestroyWindow(display, window);
+        if (pbuffer) {
+            glXDestroyPbuffer(display, drawable);
+        } else {
+            glXDestroyWindow(display, drawable);
+            XDestroyWindow(display, window);
+        }
     }
 
     void
     resize(int w, int h) {
+        if (!window) {
+            return;
+        }
+
         if (w == width && h == height) {
             return;
         }
@@ -102,7 +121,8 @@ public:
     }
 
     void show(void) {
-        if (visible) {
+        if (!window ||
+            visible) {
             return;
         }
 
@@ -116,23 +136,24 @@ public:
     }
 
     void copySubBuffer(int x, int y, int width, int height) {
-        glXCopySubBufferMESA(display, window, x, y, width, height);
+        glXCopySubBufferMESA(display, drawable, x, y, width, height);
 
-        processKeys(window);
+        if (window) {
+            processKeys(window);
+        }
     }
 
     void swapBuffers(void) {
-        if (ever_current) {
-            // The window has been bound to a context at least once
-            glXSwapBuffers(display, window);
-        } else {
-            // Don't call glXSwapBuffers on this window to avoid an
-            // (untrappable) X protocol error with NVIDIA's driver.
-            std::cerr << "warning: attempt to issue SwapBuffers on unbound window "
-                         " - skipping.\n";
+        assert(!pbuffer);
+        glXSwapBuffers(display, drawable);
+        if (window) {
+            processKeys(window);
         }
-        processKeys(window);
     }
+
+private:
+    Window createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                         const glws::pbuffer_info *pbInfo, int w, int h);
 };
 
 
@@ -151,20 +172,65 @@ public:
     }
 };
 
+
+#ifndef GLXBadFBConfig
+#define GLXBadFBConfig 9
+#endif
+
+static int errorBase = INT_MIN;
+static int eventBase = INT_MIN;
+
+static int (*oldErrorHandler)(Display *, XErrorEvent *) = NULL;
+
+static int
+errorHandler(Display *dpy, XErrorEvent *error)
+{
+    if (error->error_code == errorBase + GLXBadFBConfig) {
+        // Ignore, as we handle these.
+        return 0;
+    }
+
+    return oldErrorHandler(dpy, error);
+}
+
+
 void
 init(void) {
     initX();
 
     int major = 0, minor = 0;
-    glXQueryVersion(display, &major, &minor);
-    glxVersion = (major << 8) | minor;
+    if (!glXQueryVersion(display, &major, &minor)) {
+        std::cerr << "error: failed to obtain GLX version\n";
+        exit(1);
+    }
+    const int requiredMajor = 1, requiredMinor = 3;
+    if (major < requiredMajor ||
+        (major == requiredMajor && minor < requiredMinor)) {
+        std::cerr << "error: GLX version " << requiredMajor << "." << requiredMinor << " required, but got version " << major << "." << minor << "\n";
+        exit(1);
+    }
+
+    glXQueryExtension(display, &errorBase, &eventBase);
+    oldErrorHandler = XSetErrorHandler(errorHandler);
 
     extensions = glXQueryExtensionsString(display, screen);
-    has_GLX_ARB_create_context = checkExtension("GLX_ARB_create_context", extensions);
+
+#define CHECK_EXTENSION(name) \
+    has_##name = checkExtension(#name, extensions)
+
+    CHECK_EXTENSION(GLX_ARB_create_context);
+    CHECK_EXTENSION(GLX_ARB_create_context_profile);
+    CHECK_EXTENSION(GLX_EXT_create_context_es_profile);
+    CHECK_EXTENSION(GLX_EXT_create_context_es2_profile);
+
+#undef CHECK_EXTENSION
 }
 
 void
 cleanup(void) {
+    XSetErrorHandler(oldErrorHandler);
+    oldErrorHandler = NULL;
+
     cleanupX();
 }
 
@@ -172,61 +238,41 @@ Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     GlxVisual *visual = new GlxVisual(profile);
 
-    if (glxVersion >= 0x0103) {
-        Attributes<int> attribs;
-        attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
-        attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
-        attribs.add(GLX_RED_SIZE, 1);
-        attribs.add(GLX_GREEN_SIZE, 1);
-        attribs.add(GLX_BLUE_SIZE, 1);
-        attribs.add(GLX_ALPHA_SIZE, 1);
-        attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
-        attribs.add(GLX_DEPTH_SIZE, 1);
-        attribs.add(GLX_STENCIL_SIZE, 1);
-        if (samples > 1) {
-            attribs.add(GLX_SAMPLE_BUFFERS, 1);
-            attribs.add(GLX_SAMPLES_ARB, samples);
-        }
-        attribs.end();
-
-        int num_configs = 0;
-        GLXFBConfig * fbconfigs;
-        fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
-        if (!num_configs || !fbconfigs) {
-            return NULL;
-        }
-        visual->fbconfig = fbconfigs[0];
-        assert(visual->fbconfig);
-        visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
-        assert(visual->visinfo);
-    } else {
-        Attributes<int> attribs;
-        attribs.add(GLX_RGBA);
-        attribs.add(GLX_RED_SIZE, 1);
-        attribs.add(GLX_GREEN_SIZE, 1);
-        attribs.add(GLX_BLUE_SIZE, 1);
-        attribs.add(GLX_ALPHA_SIZE, 1);
-        if (doubleBuffer) {
-            attribs.add(GLX_DOUBLEBUFFER);
-        }
-        attribs.add(GLX_DEPTH_SIZE, 1);
-        attribs.add(GLX_STENCIL_SIZE, 1);
-        if (samples > 1) {
-            attribs.add(GLX_SAMPLE_BUFFERS, 1);
-            attribs.add(GLX_SAMPLES_ARB, samples);
-        }
-        attribs.end();
-
-        visual->visinfo = glXChooseVisual(display, screen, attribs);
+    Attributes<int> attribs;
+    attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
+    attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+    attribs.add(GLX_RED_SIZE, 1);
+    attribs.add(GLX_GREEN_SIZE, 1);
+    attribs.add(GLX_BLUE_SIZE, 1);
+    attribs.add(GLX_ALPHA_SIZE, 1);
+    attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+    attribs.add(GLX_DEPTH_SIZE, 1);
+    attribs.add(GLX_STENCIL_SIZE, 1);
+    if (samples > 1) {
+        attribs.add(GLX_SAMPLE_BUFFERS, 1);
+        attribs.add(GLX_SAMPLES_ARB, samples);
     }
+    attribs.end();
+
+    int num_configs = 0;
+    GLXFBConfig * fbconfigs;
+    fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
+    if (!num_configs || !fbconfigs) {
+        return NULL;
+    }
+    visual->fbconfig = fbconfigs[0];
+    assert(visual->fbconfig);
+    visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
+    assert(visual->visinfo);
 
     return visual;
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo)
 {
-    return new GlxDrawable(visual, width, height, pbuffer);
+    return new GlxDrawable(visual, width, height, pbInfo);
 }
 
 Context *
@@ -241,49 +287,68 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
-    if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
+    if (has_GLX_ARB_create_context) {
         Attributes<int> attribs;
-        
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
-        if (debug) {
-            attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
-        }
-
-        switch (profile) {
-        case PROFILE_COMPAT:
-            break;
-        case PROFILE_ES1:
-            return NULL;
-        case PROFILE_ES2:
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
-            break;
-        default:
-            {
-                unsigned major, minor;
-                bool core;
-                getProfileVersion(profile, major, minor, core);
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, minor);
-                if (core) {
-                    attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+        int contextFlags = 0;
+        if (profile.api == glprofile::API_GL) {
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            if (profile.versionGreaterOrEqual(3, 2)) {
+                if (!has_GLX_ARB_create_context_profile) {
+                    std::cerr << "error: GLX_ARB_create_context_profile not supported\n";
+                    return NULL;
                 }
-                break;
+                int profileMask = profile.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
+                if (profile.forwardCompatible) {
+                    contextFlags |= GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+                }
             }
+        } else if (profile.api == glprofile::API_GLES) {
+            if (has_GLX_EXT_create_context_es_profile) {
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            } else if (profile.major < 2) {
+                std::cerr << "error: " << profile << " requested but GLX_EXT_create_context_es_profile not supported\n";
+                return NULL;
+            } else if (has_GLX_EXT_create_context_es2_profile) {
+                assert(profile.major >= 2);
+                if (profile.major != 2 || profile.minor != 0) {
+                    // We might still get a ES 3.0 context later (in particular Mesa does this)
+                    std::cerr << "warning: " << profile << " requested but GLX_EXT_create_context_es_profile not supported\n";
+                }
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 2);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 0);
+            } else {
+                std::cerr << "warning: " << profile << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
+            }
+        } else {
+            assert(0);
         }
-        
+        if (debug) {
+            contextFlags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+        }
+        if (contextFlags) {
+            attribs.add(GLX_CONTEXT_FLAGS_ARB, contextFlags);
+        }
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
+        if (!context && debug) {
+            // XXX: Mesa has problems with GLX_CONTEXT_DEBUG_BIT_ARB with
+            // OpenGL ES contexts, so retry without it
+            return createContext(_visual, shareContext, false);
+        }
     } else {
-        if (profile != PROFILE_COMPAT) {
+        if (profile.api != glprofile::API_GL ||
+            profile.core) {
             return NULL;
         }
 
-        if (glxVersion >= 0x103) {
-            context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
-        } else {
-            context = glXCreateContext(display, visual->visinfo, share_context, True);
-        }
+        context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
     }
 
     if (!context) {
@@ -294,19 +359,199 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
-    if (!drawable || !context) {
-        return glXMakeCurrent(display, None, NULL);
-    } else {
+    Window draw = None;
+    if (drawable) {
         GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
-        GlxContext *glxContext = static_cast<GlxContext *>(context);
-
-        glxDrawable->ever_current = true;
-
-        return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
+        draw = glxDrawable->drawable;
     }
+
+    GLXContext ctx = nullptr;
+    if (context) {
+        GlxContext *glxContext = static_cast<GlxContext *>(context);
+        ctx = glxContext->context;
+    }
+
+    return glXMakeCurrent(display, draw, ctx);
 }
 
+Window
+GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
+                           const glws::pbuffer_info *pbInfo, int w, int h)
+{
+    int samples = 0;
+
+    // XXX ideally, we'd populate these attributes according to the Visual info
+    Attributes<int> attribs;
+    attribs.add(GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT);
+    attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+    attribs.add(GLX_RED_SIZE, 1);
+    attribs.add(GLX_GREEN_SIZE, 1);
+    attribs.add(GLX_BLUE_SIZE, 1);
+    attribs.add(GLX_ALPHA_SIZE, 1);
+    //attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+    attribs.add(GLX_DEPTH_SIZE, 1);
+    attribs.add(GLX_STENCIL_SIZE, 1);
+    if (samples > 1) {
+        attribs.add(GLX_SAMPLE_BUFFERS, 1);
+        attribs.add(GLX_SAMPLES_ARB, samples);
+    }
+    attribs.end();
+
+    int num_configs = 0;
+    GLXFBConfig *fbconfigs;
+    fbconfigs = glXChooseFBConfig(dpy, screen, attribs, &num_configs);
+    if (!num_configs || !fbconfigs) {
+        std::cerr << "error: glXChooseFBConfig for pbuffer failed.\n";
+        exit(1);
+    }
+
+    Attributes<int> pbAttribs;
+    pbAttribs.add(GLX_PBUFFER_WIDTH, w);
+    pbAttribs.add(GLX_PBUFFER_HEIGHT, h);
+    pbAttribs.add(GLX_PRESERVED_CONTENTS, True);
+    pbAttribs.end();
+
+    GLXDrawable pbuffer = glXCreatePbuffer(dpy, fbconfigs[0], pbAttribs);
+    if (!pbuffer) {
+        std::cerr << "error: glXCreatePbuffer() failed\n";
+        exit(1);
+    }
+
+    return pbuffer;
+}
+
+
+// For GLX, we implement wglBindTexARB() as a copy operation.
+// We copy the pbuffer image to the currently bound texture.
+// If there's any rendering to the pbuffer before the wglReleaseTexImage()
+// call, the results are undefined (and permitted by the extension spec).
+//
+// The spec says that glTexImage and glCopyTexImage calls which effect
+// the pbuffer/texture should not be allowed, but we do not enforce that.
+//
+// The spec says that when a pbuffer is released from the texture that
+// the contents do not have to be preserved.  But that's what will happen
+// since we're copying here.
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    GLint readBufSave;
+    GLint width, height;
+
+    assert(pBuffer->pbuffer);
+
+    // Save the current drawing surface and bind the pbuffer surface
+    GLXDrawable prevDrawable = glXGetCurrentDrawable();
+    GLXContext prevContext = glXGetCurrentContext();
+    GlxDrawable *glxPBuffer = static_cast<GlxDrawable *>(pBuffer);
+    glXMakeCurrent(display, glxPBuffer->drawable, prevContext);
+
+    glGetIntegerv(GL_READ_BUFFER, &readBufSave);
+
+    assert(iBuffer == GL_FRONT_LEFT ||
+           iBuffer == GL_BACK_LEFT ||
+           iBuffer == GL_FRONT_RIGHT ||
+           iBuffer == GL_BACK_RIGHT ||
+           iBuffer == GL_AUX0);
+
+    // set src buffer
+    glReadBuffer(iBuffer);
+
+    // Just copy image from pbuffer to texture
+    switch (pBuffer->pbInfo.texTarget) {
+    case GL_TEXTURE_1D:
+        glGetTexLevelParameteriv(GL_TEXTURE_1D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        if (width == pBuffer->width) {
+            // replace existing texture
+            glCopyTexSubImage1D(GL_TEXTURE_1D,
+                                pBuffer->mipmapLevel,
+                                0,    // xoffset
+                                0, 0, // x, y
+                                pBuffer->width);
+        } else {
+            // define initial texture
+            glCopyTexImage1D(GL_TEXTURE_1D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, 0);
+        }
+        break;
+    case GL_TEXTURE_2D:
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, pBuffer->mipmapLevel,
+                                 GL_TEXTURE_HEIGHT, &height);
+        if (width == pBuffer->width && height == pBuffer->height) {
+            // replace existing texture
+            glCopyTexSubImage2D(GL_TEXTURE_2D,
+                                pBuffer->mipmapLevel,
+                                0, 0, // xoffset, yoffset
+                                0, 0, // x, y
+                                pBuffer->width, pBuffer->height);
+        } else {
+            // define initial texture
+            glCopyTexImage2D(GL_TEXTURE_2D,
+                             pBuffer->mipmapLevel,
+                             pBuffer->pbInfo.texFormat,
+                             0, 0, // x, y
+                             pBuffer->width, pBuffer->height, 0);
+        }
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        {
+            const GLenum target =
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + pBuffer->cubeFace;
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_WIDTH, &width);
+            glGetTexLevelParameteriv(target, pBuffer->mipmapLevel,
+                                     GL_TEXTURE_HEIGHT, &height);
+            if (width == pBuffer->width && height == pBuffer->height) {
+                // replace existing texture
+                glCopyTexSubImage2D(target,
+                                    pBuffer->mipmapLevel,
+                                    0, 0, // xoffset, yoffset
+                                    0, 0, // x, y
+                                    pBuffer->width, pBuffer->height);
+            } else {
+                // define new texture
+                glCopyTexImage2D(target,
+                                 pBuffer->mipmapLevel,
+                                 pBuffer->pbInfo.texFormat,
+                                 0, 0, // x, y
+                                 pBuffer->width, pBuffer->height, 0);
+            }
+        }
+        break;
+    default:
+        ; // no op
+    }
+
+    // restore
+    glReadBuffer(readBufSave);
+
+    // rebind previous drawing surface
+    glXMakeCurrent(display, prevDrawable, prevContext);
+
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    assert(pBuffer->pbuffer);
+    // nothing to do here.
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    assert(pBuffer->pbuffer);
+    // Nothing to do here.  retrace_wglSetPbufferAttribARB() will have parsed
+    // and saved the mipmap/cubeface info in the Drawable.
+    std::cout << "Calling GLX setPbufferAttrib\n";
+    return true;
+}
 
 } /* namespace glws */

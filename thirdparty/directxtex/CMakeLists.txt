@@ -1,6 +1,6 @@
 include (CheckIncludeFileCXX)
 
-if (DirectX_D3D11_INCLUDE_DIR)
+if (DirectX_D3D11_INCLUDE_FOUND)
 
     include_directories (BEFORE
         ${DirectX_D3D11_INCLUDE_DIR}
@@ -15,25 +15,16 @@ if (DirectX_D3D11_INCLUDE_DIR)
     endif ()
 
     if (MINGW)
-        # Older versions of MinGW do not include the sal.h header.  Use our own.
-        check_include_file_cxx (sal.h HAVE_SAL_H)
-        if (NOT HAVE_SAL_H)
-            include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/sal)
-        endif ()
-
-        # MinGW wincodec.h is incomplete.  Use our own.
-        include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec)
+        # Several MinGW headers are lacking.  Use our own.
+        include_directories (BEFORE
+            ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec
+            ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wrl
+        )
 
         include_directories (BEFORE
             ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
         )
         add_definitions (
-            # Support static_assert, nullptr, and unique_ptr.
-            #
-            # `-std=c++0x` doesn't work here, as it will define __STRICT_ANSI__
-            # which will prevent _isnan from being declared.
-            -std=gnu++0x
-
             #inhibit warnings
             -w
 
@@ -72,4 +63,9 @@ if (DirectX_D3D11_INCLUDE_DIR)
         ${MINGW_GUID}
     )
 
+    install (
+        FILES MIT.txt
+        DESTINATION ${DOC_INSTALL_DIR}
+        RENAME LICENSE-directxtex.txt
+    )
 endif ()

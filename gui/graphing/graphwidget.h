@@ -1,5 +1,4 @@
-#ifndef GRAPHWIDGET_H
-#define GRAPHWIDGET_H
+#pragma once
 
 #include "graphview.h"
 #include "graphaxiswidget.h"
@@ -108,5 +107,3 @@ protected:
     qint64 m_verticalEnd;
     Qt::ScrollBarPolicy m_verticalScrollbarPolicy;
 };
-
-#endif

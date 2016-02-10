@@ -26,9 +26,8 @@
 
 from dlltrace import DllTracer
 from specs.stdapi import API, Pointer, ObjPointer
-from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex
-
-import specs.d3d9dxva2
+from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex, d3dperf
+from specs.dxva2 import dxva2
 
 
 class D3D9Tracer(DllTracer):
@@ -58,29 +57,51 @@ class D3D9Tracer(DllTracer):
         if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
-            variables += [
-                ('size_t', '_MappedSize', '0'),
-                ('VOID *', 'm_pbData', '0'),
-            ]
+            if interface.name in ['IDirect3DTexture9']:
+                variables += [
+                    ('std::map<UINT, std::pair<size_t, VOID *> >', '_MappedData', 'std::map<UINT, std::pair<size_t, VOID *> >()'),
+                ]
+            else:
+                variables += [
+                    ('size_t', '_MappedSize', '0'),
+                    ('VOID *', 'm_pbData', '0'),
+                ]
 
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (_MappedSize && m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_MappedSize')
-            print '    }'
+            if interface.name in ['IDirect3DTexture9']:
+                print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(Level);'
+                print '    if (it != _MappedData.end()) {'
+                self.emit_memcpy('(LPBYTE)it->second.second', 'it->second.first')
+                print '        _MappedData.erase(it);'
+                print '    }'
+            else:
+                print '    if (_MappedSize && m_pbData) {'
+                self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
+                print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
-            # FIXME: handle recursive locks
-            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
-            print '    } else {'
-            print '        m_pbData = NULL;'
-            print '        _MappedSize = 0;'
-            print '    }'
+            if interface.name in ['IDirect3DTexture9']:
+                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+                print '        size_t mappedSize;'
+                print '        VOID * pbData;'
+                print '        _getMapInfo(_this, %s, pbData, mappedSize);' % ', '.join(method.argNames()[:-1])
+                print '        _MappedData[Level] = std::make_pair(mappedSize, pbData);'
+                print '    } else {'
+                print '        _MappedData.erase(Level);'
+                print '    }'
+            else:
+                # FIXME: handle recursive locks
+                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+                print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+                print '    } else {'
+                print '        m_pbData = NULL;'
+                print '        _MappedSize = 0;'
+                print '    }'
 
 
 if __name__ == '__main__':
@@ -92,10 +113,13 @@ if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
     print '#include "d3d9size.hpp"'
     print '#include "d3d9shader.hpp"'
-    print '#include "dxvaint.h"'
+    print '#include "dxva2imports.hpp"'
     print
+
+    d3d9.mergeModule(d3dperf)
 
     api = API()
     api.addModule(d3d9)
+    api.addModule(dxva2)
     tracer = D3D9Tracer()
     tracer.traceApi(api)

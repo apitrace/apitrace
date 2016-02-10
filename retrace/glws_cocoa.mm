@@ -53,6 +53,9 @@
 
 /**
  * Dummy thread to force Cocoa to enter multithreading mode.
+ *
+ * See also:
+ * - https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/mmAutoreleasePools.html
  */
 @interface DummyThread : NSObject
     + (void)enterMultiThreaded;
@@ -102,8 +105,8 @@ public:
     NSOpenGLView *view;
     NSOpenGLContext *currentContext;
 
-    CocoaDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer),
+    CocoaDrawable(const Visual *vis, int w, int h, const pbuffer_info *info) :
+        Drawable(vis, w, h, info),
         currentContext(nil)
     {
         NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
@@ -126,11 +129,11 @@ public:
 
         [window setContentView:view];
         [window setTitle:@"glretrace"];
-
     }
 
     ~CocoaDrawable() {
-        [window release];
+        [view release];
+        [window close];
     }
 
     void
@@ -140,6 +143,8 @@ public:
         }
 
         [window setContentSize:NSMakeSize(w, h)];
+
+        processEvents();
 
         if (currentContext != nil) {
             [currentContext update];
@@ -195,7 +200,8 @@ initThread(void) {
 void
 init(void) {
     // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
-    _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+    _libGlHandle = dlopen("/System/Library/Frameworks/OpenGL.framework/OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+    assert(_libGlHandle);
 
     initThread();
 
@@ -209,7 +215,11 @@ init(void) {
 
     [NSApplication sharedApplication];
 
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
     [NSApp finishLaunching];
+
+    [NSApp activateIgnoringOtherApps:YES];
 }
 
 
@@ -233,38 +243,39 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     }
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
-    switch (profile) {
-    case PROFILE_COMPAT:
-        break;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    case PROFILE_3_3_CORE:
-    case PROFILE_4_0_CORE:
-    case PROFILE_4_1_CORE:
+
+    if (profile.api != glprofile::API_GL) {
+        return NULL;
+    }
+
+    // We snap 3.1 to 3.2 core, as allowed by GLX/WGL_ARB_create_context
+    if (profile.versionGreaterOrEqual(3, 1) || profile.core) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
         /*
-         * Fall-through.
-         *
          * kCGLOGLPVersion_GL4_Core doesn't seem to work as expected.  The
          * recommended approach is to use NSOpenGLProfileVersion3_2Core and
          * then check the OpenGL version.
-         *
-         * TODO: Actually check the OpenGL version (the first time the OpenGL
-         * context is bound).
          */
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-    case PROFILE_3_0:
-    case PROFILE_3_1:
-    case PROFILE_3_2_CORE:
         attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
-        break;
+#else
+        return NULL;
 #endif
-    default:
+    } else if (profile.versionGreaterOrEqual(3, 0)) {
+        // Compatibility profile is not supported
         return NULL;
     }
     
     // Use Apple software rendering for debugging purposes.
+    // TODO: Allow to control this via command line options.
     if (0) {
         attribs.add(NSOpenGLPFARendererID, 0x00020200); // kCGLRendererGenericID
+    }
+
+    // Force hardware acceleration
+    // https://developer.apple.com/library/mac/qa/qa1502/_index.html
+    if (0) {
+        attribs.add(NSOpenGLPFAAccelerated);
+        attribs.add(NSOpenGLPFANoRecovery);
     }
 
     attribs.end();
@@ -276,11 +287,12 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+createDrawable(const Visual *visual, int width, int height,
+               const pbuffer_info *info)
 {
     initThread();
 
-    return new CocoaDrawable(visual, width, height, pbuffer);
+    return new CocoaDrawable(visual, width, height, info);
 }
 
 Context *
@@ -305,7 +317,7 @@ createContext(const Visual *visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
     initThread();
 
@@ -339,6 +351,27 @@ processEvents(void) {
             [NSApp sendEvent:event];
     } while (event);
 
+    return true;
+}
+
+bool
+bindTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Cocoa::wglBindTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+releaseTexImage(Drawable *pBuffer, int iBuffer) {
+    std::cerr << "error: Cocoa::wglReleaseTexImageARB not implemented.\n";
+    assert(pBuffer->pbuffer);
+    return true;
+}
+
+bool
+setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
+    // nothing to do here.
+    assert(pBuffer->pbuffer);
     return true;
 }
 

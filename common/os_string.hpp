@@ -27,8 +27,7 @@
  * String manipulation.
  */
 
-#ifndef _OS_STRING_HPP_
-#define _OS_STRING_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -424,6 +423,8 @@ public:
 String getProcessName();
 String getCurrentDir();
 
+String getConfigDir();
+
 bool createDirectory(const String &path);
 
 bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
@@ -432,4 +433,3 @@ bool removeFile(const String &fileName);
 
 } /* namespace os */
 
-#endif /* _OS_STRING_HPP_ */

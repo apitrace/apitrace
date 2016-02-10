@@ -33,7 +33,6 @@
 
 #include <sstream>
 
-#include "image.hpp"
 #include "json.hpp"
 
 
@@ -127,8 +126,7 @@ escapeUnicodeString(std::ostream &os, const char *str) {
             os << (unsigned char)c;
         } else {
             // unicode
-            os << "\\u" << std::setfill('0') << std::hex << std::setw(4) << (unsigned)c;
-            os << std::dec;
+            os << "\\u" << std::hex << std::setfill('0') << std::setw(4) << (unsigned)c << std::setfill(' ') << std::dec;
         }
     } while (src);
 
@@ -173,18 +171,14 @@ encodeBase64String(std::ostream &os, const unsigned char *bytes, size_t size) {
     if (size > 0) {
         c0 = bytes[0] >> 2;
         c1 = ((bytes[0] & 0x03) << 4);
-        buf[2] = '=';
-        buf[3] = '=';
 
+        buf[3] = '=';
         if (size > 1) {
             c1 |= ((bytes[1] & 0xf0) >> 4);
             c2 = ((bytes[1] & 0x0f) << 2);
-            if (size > 2) {
-                c2 |= ((bytes[2] & 0xc0) >> 6);
-                c3 = bytes[2] & 0x3f;
-                buf[3] = table64[c3];
-            }
             buf[2] = table64[c2];
+        } else {
+            buf[2] = '=';
         }
         buf[1] = table64[c1];
         buf[0] = table64[c0];
@@ -299,39 +293,4 @@ JSONWriter::writeBool(bool b) {
     os << (b ? "true" : "false");
     value = true;
     space = ' ';
-}
-
-void
-JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
-{
-    if (!image) {
-        writeNull();
-        return;
-    }
-
-    beginObject();
-
-    // Tell the GUI this is no ordinary object, but an image
-    writeStringMember("__class__", "image");
-
-    writeIntMember("__width__", image->width);
-    writeIntMember("__height__", image->height / depth);
-    writeIntMember("__depth__", depth);
-
-    writeStringMember("__format__", format);
-
-    beginMember("__data__");
-    std::stringstream ss;
-
-    if (image->channelType == image::TYPE_UNORM8) {
-        image->writePNG(ss);
-    } else {
-        image->writePNM(ss);
-    }
-
-    const std::string & s = ss.str();
-    writeBase64(s.data(), s.size());
-    endMember(); // __data__
-
-    endObject();
 }

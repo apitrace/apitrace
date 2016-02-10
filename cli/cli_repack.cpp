@@ -32,40 +32,54 @@
 #include "cli.hpp"
 
 #include "trace_file.hpp"
+#include "trace_ostream.hpp"
 
 
-static const char *synopsis = "Repack a trace file with Snappy compression.";
+static const char *synopsis = "Repack a trace file with different compression.";
 
 static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace repack <in-trace-file> <out-trace-file>\n"
+        << "usage: apitrace repack [options] <in-trace-file> <out-trace-file>\n"
         << synopsis << "\n"
         << "\n"
         << "Snappy compression allows for faster replay and smaller memory footprint,\n"
         << "at the expense of a slightly smaller compression ratio than zlib\n"
+        << "\n"
+        << "    -z,--zlib    Use ZLib compression instead\n"
         << "\n";
 }
 
 const static char *
-shortOptions = "h";
+shortOptions = "hz";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
+    {"zlib", no_argument, 0, 'z'},
     {0, 0, 0, 0}
 };
 
+enum Format {
+    FORMAT_SNAPPY = 0,
+    FORMAT_ZLIB,
+};
+
 static int
-repack(const char *inFileName, const char *outFileName)
+repack(const char *inFileName, const char *outFileName, Format format)
 {
     trace::File *inFile = trace::File::createForRead(inFileName);
     if (!inFile) {
         return 1;
     }
 
-    trace::File *outFile = trace::File::createForWrite(outFileName);
+    trace::OutStream *outFile;
+    if (format == FORMAT_SNAPPY) {
+        outFile = trace::createSnappyStream(outFileName);
+    } else {
+        outFile = trace::createZLibStream(outFileName);
+    }
     if (!outFile) {
         delete inFile;
         return 1;
@@ -89,12 +103,16 @@ repack(const char *inFileName, const char *outFileName)
 static int
 command(int argc, char *argv[])
 {
+    Format format = FORMAT_SNAPPY;
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
             usage();
             return 0;
+        case 'z':
+            format = FORMAT_ZLIB;
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -108,7 +126,7 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    return repack(argv[optind], argv[optind + 1]);
+    return repack(argv[optind], argv[optind + 1], format);
 }
 
 const Command repack_command = {

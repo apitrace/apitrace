@@ -17,10 +17,14 @@
 #include "traceprocess.h"
 #include "trimprocess.h"
 #include "thumbnail.h"
+#include "androidretracer.h"
+#include "androidfiledialog.h"
 #include "ui_retracerdialog.h"
 #include "ui_profilereplaydialog.h"
 #include "vertexdatainterpreter.h"
 #include "trace_profiler.hpp"
+#include "image/image.hpp"
+#include "leaktracethread.h"
 
 #include <QAction>
 #include <QApplication>
@@ -32,16 +36,18 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QSettings>
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QWebPage>
 #include <QWebView>
 
+typedef QLatin1String _;
 
 MainWindow::MainWindow()
     : QMainWindow(),
-      m_api(trace::API_GL),
+      m_api(trace::API_UNKNOWN),
       m_initalCallNum(-1),
       m_selectedEvent(0),
       m_stateEvent(0),
@@ -95,6 +101,94 @@ void MainWindow::openTrace()
     if (!fileName.isEmpty() && QFile::exists(fileName)) {
         newTraceFile(fileName);
     }
+}
+
+void MainWindow::saveTrace()
+{
+    QString localFile = m_trace->fileName();
+
+    QString fileName =
+            QFileDialog::getSaveFileName(
+                this,
+                tr("Save Trace As"),
+                QFileInfo(localFile).fileName(),
+                tr("Trace Files (*.trace);;All Files (*)"));
+
+    if (!fileName.isEmpty()) {
+        QFile::copy(localFile, fileName);
+    }
+}
+
+void MainWindow::pullTrace()
+{
+    QString androidFile = AndroidFileDialog::getOpenFileName(this, tr("Open trace file"), _("/sdcard"), _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+
+    QString localFile =
+            QFileDialog::getSaveFileName(
+                this,
+                tr("Open Trace"),
+                QDir::homePath() + _("/") + QFileInfo(androidFile).fileName(),
+                tr("Trace Files (*.trace)"));
+
+    if (localFile.isEmpty())
+        return;
+
+    AndroidUtils au;
+    connect(&au, SIGNAL(statusMessage(QString)), statusBar(), SLOT(showMessage(QString)));
+    if (au.updateFile(localFile, androidFile, AndroidUtils::PullFromDeviceToLocal)) {
+        m_androidFilePath = androidFile;
+        linkLocalAndroidTrace(localFile, androidFile);
+        newTraceFile(localFile);
+        m_ui.actionRetraceOnAndroid->setChecked(true);
+    } else {
+        QMessageBox::warning(this, tr("Error"),
+                             tr("Pulling '%1' for Android device failed.").arg(androidFile));
+    }
+}
+
+void MainWindow::pushTrace()
+{
+    QString localFile = m_trace->fileName();
+    QString androidFile = AndroidFileDialog::getSaveFileName(this, tr("Save trace file"), _("/sdcard/") + QFileInfo(localFile).fileName(), _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+    AndroidUtils au;
+    connect(&au, SIGNAL(statusMessage(QString)), statusBar(), SLOT(showMessage(QString)));
+    if (au.updateFile(localFile, androidFile, AndroidUtils::PushLocalToDevice)) {
+        m_androidFilePath = androidFile;
+        linkLocalAndroidTrace(localFile, androidFile);
+    } else {
+        QMessageBox::warning(this, tr("Error"),
+                             tr("Pushing '%1' to Android device failed.\n"
+                                "Make usre you have enough space on device.").arg(localFile));
+    }
+    statusBar()->showMessage(QString());
+}
+
+void MainWindow::linkTrace()
+{
+    QString localFile = m_trace->fileName();
+    QString androidFile = AndroidFileDialog::getOpenFileName(this, tr("Link trace file %1").arg(localFile),
+                                                             _("/sdcard/") + QFileInfo(localFile).fileName(),
+                                                             _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+    m_androidFilePath = androidFile;
+    linkLocalAndroidTrace(localFile, androidFile);
+}
+
+void MainWindow::retraceOnAndroid(bool android)
+{
+    delete m_retracer;
+    if (android) {
+        m_retracer = new AndroidRetracer(this);
+        m_androidFilePath = linkedAndroidTrace(m_trace->fileName());
+    } else {
+        m_retracer = new Retracer(this);
+    }
+    initRetraceConnections();
 }
 
 void MainWindow::loadTrace(const QString &fileName, int callNum)
@@ -216,7 +310,7 @@ void MainWindow::replayStart()
         m_retracer->setCoreProfile(
             dlgUi.coreProfileCB->isChecked());
 
-        m_retracer->setProfiling(false, false, false);
+        m_retracer->setProfiling(false, false, false, false);
 
         replayTrace(false, false);
     }
@@ -236,12 +330,17 @@ void MainWindow::replayProfile()
     QDialog dlg;
     Ui_ProfileReplayDialog dlgUi;
     dlgUi.setupUi(&dlg);
+    if (m_ui.actionRetraceOnAndroid->isChecked()) {
+        dlgUi.gpuTimesCB->setChecked(false);
+        dlgUi.pixelsDrawnCB->setChecked(false);
+    }
 
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setProfiling(
             dlgUi.gpuTimesCB->isChecked(),
             dlgUi.cpuTimesCB->isChecked(),
-            dlgUi.pixelsDrawnCB->isChecked());
+            dlgUi.pixelsDrawnCB->isChecked(),
+            dlgUi.memoryUsageCB->isChecked());
 
         replayTrace(false, false);
     }
@@ -255,7 +354,10 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
-    qDebug()<< "Loading  : " <<fileName;
+    if (m_ui.actionRetraceOnAndroid->isChecked())
+        m_androidFilePath = linkedAndroidTrace(fileName);
+
+    qDebug()<< "Loading:" << fileName;
 
     m_progressBar->setValue(0);
     m_trace->setFileName(fileName);
@@ -297,6 +399,15 @@ void MainWindow::replayError(const QString &message)
         this, tr("Replay Failed"), message);
 }
 
+void MainWindow::loadError(const QString &message)
+{
+    m_progressBar->hide();
+    statusBar()->showMessage(
+        tr("Load unsuccessful."), 2000);
+    QMessageBox::warning(
+        this, tr("Load Failed"), message);
+}
+
 void MainWindow::startedLoadingTrace()
 {
     Q_ASSERT(m_trace);
@@ -322,12 +433,57 @@ void MainWindow::finishedLoadingTrace()
     } else {
        m_trace->finishedParsing();
     }
+    m_ui.actionPushTrace->setEnabled(m_api == trace::API_EGL);
+    m_ui.actionLinkTrace->setEnabled(m_api == trace::API_EGL);
+    m_ui.actionRetraceOnAndroid->setEnabled(m_api == trace::API_EGL);
 }
 
 void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
 {
     if (m_trace->fileName().isEmpty()) {
         return;
+    }
+
+    if (m_ui.actionRetraceOnAndroid->isChecked()) {
+        if (m_androidFilePath.isEmpty()) {
+            QMessageBox::information(this, tr("Info"), tr("Current opened file is not linked with any file on the Android device."));
+            linkTrace();
+            if (m_androidFilePath.isEmpty())
+                return;
+        }
+        // make sure both trace files (local & android) are the same
+        AndroidUtils au;
+        if (!au.sameFile(m_trace->fileName(), m_androidFilePath)) {
+            QMessageBox msgBox;
+            msgBox.setText("Local file is different from the Android file.\nWhat do you want to do?");
+            msgBox.setDetailedText(tr("Chossing:\n"
+                                      " - \"Update Android\" will push the local file to the device (replacing it).\n"
+                                      " - \"Update local\" will pull the device file to local (replacing it)."));
+            QAbstractButton *updateAndroid =
+                  msgBox.addButton(tr("Update Android"), QMessageBox::ActionRole);
+            QAbstractButton *updateLocal =
+                  msgBox.addButton(tr("Update local"), QMessageBox::ActionRole);
+            msgBox.addButton(QMessageBox::Cancel);
+            msgBox.exec();
+            if (msgBox.clickedButton() == updateAndroid) {
+                statusBar()->showMessage(tr("Please wait, pushing the file to device might take long time ..."));
+                if (!au.updateFile(m_trace->fileName(), m_androidFilePath, AndroidUtils::PushLocalToDevice)) {
+                    QMessageBox::warning(this, tr("Error"),
+                                         tr("Pushing '%1' to Android device failed.\n"
+                                            "Make usre you have enough space on device.").arg(m_trace->fileName()));
+                }
+            } else if (msgBox.clickedButton() == updateLocal) {
+                statusBar()->showMessage(tr("Please wait, pulling the file from device might take long time ..."));
+                if (!au.updateFile(m_trace->fileName(), m_androidFilePath, AndroidUtils::PullFromDeviceToLocal)) {
+                    QMessageBox::warning(this, tr("Error"),
+                                         tr("Pulling '%1' for Android device failed.").arg(m_androidFilePath));
+                }
+            } else {
+                return;
+            }
+            statusBar()->showMessage(QString());
+        }
+        static_cast<AndroidRetracer *>(m_retracer)->setAndroidFileName(m_androidFilePath);
     }
 
     m_retracer->setFileName(m_trace->fileName());
@@ -352,6 +508,11 @@ void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
             return;
         }
         m_retracer->setCaptureAtCallNumber(index);
+    }
+    if (m_trace->isMissingThumbnails()) {
+        m_retracer->resetThumbnailsToCapture();
+        m_trace->iterateMissingThumbnails(this, this->thumbnailCallback);
+        m_trace->resetMissingThumbnails();
     }
     m_retracer->start();
 
@@ -484,8 +645,9 @@ variantListToItems(const QVector<QVariant> &lst,
                    const QVector<QVariant> &defaultLst,
                    QList<QTreeWidgetItem *> &items)
 {
+    int width = QString::number(lst.count()).length();
     for (int i = 0; i < lst.count(); ++i) {
-        QString key = QString::number(i);
+        QString key = QString::number(i).rightJustified(width, ' ');
         QVariant var = lst[i];
         QVariant defaultVar;
 
@@ -500,23 +662,42 @@ variantListToItems(const QVector<QVariant> &lst,
     }
 }
 
-static bool
-isVariantDeep(const QVariant &var)
+// Get the depth (dimensionality) of the variant:
+//
+// It will return:
+//  0: scalar
+//  1: vector (up to 4 elems)
+//  2: matrix (up to 4x4 elements)
+//  3: array
+//  4: map, etc.
+static unsigned
+getVariantDepth(const QVariant &var)
 {
     if (var.type() == QVariant::List) {
         QVector<QVariant> lst = var.toList().toVector();
+        unsigned maxDepth = 0;
         for (int i = 0; i < lst.count(); ++i) {
-            if (isVariantDeep(lst[i])) {
-                return true;
+            unsigned elemDepth = getVariantDepth(lst[i]);
+            if (elemDepth > maxDepth) {
+                if (elemDepth >= 4) {
+                    return elemDepth;
+                }
+                maxDepth = elemDepth;
             }
         }
-        return false;
+        if (lst.count() > 1) {
+            if (lst.count() > 4) {
+                return 3;
+            }
+            maxDepth += 1;
+        }
+        return maxDepth;
     } else if (var.type() == QVariant::Map) {
-        return true;
+        return 4;
     } else if (var.type() == QVariant::Hash) {
-        return true;
+        return 4;
     } else {
-        return false;
+        return 0;
     }
 }
 
@@ -530,7 +711,7 @@ variantToItem(const QString &key, const QVariant &var,
 
     QString val;
 
-    bool deep = isVariantDeep(var);
+    bool deep = getVariantDepth(var) >= 3;
     if (!deep) {
         variantToString(var, val);
     }
@@ -579,12 +760,42 @@ static void addSurfaceItem(const ApiSurface &surface,
         .arg(width)
         .arg(height);
 
+    QString toolTip;
+    toolTip += QString::fromLatin1("label = %1\n").arg(label);
+    toolTip += QString::fromLatin1("format = %1\n").arg(surface.formatName());
+    toolTip += QString::fromLatin1("width = %1\n").arg(width);
+    toolTip += QString::fromLatin1("height = %1\n").arg(height);
+    item->setToolTip(0, toolTip);
+    item->setToolTip(1, toolTip);
+
     //item->setText(1, descr);
     QLabel *l = new QLabel(descr, tree);
     l->setWordWrap(true);
     tree->setItemWidget(item, 1, l);
 
-    item->setData(0, Qt::UserRole, surface.base64Data());
+    item->setData(0, Qt::UserRole, surface.data());
+}
+
+void MainWindow::addSurface(const ApiTexture &image, QTreeWidgetItem *parent) {
+    addSurfaceItem(image, image.label(), parent, m_ui.surfacesTreeWidget);
+}
+
+void MainWindow::addSurface(const ApiFramebuffer &fbo, QTreeWidgetItem *parent) {
+    addSurfaceItem(fbo, fbo.type(), parent, m_ui.surfacesTreeWidget);
+}
+
+template <typename Surface>
+void MainWindow::addSurfaces(const QList<Surface> &surfaces, const char *label) {
+    if (!surfaces.isEmpty()) {
+        QTreeWidgetItem *imageItem = new QTreeWidgetItem(m_ui.surfacesTreeWidget);
+        imageItem->setText(0, tr(label));
+        if (surfaces.count() <= 6) {
+            imageItem->setExpanded(true);
+        }
+        for (int i = 0; i < surfaces.count(); ++i) {
+            addSurface(surfaces[i], imageItem);
+        }
+    }
 }
 
 void MainWindow::fillStateForFrame()
@@ -624,6 +835,11 @@ void MainWindow::fillStateForFrame()
     variantMapToItems(state.uniforms(), QVariantMap(), uniformsItems);
     m_ui.uniformsTreeWidget->insertTopLevelItems(0, uniformsItems);
 
+    m_ui.buffersTreeWidget->clear();
+    QList<QTreeWidgetItem *> buffersItems;
+    variantMapToItems(state.buffers(), QVariantMap(), buffersItems);
+    m_ui.buffersTreeWidget->insertTopLevelItems(0, buffersItems);
+
     const QList<ApiTexture> &textures =
         state.textures();
     const QList<ApiFramebuffer> &fbos =
@@ -634,38 +850,8 @@ void MainWindow::fillStateForFrame()
         m_ui.surfacesTab->setDisabled(false);
     } else {
         m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
-        if (!textures.isEmpty()) {
-            QTreeWidgetItem *textureItem =
-                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
-            textureItem->setText(0, tr("Textures"));
-            if (textures.count() <= 6) {
-                textureItem->setExpanded(true);
-            }
-
-            for (int i = 0; i < textures.count(); ++i) {
-                const ApiTexture &texture =
-                    textures[i];
-                addSurfaceItem(texture, texture.label(),
-                               textureItem,
-                               m_ui.surfacesTreeWidget);
-            }
-        }
-        if (!fbos.isEmpty()) {
-            QTreeWidgetItem *fboItem =
-                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
-            fboItem->setText(0, tr("Framebuffers"));
-            if (fbos.count() <= 6) {
-                fboItem->setExpanded(true);
-            }
-
-            for (int i = 0; i < fbos.count(); ++i) {
-                const ApiFramebuffer &fbo =
-                    fbos[i];
-                addSurfaceItem(fbo, fbo.type(),
-                               fboItem,
-                               m_ui.surfacesTreeWidget);
-            }
-        }
+        addSurfaces(textures, "Textures");
+        addSurfaces(fbos, "Framebuffers");
         m_ui.surfacesTab->setEnabled(true);
     }
     m_ui.stateDock->show();
@@ -677,6 +863,27 @@ void MainWindow::showSettings()
     dialog.setFilterModel(m_proxyModel);
 
     dialog.exec();
+}
+
+void MainWindow::leakTrace()
+{
+    LeakTraceThread *t=new LeakTraceThread(m_trace->fileName());
+
+    connect (t,SIGNAL(finished()),this,SLOT(leakTraceFinished()));
+
+    connect (t,SIGNAL(leakTraceErrors(const QList<ApiTraceError> &)),
+            this,SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+
+    t->start();
+}
+
+void MainWindow::leakTraceFinished(){
+
+    LeakTraceThread *t = qobject_cast<LeakTraceThread*>(sender());
+
+    m_ui.errorsDock->setVisible(t->hasError());
+
+    delete t;
 }
 
 void MainWindow::openHelp(const QUrl &url)
@@ -734,8 +941,8 @@ void MainWindow::showSelectedSurface()
 
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
 
-    QByteArray base64Data = var.value<QByteArray>();
-    viewer->setBase64Data(base64Data);
+    QByteArray data = var.value<QByteArray>();
+    viewer->setData(data);
 
     viewer->show();
     viewer->raise();
@@ -817,6 +1024,8 @@ void MainWindow::initObjects()
 
 void MainWindow::initConnections()
 {
+    connect(m_trace, SIGNAL(problemLoadingTrace(const QString&)),
+            this, SLOT(loadError(const QString&)));
     connect(m_trace, SIGNAL(startedLoadingTrace()),
             this, SLOT(startedLoadingTrace()));
     connect(m_trace, SIGNAL(loaded(int)),
@@ -838,21 +1047,13 @@ void MainWindow::initConnections()
     connect(m_trace, SIGNAL(foundCallIndex(ApiTraceCall*)),
             this, SLOT(slotJumpToResult(ApiTraceCall*)));
 
-    connect(m_retracer, SIGNAL(finished(const QString&)),
-            this, SLOT(replayFinished(const QString&)));
-    connect(m_retracer, SIGNAL(error(const QString&)),
-            this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
-            this, SLOT(replayStateFound(ApiTraceState*)));
-    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
-            this, SLOT(replayProfileFound(trace::Profile*)));
-    connect(m_retracer, SIGNAL(foundThumbnails(const QList<QImage>&)),
-            this, SLOT(replayThumbnailsFound(const QList<QImage>&)));
-    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
-            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+    initRetraceConnections();
+
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
+    connect(m_ui.bufferExportButton, SIGNAL(clicked()),
+            this, SLOT(exportBufferData()));
     connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
             m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
     connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
@@ -867,6 +1068,16 @@ void MainWindow::initConnections()
             this, SLOT(createTrace()));
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
+    connect(m_ui.actionSave, SIGNAL(triggered()),
+            this, SLOT(saveTrace()));
+    connect(m_ui.actionPullTrace, SIGNAL(triggered()),
+            this, SLOT(pullTrace()));
+    connect(m_ui.actionPushTrace, SIGNAL(triggered()),
+            this, SLOT(pushTrace()));
+    connect(m_ui.actionLinkTrace, SIGNAL(triggered()),
+            this, SLOT(linkTrace()));
+    connect(m_ui.actionRetraceOnAndroid, SIGNAL(toggled(bool)),
+            this, SLOT(retraceOnAndroid(bool)));
     connect(m_ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(close()));
 
@@ -893,6 +1104,8 @@ void MainWindow::initConnections()
             this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
+    connect(m_ui.actionLeakTrace,SIGNAL(triggered()),
+            this, SLOT(leakTrace()));
 
     connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
@@ -948,9 +1161,31 @@ void MainWindow::initConnections()
             this, SLOT(slotJumpTo(int)));
 }
 
+void MainWindow::initRetraceConnections()
+{
+    connect(m_retracer, SIGNAL(finished(const QString&)),
+            this, SLOT(replayFinished(const QString&)));
+    connect(m_retracer, SIGNAL(error(const QString&)),
+            this, SLOT(replayError(const QString&)));
+    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
+            this, SLOT(replayStateFound(ApiTraceState*)));
+    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
+            this, SLOT(replayProfileFound(trace::Profile*)));
+    connect(m_retracer, SIGNAL(foundThumbnails(const ImageHash&)),
+            this, SLOT(replayThumbnailsFound(const ImageHash&)));
+    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
+            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+}
+
 void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
 {
+    m_ui.actionPushTrace->setEnabled(false);
+    m_ui.actionLinkTrace->setEnabled(false);
+    m_ui.actionRetraceOnAndroid->setEnabled(false);
     if (traceLoaded) {
+        /* File */
+        m_ui.actionSave          ->setEnabled(true);
+
         /* Edit */
         m_ui.actionFind          ->setEnabled(true);
         m_ui.actionGo            ->setEnabled(true);
@@ -973,6 +1208,9 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
         m_ui.actionTrim          ->setEnabled(true);
     }
     else {
+        /* File */
+        m_ui.actionSave          ->setEnabled(false);
+
         /* Edit */
         m_ui.actionFind          ->setEnabled(false);
         m_ui.actionGo            ->setEnabled(false);
@@ -1017,10 +1255,10 @@ void MainWindow::replayStateFound(ApiTraceState *state)
     m_nonDefaultsLookupEvent = 0;
 }
 
-void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
+void MainWindow::replayThumbnailsFound(const ImageHash &thumbnails)
 {
     m_ui.callView->setUniformRowHeights(false);
-    m_trace->bindThumbnailsToFrames(thumbnails);
+    m_trace->bindThumbnails(thumbnails);
 }
 
 void MainWindow::slotGoTo()
@@ -1075,8 +1313,11 @@ void MainWindow::slotSearchNext(const QString &str,
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
 
-    Q_ASSERT(call || frame);
     if (!frame) {
+        // Trace is still loading.
+        if (!call) {
+            return;
+        }
         frame = call->parentFrame();
     }
     Q_ASSERT(frame);
@@ -1090,8 +1331,11 @@ void MainWindow::slotSearchPrev(const QString &str,
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
 
-    Q_ASSERT(call || frame);
     if (!frame) {
+        // Trace is still loading.
+        if (!call) {
+            return;
+        }
         frame = call->parentFrame();
     }
     Q_ASSERT(frame);
@@ -1270,22 +1514,31 @@ void MainWindow::saveSelectedSurface()
     }
 
     QVariant var = item->data(0, Qt::UserRole);
+    if (!var.isValid()) {
+        return;
+    }
+
     QImage img = var.value<QImage>();
+    if (img.isNull()) {
+        image::Image *traceImage = ApiSurface::imageFromData(var.value<QByteArray>());
+        img = ApiSurface::qimageFromRawImage(traceImage);
+        delete traceImage;
+    }
+    if (img.isNull()) {
+        statusBar()->showMessage( "Failed to save image", 5000);
+        return;
+    }
 
     QString imageIndex;
-    if (selectedCall()) {
+    ApiTraceCall *call = selectedCall();
+    if (call) {
         imageIndex = tr("_call_%1")
-                     .arg(selectedCall()->index());
-    } else if (selectedFrame()) {
-        ApiTraceCall *firstCall =
-            static_cast<ApiTraceCall *>(selectedFrame()->eventAtRow(0));
-        if (firstCall) {
+                     .arg(call->index());
+    } else {
+        ApiTraceFrame *frame = selectedFrame();
+        if (frame) {
             imageIndex = tr("_frame_%1")
-                         .arg(firstCall->index());
-        } else {
-            qDebug()<<"unknown frame number";
-            imageIndex = tr("_frame_%1")
-                         .arg(firstCall->index());
+                         .arg(frame->number);
         }
     }
 
@@ -1311,8 +1564,50 @@ void MainWindow::saveSelectedSurface()
         .arg(parentIndex)
         .arg(childIndex);
     //qDebug()<<"save "<<fileName;
-    img.save(fileName, "PNG");
-    statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+    if (img.save(fileName, "PNG")) {
+        statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+    } else {
+        statusBar()->showMessage( tr("Failed to save '%1'").arg(fileName), 5000);
+    }
+}
+
+void MainWindow::exportBufferData()
+{
+    QByteArray data = m_vdataInterpreter->data();
+    if (data.isEmpty())
+        return;
+
+    QString bufferIndex;
+    ApiTraceCall *call = selectedCall();
+    if (call) {
+        bufferIndex = tr("_call_%1").arg(call->index());
+    } else {
+        ApiTraceFrame *frame = selectedFrame();
+        if (frame) {
+            bufferIndex = tr("_frame_%1")
+                         .arg(frame->number);
+        }
+    }
+
+    QString filename =
+        tr("%1%2_buffer.raw")
+        .arg(m_trace->fileName())
+        .arg(bufferIndex);
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        statusBar()->showMessage("Failed to save buffer data", 5000);
+        return;
+    }
+
+    if (file.write(data) == -1) {
+        statusBar()->showMessage("Failed to save buffer data", 5000);
+        return;
+    }
+
+    file.close();
+
+    statusBar()->showMessage( tr("Saved buffer to '%1'").arg(filename), 5000);
 }
 
 void MainWindow::loadProgess(int percent)
@@ -1411,7 +1706,25 @@ ApiTraceCall * MainWindow::currentCall() const
     }
 
     return call;
+}
 
+void MainWindow::linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile)
+{
+
+    QSettings s;
+    s.beginGroup(_("android"));
+    QVariantMap map = s.value(_("links")).toMap();
+    map[localFile] = deviceFile;
+    s.setValue(_("links"), map);
+    s.endGroup();
+}
+
+QString MainWindow::linkedAndroidTrace(const QString &localFile)
+{
+    QSettings s;
+    s.beginGroup(_("android"));
+    QVariantMap map = s.value(_("links")).toMap();
+    return map[localFile].toString();
 }
 
 void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
@@ -1470,6 +1783,13 @@ void MainWindow::slotJumpToResult(ApiTraceCall *call)
     } else {
         statusBar()->showMessage(tr("Call has been filtered out."));
     }
+}
+
+void MainWindow::thumbnailCallback(void *object, int thumbnailIdx)
+{
+	//qDebug() << QLatin1String("debug: transfer from trace to retracer thumbnail index: ") << thumbnailIdx;
+    MainWindow *mySelf = (MainWindow *) object;
+    mySelf->m_retracer->addThumbnailToCapture(thumbnailIdx);
 }
 
 #include "mainwindow.moc"

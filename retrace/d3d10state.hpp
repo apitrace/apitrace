@@ -23,62 +23,102 @@
  *
  **************************************************************************/
 
-#ifndef _D3D10STATE_HPP_
-#define _D3D10STATE_HPP_
+#pragma once
 
+
+#include <assert.h>
 
 #include <windows.h>
 
+#include <vector>
+#include <string>
 
-#include "json.hpp"
+#include "state_writer.hpp"
+#include "com_ptr.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
+
+#include "d3d10imports.hpp"
 
 
 namespace d3dstate {
 
 
-template< class T >
+template< typename T >
+inline std::vector<BYTE>
+getPrivateData(T *pObject, REFGUID guid)
+{
+    std::vector<BYTE> Data;
+
+    if (!pObject) {
+        return Data;
+    }
+
+    UINT DataLength = 0;
+    HRESULT hr;
+    hr = pObject->GetPrivateData(guid, &DataLength, NULL);
+    if (hr != S_OK) {
+        assert(hr == DXGI_ERROR_NOT_FOUND);
+        return Data;
+    }
+
+    Data.resize(DataLength);
+
+    hr = pObject->GetPrivateData(guid, &DataLength, &Data[0]);
+    assert(hr == S_OK);
+    if (FAILED(hr)) {
+        Data.clear();
+    }
+
+    return Data;
+}
+
+
+template< typename T >
 inline void
-dumpShader(JSONWriter &json, const char *name, T *pShader) {
+dumpShader(StateWriter &writer, const char *name, T *pShader) {
     if (!pShader) {
         return;
     }
-
-    HRESULT hr;
 
     /*
      * There is no method to get the shader byte code, so the creator is supposed to
      * attach it via the SetPrivateData method.
      */
-    UINT BytecodeLength = 0;
-    char dummy;
-    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, &dummy);
-    if (hr != DXGI_ERROR_MORE_DATA) {
+
+
+    std::vector<BYTE> ShaderBytecode = getPrivateData(pShader, GUID_D3DSTATE);
+    if (ShaderBytecode.empty()) {
         return;
     }
 
-    void *pShaderBytecode = malloc(BytecodeLength);
-    if (!pShaderBytecode) {
-        return;
-    }
-
-    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, pShaderBytecode);
+    com_ptr<IDisassemblyBuffer> pDisassembly;
+    HRESULT hr;
+    hr = DisassembleShader(&ShaderBytecode[0], ShaderBytecode.size(), &pDisassembly);
     if (SUCCEEDED(hr)) {
-        IDisassemblyBuffer *pDisassembly = NULL;
-        hr = DisassembleShader(pShaderBytecode, BytecodeLength, &pDisassembly);
-        if (SUCCEEDED(hr)) {
-            json.beginMember(name);
-            json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-            json.endMember();
-            pDisassembly->Release();
-        }
+        writer.beginMember(name);
+        writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+        writer.endMember();
     }
-
-    free(pShaderBytecode);
 }
+
+
+template< typename T >
+inline std::string
+getObjectName(T *pObject)
+{
+    std::vector<BYTE> ObjectName = getPrivateData(pObject, WKPDID_D3DDebugObjectName);
+    return std::string(ObjectName.begin(), ObjectName.end());
+}
+
+
+image::Image *
+getSubResourceImage(ID3D10Device *pDevice,
+                    ID3D10Resource *pResource,
+                    DXGI_FORMAT Format,
+                    UINT ArraySlice,
+                    UINT MipSlice);
 
 
 } /* namespace d3dstate */
 
-#endif // _D3D10STATE_HPP_

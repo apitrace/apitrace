@@ -42,25 +42,18 @@ def function_pointer_type(function):
 
 
 def function_pointer_value(function):
-    return '_' + function.name + '_ptr'
+    return '_' + function.name
 
 
 class Dispatcher:
 
-    def header(self):
-        # Must be implemented by derived classes, which should define, declare,
-        # or implement something like:
-        #
-        #  typedef void (*_PROC)(void);
-        #
-        #  static _PROC _getPublicProcAddress(const char *name);
-        #  static _PROC _getPrivateProcAddress(const char *name);
-        #
-        raise NotImplementedError
-
     def dispatchModule(self, module):
+        self.dispatchModuleDecl(module)
+        self.dispatchModuleImpl(module)
+    
+    def dispatchModuleDecl(self, module):
         for function in module.functions:
-            self.dispatchFunction(module, function)
+            self.dispatchFunctionDecl(module, function)
         
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
@@ -70,55 +63,67 @@ class Dispatcher:
             print '#define %s _%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print
-
-    def dispatchFunction(self, module, function):
+    
+    def dispatchFunctionDecl(self, module, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
-        print 'static %s %s = NULL;' % (ptype, pvalue)
+        print 'extern %s %s;' % (ptype, pvalue)
         print
-        print 'static inline ' + function.prototype('_' + function.name) + ' {'
-        print '    const char *_name = "%s";' % function.name
+
+    def dispatchModuleImpl(self, module):
+        for function in module.functions:
+            self.dispatchFunctionImpl(module, function)
+
+    def dispatchFunctionImpl(self, module, function):
+        ptype = function_pointer_type(function)
+        pvalue = function_pointer_value(function)
+
         if function.type is stdapi.Void:
             ret = ''
         else:
             ret = 'return '
+
+        print 'static ' + function.prototype('_fail_' + function.name) + ' {'
+        self.failFunction(function)
+        print '}'
+        print
+
+        print 'static ' + function.prototype('_get_' + function.name) + ' {'
         self.invokeGetProcAddress(module, function)
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
 
-    def isFunctionPublic(self, module, function):
-        return True
+        print '%s %s = &%s;' % (ptype, pvalue, '_get_' + function.name)
+        print
 
     def getProcAddressName(self, module, function):
-        if self.isFunctionPublic(module, function):
-            return '_getPublicProcAddress'
-        else:
-            return '_getPrivateProcAddress'
+        raise NotImplementedError
 
     def invokeGetProcAddress(self, module, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         getProcAddressName = self.getProcAddressName(module, function)
-        print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s(_name);' % (pvalue, ptype, getProcAddressName)
-        print '        if (!%s) {' % (pvalue,)
-        self.failFunction(function)
-        print '        }'
+        print '    %s _ptr;' % (ptype,)
+        print '    _ptr = (%s)%s("%s");' % (ptype, getProcAddressName, function.name)
+        print '    if (!_ptr) {'
+        print '        _ptr = &%s;' % ('_fail_' + function.name)
         print '    }'
+        print '    %s = _ptr;' % (pvalue,)
 
     def failFunction(self, function):
+        print r'    const char *_name = "%s";' % function.name
         if function.type is stdapi.Void or function.fail is not None:
-            print r'            os::log("warning: ignoring call to unavailable function %s\n", _name);'
+            print r'    os::log("warning: ignoring call to unavailable function %s\n", _name);'
             if function.type is stdapi.Void:
                 assert function.fail is None
-                print '            return;' 
+                print '    return;' 
             else:
                 assert function.fail is not None
-                print '            return %s;' % function.fail
+                print '    return %s;' % function.fail
         else:
-            print r'            os::log("error: unavailable function %s\n", _name);'
-            print r'            os::abort();'
+            print r'    os::log("error: unavailable function %s\n", _name);'
+            print r'    os::abort();'
 
 

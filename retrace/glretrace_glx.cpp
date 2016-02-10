@@ -96,7 +96,7 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     Context *share_context = getContext(call.arg(2).toUIntPtr());
 
     const trace::Value * attrib_list = &call.arg(4);
-    glws::Profile profile = parseContextAttribList(attrib_list);
+    glprofile::Profile profile = parseContextAttribList(attrib_list);
 
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
@@ -173,8 +173,9 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
     const trace::Value *attrib_list = &call.arg(2);
     int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
     int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
+    glws::pbuffer_info pbInfo = {0, 0, false};
 
-    glws::Drawable *drawable = glretrace::createPbuffer(width, height);
+    glws::Drawable *drawable = glretrace::createPbuffer(width, height, &pbInfo);
     
     drawable_map[orig_drawable] = drawable;
 }
@@ -288,6 +289,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     //{"glXSwapBuffersMscOML", &retrace_glXSwapBuffersMscOML},
     {"glXSwapBuffers", &retrace_glXSwapBuffers},
     {"glXSwapIntervalEXT", &retrace::ignore},
+    {"glXSwapIntervalMESA", &retrace::ignore},
     {"glXSwapIntervalSGI", &retrace::ignore},
     //{"glXUseXFont", &retrace_glXUseXFont},
     {"glXWaitForMscOML", &retrace::ignore},

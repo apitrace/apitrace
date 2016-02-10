@@ -1,5 +1,4 @@
-#ifndef SHADERSSOURCEWIDGET_H
-#define SHADERSSOURCEWIDGET_H
+#pragma once
 
 #include "ui_shaderssourcewidget.h"
 #include <QWidget>
@@ -22,5 +21,3 @@ private:
     QMap<QString, QString> m_sources;
     GLSLEdit *m_edit;
 };
-
-#endif

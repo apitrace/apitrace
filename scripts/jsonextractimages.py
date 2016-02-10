@@ -34,12 +34,31 @@ import base64
 import sys
 
 
+pngSignature = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+
+
 def dumpSurfaces(state, memberName):
     for name, imageObj in state[memberName].iteritems():
         data = imageObj['__data__']
         data = base64.b64decode(data)
 
-        imageName = '%s.png' % name
+        if data.startswith(pngSignature):
+            extName = 'png'
+        else:
+            magic = data[:2]
+            if magic in ('P1', 'P4'):
+                extName = 'pbm'
+            elif magic in ('P2', 'P5'):
+                extName = 'pgm'
+            elif magic in ('P3', 'P6'):
+                extName = 'ppm'
+            elif magic in ('Pf', 'PF'):
+                extName = 'pfm'
+            else:
+                sys.stderr.write('warning: unsupport Netpbm format %s\n' % magic)
+                continue
+
+        imageName = '%s.%s' % (name, extName)
         open(imageName, 'wb').write(data)
         sys.stderr.write('Wrote %s\n' % imageName)
 

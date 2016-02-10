@@ -116,7 +116,6 @@ void Profiler::addCall(unsigned no,
         gpuStart -= baseGpuTime;
     } else {
         gpuStart = 0;
-        gpuDuration = 0;
     }
 
     if (cpuTimes && cpuStart) {

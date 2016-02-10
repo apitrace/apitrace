@@ -46,8 +46,11 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -h, --help               Show detailed help for sed options and exit\n"
-        "    -e s/SEARCH/REPLACE/     Search and replace a symbol.\n"
-        "                             XXX: Only works for enums.\n"
+        "    -e s/SEARCH/REPLACE/     Search and replace a symbol. Use @file(<path>)\n"
+        "                             to read SEARCH or REPLACE from a file.\n"
+        "                             Any character (not just /) can be used as \n"
+        "                             separator.\n"
+        "                             XXX: Only works for enums and strings.\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
     ;
 }
@@ -104,6 +107,16 @@ public:
     }
 
     void visit(String *node) {
+        if (!searchName.compare(node->value)) {
+            size_t len = replaceName.length() + 1;
+            delete [] node->value;
+            char *str = new char [len];
+            memcpy(str, replaceName.c_str(), len);
+            node->value = str;
+        }
+    }
+
+    void visit(WString *node) {
     }
 
     void visit(Enum *node) {
@@ -212,17 +225,17 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
 static bool
 parseSubstOpt(Replacements &replacements, const char *opt)
 {
+    char separator;
+
     if (*opt++ != 's') {
         return false;
     }
 
-    if (*opt++ != '/') {
-        return false;
-    }
+    separator = *opt++;
 
     // Parse the search pattern
     const char *search_begin = opt;
-    while (*opt != '/') {
+    while (*opt != separator) {
         if (*opt == 0) {
             return false;
         }
@@ -232,7 +245,7 @@ parseSubstOpt(Replacements &replacements, const char *opt)
 
     // Parse the replace pattern
     const char *replace_begin = opt;
-    while (*opt != '/') {
+    while (*opt != separator) {
         if (*opt == 0) {
             return false;
         }
@@ -246,6 +259,36 @@ parseSubstOpt(Replacements &replacements, const char *opt)
 
     std::string search(search_begin, search_end);
     std::string replace(replace_begin, replace_end);
+
+    // If search or replace strings are taken from a file, read the file
+    std::string file_subst = "@file(";
+
+    for (int i = 0; i < 2; i++) {
+        std::string *str = i ? &search : &replace;
+
+        if (!str->compare(0, file_subst.length(), file_subst)) {
+            if ((*str)[str->length()-1] != ')') {
+                return false;
+            }
+
+            std::string fname = str->substr(file_subst.length());
+            fname[fname.length()-1] = 0;
+            FILE *f = fopen(fname.c_str(), "rt");
+            if (!f) {
+                std::cerr << "error: cannot open file " << fname << "\n";
+                return false;
+            }
+            char buf[1024];
+            (*str) = "";
+            while (!feof(f)) {
+                if (fgets(buf, 1024, f)) {
+                    str->append(buf);
+                }
+            }
+            fclose(f);
+        }
+    }
+
 
     replacements.push_back(Replacer(search, replace));
 
@@ -270,7 +313,7 @@ command(int argc, char *argv[])
             break;
         case 'e':
             if (!parseSubstOpt(replacements, optarg)) {
-                std::cerr << "error: invalid replacement patter `" << optarg << "`\n";
+                std::cerr << "error: invalid replacement pattern `" << optarg << "`\n";
             }
             break;
         default:

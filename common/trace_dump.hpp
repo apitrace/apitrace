@@ -27,8 +27,7 @@
  * Human-readible dumping.
  */
 
-#ifndef _TRACE_DUMP_HPP_
-#define _TRACE_DUMP_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -46,6 +45,7 @@ enum {
     DUMP_FLAG_NO_ARG_NAMES             = (1 << 1),
     DUMP_FLAG_NO_CALL_NO               = (1 << 2),
     DUMP_FLAG_THREAD_IDS               = (1 << 3),
+    DUMP_FLAG_NO_MULTILINE             = (1 << 4),
 };
 
 
@@ -74,4 +74,3 @@ inline std::ostream & operator <<(std::ostream &os, Call &call) {
 
 } /* namespace trace */
 
-#endif /* _TRACE_DUMP_HPP_ */

@@ -25,29 +25,29 @@ void ApiSurface::setSize(const QSize &size)
 
 struct ByteArrayBuf : public std::streambuf
 {
-    ByteArrayBuf(QByteArray & a)
+    ByteArrayBuf(const QByteArray & a)
     {
-        setg(a.data(), a.data(), a.data() + a.size());
+        setg((char *)a.data(), (char *)a.data(), (char *)a.data() + a.size());
     }
 };
 
-void ApiSurface::contentsFromBase64(const QByteArray &base64)
+void ApiSurface::setData(const QByteArray &data)
 {
-    m_base64Data = base64;
+    m_data = data;
 
     /*
      * We need to do the conversion to create the thumbnail
      */
-    image::Image *image = imageFromBase64(base64);
+    image::Image *image = imageFromData(data);
     Q_ASSERT(image);
     QImage img = qimageFromRawImage(image);
     m_thumb = thumbnail(img);
     delete image;
 }
 
-QByteArray ApiSurface::base64Data() const
+QByteArray ApiSurface::data() const
 {
-    return m_base64Data;
+    return m_data;
 }
 
 QImage ApiSurface::thumb() const
@@ -107,9 +107,8 @@ void ApiFramebuffer::setType(const QString &str)
 }
 
 image::Image *
-ApiSurface::imageFromBase64(const QByteArray &base64)
+ApiSurface::imageFromData(const QByteArray &dataArray)
 {
-    QByteArray dataArray = QByteArray::fromBase64(base64);
     image::Image *image;
 
     /*

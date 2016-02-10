@@ -27,8 +27,7 @@
  * Provides access to real dlopen, as tracing libraries interpose it.
  */
 
-#ifndef _DLOPEN_HPP_
-#define _DLOPEN_HPP_
+#pragma once
 
 #include <dlfcn.h>
 
@@ -63,4 +62,3 @@ _dlopen(const char *filename, int flag)
     return dlopen_ptr(filename, flag);
 }
 
-#endif /* _DLOPEN_HPP_ */

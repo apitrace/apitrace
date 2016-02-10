@@ -18,12 +18,15 @@
 // http://go.microsoft.com/fwlink/?LinkId=248926
 //--------------------------------------------------------------------------------------
 
-#if defined(_MSC_VER) && (_MSC_VER > 1000)
 #pragma once
+
+#if defined(_XBOX_ONE) && defined(_TITLE)
+#include <d3d11_x.h>
+#else
+#include <dxgiformat.h>
 #endif
 
-#include <dxgiformat.h>
-
+// VS 2010's stdint.h conflicts with intsafe.h
 #pragma warning(push)
 #pragma warning(disable : 4005)
 #include <stdint.h>
@@ -94,6 +97,9 @@ extern __declspec(selectany) const DDS_PIXELFORMAT DDSPF_R8G8_B8G8 =
 
 extern __declspec(selectany) const DDS_PIXELFORMAT DDSPF_G8R8_G8B8 =
     { sizeof(DDS_PIXELFORMAT), DDS_FOURCC, MAKEFOURCC('G','R','G','B'), 0, 0, 0, 0, 0 };
+
+extern __declspec(selectany) const DDS_PIXELFORMAT DDSPF_YUY2 =
+    { sizeof(DDS_PIXELFORMAT), DDS_FOURCC, MAKEFOURCC('Y','U','Y','2'), 0, 0, 0, 0, 0 };
 
 extern __declspec(selectany) const DDS_PIXELFORMAT DDSPF_A8R8G8B8 =
     { sizeof(DDS_PIXELFORMAT), DDS_RGBA, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 };
@@ -169,20 +175,34 @@ extern __declspec(selectany) const DDS_PIXELFORMAT DDSPF_DX10 =
 #define DDS_FLAGS_VOLUME 0x00200000 // DDSCAPS2_VOLUME
 
 // Subset here matches D3D10_RESOURCE_DIMENSION and D3D11_RESOURCE_DIMENSION
-typedef enum DDS_RESOURCE_DIMENSION
+enum DDS_RESOURCE_DIMENSION
 {
     DDS_DIMENSION_TEXTURE1D	= 2,
     DDS_DIMENSION_TEXTURE2D	= 3,
     DDS_DIMENSION_TEXTURE3D	= 4,
-} DDS_RESOURCE_DIMENSION;
+};
 
 // Subset here matches D3D10_RESOURCE_MISC_FLAG and D3D11_RESOURCE_MISC_FLAG
-typedef enum DDS_RESOURCE_MISC_FLAG
+enum DDS_RESOURCE_MISC_FLAG
 {
-   DDS_RESOURCE_MISC_TEXTURECUBE = 0x4L,
-} DDS_RESOURCE_MISC_FLAG;
+    DDS_RESOURCE_MISC_TEXTURECUBE = 0x4L,
+};
 
-typedef struct
+enum DDS_MISC_FLAGS2
+{
+    DDS_MISC_FLAGS2_ALPHA_MODE_MASK = 0x7L,
+};
+
+enum DDS_ALPHA_MODE
+{
+    DDS_ALPHA_MODE_UNKNOWN       = 0,
+    DDS_ALPHA_MODE_STRAIGHT      = 1,
+    DDS_ALPHA_MODE_PREMULTIPLIED = 2,
+    DDS_ALPHA_MODE_OPAQUE        = 3,
+    DDS_ALPHA_MODE_CUSTOM        = 4,
+};
+
+struct DDS_HEADER
 {
     uint32_t    dwSize;
     uint32_t    dwFlags;
@@ -198,17 +218,20 @@ typedef struct
     uint32_t    dwCaps3;
     uint32_t    dwCaps4;
     uint32_t    dwReserved2;
-} DDS_HEADER;
+};
 
-typedef struct
+struct DDS_HEADER_DXT10
 {
     DXGI_FORMAT dxgiFormat;
     uint32_t    resourceDimension;
     uint32_t    miscFlag; // see DDS_RESOURCE_MISC_FLAG
     uint32_t    arraySize;
-    uint32_t    reserved;
-} DDS_HEADER_DXT10;
+    uint32_t    miscFlags2; // see DDS_MISC_FLAGS2
+};
 
 #pragma pack(pop)
+
+static_assert( sizeof(DDS_HEADER) == 124, "DDS Header size mismatch" );
+static_assert( sizeof(DDS_HEADER_DXT10) == 20, "DDS DX10 Extended Header size mismatch");
 
 }; // namespace

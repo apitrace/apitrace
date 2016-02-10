@@ -27,8 +27,7 @@
  * Trace writing functions, used to trace calls in the current process.
  */
 
-#ifndef _TRACE_WRITER_LOCAL_HPP_
-#define _TRACE_WRITER_LOCAL_HPP_
+#pragma once
 
 
 #include <stdint.h>
@@ -118,6 +117,7 @@ namespace trace {
      */
     extern LocalWriter localWriter;
 
+    void fakeMemcpy(const void *ptr, size_t size);
+
 } /* namespace trace */
 
-#endif /* _TRACE_WRITER_LOCAL_HPP_ */

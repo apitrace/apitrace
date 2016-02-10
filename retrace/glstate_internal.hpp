@@ -23,14 +23,17 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_INTERNAL_HPP_
-#define _GLSTATE_INTERNAL_HPP_
+#pragma once
 
+
+#include <stdint.h>
 
 #include "glimports.hpp"
+#include "glproc.hpp"
+#include "image.hpp"
 
 
-class JSONWriter;
+class StateWriter;
 
 
 namespace glstate {
@@ -38,22 +41,32 @@ namespace glstate {
 
 struct Context
 {
-    bool ES;
+    unsigned ES:1;
+    unsigned core:1;
 
-    bool ARB_draw_buffers;
-    bool ARB_sampler_objects;
-    bool KHR_debug;
-    bool EXT_debug_label;
+    unsigned ARB_draw_buffers:1;
+    unsigned ARB_sampler_objects:1;
+    unsigned ARB_get_program_binary:1;
+    unsigned KHR_debug:1;
+    unsigned EXT_debug_label:1;
+    unsigned NV_read_depth_stencil:1;  /* ES only */
+    unsigned ARB_shader_image_load_store:1;
+    unsigned ARB_direct_state_access:1;
 
     Context(void);
+};
 
-    void
-    resetPixelPackState(void);
 
-    void
-    restorePixelPackState(void);
+class PixelPackState
+{
+public:
+    PixelPackState(const Context & context);
+
+    ~PixelPackState();
 
 private:
+    bool ES;
+
     // Pack state
     GLint pack_alignment;
     GLint pack_image_height;
@@ -67,25 +80,123 @@ private:
 };
 
 
-void dumpBoolean(JSONWriter &json, GLboolean value);
+static inline void
+flushErrors(void) {
+    while (glGetError() != GL_NO_ERROR) {
+    }
+}
 
-void dumpEnum(JSONWriter &json, GLenum pname);
+
+
+const char *
+formatToString(GLenum internalFormat);
+
+
+struct InternalFormatDesc
+{
+    GLenum internalFormat;
+
+    /* The external format/type that matches the internalFormat exactly, or GL_NONE. */
+    GLenum format;
+    GLenum type;
+
+    /* The appropriate read type for dumping. */
+    GLenum readType;
+};
+
+
+const InternalFormatDesc &
+getInternalFormatDesc(GLenum internalFormat);
+
+void
+chooseReadBackFormat(const InternalFormatDesc &formatDesc, GLenum &format, GLenum &type);
+
+void
+getImageFormat(GLenum format, GLenum type,
+               GLuint &channels, image::ChannelType &channelType);
+
+
+// Abstract base class for pixel format conversion
+class PixelFormat
+{
+public:
+    virtual ~PixelFormat() {}
+
+    // Size in bytes
+    virtual size_t
+    size(void) const = 0;
+
+    // Unpack a span of pixels
+    virtual void
+    unpackSpan(const uint8_t *inSpan, float *outSpan, unsigned width) const = 0;
+};
+
+
+const PixelFormat *
+getPixelFormat(GLenum internalFormat);
+
+
+/**
+ * Helper class to temporarily bind a buffer to the specified target until
+ * control leaves the declaration scope.
+ */
+class BufferBinding
+{
+private:
+    GLenum target;
+    GLuint buffer;
+    GLuint prevBuffer;
+
+public:
+    BufferBinding(GLenum _target, GLuint _buffer);
+
+    ~BufferBinding();
+};
+
+
+/**
+ * Helper class to temporarily map a buffer (if necessary), and unmap when
+ * destroyed.
+ */
+class BufferMapping
+{
+    GLuint target;
+    GLuint buffer;
+    GLvoid *map_pointer;
+    bool unmap;
+
+public:
+    BufferMapping();
+
+    GLvoid *
+    map(GLenum _target, GLuint _buffer);
+
+    ~BufferMapping();
+};
+
+
+bool
+isGeometryShaderBound(Context &context);
+
+
+void dumpBoolean(StateWriter &writer, GLboolean value);
+
+void dumpEnum(StateWriter &writer, GLenum pname);
 
 char *
 getObjectLabel(Context &context, GLenum identifier, GLuint name);
 
-void dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member);
+void dumpObjectLabel(StateWriter &writer, Context &context, GLenum identifier, GLuint name, const char *member);
 
-void dumpParameters(JSONWriter &json, Context &context);
+void dumpParameters(StateWriter &writer, Context &context);
 
-void dumpShadersUniforms(JSONWriter &json, Context &context);
+void dumpShadersUniforms(StateWriter &writer, Context &context);
 
-void dumpTextures(JSONWriter &json, Context &context);
+void dumpTextures(StateWriter &writer, Context &context);
 
-void dumpFramebuffer(JSONWriter &json, Context &context);
+void dumpFramebuffer(StateWriter &writer, Context &context);
 
 
 } /* namespace glstate */
 
 
-#endif /* _GLSTATE_INTERNAL_HPP_ */

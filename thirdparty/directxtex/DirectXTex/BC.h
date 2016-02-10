@@ -13,9 +13,7 @@
 // http://go.microsoft.com/fwlink/?LinkId=248926
 //-------------------------------------------------------------------------------------
 
-#if defined(_MSC_VER) && (_MSC_VER > 1000)
 #pragma once
-#endif
 
 #include <assert.h>
 
@@ -27,11 +25,6 @@
 #endif
 
 #include <float.h>
-
-#pragma warning(push)
-#pragma warning(disable : 4005)
-#include <stdint.h>
-#pragma warning(pop)
 
 namespace DirectX
 {
@@ -50,7 +43,7 @@ const uint16_t F16S_MASK    = 0x8000;   // f16 sign mask
 const uint16_t F16EM_MASK   = 0x7fff;   // f16 exp & mantissa mask
 const uint16_t F16MAX       = 0x7bff;   // MAXFLT bit pattern for XMHALF
 
-#define	SIGN_EXTEND(x,nb) ((((x)&(1<<((nb)-1)))?((~0)<<(nb)):0)|(x))
+#define SIGN_EXTEND(x,nb) ((((x)&(1<<((nb)-1)))?((~0)<<(nb)):0)|(x))
 
 // Because these are used in SAL annotations, they need to remain macros rather than const values
 #define NUM_PIXELS_PER_BLOCK 16
@@ -65,9 +58,9 @@ const size_t BC6H_MAX_SHAPES = 32;
 const size_t BC7_NUM_CHANNELS = 4;
 const size_t BC7_MAX_SHAPES = 64;
 
-const uint32_t BC67_WEIGHT_MAX = 64;
+const int32_t BC67_WEIGHT_MAX = 64;
 const uint32_t BC67_WEIGHT_SHIFT = 6;
-const uint32_t BC67_WEIGHT_ROUND = 32;
+const int32_t BC67_WEIGHT_ROUND = 32;
 
 extern const int g_aWeights2[4];
 extern const int g_aWeights3[8];
@@ -79,6 +72,7 @@ enum BC_FLAGS
     BC_FLAGS_DITHER_RGB = 0x10000,  // Enables dithering for RGB colors for BC1-3
     BC_FLAGS_DITHER_A   = 0x20000,  // Enables dithering for Alpha channel for BC1-3
     BC_FLAGS_UNIFORM    = 0x40000,  // By default, uses perceptual weighting for BC1-3; this flag makes it a uniform weighting
+    BC_FLAGS_USE_3SUBSETS = 0x80000,// By default, BC7 skips mode 0 & 2; this flag adds those modes back
 };
 
 //-------------------------------------------------------------------------------------
@@ -91,7 +85,7 @@ class LDRColorA
 public:
     uint8_t r, g, b, a;
 
-    LDRColorA() {}
+    LDRColorA() DIRECTX_CTOR_DEFAULT
     LDRColorA(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a) : r(_r), g(_g), b(_b), a(_a) {}
 
     const uint8_t& operator [] (_In_range_(0,3) size_t uElement) const
@@ -120,14 +114,14 @@ public:
 
     LDRColorA operator = (_In_ const HDRColorA& c);
 
-    static void InterpolateRGB(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wc, _In_ size_t wcprec, _Out_ LDRColorA& out)
+    static void InterpolateRGB(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wc, _In_ _In_range_(2, 4) size_t wcprec, _Out_ LDRColorA& out)
     {
         const int* aWeights = nullptr;
         switch(wcprec)
         {
-        case 2: aWeights = g_aWeights2; assert( wc < 4 ); __analysis_assume( wc < 4 ); break;
-        case 3: aWeights = g_aWeights3; assert( wc < 8 ); __analysis_assume( wc < 8 ); break;
-        case 4: aWeights = g_aWeights4; assert( wc < 16 ); __analysis_assume( wc < 16 ); break;
+        case 2: aWeights = g_aWeights2; assert( wc < 4 ); _Analysis_assume_( wc < 4 ); break;
+        case 3: aWeights = g_aWeights3; assert( wc < 8 ); _Analysis_assume_( wc < 8 ); break;
+        case 4: aWeights = g_aWeights4; assert( wc < 16 ); _Analysis_assume_( wc < 16 ); break;
         default: assert(false); out.r = out.g = out.b = 0; return;
         }
         out.r = uint8_t((uint32_t(c0.r) * uint32_t(BC67_WEIGHT_MAX - aWeights[wc]) + uint32_t(c1.r) * uint32_t(aWeights[wc]) + BC67_WEIGHT_ROUND) >> BC67_WEIGHT_SHIFT);
@@ -135,25 +129,27 @@ public:
         out.b = uint8_t((uint32_t(c0.b) * uint32_t(BC67_WEIGHT_MAX - aWeights[wc]) + uint32_t(c1.b) * uint32_t(aWeights[wc]) + BC67_WEIGHT_ROUND) >> BC67_WEIGHT_SHIFT);
     }
 
-    static void InterpolateA(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wa, _In_ size_t waprec, _Out_ LDRColorA& out)
+    static void InterpolateA(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wa, _In_range_(2, 4) _In_ size_t waprec, _Out_ LDRColorA& out)
     {
         const int* aWeights = nullptr;
         switch(waprec)
         {
-        case 2: aWeights = g_aWeights2; assert( wa < 4 ); __analysis_assume( wa < 4 ); break;
-        case 3: aWeights = g_aWeights3; assert( wa < 8 ); __analysis_assume( wa < 8 ); break;
-        case 4: aWeights = g_aWeights4; assert( wa < 16 ); __analysis_assume( wa < 16 ); break;
+        case 2: aWeights = g_aWeights2; assert( wa < 4 ); _Analysis_assume_( wa < 4 ); break;
+        case 3: aWeights = g_aWeights3; assert( wa < 8 ); _Analysis_assume_( wa < 8 ); break;
+        case 4: aWeights = g_aWeights4; assert( wa < 16 ); _Analysis_assume_( wa < 16 ); break;
         default: assert(false); out.a = 0; return;
         }
         out.a = uint8_t((uint32_t(c0.a) * uint32_t(BC67_WEIGHT_MAX - aWeights[wa]) + uint32_t(c1.a) * uint32_t(aWeights[wa]) + BC67_WEIGHT_ROUND) >> BC67_WEIGHT_SHIFT);
     }
 
-    static void Interpolate(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wc, _In_ size_t wa, _In_ size_t wcprec, _In_ size_t waprec, _Out_ LDRColorA& out)
+    static void Interpolate(_In_ const LDRColorA& c0, _In_ const LDRColorA& c1, _In_ size_t wc, _In_ size_t wa, _In_ _In_range_(2, 4) size_t wcprec, _In_ _In_range_(2, 4) size_t waprec, _Out_ LDRColorA& out)
     {
         InterpolateRGB(c0, c1, wc, wcprec, out);
         InterpolateA(c0, c1, wa, waprec, out);
     }
 };
+
+static_assert( sizeof(LDRColorA) == 4, "Unexpected packing");
 
 class HDRColorA
 {
@@ -161,7 +157,7 @@ public:
     float r, g, b, a;
 
 public:
-    HDRColorA() {}
+    HDRColorA() DIRECTX_CTOR_DEFAULT
     HDRColorA(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
     HDRColorA(const HDRColorA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
     HDRColorA(const LDRColorA& c)
@@ -322,9 +318,10 @@ class INTColor
 {
 public:
     int r, g, b;
+    int pad;
 
 public:
-    INTColor() {}
+    INTColor() DIRECTX_CTOR_DEFAULT
     INTColor(int nr, int ng, int nb) {r = nr; g = ng; b = nb;}
     INTColor(const INTColor& c) {r = c.r; g = c.g; b = c.b;}
 
@@ -360,7 +357,7 @@ public:
     int& operator [] ( _In_ uint8_t i )
     {
         assert(i < sizeof(INTColor) / sizeof(int));
-        __analysis_assume(i < sizeof(INTColor) / sizeof(int));
+        _Analysis_assume_(i < sizeof(INTColor) / sizeof(int));
         return ((int*) this)[i];
     }
 
@@ -392,7 +389,7 @@ public:
         return *this;
     }
 
-    void ToF16(_Out_cap_c_(3) HALF aF16[3], _In_ bool bSigned) const
+    void ToF16(_Out_writes_(3) HALF aF16[3], _In_ bool bSigned) const
     {
         aF16[0] = INT2F16(r, bSigned);
         aF16[1] = INT2F16(g, bSigned);
@@ -445,6 +442,8 @@ private:
     }
 };
 
+static_assert( sizeof(INTColor) == 16, "Unexpected packing");
+
 struct INTEndPntPair
 {
     INTColor A;
@@ -458,7 +457,7 @@ public:
     uint8_t GetBit(_Inout_ size_t& uStartBit) const
     {
         assert(uStartBit < 128);
-        __analysis_assume(uStartBit < 128);
+        _Analysis_assume_(uStartBit < 128);
         size_t uIndex = uStartBit >> 3;
         uint8_t ret = (m_uBits[uIndex] >> (uStartBit - (uIndex << 3))) & 0x01;
         uStartBit++;
@@ -469,7 +468,7 @@ public:
     {
         if(uNumBits == 0) return 0;
         assert(uStartBit + uNumBits <= 128 && uNumBits <= 8);
-        __analysis_assume(uStartBit + uNumBits <= 128 && uNumBits <= 8);
+        _Analysis_assume_(uStartBit + uNumBits <= 128 && uNumBits <= 8);
         uint8_t ret;
         size_t uIndex = uStartBit >> 3;
         size_t uBase = uStartBit - (uIndex << 3);
@@ -491,7 +490,7 @@ public:
     void SetBit(_Inout_ size_t& uStartBit, _In_ uint8_t uValue)
     {
         assert(uStartBit < 128 && uValue < 2);
-        __analysis_assume(uStartBit < 128 && uValue < 2);
+        _Analysis_assume_(uStartBit < 128 && uValue < 2);
         size_t uIndex = uStartBit >> 3;
         size_t uBase = uStartBit - (uIndex << 3);
         m_uBits[uIndex] &= ~(1 << uBase);
@@ -504,7 +503,7 @@ public:
         if(uNumBits == 0)
             return;
         assert(uStartBit + uNumBits <= 128 && uNumBits <= 8);
-        __analysis_assume(uStartBit + uNumBits <= 128 && uNumBits <= 8);
+        _Analysis_assume_(uStartBit + uNumBits <= 128 && uNumBits <= 8);
         assert(uValue < (1 << uNumBits));
         size_t uIndex = uStartBit >> 3;
         size_t uBase = uStartBit - (uIndex << 3);
@@ -529,17 +528,16 @@ private:
     uint8_t m_uBits[ SizeInBytes ];
 };
 
-#pragma warning(push)
-#pragma warning(disable : 4127 4480 4512)
-
 // BC6H compression (16 bits per texel)
 class D3DX_BC6H : private CBits< 16 >
 {
 public:
-    void Decode(_In_ bool bSigned, _Out_cap_c_(NUM_PIXELS_PER_BLOCK) HDRColorA* pOut) const;
-    void Encode(_In_ bool bSigned, _In_count_c_(NUM_PIXELS_PER_BLOCK) const HDRColorA* const pIn);
+    void Decode(_In_ bool bSigned, _Out_writes_(NUM_PIXELS_PER_BLOCK) HDRColorA* pOut) const;
+    void Encode(_In_ bool bSigned, _In_reads_(NUM_PIXELS_PER_BLOCK) const HDRColorA* const pIn);
 
 private:
+#pragma warning(push)
+#pragma warning(disable : 4480)
     enum EField : uint8_t
     {
         NA, // N/A
@@ -558,6 +556,7 @@ private:
         BY,
         BZ,
     };
+#pragma warning(pop)
 
     struct ModeDescriptor
     {
@@ -574,6 +573,8 @@ private:
         LDRColorA RGBAPrec[BC6H_MAX_REGIONS][2];
     };
 
+#pragma warning(push)
+#pragma warning(disable : 4512)
     struct EncodeParams
     {
         float fBestErr;
@@ -593,35 +594,36 @@ private:
             }
         }
     };
+#pragma warning(pop)
 
     static int Quantize(_In_ int iValue, _In_ int prec, _In_ bool bSigned);
     static int Unquantize(_In_ int comp, _In_ uint8_t uBitsPerComp, _In_ bool bSigned);
     static int FinishUnquantize(_In_ int comp, _In_ bool bSigned);
 
-    static bool EndPointsFit(_In_ const EncodeParams* pEP, _In_count_c_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[]);
+    static bool EndPointsFit(_In_ const EncodeParams* pEP, _In_reads_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[]);
 
     void GeneratePaletteQuantized(_In_ const EncodeParams* pEP, _In_ const INTEndPntPair& endPts,
-                                  _Out_cap_c_(BC6H_MAX_INDICES) INTColor aPalette[]) const;
-    float MapColorsQuantized(_In_ const EncodeParams* pEP, _In_count_(np) const INTColor aColors[], _In_ size_t np, _In_ const INTEndPntPair &endPts) const;
-    float PerturbOne(_In_ const EncodeParams* pEP, _In_count_(np) const INTColor aColors[], _In_ size_t np, _In_ uint8_t ch,
+                                  _Out_writes_(BC6H_MAX_INDICES) INTColor aPalette[]) const;
+    float MapColorsQuantized(_In_ const EncodeParams* pEP, _In_reads_(np) const INTColor aColors[], _In_ size_t np, _In_ const INTEndPntPair &endPts) const;
+    float PerturbOne(_In_ const EncodeParams* pEP, _In_reads_(np) const INTColor aColors[], _In_ size_t np, _In_ uint8_t ch,
                      _In_ const INTEndPntPair& oldEndPts, _Out_ INTEndPntPair& newEndPts, _In_ float fOldErr, _In_ int do_b) const;
-    void OptimizeOne(_In_ const EncodeParams* pEP, _In_count_(np) const INTColor aColors[], _In_ size_t np, _In_ float aOrgErr,
+    void OptimizeOne(_In_ const EncodeParams* pEP, _In_reads_(np) const INTColor aColors[], _In_ size_t np, _In_ float aOrgErr,
                      _In_ const INTEndPntPair &aOrgEndPts, _Out_ INTEndPntPair &aOptEndPts) const;
-    void OptimizeEndPoints(_In_ const EncodeParams* pEP, _In_count_c_(BC6H_MAX_REGIONS) const float aOrgErr[],
-                           _In_count_c_(BC6H_MAX_REGIONS) const INTEndPntPair aOrgEndPts[],
-                           _Inout_count_c_(BC6H_MAX_REGIONS) INTEndPntPair aOptEndPts[]) const;
-    static void SwapIndices(_In_ const EncodeParams* pEP, _Inout_count_c_(BC6H_MAX_REGIONS) INTEndPntPair aEndPts[],
-                            _In_count_c_(NUM_PIXELS_PER_BLOCK) size_t aIndices[]);
-    void AssignIndices(_In_ const EncodeParams* pEP, _In_count_c_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[],
-                        _Out_cap_c_(NUM_PIXELS_PER_BLOCK) size_t aIndices[],
-                        _Out_cap_c_(BC6H_MAX_REGIONS) float aTotErr[]) const;
-    void QuantizeEndPts(_In_ const EncodeParams* pEP, _Out_cap_c_(BC6H_MAX_REGIONS) INTEndPntPair* qQntEndPts) const;
-    void EmitBlock(_In_ const EncodeParams* pEP, _In_count_c_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[],
-                   _In_count_c_(NUM_PIXELS_PER_BLOCK) const size_t aIndices[]);
+    void OptimizeEndPoints(_In_ const EncodeParams* pEP, _In_reads_(BC6H_MAX_REGIONS) const float aOrgErr[],
+                           _In_reads_(BC6H_MAX_REGIONS) const INTEndPntPair aOrgEndPts[],
+                           _Out_writes_all_(BC6H_MAX_REGIONS) INTEndPntPair aOptEndPts[]) const;
+    static void SwapIndices(_In_ const EncodeParams* pEP, _Inout_updates_all_(BC6H_MAX_REGIONS) INTEndPntPair aEndPts[],
+                            _In_reads_(NUM_PIXELS_PER_BLOCK) size_t aIndices[]);
+    void AssignIndices(_In_ const EncodeParams* pEP, _In_reads_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[],
+                        _Out_writes_(NUM_PIXELS_PER_BLOCK) size_t aIndices[],
+                        _Out_writes_(BC6H_MAX_REGIONS) float aTotErr[]) const;
+    void QuantizeEndPts(_In_ const EncodeParams* pEP, _Out_writes_(BC6H_MAX_REGIONS) INTEndPntPair* qQntEndPts) const;
+    void EmitBlock(_In_ const EncodeParams* pEP, _In_reads_(BC6H_MAX_REGIONS) const INTEndPntPair aEndPts[],
+                   _In_reads_(NUM_PIXELS_PER_BLOCK) const size_t aIndices[]);
     void Refine(_Inout_ EncodeParams* pEP);
 
-    static void GeneratePaletteUnquantized(_In_ const EncodeParams* pEP, _In_ size_t uRegion, _Out_cap_c_(BC6H_MAX_INDICES) INTColor aPalette[]);
-    float MapColors(_In_ const EncodeParams* pEP, _In_ size_t uRegion, _In_ size_t np, _In_count_(np) const size_t* auIndex) const;
+    static void GeneratePaletteUnquantized(_In_ const EncodeParams* pEP, _In_ size_t uRegion, _Out_writes_(BC6H_MAX_INDICES) INTColor aPalette[]);
+    float MapColors(_In_ const EncodeParams* pEP, _In_ size_t uRegion, _In_ size_t np, _In_reads_(np) const size_t* auIndex) const;
     float RoughMSE(_Inout_ EncodeParams* pEP) const;
 
 private:
@@ -634,8 +636,8 @@ private:
 class D3DX_BC7 : private CBits< 16 >
 {
 public:
-    void Decode(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) HDRColorA* pOut) const;
-    void Encode(_In_count_c_(NUM_PIXELS_PER_BLOCK) const HDRColorA* const pIn);
+    void Decode(_Out_writes_(NUM_PIXELS_PER_BLOCK) HDRColorA* pOut) const;
+    void Encode(bool skip3subsets, _In_reads_(NUM_PIXELS_PER_BLOCK) const HDRColorA* const pIn);
 
 private:
     struct ModeInfo
@@ -651,6 +653,8 @@ private:
         LDRColorA RGBAPrecWithP;
     };
 
+#pragma warning(push)
+#pragma warning(disable : 4512)
     struct EncodeParams
     {
         uint8_t uMode;
@@ -660,6 +664,7 @@ private:
 
         EncodeParams(const HDRColorA* const aOriginal) : aHDRPixels(aOriginal) {}
     };
+#pragma warning(pop)
 
     static uint8_t Quantize(_In_ uint8_t comp, _In_ uint8_t uPrec)
     {
@@ -699,29 +704,29 @@ private:
     }
 
     void GeneratePaletteQuantized(_In_ const EncodeParams* pEP, _In_ size_t uIndexMode, _In_ const LDREndPntPair& endpts,
-                                  _Out_cap_c_(BC7_MAX_INDICES) LDRColorA aPalette[]) const;
-    float PerturbOne(_In_ const EncodeParams* pEP, _In_count_(np) const LDRColorA colors[], _In_ size_t np, _In_ size_t uIndexMode,
+                                  _Out_writes_(BC7_MAX_INDICES) LDRColorA aPalette[]) const;
+    float PerturbOne(_In_ const EncodeParams* pEP, _In_reads_(np) const LDRColorA colors[], _In_ size_t np, _In_ size_t uIndexMode,
                      _In_ size_t ch, _In_ const LDREndPntPair &old_endpts,
                      _Out_ LDREndPntPair &new_endpts, _In_ float old_err, _In_ uint8_t do_b) const;
-    void Exhaustive(_In_ const EncodeParams* pEP, _In_count_(np) const LDRColorA aColors[], _In_ size_t np, _In_ size_t uIndexMode,
+    void Exhaustive(_In_ const EncodeParams* pEP, _In_reads_(np) const LDRColorA aColors[], _In_ size_t np, _In_ size_t uIndexMode,
                     _In_ size_t ch, _Inout_ float& fOrgErr, _Inout_ LDREndPntPair& optEndPt) const;
-    void OptimizeOne(_In_ const EncodeParams* pEP, _In_count_(np) const LDRColorA colors[], _In_ size_t np, _In_ size_t uIndexMode,
+    void OptimizeOne(_In_ const EncodeParams* pEP, _In_reads_(np) const LDRColorA colors[], _In_ size_t np, _In_ size_t uIndexMode,
                      _In_ float orig_err, _In_ const LDREndPntPair &orig_endpts, _Out_ LDREndPntPair &opt_endpts) const;
     void OptimizeEndPoints(_In_ const EncodeParams* pEP, _In_ size_t uShape, _In_ size_t uIndexMode,
-                           _In_count_c_(BC7_MAX_REGIONS) const float orig_err[],
-                           _In_count_c_(BC7_MAX_REGIONS) const LDREndPntPair orig_endpts[],
-                           _Out_cap_c_(BC7_MAX_REGIONS) LDREndPntPair opt_endpts[]) const;
+                           _In_reads_(BC7_MAX_REGIONS) const float orig_err[],
+                           _In_reads_(BC7_MAX_REGIONS) const LDREndPntPair orig_endpts[],
+                           _Out_writes_(BC7_MAX_REGIONS) LDREndPntPair opt_endpts[]) const;
     void AssignIndices(_In_ const EncodeParams* pEP, _In_ size_t uShape, _In_ size_t uIndexMode,
-                       _In_count_c_(BC7_MAX_REGIONS) LDREndPntPair endpts[],
-                       _Out_cap_c_(NUM_PIXELS_PER_BLOCK) size_t aIndices[], _Out_cap_c_(NUM_PIXELS_PER_BLOCK) size_t aIndices2[],
-                       _Out_cap_c_(BC7_MAX_REGIONS) float afTotErr[]) const;
+                       _In_reads_(BC7_MAX_REGIONS) LDREndPntPair endpts[],
+                       _Out_writes_(NUM_PIXELS_PER_BLOCK) size_t aIndices[], _Out_writes_(NUM_PIXELS_PER_BLOCK) size_t aIndices2[],
+                       _Out_writes_(BC7_MAX_REGIONS) float afTotErr[]) const;
     void EmitBlock(_In_ const EncodeParams* pEP, _In_ size_t uShape, _In_ size_t uRotation, _In_ size_t uIndexMode,
-                   _In_count_c_(BC7_MAX_REGIONS) const LDREndPntPair aEndPts[],
-                   _In_count_c_(NUM_PIXELS_PER_BLOCK) const size_t aIndex[],
-                   _In_count_c_(NUM_PIXELS_PER_BLOCK) const size_t aIndex2[]);
+                   _In_reads_(BC7_MAX_REGIONS) const LDREndPntPair aEndPts[],
+                   _In_reads_(NUM_PIXELS_PER_BLOCK) const size_t aIndex[],
+                   _In_reads_(NUM_PIXELS_PER_BLOCK) const size_t aIndex2[]);
     float Refine(_In_ const EncodeParams* pEP, _In_ size_t uShape, _In_ size_t uRotation, _In_ size_t uIndexMode);
 
-    float MapColors(_In_ const EncodeParams* pEP, _In_count_(np) const LDRColorA aColors[], _In_ size_t np, _In_ size_t uIndexMode,
+    float MapColors(_In_ const EncodeParams* pEP, _In_reads_(np) const LDRColorA aColors[], _In_ size_t np, _In_ size_t uIndexMode,
                     _In_ const LDREndPntPair& endPts, _In_ float fMinErr) const;
     static float RoughMSE(_Inout_ EncodeParams* pEP, _In_ size_t uShape, _In_ size_t uIndexMode);
 
@@ -730,6 +735,8 @@ private:
 };
 
 //-------------------------------------------------------------------------------------
+#pragma warning(push)
+#pragma warning(disable : 4127)
 template <bool bRange> void OptimizeAlpha(float *pX, float *pY, const float *pPoints, size_t cSteps)
 {
     static const float pC6[] = { 5.0f/5.0f, 4.0f/5.0f, 3.0f/5.0f, 2.0f/5.0f, 1.0f/5.0f, 0.0f/5.0f };
@@ -870,28 +877,28 @@ template <bool bRange> void OptimizeAlpha(float *pX, float *pY, const float *pPo
 typedef void (*BC_DECODE)(XMVECTOR *pColor, const uint8_t *pBC);
 typedef void (*BC_ENCODE)(uint8_t *pDXT, const XMVECTOR *pColor, DWORD flags);
 
-void D3DXDecodeBC1(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(8) const uint8_t *pBC);
-void D3DXDecodeBC2(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC3(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC4U(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(8) const uint8_t *pBC);
-void D3DXDecodeBC4S(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(8) const uint8_t *pBC);
-void D3DXDecodeBC5U(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC5S(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC6HU(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC6HS(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
-void D3DXDecodeBC7(_Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_count_c_(16) const uint8_t *pBC);
+void D3DXDecodeBC1(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(8) const uint8_t *pBC);
+void D3DXDecodeBC2(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC3(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC4U(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(8) const uint8_t *pBC);
+void D3DXDecodeBC4S(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(8) const uint8_t *pBC);
+void D3DXDecodeBC5U(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC5S(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC6HU(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC6HS(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
+void D3DXDecodeBC7(_Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_reads_(16) const uint8_t *pBC);
 
-void D3DXEncodeBC1(_Out_cap_c_(8) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ float alphaRef, _In_ DWORD flags);
+void D3DXEncodeBC1(_Out_writes_(8) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ float alphaRef, _In_ DWORD flags);
     // BC1 requires one additional parameter, so it doesn't match signature of BC_ENCODE above
 
-void D3DXEncodeBC2(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC3(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC4U(_Out_cap_c_(8) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC4S(_Out_cap_c_(8) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC5U(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC5S(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC6HU(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC6HS(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
-void D3DXEncodeBC7(_Out_cap_c_(16) uint8_t *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC2(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC3(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC4U(_Out_writes_(8) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC4S(_Out_writes_(8) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC5U(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC5S(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC6HU(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC6HS(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
+void D3DXEncodeBC7(_Out_writes_(16) uint8_t *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const XMVECTOR *pColor, _In_ DWORD flags);
 
 }; // namespace

@@ -1,5 +1,4 @@
-#ifndef PROFILETABLEMODEL_H
-#define PROFILETABLEMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 #include "trace_profiler.hpp"
@@ -67,4 +66,3 @@ private:
     Qt::SortOrder m_sortOrder;
 };
 
-#endif // PROFILEMODEL_H

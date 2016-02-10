@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DRETRACE_HPP_
-#define _D3DRETRACE_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -36,6 +35,7 @@
 namespace d3dretrace {
 
 
+extern const retrace::Entry ddraw_callbacks[];
 extern const retrace::Entry d3d8_callbacks[];
 extern const retrace::Entry d3d9_callbacks[];
 extern const retrace::Entry dxgi_callbacks[];
@@ -59,12 +59,13 @@ public:
     }
 
     bool
-    dumpState(std::ostream &os) {
-        if (!pLastDevice) {
-            return false;
-        }
-        d3dstate::dumpDevice(os, pLastDevice);
-        return true;
+    canDump(void) {
+        return pLastDevice;
+    }
+
+    void
+    dumpState(StateWriter &writer) {
+        d3dstate::dumpDevice(writer, pLastDevice);
     }
 
     inline void
@@ -85,6 +86,9 @@ public:
 HWND
 createWindow(int width, int height);
 
+HWND
+createWindow(HWND hWnd, int width, int height);
+
 void
 resizeWindow(HWND hWnd, int width, int height);
 
@@ -95,4 +99,3 @@ processEvents(void);
 } /* namespace d3dretrace */
 
 
-#endif /* _D3DRETRACE_HPP_ */

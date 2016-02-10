@@ -27,8 +27,7 @@
  * Simple OS abstraction layer.
  */
 
-#ifndef _OS_HPP_
-#define _OS_HPP_
+#pragma once
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -64,13 +63,8 @@ void log(const char *format, ...)
   #endif
   #define PRIVATE
 #else
-  #if __GNUC__ >= 4
-    #define PUBLIC __attribute__ ((visibility("default")))
-    #define PRIVATE __attribute__ ((visibility("hidden")))
-  #else
-    #define PUBLIC
-    #define PRIVATE
-  #endif
+  #define PUBLIC __attribute__ ((visibility("default")))
+  #define PRIVATE __attribute__ ((visibility("hidden")))
 #endif
 
 /**
@@ -79,7 +73,19 @@ void log(const char *format, ...)
  * This should be called only from the wrappers, when there is no safe way of
  * failing gracefully.
  */
-void abort(void);
+// coverity[+kill]
+#ifdef _MSC_VER
+__declspec(noreturn)
+#endif
+void abort(void)
+#ifdef __GNUC__
+   __attribute__((__noreturn__))
+#endif
+;
+
+void
+breakpoint(void);
+
 
 void setExceptionCallback(void (*callback)(void));
 void resetExceptionCallback(void);
@@ -106,4 +112,3 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info);
 
 } /* namespace os */
 
-#endif /* _OS_HPP_ */

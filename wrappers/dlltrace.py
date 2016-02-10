@@ -46,7 +46,7 @@ class DllDispatcher(Dispatcher):
         print r'        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {'
         print r'            return NULL;'
         print r'        }'
-        print r'        strcat(szDll, "\\\\%s.dll");' % module.name
+        print r'        strcat(szDll, "\\%s.dll");' % module.name
         print r'        g_h%sModule = LoadLibraryA(szDll);' % tag
         print r'        if (!g_h%sModule) {' % tag
         print r'            return NULL;'
@@ -59,7 +59,6 @@ class DllDispatcher(Dispatcher):
         Dispatcher.dispatchModule(self, module)
 
     def getProcAddressName(self, module, function):
-        assert self.isFunctionPublic(module, function)
         return '_get%sProcAddress' % (module.name.upper())
 
 

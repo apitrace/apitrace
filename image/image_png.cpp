@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <fstream>
 
@@ -50,18 +51,48 @@ pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
     os->write((const char *)data, length);
 }
 
-bool
-Image::writePNG(std::ostream &os) const
-{
-    assert(channelType == TYPE_UNORM8);
 
+static inline uint8_t
+floatToUnorm8(float c)
+{
+    if (c <= 0.0f) {
+        return 0;
+    }
+    if (c >= 1.0f) {
+        return 255;
+    }
+    return c * 255.0f + 0.5f;
+}
+
+
+static inline uint8_t
+floatToSRGB(float c)
+{
+    if (c <= 0.0f) {
+        return 0;
+    }
+    if (c >= 1.0f) {
+        return 255;
+    }
+    if (c <= 0.0031308f) {
+        c *= 12.92f;
+    } else {
+        c = 1.055f * powf(c, 1.0f/2.4f) - 0.055f;
+    }
+    return c * 255.0f + 0.5f;
+}
+
+
+bool
+Image::writePNG(std::ostream &os, bool strip_alpha) const
+{
     png_structp png_ptr;
     png_infop info_ptr;
     int color_type;
 
     switch (channels) {
     case 4:
-        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+        color_type = strip_alpha ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGB_ALPHA;
         break;
     case 3:
         color_type = PNG_COLOR_TYPE_RGB;
@@ -102,17 +133,31 @@ Image::writePNG(std::ostream &os) const
 
     png_write_info(png_ptr, info_ptr);
 
-    if (!flipped) {
-        for (unsigned y = 0; y < height; ++y) {
-            png_bytep row = (png_bytep)(pixels + y*width*channels);
-            png_write_rows(png_ptr, &row, 1);
+    if (channels == 4 && strip_alpha) {
+        png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+    }
+
+    switch (channelType) {
+    case TYPE_UNORM8:
+        for (const unsigned char *row = start(); row != end(); row += stride()) {
+            png_write_rows(png_ptr, (png_bytepp) &row, 1);
         }
-    } else {
-        unsigned y = height;
-        while (y--) {
-            png_bytep row = (png_bytep)(pixels + y*width*channels);
-            png_write_rows(png_ptr, &row, 1);
+        break;
+    case TYPE_FLOAT:
+        png_bytep rowUnorm8 = new png_byte[width * channels];
+        for (const unsigned char *row = start(); row != end(); row += stride()) {
+            const float *rowFloat = (const float *)row;
+            for (unsigned x = 0, i = 0; x < width; ++x) {
+                for (unsigned channel = 0; channel < channels; ++channel, ++i) {
+                    float c = rowFloat[i];
+                    bool srgb = channels >= 3 && channel < 3;
+                    rowUnorm8[i] = srgb ? floatToSRGB(c) : floatToUnorm8(c);
+                }
+            }
+            png_write_rows(png_ptr, (png_bytepp) &rowUnorm8, 1);
         }
+        delete [] rowUnorm8;
+        break;
     }
 
     png_write_end(png_ptr, info_ptr);
@@ -126,13 +171,13 @@ no_png:
 
 
 bool
-Image::writePNG(const char *filename) const
+Image::writePNG(const char *filename, bool strip_alpha) const
 {
     std::ofstream os(filename, std::ofstream::binary);
     if (!os) {
         return false;
     }
-    return writePNG(os);
+    return writePNG(os, strip_alpha);
 }
 
 

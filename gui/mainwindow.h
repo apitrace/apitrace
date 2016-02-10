@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "ui_mainwindow.h"
 
@@ -52,14 +51,20 @@ private slots:
     void callItemActivated(const QModelIndex &index);
     void createTrace();
     void openTrace();
+    void saveTrace();
+    void pullTrace();
+    void pushTrace();
+    void linkTrace();
+    void retraceOnAndroid(bool android);
     void replayStart();
     void replayProfile();
     void replayStop();
     void replayFinished(const QString &message);
     void replayStateFound(ApiTraceState *state);
     void replayProfileFound(trace::Profile *state);
-    void replayThumbnailsFound(const QList<QImage> &thumbnails);
+    void replayThumbnailsFound(const ImageHash &thumbnails);
     void replayError(const QString &msg);
+    void loadError(const QString &msg);
     void startedLoadingTrace();
     void loadProgess(int percent);
     void finishedLoadingTrace();
@@ -67,10 +72,13 @@ private slots:
     void showThumbnails();
     void trim();
     void showSettings();
+    void leakTrace();
+    void leakTraceFinished();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
     void saveSelectedSurface();
+    void exportBufferData();
     void slotGoTo();
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
@@ -96,13 +104,15 @@ private slots:
     void slotFoundFrameStart(ApiTraceFrame *frame);
     void slotFoundFrameEnd(ApiTraceFrame *frame);
     void slotJumpToResult(ApiTraceCall *call);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
 
 private:
     void initObjects();
     void initConnections();
+    void initRetraceConnections();
+
     void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
-    void replayTrace(bool dumpState, bool dumpThumbnails);
     void trimEvent();
     void fillStateForFrame();
 
@@ -114,6 +124,15 @@ private:
     ApiTraceCall *selectedCall() const;
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
+
+    static void thumbnailCallback(void *object, int thumbnailIdx);
+
+    void linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile);
+    QString linkedAndroidTrace(const QString &localFile);
+    void addSurface(const ApiTexture &image, QTreeWidgetItem *parent);
+    void addSurface(const ApiFramebuffer &image, QTreeWidgetItem *parent);
+    template <typename Surface>
+    void addSurfaces(const QList<Surface> &images, const char *label);
 
 protected:
     virtual void closeEvent(QCloseEvent * event);
@@ -153,7 +172,5 @@ private:
     ApiTraceEvent *m_nonDefaultsLookupEvent;
 
     ProfileDialog* m_profileDialog;
+    QString m_androidFilePath;
 };
-
-
-#endif

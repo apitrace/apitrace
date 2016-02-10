@@ -27,8 +27,7 @@
  * Dynamic library linking abstraction.
  */
 
-#ifndef _OS_DL_HPP_
-#define _OS_DL_HPP_
+#pragma once
 
 
 #if defined(_WIN32)
@@ -86,4 +85,3 @@ namespace os {
 
 } /* namespace os */
 
-#endif /* _OS_DL_HPP_ */

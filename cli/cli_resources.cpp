@@ -101,11 +101,11 @@ findWrapper(const char *wrapperFilename, bool verbose)
     // Try relative build directory
     // XXX: Just make build and install directory layout match
     wrapperPath = processDir;
-#if defined(APITRACE_CONFIGURATION_SUBDIR)
+#if defined(CMAKE_INTDIR)
     // Go from `Debug\apitrace.exe` to `wrappers\Debug\foo.dll` on MSVC builds.
     wrapperPath.join("..");
     wrapperPath.join("wrappers");
-    wrapperPath.join(APITRACE_CONFIGURATION_SUBDIR);
+    wrapperPath.join(CMAKE_INTDIR);
 #else
     wrapperPath.join("wrappers");
 #endif
@@ -194,6 +194,5 @@ findScript(const char *scriptFilename, bool verbose)
 #endif
 
     std::cerr << "error: cannot find " << scriptFilename << " script\n";
-
-    return "";
+    exit(1);
 }

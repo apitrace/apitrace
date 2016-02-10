@@ -45,12 +45,9 @@ static void
 usage(void)
 {
     os::String command = find_command();
-    if (!command.length()) {
-        exit(1);
-    }
 
     char *args[4];
-    args[0] = (char *) "python";
+    args[0] = (char *) APITRACE_PYTHON_EXECUTABLE;
     args[1] = (char *) command.str();
     args[2] = (char *) "--help";
     args[3] = NULL;
@@ -64,12 +61,9 @@ command(int argc, char *argv[])
     int i;
 
     os::String command = find_command();
-    if (!command.length()) {
-        return 1;
-    }
 
     std::vector<const char *> args;
-    args.push_back("python");
+    args.push_back(APITRACE_PYTHON_EXECUTABLE);
     args.push_back(command.str());
     for (i = 1; i < argc; i++) {
         args.push_back(argv[i]);

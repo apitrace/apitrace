@@ -50,7 +50,7 @@ D3DRECT = Struct("D3DRECT", [
 ])
 
 D3DMATRIX = Struct("D3DMATRIX", [
-    (Array(Array(Float, 4), "4"), "m"),
+    (Array(Array(Float, 4), 4), "m"),
 ])
 
 D3DVIEWPORT8 = Struct("D3DVIEWPORT8", [

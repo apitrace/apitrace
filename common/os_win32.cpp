@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2010-2015 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,6 +26,7 @@
 #ifdef _WIN32
 
 #include <windows.h>
+#include <shlobj.h>
 
 #include <assert.h>
 #include <string.h>
@@ -68,6 +69,20 @@ getCurrentDir(void)
     buf[size - 1] = 0;
     path.truncate();
 
+    return path;
+}
+
+String
+getConfigDir(void)
+{
+    String path;
+    char *buf = path.buf(MAX_PATH);
+    HRESULT hr = SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, buf);
+    if (SUCCEEDED(hr)) {
+        path.truncate();
+    } else {
+        path.truncate(0);
+    }
     return path;
 }
 
@@ -239,12 +254,32 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-    TerminateProcess(GetCurrentProcess(), 1);
+    TerminateProcess(GetCurrentProcess(), 3);
+#if defined(__GNUC__)
+     __builtin_unreachable();
+#endif
+}
+
+
+void
+breakpoint(void)
+{
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    asm("int3");
+#elif defined(_MSC_VER)
+    __debugbreak();
+#else
+    DebugBreak();
+#endif
 }
 
 
 #ifndef DBG_PRINTEXCEPTION_C
 #define DBG_PRINTEXCEPTION_C 0x40010006
+#endif
+
+#ifndef DBG_PRINTEXCEPTION_WIDE_C
+#define DBG_PRINTEXCEPTION_WIDE_C 0x4001000A
 #endif
 
 static PVOID prevExceptionFilter = NULL;
@@ -253,53 +288,77 @@ static void (*gCallback)(void) = NULL;
 static LONG CALLBACK
 unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
-
     /*
-     * Ignore OutputDebugStringA exception.
-     */
-    if (pExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C) {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
-
-    /*
-     * Ignore C++ exceptions
+     * Before Vista KiUserExceptionDispatcher does not clear the direction
+     * flag.
      *
-     * http://support.microsoft.com/kb/185294
-     * http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     * See also:
+     * - https://bugs.chromium.org/p/nativeclient/issues/detail?id=1495
      */
-    if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
+#ifdef _MSC_VER
+#ifndef _WIN64
+    __asm cld;
+#endif
+#else
+    asm("cld");
+#endif
+
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+    DWORD ExceptionCode = pExceptionRecord->ExceptionCode;
+
+    // https://msdn.microsoft.com/en-us/library/het71c37.aspx
+    switch (ExceptionCode >> 30) {
+    case 0: // success
+        return EXCEPTION_CONTINUE_SEARCH;
+    case 1: // informational
+    case 2: // warning
+    case 3: // error
+        break;
+    }
+
+    /*
+     * Ignore OutputDebugStringA/W exceptions.
+     */
+    if (ExceptionCode == DBG_PRINTEXCEPTION_C ||
+        ExceptionCode == DBG_PRINTEXCEPTION_WIDE_C) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
+
+    /*
+     * Ignore C++ exceptions, as some applications generate a lot of these with
+     * no harm.  But don't ignore them on debug builds, as bugs in apitrace can
+     * easily lead the applicationa and/or runtime to raise them, and catching
+     * them helps debugging.
+     *
+     * See also:
+     * - http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     * - http://support.microsoft.com/kb/185294
+     */
+#ifdef NDEBUG
+    if (ExceptionCode == 0xe06d7363) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+#endif
 
     /*
      * Ignore thread naming exception.
      *
      * http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
      */
-    if (pExceptionRecord->ExceptionCode == 0x406d1388) {
+    if (ExceptionCode == 0x406d1388) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
     /*
-     * Ignore .NET exception.
+     * Ignore .NET exceptions.
      *
      * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
+     * https://github.com/dotnet/coreclr/blob/master/src/jit/importer.cpp
      */
-    if (pExceptionRecord->ExceptionCode == 0xe0434352) {
+    if (ExceptionCode == 0xe0434352 ||
+        ExceptionCode == 0xe0564552) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
-
-    // Clear direction flag
-#ifdef _MSC_VER
-#ifndef _WIN64
-    __asm {
-        cld
-    };
-#endif
-#else
-    asm("cld");
-#endif
 
     log("apitrace: warning: caught exception 0x%08lx\n", pExceptionRecord->ExceptionCode);
 

@@ -1,5 +1,4 @@
-#ifndef HEATMAPVERTICALAXISWIDGET_H
-#define HEATMAPVERTICALAXISWIDGET_H
+#pragma once
 
 #include "heatmapview.h"
 #include "graphaxiswidget.h"
@@ -20,5 +19,3 @@ protected:
     int m_rowHeight;
     HeatmapDataProvider* m_data;
 };
-
-#endif

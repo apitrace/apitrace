@@ -63,7 +63,7 @@ inline static uint16_t Encode565(_In_ const HDRColorA *pColor)
 
 //-------------------------------------------------------------------------------------
 static void OptimizeRGB(_Out_ HDRColorA *pX, _Out_ HDRColorA *pY,
-                        _In_count_c_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pPoints, _In_ size_t cSteps, _In_ DWORD flags)
+                        _In_reads_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pPoints, _In_ size_t cSteps, _In_ DWORD flags)
 {
     static const float fEpsilon = (0.25f / 64.0f) * (0.25f / 64.0f);
     static const float pC3[] = { 2.0f/2.0f, 1.0f/2.0f, 0.0f/2.0f };
@@ -254,7 +254,7 @@ static void OptimizeRGB(_Out_ HDRColorA *pX, _Out_ HDRColorA *pY,
             size_t iStep;
             if(fDot <= 0.0f)
                 iStep = 0;
-            if(fDot >= fSteps)
+            else if(fDot >= fSteps)
                 iStep = cSteps - 1;
             else
                 iStep = static_cast<size_t>(fDot + 0.5f);
@@ -317,7 +317,7 @@ static void OptimizeRGB(_Out_ HDRColorA *pX, _Out_ HDRColorA *pY,
 
 
 //-------------------------------------------------------------------------------------
-inline static void DecodeBC1( _Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_ const D3DX_BC1 *pBC )
+inline static void DecodeBC1( _Out_writes_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor, _In_ const D3DX_BC1 *pBC, _In_ bool isbc1 )
 {
     assert( pColor && pBC );
     static_assert( sizeof(D3DX_BC1) == 8, "D3DX_BC1 should be 8 bytes" );
@@ -330,14 +330,14 @@ inline static void DecodeBC1( _Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor
     clr0 = XMVectorMultiply( clr0, s_Scale );
     clr1 = XMVectorMultiply( clr1, s_Scale );
 
-    clr0 = XMVectorSwizzle( clr0, 2, 1, 0, 3 );
-    clr1 = XMVectorSwizzle( clr1, 2, 1, 0, 3 );
+    clr0 = XMVectorSwizzle<2, 1, 0, 3>( clr0 );
+    clr1 = XMVectorSwizzle<2, 1, 0, 3>( clr1 );
 
     clr0 = XMVectorSelect( g_XMIdentityR3, clr0, g_XMSelect1110 );
     clr1 = XMVectorSelect( g_XMIdentityR3, clr1, g_XMSelect1110 );
 
     XMVECTOR clr2, clr3;
-    if(pBC->rgb[0] <= pBC->rgb[1])
+    if ( isbc1 && (pBC->rgb[0] <= pBC->rgb[1]) )
     {
         clr2 = XMVectorLerp( clr0, clr1, 0.5f );
         clr3 = XMVectorZero();  // Alpha of 0
@@ -366,9 +366,8 @@ inline static void DecodeBC1( _Out_cap_c_(NUM_PIXELS_PER_BLOCK) XMVECTOR *pColor
 
 
 //-------------------------------------------------------------------------------------
-#pragma warning(disable: 4616 6001 6201)
 
-static void EncodeBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pColor,
+static void EncodeBC1(_Out_ D3DX_BC1 *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pColor,
                       _In_ bool bColorKey, _In_ float alphaRef, _In_ DWORD flags)
 {
     assert( pBC && pColor );
@@ -446,7 +445,7 @@ static void EncodeBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) co
             if(3 != (i & 3))
             {
                 assert( i < 15 );
-                __analysis_assume( i < 15 );
+                _Analysis_assume_( i < 15 );
                 Error[i + 1].r += Diff.r * (7.0f / 16.0f);
                 Error[i + 1].g += Diff.g * (7.0f / 16.0f);
                 Error[i + 1].b += Diff.b * (7.0f / 16.0f);
@@ -468,7 +467,7 @@ static void EncodeBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) co
                 if(3 != (i & 3))
                 {
                     assert( i < 11 );
-                    __analysis_assume(i < 11 );
+                    _Analysis_assume_( i < 11 );
                     Error[i + 5].r += Diff.r * (1.0f / 16.0f);
                     Error[i + 5].g += Diff.g * (1.0f / 16.0f);
                     Error[i + 5].b += Diff.b * (1.0f / 16.0f);
@@ -677,7 +676,7 @@ static void EncodeBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) co
 
 //-------------------------------------------------------------------------------------
 #ifdef COLOR_WEIGHTS
-static void EncodeSolidBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pColor)
+static void EncodeSolidBC1(_Out_ D3DX_BC1 *pBC, _In_reads_(NUM_PIXELS_PER_BLOCK) const HDRColorA *pColor)
 {
 #ifdef COLOR_AVG_0WEIGHTS
     // Compute avg color
@@ -717,12 +716,14 @@ static void EncodeSolidBC1(_Out_ D3DX_BC1 *pBC, _In_count_c_(NUM_PIXELS_PER_BLOC
 //-------------------------------------------------------------------------------------
 // BC1 Compression
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 void D3DXDecodeBC1(XMVECTOR *pColor, const uint8_t *pBC)
 {
-    const D3DX_BC1 *pBC1 = reinterpret_cast<const D3DX_BC1 *>(pBC);
-    DecodeBC1( pColor, pBC1 );
+    auto pBC1 = reinterpret_cast<const D3DX_BC1 *>(pBC);
+    DecodeBC1( pColor, pBC1, true );
 }
 
+_Use_decl_annotations_
 void D3DXEncodeBC1(uint8_t *pBC, const XMVECTOR *pColor, float alphaRef, DWORD flags)
 {
     assert( pBC && pColor );
@@ -751,7 +752,7 @@ void D3DXEncodeBC1(uint8_t *pBC, const XMVECTOR *pColor, float alphaRef, DWORD f
             if(3 != (i & 3))
             {
                 assert( i < 15 );
-                __analysis_assume( i < 15 );
+                _Analysis_assume_( i < 15 );
                 fError[i + 1] += fDiff * (7.0f / 16.0f);
             }
 
@@ -765,7 +766,7 @@ void D3DXEncodeBC1(uint8_t *pBC, const XMVECTOR *pColor, float alphaRef, DWORD f
                 if(3 != (i & 3))
                 {
                     assert( i < 11 );
-                    __analysis_assume( i < 11 );
+                    _Analysis_assume_( i < 11 );
                     fError[i + 5] += fDiff * (1.0f / 16.0f);
                 }
             }
@@ -779,7 +780,7 @@ void D3DXEncodeBC1(uint8_t *pBC, const XMVECTOR *pColor, float alphaRef, DWORD f
         }
     }
 
-    D3DX_BC1 *pBC1 = reinterpret_cast<D3DX_BC1 *>(pBC);
+    auto pBC1 = reinterpret_cast<D3DX_BC1 *>(pBC);
     EncodeBC1(pBC1, Color, true, alphaRef, flags);
 }
 
@@ -787,21 +788,25 @@ void D3DXEncodeBC1(uint8_t *pBC, const XMVECTOR *pColor, float alphaRef, DWORD f
 //-------------------------------------------------------------------------------------
 // BC2 Compression
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 void D3DXDecodeBC2(XMVECTOR *pColor, const uint8_t *pBC)
 {
     assert( pColor && pBC );
     static_assert( sizeof(D3DX_BC2) == 16, "D3DX_BC2 should be 16 bytes" );
 
-    const D3DX_BC2 *pBC2 = reinterpret_cast<const D3DX_BC2 *>(pBC);
+    auto pBC2 = reinterpret_cast<const D3DX_BC2 *>(pBC);
 
     // RGB part
-    DecodeBC1(pColor, &pBC2->bc1);
+    DecodeBC1(pColor, &pBC2->bc1, false);
 
     // 4-bit alpha part
     DWORD dw = pBC2->bitmap[0];
 
     for(size_t i = 0; i < 8; ++i, dw >>= 4)
+    {
+        #pragma prefast(suppress:22103, "writing blocks in two halves confuses tool")
         pColor[i] = XMVectorSetW( pColor[i], (float) (dw & 0xf) * (1.0f / 15.0f) );
+    }
 
     dw = pBC2->bitmap[1];
 
@@ -809,6 +814,7 @@ void D3DXDecodeBC2(XMVECTOR *pColor, const uint8_t *pBC)
         pColor[i] = XMVectorSetW( pColor[i], (float) (dw & 0xf) * (1.0f / 15.0f) );
 }
 
+_Use_decl_annotations_
 void D3DXEncodeBC2(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
 {
     assert( pBC && pColor );
@@ -820,7 +826,7 @@ void D3DXEncodeBC2(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
         XMStoreFloat4( reinterpret_cast<XMFLOAT4*>( &Color[i] ), pColor[i] );
     }
 
-    D3DX_BC2 *pBC2 = reinterpret_cast<D3DX_BC2 *>(pBC);
+    auto pBC2 = reinterpret_cast<D3DX_BC2 *>(pBC);
 
     // 4-bit alpha part.  Dithered using Floyd Stienberg error diffusion.
     pBC2->bitmap[0] = 0;
@@ -848,7 +854,7 @@ void D3DXEncodeBC2(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
             if(3 != (i & 3))
             {
                 assert( i < 15 );
-                __analysis_assume( i < 15 );
+                _Analysis_assume_( i < 15 );
                 fError[i + 1] += fDiff * (7.0f / 16.0f);
             }
 
@@ -862,7 +868,7 @@ void D3DXEncodeBC2(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
                 if(3 != (i & 3))
                 {
                     assert( i < 11 );
-                    __analysis_assume( i < 11 );
+                    _Analysis_assume_( i < 11 );
                     fError[i + 5] += fDiff * (1.0f / 16.0f);
                 }
             }
@@ -885,15 +891,16 @@ void D3DXEncodeBC2(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
 //-------------------------------------------------------------------------------------
 // BC3 Compression
 //-------------------------------------------------------------------------------------
+_Use_decl_annotations_
 void D3DXDecodeBC3(XMVECTOR *pColor, const uint8_t *pBC)
 {
     assert( pColor && pBC );
     static_assert( sizeof(D3DX_BC3) == 16, "D3DX_BC3 should be 16 bytes" );
 
-    const D3DX_BC3 *pBC3 = reinterpret_cast<const D3DX_BC3 *>(pBC);
+    auto pBC3 = reinterpret_cast<const D3DX_BC3 *>(pBC);
 
     // RGB part
-    DecodeBC1(pColor, &pBC3->bc1);
+    DecodeBC1(pColor, &pBC3->bc1, false);
 
     // Adaptive 3-bit alpha part
     float fAlpha[8];
@@ -926,6 +933,7 @@ void D3DXDecodeBC3(XMVECTOR *pColor, const uint8_t *pBC)
         pColor[i] = XMVectorSetW( pColor[i], fAlpha[dw & 0x7] );
 }
 
+_Use_decl_annotations_
 void D3DXEncodeBC3(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
 {
     assert( pBC && pColor );
@@ -937,7 +945,7 @@ void D3DXEncodeBC3(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
         XMStoreFloat4( reinterpret_cast<XMFLOAT4*>( &Color[i] ), pColor[i] );
     }
 
-    D3DX_BC3 *pBC3 = reinterpret_cast<D3DX_BC3 *>(pBC);
+    auto pBC3 = reinterpret_cast<D3DX_BC3 *>(pBC);
 
     // Quantize block to A8, using Floyd Stienberg error diffusion.  This 
     // increases the chance that colors will map directly to the quantized 
@@ -971,7 +979,7 @@ void D3DXEncodeBC3(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
             if(3 != (i & 3))
             {
                 assert( i < 15 );
-                __analysis_assume( i < 15 );
+                _Analysis_assume_( i < 15 );
                 fError[i + 1] += fDiff * (7.0f / 16.0f);
             }
 
@@ -985,7 +993,7 @@ void D3DXEncodeBC3(uint8_t *pBC, const XMVECTOR *pColor, DWORD flags)
                 if(3 != (i & 3))
                 {
                     assert( i < 11 );
-                    __analysis_assume( i < 11 );
+                    _Analysis_assume_( i < 11 );
                     fError[i + 5] += fDiff * (1.0f / 16.0f);
                 }
             }

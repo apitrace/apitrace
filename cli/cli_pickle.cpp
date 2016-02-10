@@ -83,6 +83,10 @@ public:
         writer.writeString(node->value);
     }
 
+    void visit(WString *node) {
+        writer.writeWString(node->value);
+    }
+
     void visit(Enum *node) {
         if (symbolic) {
             const EnumValue *it = node->lookup();
@@ -98,7 +102,7 @@ public:
         if (symbolic) {
             unsigned long long value = node->value;
             const BitmaskSig *sig = node->sig;
-            writer.beginList();
+            writer.beginTuple();
             for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
                 if ((it->value && (value & it->value) == it->value) ||
                     (!it->value && value == 0)) {
@@ -112,14 +116,15 @@ public:
             if (value) {
                 writer.writeInt(value);
             }
-            writer.endList();
+            writer.endTuple();
         } else {
             writer.writeInt(node->value);
         }
     }
 
     void visit(Struct *node) {
-        if (false) {
+        if (true) {
+            // Structures as dictionaries
             writer.beginDict();
             for (unsigned i = 0; i < node->sig->num_members; ++i) {
                 writer.beginItem(node->sig->member_names[i]);
@@ -128,11 +133,13 @@ public:
             }
             writer.endDict();
         } else {
-            writer.beginTuple();
-            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+            // Structures as tuples
+            unsigned num_members = node->sig->num_members;
+            writer.beginTuple(num_members);
+            for (unsigned i = 0; i < num_members; ++i) {
                 _visit(node->members[i]);
             }
-            writer.endTuple();
+            writer.endTuple(num_members);
         }
     }
 
@@ -149,7 +156,7 @@ public:
     }
 
     void visit(Pointer *node) {
-        writer.writeInt(node->value);
+        writer.writePointer(node->value);
     }
 
     void visit(Repr *r) {
@@ -169,11 +176,18 @@ public:
 
         writer.beginList();
         for (unsigned i = 0; i < call->args.size(); ++i) {
+            writer.beginTuple(2);
+            if (i < call->sig->num_args) {
+                writer.writeString(call->sig->arg_names[i]);
+            } else {
+                writer.writeNone();
+            }
             if (call->args[i].value) {
                 _visit(call->args[i].value);
             } else {
                 writer.writeNone();
             }
+            writer.endTuple(2);
         }
         writer.endList();
 
@@ -182,6 +196,8 @@ public:
         } else {
             writer.writeNone();
         }
+
+        writer.writeInt(call->flags);
 
         writer.endTuple();
     }

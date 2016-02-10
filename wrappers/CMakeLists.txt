@@ -2,14 +2,71 @@
 # API tracers
 
 
+if (ENABLE_STATIC_LIBGCC)
+    add_linker_flags (-static-libgcc)
+endif ()
+if (ENABLE_STATIC_LIBSTDCXX)
+    # Unfortunately for a long time static libstdcxx didn't built with -fPIC
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=28811
+    include (CheckCXXSourceCompiles)
+    set (CMAKE_REQUIRED_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
+    set (CMAKE_REQUIRED_LIBRARIES -shared -static-libgcc -static-libstdc++)
+    check_cxx_source_compiles (
+        "
+            #include <string>
+            std::string s;
+        "
+        STATIC_LIBSTDCXX_PIC
+    )
+    unset (CMAKE_REQUIRED_LIBRARIES)
+    unset (CMAKE_REQUIRED_FLAGS)
+    if (STATIC_LIBSTDCXX_PIC)
+        add_linker_flags (-static-libstdc++)
+    endif ()
+endif ()
+
+macro (target_linker_version_script target version_script)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+        # https://sourceware.org/binutils/docs/ld/VERSION.html
+        set_property (
+            TARGET ${target}
+            APPEND_STRING
+            PROPERTY LINK_FLAGS " -Wl,--version-script=${version_script}"
+        )
+        # XXX: Unfortunately LINK_DEPENDS is ignored in non-Makefile generators
+        # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
+        add_custom_target (${target}_version_script
+            DEPENDS ${version_script}
+            VERBATIM
+        )
+        #set_property (
+        #    TARGET ${target}
+        #    PROPERTY LINK_DEPENDS ${version_script}
+        #)
+        add_dependencies (${target} ${target}_version_script)
+    endif ()
+endmacro ()
+
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
+
 include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
+    ${CMAKE_SOURCE_DIR}/guids
 )
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_convenience_library (trace
+    assert.cpp
+)
+target_link_libraries (trace
+    common
+    guids
+    ${SNAPPY_LIBRARIES}
+    ${ZLIB_LIBRARIES}  # for crc32
+)
 
 if (WIN32)
     if (MINGW)
@@ -19,7 +76,7 @@ if (WIN32)
     endif ()
 
     # ddraw.dll
-    if (DirectX_D3D_INCLUDE_DIR)
+    if (DirectX_D3D_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
@@ -38,19 +95,18 @@ if (WIN32)
         )
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace
-            common
-            ${ZLIB_LIBRARIES}
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (ddrawtrace PROPERTIES
             PREFIX ""
             OUTPUT_NAME ddraw
         )
         install (TARGETS ddrawtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (ddrawtrace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d8.dll
-    if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
@@ -73,19 +129,18 @@ if (WIN32)
         )
         target_link_libraries (d3d8trace
             d3dhelpers
-            common
-            ${ZLIB_LIBRARIES}
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d3d8trace PROPERTIES
             PREFIX ""
             OUTPUT_NAME d3d8
         )
         install (TARGETS d3d8trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d3d8trace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d9.dll
-    if (DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D9_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
@@ -98,7 +153,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/d3d9.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9dxva2.py
+                ${CMAKE_SOURCE_DIR}/specs/dxva2.py
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
@@ -109,143 +164,56 @@ if (WIN32)
         )
         target_link_libraries (d3d9trace
             d3dhelpers
-            common
-            ${ZLIB_LIBRARIES}
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d3d9trace PROPERTIES
             PREFIX ""
             OUTPUT_NAME d3d9
         )
         install (TARGETS d3d9trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d3d9trace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
-    set (DXGI_MODULES)
-    if (DirectX_D3D10_INCLUDE_DIR)
-        set (DXGITRACE_DEF ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.def)
-        file (WRITE  ${DXGITRACE_DEF} "EXPORTS\n")
-        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory\n")
-        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory1\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain\n")
+    if (DirectX_D3D11_3_INCLUDE_FOUND)
+        include_directories (BEFORE SYSTEM ${DirectX_D3D11_3_INCLUDE_DIR})
 
-        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-        set (DXGI_MODULES d3d10)
-        if (DirectX_D3D10_1_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
-            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
-            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
-        endif ()
-        if (DirectX_D3D11_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d11)
-            if (DirectX_D3D11_1_INCLUDE_DIR)
-                include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
-                set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
-            endif ()
-            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
-            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDeviceAndSwapChain\n")
-        endif ()
-        
         add_custom_command (
             OUTPUT dxgitrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
             DEPENDS
                 dxgitrace.py
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi1_2.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (dxgitrace SHARED
-            ${DXGITRACE_DEF}
+        add_library (dxgitrace MODULE
+            dxgitrace.def
             dxgitrace.cpp
             d3dcommonshader.cpp
         )
         target_link_libraries (dxgitrace
             d3dhelpers
-            common
-            ${ZLIB_LIBRARIES}
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
         )
-        install (TARGETS dxgitrace
-            RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-            LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-        )
-
-        # dxgi.dll (empty stub for dxgitrace.dll)
-        add_library (dxgistubs MODULE
-            dxgi.def
-            dxgistubs.cpp
-            d3dkmtstubs.cpp
-        )
-        target_link_libraries (dxgistubs dxgitrace)
-        set_target_properties (dxgistubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME dxgi
-        )
-        install (TARGETS dxgistubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-
-        # d3d10.dll (empty stub for dxgitrace.dll)
-        add_library (d3d10stubs MODULE
-            d3d10.def
-            d3d10stubs.cpp
-        )
-        target_link_libraries (d3d10stubs dxgitrace)
-        set_target_properties (d3d10stubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME d3d10
-        )
-        install (TARGETS d3d10stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-
-        # d3d10_1.dll (empty stub for dxgitrace.dll)
-        if (DirectX_D3D10_1_INCLUDE_DIR)
-            add_library (d3d10_1stubs MODULE
-                d3d10_1.def
-                d3d10stubs.cpp
-            )
-            target_link_libraries (d3d10_1stubs dxgitrace)
-            set_target_properties (d3d10_1stubs
-                PROPERTIES PREFIX ""
-                OUTPUT_NAME d3d10_1
-            )
-            install (TARGETS d3d10_1stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-        endif ()
-        
-        # d3d11.dll (empty stub for dxgitrace.dll)
-        if (DirectX_D3D11_INCLUDE_DIR)
-            add_library (d3d11stubs MODULE
-                d3d11.def
-                d3d11stubs.cpp
-                d3dkmtstubs.cpp
-            )
-            target_link_libraries (d3d11stubs dxgitrace)
-            set_target_properties (d3d11stubs
-                PROPERTIES PREFIX ""
-                OUTPUT_NAME d3d11
-            )
-            install (TARGETS d3d11stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-        endif ()
+        install (TARGETS dxgitrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (dxgitrace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll
-    if (DirectX_D2D1_INCLUDE_DIR)
-        include_directories (BEFORE SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+    if (DirectX_D2D1_1_INCLUDE_FOUND)
+        include_directories (BEFORE SYSTEM ${DirectX_D2D1_1_INCLUDE_DIR})
 
         add_custom_command (
             OUTPUT d2d1trace.cpp
@@ -254,42 +222,22 @@ if (WIN32)
                 d2d1trace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/specs/d2d1.py
-                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
-                ${CMAKE_SOURCE_DIR}/specs/d2dbasetypes.py
-                ${CMAKE_SOURCE_DIR}/specs/d2derr.py
                 ${CMAKE_SOURCE_DIR}/specs/dwrite.py
                 ${CMAKE_SOURCE_DIR}/specs/dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d2d1trace SHARED d2d1.def d2d1trace.cpp)
+        add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace
-            common
-            ${ZLIB_LIBRARIES}
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
-            OUTPUT_NAME d2d1
         )
-        # http://www.cmake.org/pipermail/cmake/2009-March/028221.html
-        install (TARGETS d2d1trace
-            RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-            LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-        )
-
-        # dwrite.dll is just an empty stub for d2d1.dll
-        add_library (dwritetrace MODULE dwrite.def dwritetrace.cpp)
-        target_link_libraries (dwritetrace d2d1trace)
-        set_target_properties (dwritetrace
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME dwrite
-        )
-        install (TARGETS dwritetrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D2D1_INCLUDE_DIR)
+        install (TARGETS d2d1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d2d1trace DESTINATION ${WRAPPER_INSTALL_DIR})
+    endif ()
 
     # opengl32.dll
     add_custom_command (
@@ -311,20 +259,21 @@ if (WIN32)
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
+        glhelpers
         glproc_gl
-        common
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
+        trace
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
     )
     install (TARGETS wgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    install_pdb (wgltrace DESTINATION ${WRAPPER_INSTALL_DIR})
 
 elseif (APPLE)
     # OpenGL framework
@@ -335,6 +284,7 @@ elseif (APPLE)
             cgltrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/cglapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
@@ -345,6 +295,7 @@ elseif (APPLE)
     add_library (cgltrace SHARED
         cgltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
     )
 
@@ -360,12 +311,11 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
+        glhelpers
         glproc_gl
-        common
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
 
     install (TARGETS cgltrace FRAMEWORK DESTINATION ${WRAPPER_INSTALL_DIR})
@@ -378,8 +328,8 @@ elseif (X11_FOUND)
             glxtrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/glxapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glesapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
             ${CMAKE_SOURCE_DIR}/specs/gltypes.py
@@ -389,6 +339,7 @@ elseif (X11_FOUND)
     add_library (glxtrace SHARED
         glxtrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
         dlsym.cpp
     )
@@ -399,18 +350,20 @@ elseif (X11_FOUND)
         # avoid the default "lib" prefix
         PREFIX ""
         # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        # overwritten by the application.  And fail if there are missing
+        # symbols.
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (glxtrace
+        glhelpers
         glproc_gl
-        common
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
+
+    target_linker_version_script (glxtrace ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.version)
 
     install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
@@ -425,9 +378,9 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
             egltrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/eglapi.py
             ${CMAKE_SOURCE_DIR}/specs/eglenum.py
-            ${CMAKE_SOURCE_DIR}/specs/glesapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
             ${CMAKE_SOURCE_DIR}/specs/gltypes.py
@@ -437,8 +390,8 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     add_library (egltrace SHARED
         egltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
-        ${CMAKE_SOURCE_DIR}/helpers/eglsize.cpp
         dlsym.cpp
     )
 
@@ -448,18 +401,20 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         # avoid the default "lib" prefix
         PREFIX ""
         # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        # overwritten by the application.  And fail if there are missing
+        # symbols.
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (egltrace
+        glhelpers
         glproc_egl
-        common
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
+
+    target_linker_version_script (egltrace ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.version)
 
     install (TARGETS egltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()

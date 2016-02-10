@@ -24,8 +24,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DCOMMONSHADER_HPP_
-#define _D3DCOMMONSHADER_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -35,4 +34,3 @@
 void DumpShader(trace::Writer &writer, const void *pShaderBytecode, SIZE_T BytecodeLength);
 
 
-#endif /* _D3DCOMMONSHADER_HPP_ */

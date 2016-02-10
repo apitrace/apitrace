@@ -56,7 +56,7 @@ class D3D8Tracer(DllTracer):
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    if (_MappedSize && m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_MappedSize')
+            self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)

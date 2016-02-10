@@ -35,12 +35,15 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <string>
 #include <map>
 
 #include "glproc.hpp"
 #include "gltrace.hpp"
+#include "os.hpp"
+#include "config.hpp"
 
 
 namespace gltrace {
@@ -62,10 +65,12 @@ extraExtension_stringsFull[] = {
     "GL_KHR_debug",
     "GL_EXT_debug_marker",
     "GL_EXT_debug_label",
+    "GL_VMWX_map_buffer_debug",
 };
 
 static const char *
 extraExtension_stringsES[] = {
+    "GL_KHR_debug",
     "GL_EXT_debug_marker",
     "GL_EXT_debug_label",
 };
@@ -93,15 +98,12 @@ extraExtensionsES = {
 
 
 const struct ExtensionsDesc *
-getExtraExtensions(void)
+getExtraExtensions(const Context *ctx)
 {
-    Context *ctx = getContext();
-
-    switch (ctx->profile) {
-    case PROFILE_COMPAT:
+    switch (ctx->profile.api) {
+    case glprofile::API_GL:
         return &extraExtensionsFull;
-    case PROFILE_ES1:
-    case PROFILE_ES2:
+    case glprofile::API_GLES:
         return &extraExtensionsES;
     default:
         assert(0);
@@ -116,7 +118,8 @@ getExtraExtensions(void)
 static const char *
 overrideExtensionsString(const char *extensions)
 {
-    const ExtensionsDesc *desc = getExtraExtensions();
+    const Context *ctx = getContext();
+    const ExtensionsDesc *desc = getExtraExtensions(ctx);
     size_t i;
 
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
@@ -170,7 +173,15 @@ overrideExtensionsString(const char *extensions)
 const GLubyte *
 _glGetString_override(GLenum name)
 {
-    const GLubyte *result = _glGetString(name);
+    const configuration *config = getConfig();
+    const GLubyte *result;
+
+    // Try getting the override string value first
+    result = getConfigString(config, name);
+    if (!result) {
+        // Ask the real GL library
+        result = _glGetString(name);
+    }
 
     if (result) {
         switch (name) {
@@ -186,16 +197,66 @@ _glGetString_override(GLenum name)
 }
 
 
+static void
+getInteger(const configuration *config,
+           GLenum pname, GLint *params)
+{
+    // Disable ARB_get_program_binary
+    switch (pname) {
+    case GL_NUM_PROGRAM_BINARY_FORMATS:
+        if (params) {
+            GLint numProgramBinaryFormats = 0;
+            _glGetIntegerv(pname, &numProgramBinaryFormats);
+            if (numProgramBinaryFormats > 0) {
+                os::log("apitrace: warning: hiding program binary formats (https://github.com/apitrace/apitrace/issues/316)\n");
+            }
+            params[0] = 0;
+        }
+        return;
+    case GL_PROGRAM_BINARY_FORMATS:
+        // params might be NULL here, as we returned 0 for
+        // GL_NUM_PROGRAM_BINARY_FORMATS.
+        return;
+    }
+
+    if (params) {
+        *params = getConfigInteger(config, pname);
+        if (*params != 0) {
+            return;
+        }
+    }
+
+    // Ask the real GL library
+    _glGetIntegerv(pname, params);
+}
+
+
+/**
+ * TODO: To be thorough, we should override all glGet*v.
+ */
 void
 _glGetIntegerv_override(GLenum pname, GLint *params)
 {
-    _glGetIntegerv(pname, params);
+    const configuration *config = getConfig();
+
+    /*
+     * It's important to handle params==NULL correctly here, which can and does
+     * happen, particularly when pname is GL_COMPRESSED_TEXTURE_FORMATS or
+     * GL_PROGRAM_BINARY_FORMATS and the implementation returns 0 for
+     * GL_NUM_COMPRESSED_TEXTURE_FORMATS or GL_NUM_PROGRAM_BINARY_FORMATS, as
+     * the application ends up calling `params = malloc(0)` or `param = new
+     * GLint[0]` which can yield NULL.
+     */
+
+    getInteger(config, pname, params);
 
     if (params) {
+        const Context *ctx;
         switch (pname) {
         case GL_NUM_EXTENSIONS:
-            {
-                const ExtensionsDesc *desc = getExtraExtensions();
+            ctx = getContext();
+            if (ctx->profile.major >= 3) {
+                const ExtensionsDesc *desc = getExtraExtensions(ctx);
                 *params += desc->numStrings;
             }
             break;
@@ -207,8 +268,6 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
                 params[0] = 256;
             }
             break;
-        default:
-            break;
         }
     }
 }
@@ -217,20 +276,30 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
 const GLubyte *
 _glGetStringi_override(GLenum name, GLuint index)
 {
-    switch (name) {
-    case GL_EXTENSIONS:
-        {
-            const ExtensionsDesc *desc = getExtraExtensions();
-            GLint numExtensions = 0;
-            _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-            if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
-                return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
+    const configuration *config = getConfig();
+    const Context *ctx = getContext();
+    const GLubyte *retVal;
+
+    if (ctx->profile.major >= 3) {
+        switch (name) {
+        case GL_EXTENSIONS:
+            {
+                const ExtensionsDesc *desc = getExtraExtensions(ctx);
+                GLint numExtensions = 0;
+                getInteger(config, GL_NUM_EXTENSIONS, &numExtensions);
+                if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
+                    return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
+                }
             }
+            break;
+        default:
+            break;
         }
-        break;
-    default:
-        break;
     }
+
+    retVal = getConfigStringi(config, name, index);
+    if (retVal)
+        return retVal;
 
     return _glGetStringi(name, index);
 }

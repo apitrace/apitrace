@@ -27,10 +27,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <limits>
 #include <fstream>
 #include <iostream>
-#include <string>
+#include <sstream>
 
 #include <trace_callset.hpp>
 
@@ -233,12 +232,22 @@ CallSet::merge(const char *string)
         firstmerge = false;
     }
 
-    if (*string == '@') {
-        FileCallSetParser parser(*this, &string[1]);
-        parser.parse();
-    } else {
-        StringCallSetParser parser(*this, string);
-        parser.parse();
+    /*
+     * Parse a comma-separated list of files or ranges
+     */
+    std::stringstream calls_arg(string);
+    std::string token;
+    const char *str;
+
+    while (std::getline(calls_arg, token, ',')) {
+        str = token.c_str();
+        if (str[0] == '@') {
+            FileCallSetParser parser(*this, &str[1]);
+            parser.parse();
+        } else {
+            StringCallSetParser parser(*this, str);
+            parser.parse();
+        }
     }
 }
 

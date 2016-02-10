@@ -185,24 +185,17 @@ void VariantVisitor::visit(trace::Double *node)
 
 void VariantVisitor::visit(trace::String *node)
 {
-    m_variant = QVariant(QString::fromStdString(node->value));
+    m_variant = QVariant(QString::fromLatin1(node->value));
+}
+
+void VariantVisitor::visit(trace::WString *node)
+{
+    m_variant = QVariant(QString::fromWCharArray(node->value));
 }
 
 void VariantVisitor::visit(trace::Enum *e)
 {
-    ApiTraceEnumSignature *sig = 0;
-
-    if (m_loader) {
-        sig = m_loader->enumSignature(e->sig->id);
-    }
-    if (!sig) {
-        sig = new ApiTraceEnumSignature(e->sig);
-        if (m_loader) {
-            m_loader->addEnumSignature(e->sig->id, sig);
-        }
-    }
-
-    m_variant = QVariant::fromValue(ApiEnum(sig, e->value));
+    m_variant = QVariant::fromValue(ApiEnum(e->sig, e->value));
 }
 
 void VariantVisitor::visit(trace::Bitmask *bitmask)
@@ -237,42 +230,24 @@ void VariantVisitor::visit(trace::Repr *repr)
     repr->humanValue->visit(*this);
 }
 
-ApiTraceEnumSignature::ApiTraceEnumSignature(const trace::EnumSig *sig)
-{
-    for (const trace::EnumValue *it = sig->values;
-         it != sig->values + sig->num_values; ++it) {
-        QPair<QString, signed long long> pair;
-
-        pair.first = QString::fromStdString(it->name);
-        pair.second = it->value;
-
-        m_names.append(pair);
-    }
-}
-
-QString ApiTraceEnumSignature::name(signed long long value) const
-{
-    for (ValueList::const_iterator it = m_names.begin();
-         it != m_names.end(); ++it) {
-        if (value == it->second) {
-            return it->first;
-        }
-    }
-    return QString::fromLatin1("%1").arg(value);
-}
-
-ApiEnum::ApiEnum(ApiTraceEnumSignature *sig, signed long long value)
+ApiEnum::ApiEnum(const trace::EnumSig *sig, signed long long value)
     : m_sig(sig), m_value(value)
 {
+    Q_ASSERT(m_sig);
 }
 
 QString ApiEnum::toString() const
 {
-    if (m_sig) {
-        return m_sig->name(m_value);
+    Q_ASSERT(m_sig);
+
+    for (const trace::EnumValue *it = m_sig->values;
+         it != m_sig->values + m_sig->num_values; ++it) {
+        if (m_value == it->value) {
+            return QString::fromLatin1(it->name);
+        }
     }
-    Q_ASSERT(!"should never happen");
-    return QString();
+
+    return QString::fromLatin1("%1").arg(m_value);
 }
 
 QVariant ApiEnum::value() const
@@ -282,15 +257,6 @@ QVariant ApiEnum::value() const
     }
     Q_ASSERT(!"should never happen");
     return QVariant();
-}
-
-QString ApiEnum::name() const
-{
-    if (m_sig) {
-        return m_sig->name(m_value);
-    }
-    Q_ASSERT(!"should never happen");
-    return QString();
 }
 
 unsigned long long ApiBitmask::value() const
@@ -348,7 +314,7 @@ void ApiBitmask::init(const trace::Bitmask *bitmask)
          it != bitmask->sig->flags + bitmask->sig->num_flags; ++it) {
         QPair<QString, unsigned long long> pair;
 
-        pair.first = QString::fromStdString(it->name);
+        pair.first = QString::fromLatin1(it->name);
         pair.second = it->value;
 
         m_sig.append(pair);
@@ -411,11 +377,11 @@ void ApiStruct::init(const trace::Struct *s)
     if (!s)
         return;
 
-    m_sig.name = QString::fromStdString(s->sig->name);
+    m_sig.name = QString::fromLatin1(s->sig->name);
     for (unsigned i = 0; i < s->sig->num_members; ++i) {
-        VariantVisitor vis(0);
+        VariantVisitor vis;
         m_sig.memberNames.append(
-            QString::fromStdString(s->sig->member_names[i]));
+            QString::fromLatin1(s->sig->member_names[i]));
         s->members[i]->visit(vis);
         m_members.append(vis.variant());
     }
@@ -458,7 +424,7 @@ void ApiArray::init(const trace::Array *arr)
 
     m_array.reserve(arr->values.size());
     for (int i = 0; i < arr->values.size(); ++i) {
-        VariantVisitor vis(0);
+        VariantVisitor vis;
         arr->values[i]->visit(vis);
 
         m_array.append(vis.variant());
@@ -468,6 +434,34 @@ void ApiArray::init(const trace::Array *arr)
 
 ApiTraceState::ApiTraceState()
 {
+}
+
+static ApiTexture getTextureFrom(QVariantMap const &image, QString label)
+{
+    QSize size(image[QLatin1String("__width__")].toInt(),
+               image[QLatin1String("__height__")].toInt());
+    QString cls = image[QLatin1String("__class__")].toString();
+    int depth =
+        image[QLatin1String("__depth__")].toInt();
+    QString formatName =
+        image[QLatin1String("__format__")].toString();
+
+    QByteArray dataArray =
+        image[QLatin1String("__data__")].toByteArray();
+
+    QString userLabel =
+        image[QLatin1String("__label__")].toString();
+    if (!userLabel.isEmpty()) {
+        label += QString(", \"%1\"").arg(userLabel);
+    }
+
+    ApiTexture tex;
+    tex.setSize(size);
+    tex.setDepth(depth);
+    tex.setFormatName(formatName);
+    tex.setLabel(label);
+    tex.setData(dataArray);
+    return tex;
 }
 
 ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
@@ -487,29 +481,14 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
     m_uniforms = parsedJson[QLatin1String("uniforms")].toMap();
 
-    QVariantMap textures =
-        parsedJson[QLatin1String("textures")].toMap();
-    for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
-        QVariantMap image = itr.value().toMap();
-        QSize size(image[QLatin1String("__width__")].toInt(),
-                   image[QLatin1String("__height__")].toInt());
-        QString cls = image[QLatin1String("__class__")].toString();
-        int depth =
-            image[QLatin1String("__depth__")].toInt();
-        QString formatName =
-            image[QLatin1String("__format__")].toString();
+    m_buffers = parsedJson[QLatin1String("buffers")].toMap();
 
-        QByteArray dataArray =
-            image[QLatin1String("__data__")].toByteArray();
-
-        ApiTexture tex;
-        tex.setSize(size);
-        tex.setDepth(depth);
-        tex.setFormatName(formatName);
-        tex.setLabel(itr.key());
-        tex.contentsFromBase64(dataArray);
-
-        m_textures.append(tex);
+    {
+        QVariantMap textures =
+            parsedJson[QLatin1String("textures")].toMap();
+        for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
+            m_textures.append(getTextureFrom(itr.value().toMap(), itr.key()));
+        }
     }
 
     QVariantMap fbos =
@@ -525,12 +504,19 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QByteArray dataArray =
             buffer[QLatin1String("__data__")].toByteArray();
 
+        QString label = itr.key();
+        QString userLabel =
+            buffer[QLatin1String("__label__")].toString();
+        if (!userLabel.isEmpty()) {
+            label += QString(", \"%1\"").arg(userLabel);
+        }
+
         ApiFramebuffer fbo;
         fbo.setSize(size);
         fbo.setDepth(depth);
         fbo.setFormatName(formatName);
-        fbo.setType(itr.key());
-        fbo.contentsFromBase64(dataArray);
+        fbo.setType(label);
+        fbo.setData(dataArray);
         m_framebuffers.append(fbo);
     }
 }
@@ -548,6 +534,11 @@ const QMap<QString, QString> & ApiTraceState::shaderSources() const
 const QVariantMap & ApiTraceState::uniforms() const
 {
     return m_uniforms;
+}
+
+const QVariantMap & ApiTraceState::buffers() const
+{
+    return m_buffers;
 }
 
 bool ApiTraceState::isEmpty() const
@@ -607,8 +598,7 @@ void ApiTraceCallSignature::setHelpUrl(const QUrl &url)
 
 ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0),
+      m_binaryDataIndex(-1),
       m_state(0),
       m_staticText(0)
 {
@@ -616,26 +606,17 @@ ApiTraceEvent::ApiTraceEvent()
 
 ApiTraceEvent::ApiTraceEvent(Type t)
     : m_type(t),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0),
+      m_binaryDataIndex(-1),
       m_state(0),
       m_staticText(0)
 {
+    Q_ASSERT(m_type == t);
 }
 
 ApiTraceEvent::~ApiTraceEvent()
 {
     delete m_state;
     delete m_staticText;
-}
-
-QVariantMap ApiTraceEvent::stateParameters() const
-{
-    if (m_state) {
-        return m_state->parameters();
-    } else {
-        return QVariantMap();
-    }
 }
 
 ApiTraceState *ApiTraceEvent::state() const
@@ -646,6 +627,16 @@ ApiTraceState *ApiTraceEvent::state() const
 void ApiTraceEvent::setState(ApiTraceState *state)
 {
     m_state = state;
+}
+
+void ApiTraceEvent::setThumbnail(const QImage & thumbnail)
+{
+    m_thumbnail = thumbnail;
+}
+
+const QImage & ApiTraceEvent::thumbnail() const
+{
+    return m_thumbnail;
 }
 
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
@@ -683,28 +674,27 @@ ApiTraceCall::loadData(TraceLoader *loader,
     m_signature = loader->signature(call->sig->id);
 
     if (!m_signature) {
-        QString name = QString::fromStdString(call->sig->name);
+        QString name = QString::fromLatin1(call->sig->name);
         QStringList argNames;
         argNames.reserve(call->sig->num_args);
         for (int i = 0; i < call->sig->num_args; ++i) {
-            argNames += QString::fromStdString(call->sig->arg_names[i]);
+            argNames += QString::fromLatin1(call->sig->arg_names[i]);
         }
         m_signature = new ApiTraceCallSignature(name, argNames);
         loader->addSignature(call->sig->id, m_signature);
     }
     if (call->ret) {
-        VariantVisitor retVisitor(loader);
+        VariantVisitor retVisitor;
         call->ret->visit(retVisitor);
         m_returnValue = retVisitor.variant();
     }
     m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
         if (call->args[i].value) {
-            VariantVisitor argVisitor(loader);
+            VariantVisitor argVisitor;
             call->args[i].value->visit(argVisitor);
             m_argValues.append(argVisitor.variant());
             if (m_argValues[i].type() == QVariant::ByteArray) {
-                m_hasBinaryData = true;
                 m_binaryDataIndex = i;
             }
         } else {
@@ -910,11 +900,12 @@ QUrl ApiTraceCall::helpUrl() const
 
 bool ApiTraceCall::hasBinaryData() const
 {
-    return m_hasBinaryData;
+    return m_binaryDataIndex >= 0;
 }
 
 int ApiTraceCall::binaryDataIndex() const
 {
+    Q_ASSERT(hasBinaryData());
     return m_binaryDataIndex;
 }
 
@@ -1117,6 +1108,11 @@ bool ApiTraceCall::contains(const QString &str,
     return txt.contains(str, sensitivity);
 }
 
+void ApiTraceCall::missingThumbnail()
+{
+    m_parentFrame->parentTrace()->missingThumbnail(this);
+}
+
 
 ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
     : ApiTraceEvent(ApiTraceEvent::Frame),
@@ -1317,12 +1313,7 @@ unsigned ApiTraceFrame::lastCallIndex() const
     }
 }
 
-void ApiTraceFrame::setThumbnail(const QImage & thumbnail)
+void ApiTraceFrame::missingThumbnail()
 {
-    m_thumbnail = thumbnail;
-}
-
-const QImage & ApiTraceFrame::thumbnail() const
-{
-    return m_thumbnail;
+    m_parentTrace->missingThumbnail(this);
 }

@@ -28,129 +28,58 @@
 
 #include "d3dretrace.hpp"
 
+#include "ws_win32.hpp"
+
 
 namespace d3dretrace {
 
 
-// XXX: Don't duplicate this code.
-
-static LRESULT CALLBACK
-WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HWND
+createWindow(int width, int height)
 {
-    MINMAXINFO *pMMI;
-    switch (uMsg) {
-    case WM_KEYDOWN:
-        switch (wParam) {
-        case VK_ESCAPE:
-            PostMessage(hWnd, WM_CLOSE, 0, 0);
-            break;
-        }
-        break;
-    case WM_GETMINMAXINFO:
-        // Allow to create a window bigger than the desktop
-        pMMI = (MINMAXINFO *)lParam;
-        pMMI->ptMaxSize.x = 60000;
-        pMMI->ptMaxSize.y = 60000;
-        pMMI->ptMaxTrackSize.x = 60000;
-        pMMI->ptMaxTrackSize.y = 60000;
-        break;
-    case WM_CLOSE:
-        exit(0);
-        break;
-    default:
-        break;
-    }
+    HWND hWnd;
 
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    hWnd = ws::createWindow("d3dretrace", width, height);
+
+    ws::showWindow(hWnd);
+
+    return hWnd;
 }
 
 
+typedef std::map<HWND, HWND> HWND_MAP;
+static HWND_MAP g_hWndMap;
+
+
 HWND
-createWindow(int width, int height) {
-    static bool first = TRUE;
-    RECT rect;
-
-    if (first) {
-        WNDCLASS wc;
-        memset(&wc, 0, sizeof wc);
-        wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
-        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-        wc.lpfnWndProc = WndProc;
-        wc.lpszClassName = "d3dretrace";
-        wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-        RegisterClass(&wc);
-        first = FALSE;
+createWindow(HWND hWnd, int width, int height)
+{
+    HWND_MAP::iterator it;
+    it = g_hWndMap.find(hWnd);
+    if (it == g_hWndMap.end()) {
+        // Create a new window
+        hWnd = createWindow(width, height);
+        g_hWndMap[hWnd] = hWnd;
+    } else {
+        // Reuse the existing window
+        hWnd = it->second;
+        ws::resizeWindow(hWnd, width, height);
     }
-
-    DWORD dwExStyle;
-    DWORD dwStyle;
-    HWND hWnd;
-
-    dwExStyle = 0;
-    dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-
-    int x = 0, y = 0;
-
-    rect.left = x;
-    rect.top = y;
-    rect.right = rect.left + width;
-    rect.bottom = rect.top + height;
-
-    AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
-
-    hWnd = CreateWindowEx(dwExStyle,
-                          "d3dretrace", /* wc.lpszClassName */
-                          NULL,
-                          dwStyle,
-                          0, /* x */
-                          0, /* y */
-                          rect.right - rect.left, /* width */
-                          rect.bottom - rect.top, /* height */
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL);
-    ShowWindow(hWnd, SW_SHOW);
     return hWnd;
 }
 
 
 void
-resizeWindow(HWND hWnd, int width, int height) {
-    RECT rClient;
-    GetClientRect(hWnd, &rClient);
-    if (width  == rClient.right  - rClient.left &&
-        height == rClient.bottom - rClient.top) {
-        return;
-    }
-
-    RECT rWindow;
-    GetWindowRect(hWnd, &rWindow);
-    width  += (rWindow.right  - rWindow.left) - rClient.right;
-    height += (rWindow.bottom - rWindow.top)  - rClient.bottom;
-
-    // SetWindowPos will hang if this ever happens.
-    assert(GetCurrentThreadId() == GetWindowThreadProcessId(hWnd, NULL));
-
-    SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, width, height, SWP_NOMOVE);
+resizeWindow(HWND hWnd, int width, int height)
+{
+    ws::resizeWindow(hWnd, width, height);
 }
 
 
 bool
-processEvents(void) {
-    MSG uMsg;
-    while (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) {
-        if (uMsg.message == WM_QUIT) {
-            return false;
-        }
-
-        if (!TranslateAccelerator(uMsg.hwnd, NULL, &uMsg)) {
-            TranslateMessage(&uMsg);
-            DispatchMessage(&uMsg);
-        }
-    }
-    return true;
+processEvents(void)
+{
+    return ws::processEvents();
 }
 
 

@@ -24,8 +24,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3D9SHADER_HPP_
-#define _D3D9SHADER_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -35,4 +34,3 @@
 void DumpShader(trace::Writer &writer, const DWORD *tokens);
 
 
-#endif /* _D3D9SHADER_HPP_ */

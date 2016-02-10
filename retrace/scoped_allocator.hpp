@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _SCOPED_ALLOCATOR_HPP_
-#define _SCOPED_ALLOCATOR_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -63,10 +62,11 @@ public:
         return static_cast<void *>(&buf[1]);
     }
     
+    /* XXX: See comment in retrace::ScopedAllocator::allocArray template. */
     template< class T >
     inline T *
-    alloc(size_t size = 1) {
-        return static_cast<T *>(alloc(sizeof(T) * size));
+    alloc(size_t size = 1, size_t sizeof_T = sizeof(T)) {
+        return static_cast<T *>(alloc(sizeof_T * size));
     }
 
     /**
@@ -98,4 +98,3 @@ public:
 };
 
 
-#endif /* _SCOPED_ALLOCATOR_HPP_ */

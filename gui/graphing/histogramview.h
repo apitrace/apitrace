@@ -1,5 +1,4 @@
-#ifndef HISTOGRAMVIEW_H
-#define HISTOGRAMVIEW_H
+#pragma once
 
 #include "graphview.h"
 
@@ -37,5 +36,3 @@ protected:
 
     GraphDataProvider* m_data;
 };
-
-#endif

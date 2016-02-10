@@ -26,8 +26,6 @@
  *********************************************************************/
 
 #include <string.h>
-#include <getopt.h>
-
 #include <iostream>
 
 #include "cli.hpp"
@@ -37,63 +35,42 @@
 
 static const char *synopsis = "Identify differences between two state dumps.";
 
+static os::String
+find_command(void)
+{
+    return findScript("jsondiff.py");
+}
+
 static void
 usage(void)
 {
-    std::cout
-        << "usage: apitrace diff-state <state-1> <state-2>\n"
-        << synopsis << "\n"
-        "\n"
-        "    Both input files should be the result of running 'glretrace -D XYZ <trace>'.\n";
+    os::String command = find_command();
+
+    char *args[4];
+    args[0] = (char *) APITRACE_PYTHON_EXECUTABLE;
+    args[1] = (char *) command.str();
+    args[2] = (char *) "--help";
+    args[3] = NULL;
+
+    os::execute(args);
 }
-
-const static char *
-shortOptions = "h";
-
-const static struct option
-longOptions[] = {
-    {"help", no_argument, 0, 'h'},
-    {0, 0, 0, 0}
-};
 
 static int
 command(int argc, char *argv[])
 {
-    int opt;
-    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
-        switch (opt) {
-        case 'h':
-            usage();
-            return 0;
-        default:
-            std::cerr << "error: unexpected option `" << (char)opt << "`\n";
-            usage();
-            return 1;
-        }
+    int i;
+
+    os::String command = find_command();
+
+    std::vector<const char *> args;
+    args.push_back(APITRACE_PYTHON_EXECUTABLE);
+    args.push_back(command.str());
+    for (i = 1; i < argc; i++) {
+        args.push_back(argv[i]);
     }
+    args.push_back(NULL);
 
-    if (argc != optind + 2) {
-        std::cerr << "Error: diff-state requires exactly two state-dump files as arguments.\n";
-        usage();
-        return 1;
-    }
-
-    char *file1, *file2;
-
-    file1 = argv[optind];
-    file2 = argv[optind + 1];
-
-    os::String command = findScript("jsondiff.py");
-
-    char *args[5];
-
-    args[0] = const_cast<char *>("python");
-    args[1] = const_cast<char *>(command.str());
-    args[2] = file1;
-    args[3] = file2;
-    args[4] = NULL;
-
-    return os::execute(args);
+    return os::execute((char * const *)&args[0]);
 }
 
 const Command diff_state_command = {

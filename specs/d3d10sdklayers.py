@@ -23,8 +23,9 @@
 #
 ##########################################################################/
 
+
 from dxgi import *
-from d3d10 import HRESULT
+
 
 D3D10_DEBUG_FEATURE = Flags(UINT, [
     "D3D10_DEBUG_FEATURE_FLUSH_PER_RENDER_OP",
@@ -35,7 +36,7 @@ D3D10_DEBUG_FEATURE = Flags(UINT, [
 ID3D10Debug = Interface("ID3D10Debug", IUnknown)
 ID3D10Debug.methods += [
     StdMethod(HRESULT, "SetFeatureMask", [(D3D10_DEBUG_FEATURE, "Mask")]),
-    StdMethod(UINT, "GetFeatureMask", [], sideeffects=False),
+    StdMethod(D3D10_DEBUG_FEATURE, "GetFeatureMask", [], sideeffects=False),
     StdMethod(HRESULT, "SetPresentPerRenderOpDelay", [(UINT, "Milliseconds")]),
     StdMethod(UINT, "GetPresentPerRenderOpDelay", [], sideeffects=False),
     StdMethod(HRESULT, "SetSwapChain", [(ObjPointer(IDXGISwapChain), "pSwapChain")]),
@@ -567,11 +568,11 @@ D3D10_MESSAGE = Struct("D3D10_MESSAGE", [
 
 D3D10_INFO_QUEUE_FILTER_DESC = Struct("D3D10_INFO_QUEUE_FILTER_DESC", [
     (UINT, "NumCategories"),
-    (Pointer(D3D10_MESSAGE_CATEGORY), "pCategoryList"),
+    (Array(D3D10_MESSAGE_CATEGORY, "{self}.NumCategories"), "pCategoryList"),
     (UINT, "NumSeverities"),
-    (Pointer(D3D10_MESSAGE_SEVERITY), "pSeverityList"),
+    (Array(D3D10_MESSAGE_SEVERITY, "{self}.NumSeverities"), "pSeverityList"),
     (UINT, "NumIDs"),
-    (OpaquePointer(D3D10_MESSAGE_ID), "pIDList"), # TODO: Array
+    (Array(D3D10_MESSAGE_ID, "{self}.NumIDs"), "pIDList"),
 ])
 
 D3D10_INFO_QUEUE_FILTER = Struct("D3D10_INFO_QUEUE_FILTER", [

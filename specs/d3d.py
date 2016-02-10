@@ -179,7 +179,7 @@ LPDIRECT3DVERTEXBUFFER7 = ObjPointer(IDirect3DVertexBuffer7)
 
 IDirect3D.methods += [
     StdMethod(HRESULT, "Initialize", [(REFCLSID, "riid")]),
-    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")]),
+    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")], sideeffects=False),
     StdMethod(HRESULT, "CreateLight", [Out(Pointer(LPDIRECT3DLIGHT), "lplpDirect3DLight"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateMaterial", [Out(Pointer(LPDIRECT3DMATERIAL), "lplpDirect3DMaterial"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateViewport", [Out(Pointer(LPDIRECT3DVIEWPORT), "lplpD3DViewport"), (LPUNKNOWN, "pUnkOuter")]),
@@ -187,7 +187,7 @@ IDirect3D.methods += [
 ]
 
 IDirect3D2.methods += [
-    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")]),
+    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")], sideeffects=False),
     StdMethod(HRESULT, "CreateLight", [Out(Pointer(LPDIRECT3DLIGHT), "lplpDirect3DLight"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateMaterial", [Out(Pointer(LPDIRECT3DMATERIAL2), "lplpDirect3DMaterial2"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateViewport", [Out(Pointer(LPDIRECT3DVIEWPORT2), "lplpD3DViewport2"), (LPUNKNOWN, "pUnkOuter")]),
@@ -196,41 +196,41 @@ IDirect3D2.methods += [
 ]
 
 IDirect3D3.methods += [
-    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")]),
+    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")], sideeffects=False),
     StdMethod(HRESULT, "CreateLight", [Out(Pointer(LPDIRECT3DLIGHT), "lplpDirect3DLight"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateMaterial", [Out(Pointer(LPDIRECT3DMATERIAL3), "lplpDirect3DMaterial3"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "CreateViewport", [Out(Pointer(LPDIRECT3DVIEWPORT3), "lplpD3DViewport3"), (LPUNKNOWN, "pUnkOuter")]),
     StdMethod(HRESULT, "FindDevice", [(LPD3DFINDDEVICESEARCH, "lpD3DDFS"), Out(LPD3DFINDDEVICERESULT, "lpD3DFDR")]),
     StdMethod(HRESULT, "CreateDevice", [(REFCLSID, "rclsid"), (LPDIRECTDRAWSURFACE4, "lpDDS"), Out(Pointer(LPDIRECT3DDEVICE3), "lplpD3DDevice3"), (LPUNKNOWN, "lpUnk")]),
     StdMethod(HRESULT, "CreateVertexBuffer", [(LPD3DVERTEXBUFFERDESC, "lpD3DVertBufDesc"), Out(Pointer(LPDIRECT3DVERTEXBUFFER), "lplpD3DVertBuf"), (DWORD, "dwFlags"), (LPUNKNOWN, "lpUnk")]),
-    StdMethod(HRESULT, "EnumZBufferFormats", [(REFCLSID, "riidDevice"), (LPD3DENUMPIXELFORMATSCALLBACK, "lpEnumCallback"), (LPVOID, "lpContext")]),
+    StdMethod(HRESULT, "EnumZBufferFormats", [(REFCLSID, "riidDevice"), (LPD3DENUMPIXELFORMATSCALLBACK, "lpEnumCallback"), (LPVOID, "lpContext")], sideeffects=False),
     StdMethod(HRESULT, "EvictManagedTextures", []),
 ]
 
 IDirect3D7.methods += [
-    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK7, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")]),
+    StdMethod(HRESULT, "EnumDevices", [(LPD3DENUMDEVICESCALLBACK7, "lpEnumDevicesCallback"), (LPVOID, "lpUserArg")], sideeffects=False),
     StdMethod(HRESULT, "CreateDevice", [(REFCLSID, "rclsid"), (LPDIRECTDRAWSURFACE7, "lpDDS"), Out(Pointer(LPDIRECT3DDEVICE7), "lplpD3DDevice")]),
     StdMethod(HRESULT, "CreateVertexBuffer", [(LPD3DVERTEXBUFFERDESC, "lpD3DVertBufDesc"), Out(Pointer(LPDIRECT3DVERTEXBUFFER7), "lplpD3DVertBuf"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "EnumZBufferFormats", [(REFCLSID, "riidDevice"), (LPD3DENUMPIXELFORMATSCALLBACK, "lpEnumCallback"), (LPVOID, "lpContext")]),
+    StdMethod(HRESULT, "EnumZBufferFormats", [(REFCLSID, "riidDevice"), (LPD3DENUMPIXELFORMATSCALLBACK, "lpEnumCallback"), (LPVOID, "lpContext")], sideeffects=False),
     StdMethod(HRESULT, "EvictManagedTextures", []),
 ]
 
 IDirect3DDevice.methods += [
     StdMethod(HRESULT, "Initialize", [(LPDIRECT3D, "lpDirect3D"), (LPGUID, "lpGUID"), (LPD3DDEVICEDESC, "lpD3DDVDesc")]),
-    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")]),
+    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")], sideeffects=False),
     StdMethod(HRESULT, "SwapTextureHandles", [(LPDIRECT3DTEXTURE, "lpD3Dtex1"), (LPDIRECT3DTEXTURE, "lpD3DTex2")]),
     StdMethod(HRESULT, "CreateExecuteBuffer", [(LPD3DEXECUTEBUFFERDESC, "lpDesc"), Out(Pointer(LPDIRECT3DEXECUTEBUFFER), "lplpDirect3DExecuteBuffer"), (LPUNKNOWN, "pUnkOuter")]),
-    StdMethod(HRESULT, "GetStats", [(LPD3DSTATS, "lpD3DStats")]),
+    StdMethod(HRESULT, "GetStats", [(LPD3DSTATS, "lpD3DStats")], sideeffects=False),
     StdMethod(HRESULT, "Execute", [(LPDIRECT3DEXECUTEBUFFER, "lpDirect3DExecuteBuffer"), (LPDIRECT3DVIEWPORT, "lpDirect3DViewport"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "AddViewport", [(LPDIRECT3DVIEWPORT, "lpDirect3DViewport")]),
     StdMethod(HRESULT, "DeleteViewport", [(LPDIRECT3DVIEWPORT, "lpDirect3DViewport")]),
     StdMethod(HRESULT, "NextViewport", [(LPDIRECT3DVIEWPORT, "lpDirect3DViewport"), Out(Pointer(LPDIRECT3DVIEWPORT), "lplpDirect3DViewport"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "Pick", [(LPDIRECT3DEXECUTEBUFFER, "lpDirect3DExecuteBuffer"), (LPDIRECT3DVIEWPORT, "lpDirect3DViewport"), (DWORD, "dwFlags"), (LPD3DRECT, "lpRect")]),
-    StdMethod(HRESULT, "GetPickRecords", [(LPDWORD, "lpCount"), (LPD3DPICKRECORD, "lpD3DPickRec")]),
-    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMTEXTUREFORMATSCALLBACK, "lpD3DEnumTextureProc"), (LPVOID, "lpArg")]),
+    StdMethod(HRESULT, "GetPickRecords", [(LPDWORD, "lpCount"), (LPD3DPICKRECORD, "lpD3DPickRec")], sideeffects=False),
+    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMTEXTUREFORMATSCALLBACK, "lpD3DEnumTextureProc"), (LPVOID, "lpArg")], sideeffects=False),
     StdMethod(HRESULT, "CreateMatrix", [Out(LPD3DMATRIXHANDLE, "lpD3DMatHandle")]),
     StdMethod(HRESULT, "SetMatrix", [(D3DMATRIXHANDLE, "D3DMatHandle"), (Const(LPD3DMATRIX), "lpD3DMatrix")]),
-    StdMethod(HRESULT, "GetMatrix", [(D3DMATRIXHANDLE, "D3DMatHandle"), Out(LPD3DMATRIX, "lpD3DMatrix")]),
+    StdMethod(HRESULT, "GetMatrix", [(D3DMATRIXHANDLE, "D3DMatHandle"), Out(LPD3DMATRIX, "lpD3DMatrix")], sideeffects=False),
     StdMethod(HRESULT, "DeleteMatrix", [(D3DMATRIXHANDLE, "D3DMatHandle")]),
     StdMethod(HRESULT, "BeginScene", []),
     StdMethod(HRESULT, "EndScene", []),
@@ -238,18 +238,18 @@ IDirect3DDevice.methods += [
 ]
 
 IDirect3DDevice2.methods += [
-    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")]),
+    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")], sideeffects=False),
     StdMethod(HRESULT, "SwapTextureHandles", [(LPDIRECT3DTEXTURE2, "lpD3DTex1"), (LPDIRECT3DTEXTURE2, "lpD3DTex2")]),
-    StdMethod(HRESULT, "GetStats", [Out(LPD3DSTATS, "lpD3DStats")]),
+    StdMethod(HRESULT, "GetStats", [Out(LPD3DSTATS, "lpD3DStats")], sideeffects=False),
     StdMethod(HRESULT, "AddViewport", [(LPDIRECT3DVIEWPORT2, "lpDirect3DViewport2")]),
     StdMethod(HRESULT, "DeleteViewport", [(LPDIRECT3DVIEWPORT2, "lpDirect3DViewport2")]),
     StdMethod(HRESULT, "NextViewport", [(LPDIRECT3DVIEWPORT2, "lpDirect3DViewport2"), Out(Pointer(LPDIRECT3DVIEWPORT2), "lplpDirect3DViewport2"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMTEXTUREFORMATSCALLBACK, "lpD3DEnumTextureProc"), (LPVOID, "lpArg")]),
+    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMTEXTUREFORMATSCALLBACK, "lpD3DEnumTextureProc"), (LPVOID, "lpArg")], sideeffects=False),
     StdMethod(HRESULT, "BeginScene", []),
     StdMethod(HRESULT, "EndScene", []),
     StdMethod(HRESULT, "GetDirect3D", [Out(Pointer(LPDIRECT3D2), "lplpDirect3D2")]),
     StdMethod(HRESULT, "SetCurrentViewport", [(LPDIRECT3DVIEWPORT2, "lpDirect3DViewport2")]),
-    StdMethod(HRESULT, "GetCurrentViewport", [Out(Pointer(LPDIRECT3DVIEWPORT2), "lplpDirect3DViewport2")]),
+    StdMethod(HRESULT, "GetCurrentViewport", [Out(Pointer(LPDIRECT3DVIEWPORT2), "lplpDirect3DViewport2")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderTarget", [(LPDIRECTDRAWSURFACE, "lpNewRenderTarget"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetRenderTarget", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpRenderTarget")]),
     StdMethod(HRESULT, "Begin", [(D3DPRIMITIVETYPE, "d3dpt"), (D3DVERTEXTYPE, "dwVertexTypeDesc"), (DWORD, "dwFlags")]),
@@ -257,31 +257,31 @@ IDirect3DDevice2.methods += [
     StdMethod(HRESULT, "Vertex", [(LPVOID, "lpVertexType")]),
     StdMethod(HRESULT, "Index", [(WORD, "wVertexIndex")]),
     StdMethod(HRESULT, "End", [(DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")]),
+    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), (DWORD, "dwRenderState")]),
-    StdMethod(HRESULT, "GetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), Out(LPDWORD, "lpdwLightState")]),
+    StdMethod(HRESULT, "GetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), Out(LPDWORD, "lpdwLightState")], sideeffects=False),
     StdMethod(HRESULT, "SetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), (DWORD, "dwLightState")]),
     StdMethod(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
-    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")]),
+    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")], sideeffects=False),
     StdMethod(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
     StdMethod(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DVERTEXTYPE, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DVERTEXTYPE, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (LPWORD, "dwIndices"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "SetClipStatus", [(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
-    StdMethod(HRESULT, "GetClipStatus", [(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
+    StdMethod(HRESULT, "GetClipStatus", [(LPD3DCLIPSTATUS, "lpD3DClipStatus")], sideeffects=False),
 ]
 
 IDirect3DDevice3.methods += [
-    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")]),
-    StdMethod(HRESULT, "GetStats", [Out(LPD3DSTATS, "lpD3DStats")]),
+    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC, "lpD3DHWDevDesc"), Out(LPD3DDEVICEDESC, "lpD3DHELDevDesc")], sideeffects=False),
+    StdMethod(HRESULT, "GetStats", [Out(LPD3DSTATS, "lpD3DStats")], sideeffects=False),
     StdMethod(HRESULT, "AddViewport", [(LPDIRECT3DVIEWPORT3, "lpDirect3DViewport3")]),
     StdMethod(HRESULT, "DeleteViewport", [(LPDIRECT3DVIEWPORT3, "lpDirect3DViewport3")]),
     StdMethod(HRESULT, "NextViewport", [(LPDIRECT3DVIEWPORT3, "lpDirect3DViewport3"), Out(Pointer(LPDIRECT3DVIEWPORT3), "lplpDirect3DViewport3"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMPIXELFORMATSCALLBACK, "lpD3DEnumPixelProc"), (LPVOID, "lpArg")]),
+    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMPIXELFORMATSCALLBACK, "lpD3DEnumPixelProc"), (LPVOID, "lpArg")], sideeffects=False),
     StdMethod(HRESULT, "BeginScene", []),
     StdMethod(HRESULT, "EndScene", []),
     StdMethod(HRESULT, "GetDirect3D", [Out(Pointer(LPDIRECT3D3), "lplpDirect3D3")]),
     StdMethod(HRESULT, "SetCurrentViewport", [(LPDIRECT3DVIEWPORT3, "lpDirect3DViewport3")]),
-    StdMethod(HRESULT, "GetCurrentViewport", [Out(Pointer(LPDIRECT3DVIEWPORT3), "lplpDirect3DViewport3")]),
+    StdMethod(HRESULT, "GetCurrentViewport", [Out(Pointer(LPDIRECT3DVIEWPORT3), "lplpDirect3DViewport3")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderTarget", [(LPDIRECTDRAWSURFACE4, "lpNewRenderTarget"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetRenderTarget", [Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpRenderTarget")]),
     StdMethod(HRESULT, "Begin", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (DWORD, "dwVertexTypeDesc"), (DWORD, "dwFlags")]),
@@ -289,17 +289,17 @@ IDirect3DDevice3.methods += [
     StdMethod(HRESULT, "Vertex", [(LPVOID, "lpVertexType")]),
     StdMethod(HRESULT, "Index", [(WORD, "wVertexIndex")]),
     StdMethod(HRESULT, "End", [(DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")]),
+    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), (DWORD, "dwRenderState")]),
-    StdMethod(HRESULT, "GetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), Out(LPDWORD, "lpdwLightState")]),
+    StdMethod(HRESULT, "GetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), Out(LPDWORD, "lpdwLightState")], sideeffects=False),
     StdMethod(HRESULT, "SetLightState", [(D3DLIGHTSTATETYPE, "dwLightStateType"), (DWORD, "dwLightState")]),
     StdMethod(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
-    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")]),
+    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")], sideeffects=False),
     StdMethod(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
     StdMethod(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (DWORD, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (DWORD, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (LPWORD, "dwIndices"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "SetClipStatus", [(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
-    StdMethod(HRESULT, "GetClipStatus", [Out(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
+    StdMethod(HRESULT, "GetClipStatus", [Out(LPD3DCLIPSTATUS, "lpD3DClipStatus")], sideeffects=False),
     StdMethod(HRESULT, "DrawPrimitiveStrided", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (DWORD, "dwVertexType"), (LPD3DDRAWPRIMITIVESTRIDEDDATA, "lpD3DDrawPrimStrideData"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawIndexedPrimitiveStrided", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (DWORD, "dwVertexType"), (LPD3DDRAWPRIMITIVESTRIDEDDATA, "lpD3DDrawPrimStrideData"), (DWORD, "dwVertexCount"), (LPWORD, "lpIndex"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawPrimitiveVB", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (LPDIRECT3DVERTEXBUFFER, "lpD3DVertexBuf"), (DWORD, "dwStartVertex"), (DWORD, "dwNumVertices"), (DWORD, "dwFlags")]),
@@ -307,38 +307,38 @@ IDirect3DDevice3.methods += [
     StdMethod(HRESULT, "ComputeSphereVisibility", [(LPD3DVECTOR, "lpCenters"), (LPD3DVALUE, "lpRadii"), (DWORD, "dwNumSpheres"), (DWORD, "dwFlags"), (LPDWORD, "lpdwReturnValues")]),
     StdMethod(HRESULT, "GetTexture", [(DWORD, "dwStage"), Out(Pointer(LPDIRECT3DTEXTURE2), "lplpTexture2")]),
     StdMethod(HRESULT, "SetTexture", [(DWORD, "dwStage"), (LPDIRECT3DTEXTURE2, "lpTexture2")]),
-    StdMethod(HRESULT, "GetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), Out(LPDWORD, "lpdwState")]),
+    StdMethod(HRESULT, "GetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), Out(LPDWORD, "lpdwState")], sideeffects=False),
     StdMethod(HRESULT, "SetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), (DWORD, "dwState")]),
     StdMethod(HRESULT, "ValidateDevice", [(LPDWORD, "lpdwPasses")]),
 ]
 
 IDirect3DDevice7.methods += [
-    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC7, "lpD3DHELDevDesc")]),
-    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMPIXELFORMATSCALLBACK, "lpD3DEnumPixelProc"), (LPVOID, "lpArg")]),
+    StdMethod(HRESULT, "GetCaps", [Out(LPD3DDEVICEDESC7, "lpD3DHELDevDesc")], sideeffects=False),
+    StdMethod(HRESULT, "EnumTextureFormats", [(LPD3DENUMPIXELFORMATSCALLBACK, "lpD3DEnumPixelProc"), (LPVOID, "lpArg")], sideeffects=False),
     StdMethod(HRESULT, "BeginScene", []),
     StdMethod(HRESULT, "EndScene", []),
     StdMethod(HRESULT, "GetDirect3D", [Out(Pointer(LPDIRECT3D7), "lplpDirect3D3")]),
     StdMethod(HRESULT, "SetRenderTarget", [(LPDIRECTDRAWSURFACE7, "lpNewRenderTarget"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetRenderTarget", [Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpRenderTarget")]),
-    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
+    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
     StdMethod(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
-    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")]),
+    StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")], sideeffects=False),
     StdMethod(HRESULT, "SetViewport", [(LPD3DVIEWPORT7, "lpData")]),
     StdMethod(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
-    StdMethod(HRESULT, "GetViewport", [Out(LPD3DVIEWPORT7, "lpData")]),
+    StdMethod(HRESULT, "GetViewport", [Out(LPD3DVIEWPORT7, "lpData")], sideeffects=False),
     StdMethod(HRESULT, "SetMaterial", [(LPD3DMATERIAL7, "lpMat")]),
-    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL7, "lpMat")]),
+    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL7, "lpMat")], sideeffects=False),
     StdMethod(HRESULT, "SetLight", [(DWORD, "dwLightIndex"), (LPD3DLIGHT7, "lpLight")]),
-    StdMethod(HRESULT, "GetLight", [(DWORD, "dwLightIndex"), (LPD3DLIGHT7, "lpLight")]),
+    StdMethod(HRESULT, "GetLight", [(DWORD, "dwLightIndex"), (LPD3DLIGHT7, "lpLight")], sideeffects=False),
     StdMethod(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), (DWORD, "dwRenderState")]),
-    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")]),
+    StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "dwRenderStateType"), Out(LPDWORD, "lpdwRenderState")], sideeffects=False),
     StdMethod(HRESULT, "BeginStateBlock", []),
     StdMethod(HRESULT, "EndStateBlock", [Out(LPDWORD, "lpdwBlockHandle")]),
     StdMethod(HRESULT, "PreLoad", [(LPDIRECTDRAWSURFACE7, "lpddsTexture")]),
-    StdMethod(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "d3dvtVertexType"), (LPVOID, "lpvVertices"), (DWORD, "dwVertexCount"), (LPWORD, "dwIndices"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
+    StdMethod(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "d3dvtVertexType"), (Blob(VOID, "dwVertexCount * _getVertexSize(d3dvtVertexType)"), "lpvVertices"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
+    StdMethod(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "d3dvtVertexType"), (Blob(VOID, "dwVertexCount * _getVertexSize(d3dvtVertexType)"), "lpvVertices"), (DWORD, "dwVertexCount"), (LPWORD, "dwIndices"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "SetClipStatus", [(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
-    StdMethod(HRESULT, "GetClipStatus", [Out(LPD3DCLIPSTATUS, "lpD3DClipStatus")]),
+    StdMethod(HRESULT, "GetClipStatus", [Out(LPD3DCLIPSTATUS, "lpD3DClipStatus")], sideeffects=False),
     StdMethod(HRESULT, "DrawPrimitiveStrided", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "dwVertexType"), (LPD3DDRAWPRIMITIVESTRIDEDDATA, "lpD3DDrawPrimStrideData"), (DWORD, "dwVertexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawIndexedPrimitiveStrided", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (D3DFVF, "dwVertexType"), (LPD3DDRAWPRIMITIVESTRIDEDDATA, "lpD3DDrawPrimStrideData"), (DWORD, "dwVertexCount"), (LPWORD, "lpIndex"), (DWORD, "dwIndexCount"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "DrawPrimitiveVB", [(D3DPRIMITIVETYPE, "d3dptPrimitiveType"), (LPDIRECT3DVERTEXBUFFER7, "lpD3DVertexBuf"), (DWORD, "dwStartVertex"), (DWORD, "dwNumVertices"), (DWORD, "dwFlags")]),
@@ -346,7 +346,7 @@ IDirect3DDevice7.methods += [
     StdMethod(HRESULT, "ComputeSphereVisibility", [(LPD3DVECTOR, "lpCenters"), (LPD3DVALUE, "lpRadii"), (DWORD, "dwNumSpheres"), (DWORD, "dwFlags"), (LPDWORD, "lpdwReturnValues")]),
     StdMethod(HRESULT, "GetTexture", [(DWORD, "dwStage"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lpTexture")]),
     StdMethod(HRESULT, "SetTexture", [(DWORD, "dwStage"), (LPDIRECTDRAWSURFACE7, "lpTexture")]),
-    StdMethod(HRESULT, "GetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), Out(LPDWORD, "lpdwState")]),
+    StdMethod(HRESULT, "GetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), Out(LPDWORD, "lpdwState")], sideeffects=False),
     StdMethod(HRESULT, "SetTextureStageState", [(DWORD, "dwStage"), (D3DTEXTURESTAGESTATETYPE, "d3dTexStageStateType"), (DWORD, "dwState")]),
     StdMethod(HRESULT, "ValidateDevice", [Out(LPDWORD, "lpdwPasses")]),
     StdMethod(HRESULT, "ApplyStateBlock", [(DWORD, "dwBlockHandle")]),
@@ -355,10 +355,10 @@ IDirect3DDevice7.methods += [
     StdMethod(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "d3dsbType"), Out(LPDWORD, "lpdwBlockHandle")]),
     StdMethod(HRESULT, "Load", [(LPDIRECTDRAWSURFACE7, "lpDestTex"), (LPPOINT, "lpDestPoint"), (LPDIRECTDRAWSURFACE7, "lpSrcTex"), (LPRECT, "lprcSrcRect"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "LightEnable", [(DWORD, "dwLightIndex"), (BOOL, "bEnable")]),
-    StdMethod(HRESULT, "GetLightEnable", [(DWORD, "dwLightIndex"), Out(Pointer(BOOL), "pbEnable")]),
-    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "dwIndex"), (Pointer(D3DVALUE), "pPlaneEquation")]),
-    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "dwIndex"), Out(Pointer(D3DVALUE), "pPlaneEquation")]),
-    StdMethod(HRESULT, "GetInfo", [(DWORD, "dwDevInfoID"), Out(LPVOID, "pDevInfoStruct"), (DWORD, "dwSize")]),
+    StdMethod(HRESULT, "GetLightEnable", [(DWORD, "dwLightIndex"), Out(Pointer(BOOL), "pbEnable")], sideeffects=False),
+    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "dwIndex"), (Array(D3DVALUE, 4), "pPlaneEquation")]),
+    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "dwIndex"), Out(Array(D3DVALUE, 4), "pPlaneEquation")], sideeffects=False),
+    StdMethod(HRESULT, "GetInfo", [(DWORD, "dwDevInfoID"), Out(LPVOID, "pDevInfoStruct"), (DWORD, "dwSize")], sideeffects=False),
 ]
 
 IDirect3DExecuteBuffer.methods += [
@@ -366,7 +366,7 @@ IDirect3DExecuteBuffer.methods += [
     StdMethod(HRESULT, "Lock", [(LPD3DEXECUTEBUFFERDESC, "lpDesc")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "SetExecuteData", [(LPD3DEXECUTEDATA, "lpData")]),
-    StdMethod(HRESULT, "GetExecuteData", [Out(LPD3DEXECUTEDATA, "lpData")]),
+    StdMethod(HRESULT, "GetExecuteData", [Out(LPD3DEXECUTEDATA, "lpData")], sideeffects=False),
     StdMethod(HRESULT, "Validate", [(LPDWORD, "lpdwOffset"), (LPD3DVALIDATECALLBACK, "lpFunc"), (LPVOID, "lpUserArg"), (DWORD, "dwReserved")]),
     StdMethod(HRESULT, "Optimize", [(DWORD, "dwDummy")]),
 ]
@@ -374,13 +374,13 @@ IDirect3DExecuteBuffer.methods += [
 IDirect3DLight.methods += [
     StdMethod(HRESULT, "Initialize", [(LPDIRECT3D, "lpDirect3D")]),
     StdMethod(HRESULT, "SetLight", [(LPD3DLIGHT, "lpLight")]),
-    StdMethod(HRESULT, "GetLight", [Out(LPD3DLIGHT, "lpLight")]),
+    StdMethod(HRESULT, "GetLight", [Out(LPD3DLIGHT, "lpLight")], sideeffects=False),
 ]
 
 IDirect3DMaterial.methods += [
     StdMethod(HRESULT, "Initialize", [(LPDIRECT3D, "lpDirect3D")]),
     StdMethod(HRESULT, "SetMaterial", [(LPD3DMATERIAL, "lpMat")]),
-    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")]),
+    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")], sideeffects=False),
     StdMethod(HRESULT, "GetHandle", [(LPDIRECT3DDEVICE, "lpDirect3DDevice"), Out(LPD3DMATERIALHANDLE, "lpHandle")]),
     StdMethod(HRESULT, "Reserve", []),
     StdMethod(HRESULT, "Unreserve", []),
@@ -388,13 +388,13 @@ IDirect3DMaterial.methods += [
 
 IDirect3DMaterial2.methods += [
     StdMethod(HRESULT, "SetMaterial", [(LPD3DMATERIAL, "lpMat")]),
-    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")]),
+    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")], sideeffects=False),
     StdMethod(HRESULT, "GetHandle", [(LPDIRECT3DDEVICE2, "lpDirect3DDevice2"), Out(LPD3DMATERIALHANDLE, "lpHandle")]),
 ]
 
 IDirect3DMaterial3.methods += [
     StdMethod(HRESULT, "SetMaterial", [(LPD3DMATERIAL, "lpMat")]),
-    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")]),
+    StdMethod(HRESULT, "GetMaterial", [Out(LPD3DMATERIAL, "lpMat")], sideeffects=False),
     StdMethod(HRESULT, "GetHandle", [(LPDIRECT3DDEVICE3, "lpDirect3DDevice3"), Out(LPD3DMATERIALHANDLE, "lpHandle")]),
 ]
 
@@ -414,44 +414,44 @@ IDirect3DTexture2.methods += [
 
 IDirect3DViewport.methods += [
     StdMethod(HRESULT, "Initialize", [(LPDIRECT3D, "lpDirect3D")]),
-    StdMethod(HRESULT, "GetViewport", [Out(LPD3DVIEWPORT, "lpData")]),
+    StdMethod(HRESULT, "GetViewport", [Out(LPD3DVIEWPORT, "lpData")], sideeffects=False),
     StdMethod(HRESULT, "SetViewport", [(LPD3DVIEWPORT, "lpData")]),
     StdMethod(HRESULT, "TransformVertices", [(DWORD, "dwVertexCount"), (LPD3DTRANSFORMDATA, "lpData"), (DWORD, "dwFlags"), (LPDWORD, "lpOffScreen")]),
     StdMethod(HRESULT, "LightElements", [(DWORD, "dwElementCount"), (LPD3DLIGHTDATA, "lpData")]),
     StdMethod(HRESULT, "SetBackground", [(D3DMATERIALHANDLE, "hMat")]),
-    StdMethod(HRESULT, "GetBackground", [Out(LPD3DMATERIALHANDLE, "lphMat"), Out(LPBOOL, "lpValid")]),
+    StdMethod(HRESULT, "GetBackground", [Out(LPD3DMATERIALHANDLE, "lphMat"), Out(LPBOOL, "lpValid")], sideeffects=False),
     StdMethod(HRESULT, "SetBackgroundDepth", [(LPDIRECTDRAWSURFACE, "lpDDSurface")]),
     StdMethod(HRESULT, "GetBackgroundDepth", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), Out(LPBOOL, "lpValid")]),
-    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags")]),
+    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags")]),
     StdMethod(HRESULT, "AddLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight")]),
     StdMethod(HRESULT, "DeleteLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight")]),
     StdMethod(HRESULT, "NextLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight"), Out(Pointer(LPDIRECT3DLIGHT), "lplpDirect3DLight"), (DWORD, "dwFlags")]),
 ]
 
 IDirect3DViewport2.methods += [
-   StdMethod(HRESULT, "GetViewport2", [Out(LPD3DVIEWPORT2, "lpData")]),
+   StdMethod(HRESULT, "GetViewport2", [Out(LPD3DVIEWPORT2, "lpData")], sideeffects=False),
     StdMethod(HRESULT, "SetViewport2", [(LPD3DVIEWPORT2, "lpData")]),
 ]
 
 IDirect3DViewport3.methods += [
     StdMethod(HRESULT, "SetBackgroundDepth2", [(LPDIRECTDRAWSURFACE4, "lpDDS")]),
     StdMethod(HRESULT, "GetBackgroundDepth2", [Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDS"), (LPBOOL, "lpValid")]),
-    StdMethod(HRESULT, "Clear2", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
+    StdMethod(HRESULT, "Clear2", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
 ]
 
 IDirect3DVertexBuffer.methods += [
-    StdMethod(HRESULT, "Lock", [(DWORD, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
+    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "ProcessVertices", [(DWORD, "dwVertexOp"), (DWORD, "dwDestIndex"), (DWORD, "dwCount"), (LPDIRECT3DVERTEXBUFFER, "lpSrcBuffer"), (DWORD, "dwSrcIndex"), (LPDIRECT3DDEVICE3, "lpD3DDevice"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")]),
+    StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")], sideeffects=False),
     StdMethod(HRESULT, "Optimize", [(LPDIRECT3DDEVICE3, "lpD3DDevice"), (DWORD, "dwFlags")]),
 ]
 
 IDirect3DVertexBuffer7.methods += [
-    StdMethod(HRESULT, "Lock", [(DWORD, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
+    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "ProcessVertices", [(DWORD, "dwVertexOp"), (DWORD, "dwDestIndex"), (DWORD, "dwCount"), (LPDIRECT3DVERTEXBUFFER7, "lpSrcBuffer"), (DWORD, "dwSrcIndex"), (LPDIRECT3DDEVICE7, "lpD3DDevice"), (DWORD, "dwFlags")]),
-    StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")]),
+    StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")], sideeffects=False),
     StdMethod(HRESULT, "Optimize", [(LPDIRECT3DDEVICE7, "lpD3DDevice"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "ProcessVerticesStrided", [(DWORD, "dwVertexOp"), (DWORD, "dwDestIndex"), (DWORD, "dwCount"), (LPD3DDRAWPRIMITIVESTRIDEDDATA, "lpStrideData"), (DWORD, "dwVertexTypeDesc"), (LPDIRECT3DDEVICE7, "lpD3DDevice"), (DWORD, "dwFlags")]),
 ]

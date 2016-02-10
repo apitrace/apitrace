@@ -23,11 +23,14 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#pragma once
 
 #include "glws.hpp"
 #include "retrace.hpp"
+#include "metric_backend.hpp"
+#include "metric_writer.hpp"
+
+#include "os_thread.hpp"
 
 
 namespace glretrace {
@@ -49,43 +52,70 @@ struct Context {
     glws::Drawable *drawable;
 
     GLuint activeProgram;
+    bool insideBeginEnd = false;
+    bool insideList = false;
+
     bool used;
-    
-    // Context must be current
+
+    bool KHR_debug;
+    GLsizei maxDebugMessageLength = 0;
+
+    inline glprofile::Profile
+    profile(void) const {
+        return wsContext->profile;
+    }
+
+    inline glprofile::Profile
+    actualProfile(void) const {
+        return wsContext->actualProfile;
+    }
+
     inline bool
     hasExtension(const char *extension) const {
         return wsContext->hasExtension(extension);
     }
 };
 
-extern glws::Profile defaultProfile;
+extern bool metricBackendsSetup;
+extern bool profilingContextAcquired;
+extern bool profilingBoundaries[QUERY_BOUNDARY_LIST_END];
+extern unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END];
+extern std::vector<MetricBackend*> metricBackends;
+extern MetricBackend* curMetricBackend;
+extern MetricWriter profiler;
 
-extern bool insideList;
-extern bool insideGlBeginEnd;
+extern glprofile::Profile defaultProfile;
+
 extern bool supportsARBShaderObjects;
 
-Context *
-getCurrentContext(void);
+extern OS_THREAD_SPECIFIC_PTR(Context)
+currentContextPtr;
+
+
+static inline Context *
+getCurrentContext(void) {
+    return currentContextPtr;
+}
 
 
 int
-parseAttrib(const trace::Value *attribs, int param, int default_);
+parseAttrib(const trace::Value *attribs, int param, int default_ = 0, int terminator = 0);
 
-glws::Profile
+glprofile::Profile
 parseContextAttribList(const trace::Value *attribs);
 
 
 glws::Drawable *
-createDrawable(glws::Profile profile);
+createDrawable(glprofile::Profile profile);
 
 glws::Drawable *
 createDrawable(void);
 
 glws::Drawable *
-createPbuffer(int width, int height);
+createPbuffer(int width, int height, const glws::pbuffer_info *info);
 
 Context *
-createContext(Context *shareContext, glws::Profile profile);
+createContext(Context *shareContext, glprofile::Profile profile);
 
 Context *
 createContext(Context *shareContext = 0);
@@ -97,6 +127,10 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
 void
 checkGlError(trace::Call &call);
 
+void
+insertCallMarker(trace::Call &call, Context *currentContext);
+
+
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];
@@ -105,6 +139,8 @@ extern const retrace::Entry egl_callbacks[];
 
 void frame_complete(trace::Call &call);
 void initContext();
+void beforeContextSwitch();
+void afterContextSwitch();
 
 
 void updateDrawable(int width, int height);
@@ -113,7 +149,33 @@ void flushQueries();
 void beginProfile(trace::Call &call, bool isDraw);
 void endProfile(trace::Call &call, bool isDraw);
 
+MetricBackend* getBackend(std::string backendName);
+
+bool isLastPass();
+
+void listMetricsCLI();
+
+void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule);
+
+GLenum
+blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags);
+
+GLenum
+clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeout);
+
+
+// WGL_ARB_render_texture
+bool
+bindTexImage(glws::Drawable *pBuffer, int iBuffer);
+
+// WGL_ARB_render_texture
+bool
+releaseTexImage(glws::Drawable *pBuffer, int iBuffer);
+
+// WGL_ARB_render_texture
+bool
+setPbufferAttrib(glws::Drawable *pBuffer, const int *attribList);
+
 } /* namespace glretrace */
 
 
-#endif /* _GLRETRACE_HPP_ */

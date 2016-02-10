@@ -60,7 +60,7 @@ void TrimProcess::start()
     QString callSetArgument = callSetFormat
                                 .arg(m_trimIndex);
 
-    arguments << QLatin1String("trim");
+    arguments << QLatin1String("trim-auto");
     arguments << outputArgument;
     arguments << callSetArgument;
     arguments << m_tracePath;

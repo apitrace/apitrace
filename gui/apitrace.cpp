@@ -4,6 +4,7 @@
 #include "saverthread.h"
 
 #include <QDebug>
+#include <QFileInfo>
 #include <QDir>
 #include <QThread>
 
@@ -44,6 +45,8 @@ ApiTrace::ApiTrace()
             this, SIGNAL(foundCallIndex(ApiTraceCall*)));
 
 
+    connect(m_loader, SIGNAL(parseProblem(const QString&)),
+            this, SIGNAL(problemLoadingTrace(const QString&)));
     connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
     connect(m_loader, SIGNAL(parsed(int)),
@@ -173,11 +176,13 @@ ApiTraceState ApiTrace::defaultState() const
 void ApiTrace::callEdited(ApiTraceCall *call)
 {
     if (!m_editedCalls.contains(call)) {
-        //lets generate a temp filename
+        // Lets generate a temp filename
+        QFileInfo fileInfo(m_fileName);
         QString tempPath = QDir::tempPath();
-        m_tempFileName = QString::fromLatin1("%1/%2.edited")
-                         .arg(tempPath)
-                         .arg(m_fileName);
+        m_tempFileName = QDir::tempPath();
+        m_tempFileName += QDir::separator();
+        m_tempFileName += fileInfo.fileName();
+        m_tempFileName += QString::fromLatin1(".edited");
     }
     m_editedCalls.insert(call);
     m_needsSaving = true;
@@ -276,18 +281,19 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
 
     if (!m_queuedErrors.isEmpty()) {
         QList< QPair<ApiTraceFrame*, ApiTraceError> >::iterator itr;
-        for (itr = m_queuedErrors.begin(); itr != m_queuedErrors.end();
-             ++itr) {
+        itr = m_queuedErrors.begin();
+        while (itr != m_queuedErrors.end()) {
             const ApiTraceError &error = (*itr).second;
             if ((*itr).first == frame) {
                 ApiTraceCall *call = frame->callWithIndex(error.callIndex);
 
                 if (!call) {
+                    ++itr;
                     continue;
                 }
 
                 call->setError(error.message);
-                m_queuedErrors.erase(itr);
+                itr = m_queuedErrors.erase(itr);
 
                 if (call->hasError()) {
                     m_errors.insert(call);
@@ -295,6 +301,8 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
                     m_errors.remove(call);
                 }
                 emit changed(call);
+            } else {
+                ++itr;
             }
         }
     }
@@ -459,22 +467,24 @@ int ApiTrace::callInFrame(int callIdx) const
 void ApiTrace::setCallError(const ApiTraceError &error)
 {
     int frameIdx = callInFrame(error.callIndex);
-    ApiTraceFrame *frame = 0;
-
     if (frameIdx < 0) {
         return;
     }
-    frame = m_frames[frameIdx];
 
+    ApiTraceFrame *frame = 0;
+    frame = m_frames[frameIdx];
     if (frame->isLoaded()) {
         ApiTraceCall *call = frame->callWithIndex(error.callIndex);
-        call->setError(error.message);
-        if (call->hasError()) {
-            m_errors.insert(call);
-        } else {
-            m_errors.remove(call);
+        // call might be null if the error is in a filtered call
+        if (call) {
+            call->setError(error.message);
+            if (call->hasError()) {
+                m_errors.insert(call);
+            } else {
+                m_errors.remove(call);
+            }
+            emit changed(call);
         }
-        emit changed(call);
     } else {
         loadFrame(frame);
         m_queuedErrors.append(qMakePair(frame, error));
@@ -486,20 +496,79 @@ bool ApiTrace::isFrameLoading(ApiTraceFrame *frame) const
     return m_loadingFrames.contains(frame);
 }
 
-void ApiTrace::bindThumbnailsToFrames(const QList<QImage> &thumbnails)
+void ApiTrace::bindThumbnails(const ImageHash &thumbnails)
 {
-    QList<ApiTraceFrame *> frames = m_frames;
+    QHashIterator<int, QImage> i(thumbnails);
 
-    QList<QImage>::const_iterator thumbnail = thumbnails.begin();
+    while (i.hasNext()) {
+        i.next();
 
-    foreach (ApiTraceFrame *frame, frames) {
-        if (thumbnail != thumbnails.end()) {
-            frame->setThumbnail(*thumbnail);
+        if (!m_thumbnails.contains(i.key())) {
+            int callIndex = i.key();
+            const QImage &thumbnail = i.value();
 
-            ++thumbnail;
+            m_thumbnails.insert(callIndex, thumbnail);
 
-            emit changed(frame);
+            // find the frame associated with the call index
+            int frameIndex = 0;
+            while (frameAt(frameIndex)->lastCallIndex() < callIndex) {
+                ++frameIndex;
+            }
+
+            ApiTraceFrame *frame = frameAt(frameIndex);
+
+            // if the call was actually for a frame, ...
+            if (callIndex == frame->lastCallIndex()) {
+                frame->setThumbnail(thumbnail);
+
+                emit changed(frame);
+            } else {
+                ApiTraceCall *call = frame->callWithIndex(callIndex);
+                if (call) {
+                    call->setThumbnail(thumbnail);
+
+                    emit changed(call);
+                }
+            }
         }
+    }
+}
+
+void ApiTrace::missingThumbnail(ApiTraceFrame *frame)
+{
+    missingThumbnail(frame->lastCallIndex());
+}
+
+void ApiTrace::missingThumbnail(ApiTraceCall *call)
+{
+    missingThumbnail(call->index());
+}
+
+void ApiTrace::missingThumbnail(int callIdx)
+{
+    // technically, the contain() test is redundant, since this is a set;
+    // however, it enables debugging techniques to confirm correct behavior
+    if (!m_missingThumbnails.contains(callIdx)) {
+        //qDebug() << QLatin1String("debug: new missing thumbnail: ") << callIdx;
+        m_missingThumbnails.insert(callIdx);
+    }
+}
+
+bool ApiTrace::isMissingThumbnails() const
+{
+	return !m_missingThumbnails.isEmpty();
+}
+void ApiTrace::resetMissingThumbnails()
+{
+    m_missingThumbnails.clear();
+}
+
+void ApiTrace::iterateMissingThumbnails(void *object, ThumbnailCallback cb)
+{
+    //qDebug() << QLatin1String("debug: count of missing thumbnail list") << m_missingThumbnails.count();
+    foreach (int thumbnailIndex, m_missingThumbnails) {
+        //qDebug() << QLatin1String("debug: iterate missing thumbnail list") << thumbnailIndex;
+        (*cb)(object, thumbnailIndex);
     }
 }
 

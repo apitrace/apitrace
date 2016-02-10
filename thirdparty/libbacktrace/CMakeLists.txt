@@ -54,7 +54,7 @@ if (FLAG_UNWIND_TABLES)
 endif ()
 
 # Adjust warnings
-if (CMAKE_COMPILER_IS_GNUCC)
+if (NOT MSVC)
     add_definitions ("-Wno-switch -Wno-enum-compare")
 endif ()
 
@@ -66,6 +66,13 @@ check_c_source_compiles (
     __sync_lock_release (&i);}"
     HAVE_SYNC_FUNCTIONS)
 
+check_c_source_compiles (
+    "int i;
+    int main() {
+    __atomic_load_n (&i, __ATOMIC_ACQUIRE);
+    __atomic_store_n (&i, i, __ATOMIC_RELEASE);}"
+    HAVE_ATOMIC_FUNCTIONS)
+
 if (HAVE_SYNC_FUNCTIONS)
     set (BACKTRACE_SUPPORTS_THREADS 1)
 else ()
@@ -75,10 +82,12 @@ endif ()
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     set (FORMAT_FILE elf.c dwarf.c)
     math (EXPR BACKTRACE_ELF_SIZE 8*${CMAKE_C_SIZEOF_DATA_PTR})
+    set (BACKTRACE_SUPPORTS_DATA 1)
 else ()
     set (FORMAT_FILE unknown.c)
     set (BACKTRACE_SUPPORTED 0)
     message (STATUS "Executable format is not ELF. Disabling Backtrace support.")
+    set (BACKTRACE_SUPPORTS_DATA 0)
 endif ()
 
 check_symbol_exists (mmap sys/mman.h HAVE_MMAP)
@@ -88,9 +97,9 @@ if (HAVE_MMAP)
     check_symbol_exists (MAP_ANONYMOUS sys/mman.h HAVE_MMAP_ANONYMOUS)
     check_symbol_exists (MAP_ANON sys/mman.h HAVE_MMAP_ANON)
     if (HAVE_MMAP_ANONYMOUS AND HAVE_MMAP_ANON)
-	set (ALLOC_FILE mmap.c)
+        set (ALLOC_FILE mmap.c)
     else ()
-	set (ALLOC_FILE alloc.c)
+        set (ALLOC_FILE alloc.c)
     endif ()
 else ()
     set (VIEW_FILE read.c)
@@ -127,31 +136,32 @@ configure_file (backtrace-supported.h.in backtrace-supported.h)
 
 configure_file (config.h.in.cmake config.h)
 
-include_directories (BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
+
 include_directories (
     auxincl
 )
-add_library (backtrace STATIC EXCLUDE_FROM_ALL
+add_convenience_library (backtrace EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE}
     ${FORMAT_FILE}
     ${VIEW_FILE}
     ${ALLOC_FILE}
+    atomic.c
     fileline.c
     posix.c
     print.c
     state.c
-)
-set_target_properties (backtrace PROPERTIES
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
+    sort.c
 )
 
-set (ENABLE_LIBBACKTRACE_TEST false CACHE BOOL "Enable libbacktrace testing")
-if (ENABLE_LIBBACKTRACE_TEST)
-    enable_testing ()
-    add_executable (btest btest.c)
-    set_property (SOURCE btest.c PROPERTY COMPILE_FLAGS "-g")
-    target_link_libraries (btest backtrace)
-    add_test (test-libbacktrace btest)
-endif ()
+add_executable (btest btest.c)
+set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_link_libraries (btest backtrace)
+add_dependencies (check btest)
+add_test (NAME libbacktrace_btest COMMAND $<TARGET_FILE:btest>)
+
+add_executable (stest stest.c)
+set_target_properties (stest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_link_libraries (stest backtrace)
+add_dependencies (check stest)
+add_test (NAME libbacktrace_stest COMMAND $<TARGET_FILE:stest>)
