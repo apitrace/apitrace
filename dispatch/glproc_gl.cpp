@@ -33,6 +33,9 @@
 #include "dlopen.hpp"
 #endif
 
+#if defined(__APPLE__)
+#include "os_osx.hpp"
+#endif
 
 /*
  * Handle to the true OpenGL library.
@@ -99,13 +102,14 @@ void * _libgl_sym(const char *symbol)
          * absolute paths.  So we create a temporary symlink, and dlopen that
          * instead.
          */
-
-        char temp_filename[] = "/tmp/tmp.XXXXXX";
-
-        if (mktemp(temp_filename) != NULL) {
-            if (symlink(libgl_filename, temp_filename) == 0) {
+        os::String temp_directory = os::getTemporaryDirectoryPath();
+        os::String temp_filename = temp_directory;
+        temp_filename.append("tmp.XXXXXX");
+        
+        if (mktemp(temp_filename.buf(temp_filename.length())) != NULL) {
+            if (symlink(libgl_filename, temp_filename.str()) == 0) {
                 _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
-                remove(temp_filename);
+                remove(temp_filename.str());
             }
         }
 

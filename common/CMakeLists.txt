@@ -4,6 +4,8 @@ include_directories (
 
 if (WIN32)
     set (os os_win32.cpp)
+elseif (APPLE)
+    set (os os_posix.cpp os_osx.mm)
 else ()
     set (os os_posix.cpp)
 endif ()
@@ -45,6 +47,12 @@ endif ()
 if (ANDROID)
     target_link_libraries (common
         log
+    )
+endif ()
+
+if (APPLE)
+    target_link_libraries (common
+        "-framework Foundation"
     )
 endif ()
 
