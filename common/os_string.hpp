@@ -178,7 +178,7 @@ public:
      * Constructors
      */
 
-    String() {
+    String(void) {
         buffer.push_back(0);
     }
 
@@ -430,6 +430,8 @@ bool createDirectory(const String &path);
 bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
 
 bool removeFile(const String &fileName);
+
+String getTemporaryDirectoryPath(void);
 
 } /* namespace os */
 

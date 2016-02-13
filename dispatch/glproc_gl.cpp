@@ -26,6 +26,7 @@
 
 #include "glproc.hpp"
 #include "os.hpp"
+#include "os_string.hpp"
 
 
 #if !defined(_WIN32)
@@ -100,7 +101,9 @@ void * _libgl_sym(const char *symbol)
          * instead.
          */
 
-        char temp_filename[] = "/tmp/tmp.XXXXXX";
+        os::String temp_template = os::getTemporaryDirectoryPath();
+        temp_template.append("tmp.XXXXXX");
+        char *temp_filename = temp_template.buf(temp_template.length() + 1);
 
         if (mktemp(temp_filename) != NULL) {
             if (symlink(libgl_filename, temp_filename) == 0) {
