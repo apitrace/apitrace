@@ -74,9 +74,17 @@ class Comparer:
         if self.size_mismatch():
             return
 
-        # make a difference image similar to ImageMagick's compare utility
-        mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
-        mask = mask.convert('L')
+        # Make a difference image similar to ImageMagick's compare utility.
+        #
+        # Basically produces a brightened/faded version of the source image,
+        # but where every pixel for which absolute error is larger than
+        # 255*fuzz will be colored strong red.
+
+        # Take the maximum error across all channels
+        diff_max = reduce(ImageChops.lighter, self.diff.split())
+
+        # Scale values so that pixels equal or above 255*fuzz become 255
+        mask = diff_max.point(lambda x: min(x/fuzz, 255), 'L')
 
         lowlight = Image.new('RGB', self.src_im.size, (0xff, 0xff, 0xff))
         highlight = Image.new('RGB', self.src_im.size, (0xf1, 0x00, 0x1e))
