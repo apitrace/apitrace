@@ -2,7 +2,15 @@
 
 root = true
 
-[*]
+[*.{c,h,cpp,hpp,cc,hh,inl,rc}]
+indent_style = space
+indent_size = 4
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[{CMakeLists.txt,*.cmake}]
 indent_style = space
 indent_size = 4
 
