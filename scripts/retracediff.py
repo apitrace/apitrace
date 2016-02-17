@@ -43,10 +43,7 @@ import jsondiff
 
 
 # Null file, to use when we're not interested in subprocesses output
-if platform.system() == 'Windows':
-    NULL = open('NUL:', 'wb')
-else:
-    NULL = open('/dev/null', 'wb')
+NULL = open(os.path.devnull, 'wb')
 
 
 class RetraceRun:
