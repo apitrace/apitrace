@@ -194,10 +194,16 @@ class D3DRetracer(Retracer):
                 # https://msdn.microsoft.com/en-us/library/windows/desktop/bb219800.aspx#Textures
                 print r'        if (Pool == D3DPOOL_SYSTEMMEM) {'
                 print r'            // Ensure the memory stays around.'
-                print r'            call.arg(%u).toArray()->values[0]->toPointer(true);' % pSharedHandleArg.index
+                print r'            trace::Blob *blob = call.arg(%u).toArray()->values[0]->toBlob();' % pSharedHandleArg.index
+                print r'            if (blob) {'
+                print r'                blob->toPointer(true);'
+                print r'            } else {'
+                print r'                retrace::warning(call) << "invalid system memory\n";'
+                print r'                pSharedHandle = NULL;'
+                print r'            }'
                 print r'        } else {'
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
-            print r'        *pSharedHandle = NULL;'
+            print r'        pSharedHandle = NULL;'
             if method.name == 'CreateTexture':
                 print r'        }'
             print r'    }'

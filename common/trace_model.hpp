@@ -94,6 +94,7 @@ class Visitor;
 class Null;
 class Struct;
 class Array;
+class Blob;
 
 
 class Value
@@ -121,6 +122,9 @@ public:
 
     virtual const Struct *toStruct(void) const { return NULL; }
     virtual Struct *toStruct(void) { return NULL; }
+
+    virtual const Blob *toBlob(void) const { return NULL; }
+    virtual Blob *toBlob(void) { return NULL; }
 
     Value & operator[](size_t index) const;
 };
@@ -337,7 +341,11 @@ public:
     bool toBool(void) const;
     void *toPointer(void) const;
     void *toPointer(bool bind);
+
     void visit(Visitor &visitor);
+
+    const Blob *toBlob(void) const { return this; }
+    Blob *toBlob(void) { return this; }
 
     size_t size;
     char *buf;
