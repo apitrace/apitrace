@@ -32,11 +32,14 @@
 #include <unistd.h> // for isatty()
 #endif
 
+#include <memory>
+#include <fstream>
+
 #include "cli.hpp"
 #include "cli_pager.hpp"
 
 #include "trace_parser.hpp"
-#include "trace_dump.hpp"
+#include "trace_dump_internal.hpp"
 #include "trace_callset.hpp"
 #include "trace_option.hpp"
 
@@ -71,6 +74,7 @@ usage(void)
         "    --thread-ids=[=BOOL] dump thread ids [default: no]\n"
         "    --call-nos[=BOOL]    dump call numbers[default: yes]\n"
         "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
+        "    --blobs              dump blobs into files\n"
         "\n"
     ;
 }
@@ -81,6 +85,7 @@ enum {
     THREAD_IDS_OPT,
     CALL_NOS_OPT,
     ARG_NAMES_OPT,
+    BLOBS_OPT,
 };
 
 const static char *
@@ -96,14 +101,53 @@ longOptions[] = {
     {"thread-ids", optional_argument, 0, THREAD_IDS_OPT},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT},
     {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
+    {"blobs", no_argument, 0, BLOBS_OPT},
     {0, 0, 0, 0}
 };
+
+
+class BlobDumper : public trace::Dumper
+{
+    unsigned callNo = 0;
+    unsigned blobNo = 0;
+public:
+    BlobDumper(std::ostream &_os, trace::DumpFlags _flags) :
+        Dumper(_os, _flags)
+    {
+    }
+
+    void visit(trace::Blob *blob) {
+        std::string fileName = "blob_call" + std::to_string(callNo);
+        if (blobNo) {
+            fileName += "_";
+            fileName += std::to_string(blobNo);
+        }
+        fileName += ".bin";
+
+        {
+            std::ofstream stream(fileName, std::ofstream::binary);
+            stream.write((const char *)blob->buf, blob->size);
+            stream.close();
+        }
+
+        os << pointer << "blob(\"" << fileName << "\")" << normal;
+        ++blobNo;
+    }
+
+    void visit(trace::Call *call) {
+        callNo = call->no;
+        blobNo = 0;
+        Dumper::visit(call);
+    }
+};
+
 
 static int
 command(int argc, char *argv[])
 {
     trace::DumpFlags dumpFlags = 0;
-    
+    bool blobs = false;
+
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
@@ -150,6 +194,9 @@ command(int argc, char *argv[])
                 dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
             }
             break;
+        case BLOBS_OPT:
+            blobs = true;
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -170,6 +217,14 @@ command(int argc, char *argv[])
         dumpFlags |= trace::DUMP_FLAG_NO_COLOR;
     }
 
+    std::unique_ptr<trace::Dumper> dumper;
+
+    if (blobs) {
+        dumper = std::unique_ptr<trace::Dumper>(new BlobDumper(std::cout, dumpFlags));
+    } else {
+        dumper = std::unique_ptr<trace::Dumper>(new trace::Dumper(std::cout, dumpFlags));
+    }
+
     for (int i = optind; i < argc; ++i) {
         trace::Parser p;
 
@@ -182,7 +237,7 @@ command(int argc, char *argv[])
             if (calls.contains(*call)) {
                 if (verbose ||
                     !(call->flags & trace::CALL_FLAG_VERBOSE)) {
-                    trace::dump(*call, std::cout, dumpFlags);
+                    dumper->visit(call);
                 }
             }
             delete call;
