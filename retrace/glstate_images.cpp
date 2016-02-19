@@ -307,9 +307,10 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 
         const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
         if (formatDesc.type == GL_NONE) {
-            assert(0);
+            std::cerr << "error: unexpected GL_TEXTURE_BUFFER internal format "
+                      << enumToString(desc.internalFormat)
+                      << " (https://github.com/apitrace/apitrace/issues/426)\n";
             return false;
-
         }
 
         unsigned bits_per_pixel = _gl_format_size(formatDesc.format, formatDesc.type);
