@@ -386,6 +386,15 @@ static void APIENTRY
 debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
                      GLsizei length, const GLchar* message, const void *userParam)
 {
+    // Ignore NVIDIA buffer usage warnings: when dumping we inevitably use
+    // buffers differently than declared
+    if (source == GL_DEBUG_SOURCE_API &&
+        type == GL_DEBUG_TYPE_OTHER &&
+        id == 131188 &&
+        severity == GL_DEBUG_SEVERITY_LOW) {
+        return;
+    };
+
     const char *severityStr = "";
     switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
