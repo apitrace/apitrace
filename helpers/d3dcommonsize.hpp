@@ -117,8 +117,10 @@ _shaderSize(const DWORD *pFunction)
 static inline void
 _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & BlockHeight);
 
+#define PACKED_PITCH 0x7ffffff
+
 static inline size_t
-_getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT SlicePitch = 0) {
+_getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPitch = PACKED_PITCH, UINT Depth = 1, INT SlicePitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
         return 0;
     }
@@ -132,6 +134,11 @@ _getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPit
     if (Format == MAKEFOURCC('N','V','1','2') ||
         Format == MAKEFOURCC('Y','V','1','2')) {
         // Planar YUV
+
+        if (RowPitch == PACKED_PITCH) {
+            RowPitch = Width;
+        }
+
         size = (Height + (Height + 1)/2) * RowPitch;
     } else {
         size_t BlockSize;
@@ -141,13 +148,17 @@ _getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPit
         assert(BlockHeight);
         Height = (Height + BlockHeight - 1) / BlockHeight;
 
+        if (RowPitch == PACKED_PITCH) {
+            RowPitch = ((Width + BlockWidth  - 1) / BlockWidth * BlockSize + 7) / 8;
+        }
+
         size = Height * RowPitch;
 
         if (Partial || Height == 1) {
             // Must take pixel size in consideration
             if (BlockWidth) {
-                Width  = (Width  + BlockWidth  - 1) / BlockWidth;
-                size = (Width * BlockSize + 7)/ 8;
+                Width = (Width + BlockWidth  - 1) / BlockWidth;
+                size = (Width * BlockSize + 7) / 8;
                 if (Height > 1) {
                     size += (Height - 1) * RowPitch;
                 }

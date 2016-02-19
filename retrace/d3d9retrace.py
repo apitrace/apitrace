@@ -183,10 +183,23 @@ class D3DRetracer(Retracer):
             print r'        Usage |= D3DUSAGE_DYNAMIC;'
             print r'    }'
 
-        if 'pSharedHandle' in method.argNames():
+        # Deal with shared surfaces
+        # https://msdn.microsoft.com/en-us/library/windows/desktop/bb219800.aspx
+        # https://msdn.microsoft.com/en-gb/library/windows/desktop/ee913554.aspx
+        pSharedHandleArg = method.getArgByName('pSharedHandle')
+        if pSharedHandleArg:
             print r'    if (pSharedHandle) {'
+            if method.name == 'CreateTexture':
+                # Some applications (e.g., DOTA2) create shared resources within the same process.
+                # https://msdn.microsoft.com/en-us/library/windows/desktop/bb219800.aspx#Textures
+                print r'        if (Pool == D3DPOOL_SYSTEMMEM) {'
+                print r'            // Ensure the memory stays around.'
+                print r'            call.arg(%u).toArray()->values[0]->toPointer(true);' % pSharedHandleArg.index
+                print r'        } else {'
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
-            print r'        pSharedHandle = NULL;'
+            print r'        *pSharedHandle = NULL;'
+            if method.name == 'CreateTexture':
+                print r'        }'
             print r'    }'
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
