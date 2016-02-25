@@ -1036,13 +1036,15 @@ dumpShadersUniforms(StateWriter &writer, Context &context)
 
     writer.beginMember("buffers");
     writer.beginObject();
-    if (pipeline) {
-        dumpVertexAttributes(writer, context, vertex_program);
-    } else {
-        dumpVertexAttributes(writer, context, program);
-    }
-    if (program) {
-        dumpTransformFeedback(writer, program);
+    if (!context.ES) {
+        if (pipeline) {
+            dumpVertexAttributes(writer, context, vertex_program);
+        } else {
+            dumpVertexAttributes(writer, context, program);
+        }
+        if (program) {
+            dumpTransformFeedback(writer, program);
+        }
     }
     writer.endObject();
     writer.endMember(); // buffers
