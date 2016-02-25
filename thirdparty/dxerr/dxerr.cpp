@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #ifdef __MINGW32__
-#include "compat.h"
+#include "winsdk_compat.h"
 #endif
 
 #ifdef HAVE_DDRAW

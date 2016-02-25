@@ -405,6 +405,8 @@ set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
 
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat)
+
 if (NOT ENABLE_STATIC_SNAPPY)
     find_package (SNAPPY)
 endif ()
@@ -493,6 +495,7 @@ endmacro ()
 
 include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/compat
 )
 
 add_subdirectory (guids)

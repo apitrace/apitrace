@@ -1,9 +1,3 @@
-if (MINGW)
-    include_directories (BEFORE
-        ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
-    )
-endif ()
-
 macro (HaveDirectXInclude NAME)
     if (DirectX_${NAME}_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM

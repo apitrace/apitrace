@@ -32,7 +32,7 @@
 #include <windows.h>
 #include <tchar.h>
 
-#include "compat.h"
+#include "winsdk_compat.h"
 
 #include <d2d1_1.h>
 #include <dwrite_1.h>

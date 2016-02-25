@@ -41,7 +41,7 @@
 #define memcpy_s(dest, numberOfElements, src, count) memcpy(dest, src, count)
 
 
-#include "compat.h"
+#include "winsdk_compat.h"
 
 
 #ifndef ERROR_FILE_TOO_LARGE

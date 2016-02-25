@@ -21,9 +21,6 @@ if (DirectX_D3D11_INCLUDE_FOUND)
             ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wrl
         )
 
-        include_directories (BEFORE
-            ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
-        )
         add_definitions (
             #inhibit warnings
             -w

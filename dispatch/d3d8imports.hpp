@@ -31,7 +31,7 @@
 
 #include <windows.h>
 
-#include "compat.h"
+#include "winsdk_compat.h"
 
 #include <d3d8.h>
 
