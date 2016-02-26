@@ -26,6 +26,9 @@ Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
 if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
+If you have Qt in a non-standard directory, you'll need to set
+[`-DCMAKE_PREFIX_PATH`](http://doc.qt.io/qt-5/cmake-manual.html).
+
 
 The code also depends on snappy libraries, but the bundled sources are always
 used regardless of system availability, to make the wrapper shared-objects/DLL
