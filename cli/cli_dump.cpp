@@ -35,6 +35,8 @@
 #include <memory>
 #include <fstream>
 
+#include "cxx_compat.hpp" // for std::to_string
+
 #include "cli.hpp"
 #include "cli_pager.hpp"
 
