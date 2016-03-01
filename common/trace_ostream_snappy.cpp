@@ -108,6 +108,7 @@ SnappyOutStream::SnappyOutStream(const char *filename)
     if (m_stream.is_open()) {
         m_stream << SNAPPY_BYTE1;
         m_stream << SNAPPY_BYTE2;
+        m_stream.flush();
     }
 }
 
