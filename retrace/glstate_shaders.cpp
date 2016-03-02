@@ -225,7 +225,8 @@ struct AttribDesc
                GLint matrix_stride = 0,
                GLboolean is_row_major = GL_FALSE) :
         type(_type),
-        size(_size)
+        size(_size),
+        arrayStride(array_stride)
     {
         _gl_uniform_size(type, elemType, numCols, numRows);
 
