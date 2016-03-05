@@ -9,7 +9,7 @@ class TraceDialog : public QDialog, public Ui_TraceDialog
 public:
     TraceDialog(QWidget *parent = 0);
 
-    void accept();
+    void accept() override;
 
     QString api() const;
     QString applicationPath() const;

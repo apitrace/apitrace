@@ -24,7 +24,7 @@ public:
 
     void setDataProvider(FrameDataProvider* data);
 
-    virtual void paintEvent(QPaintEvent *e);
+    virtual void paintEvent(QPaintEvent *e) override;
 
 protected:
     FrameDataProvider* m_data;

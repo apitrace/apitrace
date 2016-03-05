@@ -25,7 +25,7 @@ public:
         m_flags = flags;
     }
 
-    virtual void paintEvent(QPaintEvent *)
+    virtual void paintEvent(QPaintEvent *) override
     {
         QPainter painter(this);
         painter.setPen(Qt::black);

@@ -45,13 +45,13 @@ public:
     unsigned getProgram(const QModelIndex & index) const;
     const trace::Profile::Call* getJumpCall(const QModelIndex & index) const;
 
-    virtual int rowCount(const QModelIndex & parent) const;
-    virtual int columnCount(const QModelIndex & parent) const;
+    virtual int rowCount(const QModelIndex & parent) const override;
+    virtual int columnCount(const QModelIndex & parent) const override;
 
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    virtual QVariant data(const QModelIndex &index, int role) const override;
+    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
+    virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:
     void updateModel();

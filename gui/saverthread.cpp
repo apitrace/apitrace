@@ -210,41 +210,41 @@ public:
         : m_variant(variant),
           m_editedValue(0)
     {}
-    virtual void visit(trace::Null *val)
+    virtual void visit(trace::Null *val) override
     {
         m_editedValue = val;
     }
 
-    virtual void visit(trace::Bool *node)
+    virtual void visit(trace::Bool *node) override
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::Bool);
         bool var = m_variant.toBool();
         m_editedValue = new trace::Bool(var);
     }
 
-    virtual void visit(trace::SInt *node)
+    virtual void visit(trace::SInt *node) override
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::Int);
         m_editedValue = new trace::SInt(m_variant.toInt());
     }
 
-    virtual void visit(trace::UInt *node)
+    virtual void visit(trace::UInt *node) override
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::UInt);
         m_editedValue = new trace::SInt(m_variant.toUInt());
     }
 
-    virtual void visit(trace::Float *node)
+    virtual void visit(trace::Float *node) override
     {
         m_editedValue = new trace::Float(m_variant.toFloat());
     }
 
-    virtual void visit(trace::Double *node)
+    virtual void visit(trace::Double *node) override
     {
         m_editedValue = new trace::Double(m_variant.toDouble());
     }
 
-    virtual void visit(trace::String *node)
+    virtual void visit(trace::String *node) override
     {
         QString str = m_variant.toString();
         char *newString = new char[str.length() + 1];
@@ -253,7 +253,7 @@ public:
         m_editedValue = new trace::String(newString);
     }
 
-    virtual void visit(trace::WString *node)
+    virtual void visit(trace::WString *node) override
     {
         QString str = m_variant.toString();
         size_t len = str.length();
@@ -263,22 +263,22 @@ public:
         m_editedValue = new trace::WString(newString);
     }
 
-    virtual void visit(trace::Enum *e)
+    virtual void visit(trace::Enum *e) override
     {
         m_editedValue = e;
     }
 
-    virtual void visit(trace::Bitmask *bitmask)
+    virtual void visit(trace::Bitmask *bitmask) override
     {
         m_editedValue = bitmask;
     }
 
-    virtual void visit(trace::Struct *str)
+    virtual void visit(trace::Struct *str) override
     {
         m_editedValue = str;
     }
 
-    virtual void visit(trace::Array *array)
+    virtual void visit(trace::Array *array) override
     {
         ApiArray apiArray = m_variant.value<ApiArray>();
         QVector<QVariant> vals = apiArray.values();
@@ -299,12 +299,12 @@ public:
         m_editedValue = newArray;
     }
 
-    virtual void visit(trace::Blob *blob)
+    virtual void visit(trace::Blob *blob) override
     {
         m_editedValue = blob;
     }
 
-    virtual void visit(trace::Pointer *ptr)
+    virtual void visit(trace::Pointer *ptr) override
     {
         m_editedValue = ptr;
     }

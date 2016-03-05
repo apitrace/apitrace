@@ -27,7 +27,7 @@ public:
 
 protected:
     /* Transform from time-based horizontal selection to call no based. */
-    virtual SelectionState transformSelectionIn(SelectionState state)
+    virtual SelectionState transformSelectionIn(SelectionState state) override
     {
         if (!m_profile || state.type != SelectionState::Horizontal) {
             return state;
@@ -59,7 +59,7 @@ protected:
         return state;
     }
 
-    virtual SelectionState transformSelectionOut(SelectionState state)
+    virtual SelectionState transformSelectionOut(SelectionState state) override
     {
         if (!m_profile || state.type != SelectionState::Horizontal) {
             return state;
@@ -89,12 +89,12 @@ public:
     {
     }
 
-    virtual qint64 size() const
+    virtual qint64 size() const override
     {
         return m_profile ? m_profile->calls.size() : 0;
     }
 
-    virtual bool selected(qint64 index) const
+    virtual bool selected(qint64 index) const override
     {
         if (m_selectionState) {
             if (m_selectionState->type == SelectionState::Horizontal) {
@@ -109,12 +109,12 @@ public:
         return false;
     }
 
-    virtual void setSelectionState(SelectionState* state)
+    virtual void setSelectionState(SelectionState* state) override
     {
         m_selectionState = state;
     }
 
-    virtual qint64 value(qint64 index) const
+    virtual qint64 value(qint64 index) const override
     {
         if (m_gpu) {
             return m_profile->calls[index].gpuDuration;
@@ -123,7 +123,7 @@ public:
         }
     }
 
-    virtual void itemDoubleClicked(qint64 index) const
+    virtual void itemDoubleClicked(qint64 index) const override
     {
         if (!m_profile) {
             return;
@@ -137,7 +137,7 @@ public:
         Profiling::jumpToCall(call.no);
     }
 
-    virtual QString itemTooltip(qint64 index) const
+    virtual QString itemTooltip(qint64 index) const override
     {
         if (!m_profile) {
             return QString();

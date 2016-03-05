@@ -68,7 +68,7 @@ signals:
     void retraceErrors(const QList<ApiTraceError> &errors);
 
 protected:
-    virtual void run();
+    virtual void run() override;
 
 private:
     QString m_fileName;

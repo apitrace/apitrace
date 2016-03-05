@@ -35,9 +35,9 @@ public:
 
     void setOrientation(Orientation v);
 
-    virtual void mouseMoveEvent(QMouseEvent *e);
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseReleaseEvent(QMouseEvent *e);
+    virtual void mouseMoveEvent(QMouseEvent *e) override;
+    virtual void mousePressEvent(QMouseEvent *e) override;
+    virtual void mouseReleaseEvent(QMouseEvent *e) override;
 
 public slots:
     /* The minimum and maximum values of this axis */

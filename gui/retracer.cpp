@@ -40,13 +40,13 @@ class BlockingIODevice : public QIODevice
      * system. */
 public:
     BlockingIODevice(QProcess * io);
-    bool isSequential() const;
-    bool atEnd() const;
-    bool waitForReadyRead(int msecs = -1);
+    bool isSequential() const override;
+    bool atEnd() const override;
+    bool waitForReadyRead(int msecs = -1) override;
 
 protected:
-    qint64 readData(char * data, qint64 maxSize);
-    qint64 writeData(const char * data, qint64 maxSize);
+    qint64 readData(char * data, qint64 maxSize) override;
+    qint64 writeData(const char * data, qint64 maxSize) override;
 
 private:
     QProcess *m_device;

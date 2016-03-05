@@ -13,18 +13,18 @@ public:
     HistogramView(QWidget* parent);
 
     void setDataProvider(GraphDataProvider* data);
-    void setSelectionState(SelectionState* state);
+    void setSelectionState(SelectionState* state) override;
 
     /* Gradient colours for selected and unselected items */
     void setSelectedGradient(const QLinearGradient& gradient);
     void setUnelectedGradient(const QLinearGradient& gradient);
 
-    virtual void mouseMoveEvent(QMouseEvent *e);
-    virtual void mouseDoubleClickEvent(QMouseEvent *e);
+    virtual void mouseMoveEvent(QMouseEvent *e) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *e) override;
 
-    virtual void update();
-    virtual void resizeEvent(QResizeEvent *e);
-    virtual void paintEvent(QPaintEvent *e);
+    virtual void update() override;
+    virtual void resizeEvent(QResizeEvent *e) override;
+    virtual void paintEvent(QPaintEvent *e) override;
 
 protected:
     qint64 itemAtPosition(QPoint pos);

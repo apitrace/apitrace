@@ -135,7 +135,7 @@ private:
     void addSurfaces(const QList<Surface> &images, const char *label);
 
 protected:
-    virtual void closeEvent(QCloseEvent * event);
+    virtual void closeEvent(QCloseEvent * event) override;
 
 private:
     Ui_MainWindow m_ui;

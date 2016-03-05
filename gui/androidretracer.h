@@ -18,7 +18,7 @@ signals:
     void statusMessage(const QString &message);
 
 protected:
-    void run();
+    void run() override;
 
 private slots:
     bool setup(QString *error);

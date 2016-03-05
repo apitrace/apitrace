@@ -66,17 +66,17 @@ signals:
     void gridGeometry(const QRect &rect);
 
 public:
-    void timerEvent(QTimerEvent *event);
-    void paintEvent(QPaintEvent *event);
-    void keyPressEvent(QKeyEvent *event);
-    void keyReleaseEvent(QKeyEvent *event);
-    void resizeEvent(QResizeEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void contextMenuEvent(QContextMenuEvent *event);
+    void timerEvent(QTimerEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
 
 public slots:
     void setZoom(int zoom);

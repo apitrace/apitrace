@@ -47,7 +47,7 @@ public:
     ~AndroidDeviceDialog();
 
     AndroidDeviceInfo device();
-    void accept();
+    void accept() override;
     bool saveDeviceSelection();
 
 private slots:

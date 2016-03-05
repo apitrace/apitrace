@@ -92,9 +92,9 @@ public slots:
     void indent();
 
 protected:
-    virtual void resizeEvent(QResizeEvent *e);
-    virtual void wheelEvent(QWheelEvent *e);
-    virtual void contextMenuEvent(QContextMenuEvent *e);
+    virtual void resizeEvent(QResizeEvent *e) override;
+    virtual void wheelEvent(QWheelEvent *e) override;
+    virtual void contextMenuEvent(QContextMenuEvent *e) override;
 
 
 private slots:

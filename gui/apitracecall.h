@@ -16,21 +16,21 @@ class TraceLoader;
 class VariantVisitor : public trace::Visitor
 {
 public:
-    virtual void visit(trace::Null *);
-    virtual void visit(trace::Bool *node);
-    virtual void visit(trace::SInt *node);
-    virtual void visit(trace::UInt *node);
-    virtual void visit(trace::Float *node);
-    virtual void visit(trace::Double *node);
-    virtual void visit(trace::String *node);
-    virtual void visit(trace::WString *node);
-    virtual void visit(trace::Enum *e);
-    virtual void visit(trace::Bitmask *bitmask);
-    virtual void visit(trace::Struct *str);
-    virtual void visit(trace::Array *array);
-    virtual void visit(trace::Blob *blob);
-    virtual void visit(trace::Pointer *ptr);
-    virtual void visit(trace::Repr *ptr);
+    virtual void visit(trace::Null *) override;
+    virtual void visit(trace::Bool *node) override;
+    virtual void visit(trace::SInt *node) override;
+    virtual void visit(trace::UInt *node) override;
+    virtual void visit(trace::Float *node) override;
+    virtual void visit(trace::Double *node) override;
+    virtual void visit(trace::String *node) override;
+    virtual void visit(trace::WString *node) override;
+    virtual void visit(trace::Enum *e) override;
+    virtual void visit(trace::Bitmask *bitmask) override;
+    virtual void visit(trace::Struct *str) override;
+    virtual void visit(trace::Array *array) override;
+    virtual void visit(trace::Blob *blob) override;
+    virtual void visit(trace::Pointer *ptr) override;
+    virtual void visit(trace::Repr *ptr) override;
 
     QVariant variant() const
     {
@@ -253,12 +253,12 @@ public:
     ApiTraceFrame *parentFrame()const;
     void setParentFrame(ApiTraceFrame *frame);
 
-    int callIndex(ApiTraceCall *call) const;
+    int callIndex(ApiTraceCall *call) const override;
 
     ApiTraceEvent *parentEvent() const;
     ApiTraceCall *parentCall() const;
     QVector<ApiTraceCall*> children() const;
-    ApiTraceEvent *eventAtRow(int row) const;
+    ApiTraceEvent *eventAtRow(int row) const override;
     void addChild(ApiTraceCall *call);
     void finishedAddingChildren();
 
@@ -280,15 +280,15 @@ public:
 
     QString toHtml() const;
     QString searchText() const;
-    QStaticText staticText() const;
-    int numChildren() const;
+    QStaticText staticText() const override;
+    int numChildren() const override;
     bool hasBinaryData() const;
     int binaryDataIndex() const;
 
     QString backtrace() const;
     void setBacktrace(QString backtrace);
 
-    void missingThumbnail();
+    void missingThumbnail() override;
 
 private:
     void loadData(TraceLoader *loader,
@@ -328,13 +328,13 @@ public:
     ApiTrace *parentTrace() const;
 
     void setNumChildren(int num);
-    int numChildren() const;
+    int numChildren() const override;
     int numChildrenToLoad() const;
     int numTotalCalls() const;
-    QStaticText staticText() const;
+    QStaticText staticText() const override;
 
-    ApiTraceEvent *eventAtRow(int row) const;
-    int callIndex(ApiTraceCall *call) const;
+    ApiTraceEvent *eventAtRow(int row) const override;
+    int callIndex(ApiTraceCall *call) const override;
     ApiTraceCall *callWithIndex(int index) const;
     QVector<ApiTraceCall*> calls() const;
     void setCalls(const QVector<ApiTraceCall*> &topLevelCalls,
@@ -356,7 +356,7 @@ public:
     void setLastCallIndex(unsigned index);
     unsigned lastCallIndex() const;
 
-    void missingThumbnail();
+    void missingThumbnail() override;
 
 private:
     ApiTrace *m_parentTrace;

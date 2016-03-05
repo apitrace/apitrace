@@ -103,12 +103,12 @@ public:
     HeatmapView(QWidget* parent);
 
     void setDataProvider(HeatmapDataProvider* data);
-    void setSelectionState(SelectionState* state);
+    void setSelectionState(SelectionState* state) override;
 
-    virtual void mouseMoveEvent(QMouseEvent *e);
-    virtual void mouseDoubleClickEvent(QMouseEvent *e);
+    virtual void mouseMoveEvent(QMouseEvent *e) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *e) override;
 
-    virtual void paintEvent(QPaintEvent *e);
+    virtual void paintEvent(QPaintEvent *e) override;
     virtual void paintRow(QPainter& painter, HeatmapRowIterator* itr);
 
 

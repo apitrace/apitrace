@@ -30,7 +30,7 @@ public:
     static QString getSaveFileName(QWidget *parent = 0, const QString &caption = QString(), const QString &path = QString(), const QString &filter = QString());
 
 private slots:
-    virtual void accept();
+    virtual void accept() override;
     void upFolder();
     void itemActivated(QModelIndex index);
     void setDir(const QString &dir);

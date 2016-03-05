@@ -93,8 +93,7 @@ void ProfileTableModel::updateModel()
         m_timeMax = m_profile->frames.back().cpuStart + m_profile->frames.back().cpuDuration;
     }
 
-    for (QList<ProfileTableRow>::iterator itr = m_rowData.begin(); itr != m_rowData.end(); ++itr) {
-        ProfileTableRow& row = *itr;
+    for (auto & row : m_rowData) {
 
         row.uses = 0;
         row.pixels = 0;
@@ -109,8 +108,8 @@ void ProfileTableModel::updateModel()
         ProfileTableRow* row = NULL;
         const Program& program = *itr;
 
-        for (std::vector<unsigned>::const_iterator jtr = program.calls.begin(); jtr != program.calls.end(); ++jtr) {
-            const Call& call = m_profile->calls[*jtr];
+        for (const auto & callNo : program.calls) {
+            const Call& call = m_profile->calls[callNo];
 
             if (call.cpuStart > m_timeMax) {
                 break;
@@ -195,9 +194,9 @@ int ProfileTableModel::getRowIndex(unsigned program) const
  * Get the row data for a shader program
  */
 ProfileTableRow* ProfileTableModel::getRow(unsigned program) {
-    for (QList<ProfileTableRow>::iterator itr = m_rowData.begin(); itr != m_rowData.end(); ++itr) {
-        if (itr->program == program)
-            return &*itr;
+    for (auto & row : m_rowData) {
+        if (row.program == program)
+            return &row;
     }
 
     m_rowData.append(ProfileTableRow(program));

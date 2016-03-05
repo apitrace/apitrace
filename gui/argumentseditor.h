@@ -154,7 +154,7 @@ public:
     ~ArgumentsEditor();
 
 
-    virtual void accept();
+    virtual void accept() override;
 
     void setCall(ApiTraceCall *call);
     ApiTraceCall *call() const;

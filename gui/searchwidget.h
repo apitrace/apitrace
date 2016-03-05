@@ -24,8 +24,8 @@ private slots:
     void slotCancel();
 
 protected:
-    virtual bool eventFilter(QObject *object, QEvent* event);
-    virtual void showEvent(QShowEvent *event);
+    virtual bool eventFilter(QObject *object, QEvent* event) override;
+    virtual void showEvent(QShowEvent *event) override;
 
 private:
     Qt::CaseSensitivity caseSensitivity() const;

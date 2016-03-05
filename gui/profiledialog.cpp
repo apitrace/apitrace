@@ -26,15 +26,15 @@ public:
         m_profile = profile;
     }
 
-    unsigned size() const {
+    unsigned size() const override {
         return m_profile->frames.size();
     }
 
-    qint64 frameStart(unsigned index) const {
+    qint64 frameStart(unsigned index) const override {
         return m_profile->frames[index].calls.begin;
     }
 
-    qint64 frameEnd(unsigned index) const {
+    qint64 frameEnd(unsigned index) const override {
         return m_profile->frames[index].calls.end;
     }
 
@@ -50,15 +50,15 @@ public:
         m_profile = profile;
     }
 
-    unsigned size() const {
+    unsigned size() const override {
         return m_profile->frames.size();
     }
 
-    qint64 frameStart(unsigned index) const {
+    qint64 frameStart(unsigned index) const override {
         return m_profile->frames[index].cpuStart;
     }
 
-    qint64 frameEnd(unsigned index) const {
+    qint64 frameEnd(unsigned index) const override {
         return m_profile->frames[index].cpuStart + m_profile->frames[index].cpuDuration;
     }
 

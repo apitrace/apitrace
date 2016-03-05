@@ -57,8 +57,8 @@ plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false
     int col = 0;
     bool quote = false;
     QString rich;
-    for (int i = 0; i < plain.length(); ++i) {
-        if (plain[i] == QLatin1Char('\n')){
+    for (auto & ch : plain) {
+        if (ch == QLatin1Char('\n')){
             if (multiLine) {
                 rich += QLatin1String("<br>\n");
             } else {
@@ -67,7 +67,7 @@ plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false
             col = 0;
             quote = true;
         } else {
-            if (plain[i] == QLatin1Char('\t')){
+            if (ch == QLatin1Char('\t')){
                 if (multiLine) {
                     rich += QChar(0x00a0U);
                     ++col;
@@ -79,17 +79,17 @@ plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false
                     rich += QLatin1String("\\t");
                 }
                 quote = true;
-            } else if (plain[i].isSpace()) {
+            } else if (ch.isSpace()) {
                 rich += QChar(0x00a0U);
                 quote = true;
-            } else if (plain[i] == QLatin1Char('<')) {
+            } else if (ch == QLatin1Char('<')) {
                 rich += QLatin1String("&lt;");
-            } else if (plain[i] == QLatin1Char('>')) {
+            } else if (ch == QLatin1Char('>')) {
                 rich += QLatin1String("&gt;");
-            } else if (plain[i] == QLatin1Char('&')) {
+            } else if (ch == QLatin1Char('&')) {
                 rich += QLatin1String("&amp;");
             } else {
-                rich += plain[i];
+                rich += ch;
             }
             ++col;
         }
@@ -423,9 +423,9 @@ void ApiArray::init(const trace::Array *arr)
         return;
 
     m_array.reserve(arr->values.size());
-    for (int i = 0; i < arr->values.size(); ++i) {
+    for (auto & value : arr->values) {
         VariantVisitor vis;
-        arr->values[i]->visit(vis);
+        value->visit(vis);
 
         m_array.append(vis.variant());
     }
@@ -705,8 +705,7 @@ ApiTraceCall::loadData(TraceLoader *loader,
     m_flags = call->flags;
     if (call->backtrace != NULL) {
         QString qbacktrace;
-        for (int i = 0; i < call->backtrace->size(); i++) {
-            const trace::StackFrame * frame = (*call->backtrace)[i];
+        for (auto frame : *call->backtrace) {
             if (frame->module != NULL) {
                 qbacktrace += QString("%1 ").arg(frame->module);
             }

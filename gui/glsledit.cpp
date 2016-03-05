@@ -45,7 +45,7 @@ public:
     void mark(const QString &str, Qt::CaseSensitivity caseSensitivity);
 
 protected:
-    void highlightBlock(const QString &text);
+    void highlightBlock(const QString &text) override;
 
 private:
     QSet<QString> m_keywords;
@@ -400,8 +400,8 @@ public:
     QPixmap rightArrowIcon;
     QPixmap downArrowIcon;
 protected:
-    void mousePressEvent(QMouseEvent *event);
-    void paintEvent(QPaintEvent *event);
+    void mousePressEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 };
 
 SidebarWidget::SidebarWidget(GLSLEdit *editor)

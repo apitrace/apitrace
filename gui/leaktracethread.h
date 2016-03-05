@@ -23,7 +23,7 @@ class LeakTraceThread: public QThread{
 
     protected:
 
-        virtual void run();
+        virtual void run() override;
 
     private:
 

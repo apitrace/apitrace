@@ -20,12 +20,12 @@ public:
 
     virtual void update();
 
-    virtual void resizeEvent(QResizeEvent *);
+    virtual void resizeEvent(QResizeEvent *) override;
 
-    virtual void wheelEvent(QWheelEvent *e);
-    virtual void mouseMoveEvent(QMouseEvent *e);
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseDoubleClickEvent(QMouseEvent *e);
+    virtual void wheelEvent(QWheelEvent *e) override;
+    virtual void mouseMoveEvent(QMouseEvent *e) override;
+    virtual void mousePressEvent(QMouseEvent *e) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *e) override;
 
     virtual void setSelectionState(SelectionState* state);
 

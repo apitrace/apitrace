@@ -12,8 +12,8 @@ public:
 
     void setDataProvider(HeatmapDataProvider* data);
 
-    virtual void mouseDoubleClickEvent(QMouseEvent *e);
-    virtual void paintEvent(QPaintEvent *);
+    virtual void mouseDoubleClickEvent(QMouseEvent *e) override;
+    virtual void paintEvent(QPaintEvent *) override;
 
 protected:
     int m_rowHeight;

@@ -12,7 +12,7 @@ class SettingsDialog : public QDialog, public Ui_Settings
     Q_OBJECT
 public:
     SettingsDialog(QWidget *parent = 0);
-    void accept();
+    void accept() override;
 
     void setFilterModel(ApiTraceFilter *filter);
 

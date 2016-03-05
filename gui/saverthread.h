@@ -23,7 +23,7 @@ signals:
     void traceSaved();
 
 protected:
-    virtual void run();
+    virtual void run() override;
 
 private:
     QString m_readFileName;

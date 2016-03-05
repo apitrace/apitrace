@@ -26,7 +26,7 @@ public:
         m_timeWidth = m_timeEnd - m_timeStart;
     }
 
-    virtual bool next()
+    virtual bool next() override
     {
         unsigned maxIndex = m_program == -1 ? m_profile->calls.size() : m_profile->programs[m_program].calls.size();
 
@@ -150,32 +150,32 @@ public:
         return true;
     }
 
-    virtual bool isGpu() const
+    virtual bool isGpu() const override
     {
         return m_useGpu;
     }
 
-    virtual float heat() const
+    virtual float heat() const override
     {
         return m_heat;
     }
 
-    virtual float selectedHeat() const
+    virtual float selectedHeat() const override
     {
         return m_programHeat;
     }
 
-    virtual int step() const
+    virtual int step() const override
     {
         return m_step;
     }
 
-    virtual int width() const
+    virtual int width() const override
     {
         return m_stepWidth;
     }
 
-    virtual QString label() const
+    virtual QString label() const override
     {
         return m_label;
     }
@@ -260,22 +260,22 @@ public:
         sortRows();
     }
 
-    virtual qint64 start() const
+    virtual qint64 start() const override
     {
         return m_profile->frames.front().cpuStart;
     }
 
-    virtual qint64 end() const
+    virtual qint64 end() const override
     {
         return m_profile->frames.back().cpuStart + m_profile->frames.back().cpuDuration;
     }
 
-    virtual unsigned dataRows() const
+    virtual unsigned dataRows() const override
     {
         return m_rowPrograms.size();
     }
 
-    virtual QString dataLabel(unsigned row) const
+    virtual QString dataLabel(unsigned row) const override
     {
         if (row >= m_rowPrograms.size()) {
             return QString();
@@ -284,7 +284,7 @@ public:
         }
     }
 
-    virtual qint64 dataRowAt(unsigned row) const
+    virtual qint64 dataRowAt(unsigned row) const override
     {
         if (row >= m_rowPrograms.size()) {
             return 0;
@@ -293,7 +293,7 @@ public:
         }
     }
 
-    virtual HeatmapRowIterator* dataRowIterator(int row, qint64 start, qint64 end, int steps) const
+    virtual HeatmapRowIterator* dataRowIterator(int row, qint64 start, qint64 end, int steps) const override
     {
         ProfileHeatmapRowIterator* itr = new ProfileHeatmapRowIterator(m_profile, start, end, steps, true, m_rowPrograms[row]);
 
@@ -308,17 +308,17 @@ public:
         return itr;
     }
 
-    virtual unsigned headerRows() const
+    virtual unsigned headerRows() const override
     {
         return 2;
     }
 
-    virtual qint64 headerRowAt(unsigned row) const
+    virtual qint64 headerRowAt(unsigned row) const override
     {
         return row;
     }
 
-    virtual QString headerLabel(unsigned row) const
+    virtual QString headerLabel(unsigned row) const override
     {
         if (row == 0) {
             return "CPU";
@@ -329,7 +329,7 @@ public:
         }
     }
 
-    virtual HeatmapRowIterator* headerRowIterator(int row, qint64 start, qint64 end, int steps) const
+    virtual HeatmapRowIterator* headerRowIterator(int row, qint64 start, qint64 end, int steps) const override
     {
         ProfileHeatmapRowIterator* itr = new ProfileHeatmapRowIterator(m_profile, start, end, steps, row != 0);
 
@@ -344,7 +344,7 @@ public:
         return itr;
     }
 
-    virtual qint64 dataItemAt(unsigned row, qint64 time) const
+    virtual qint64 dataItemAt(unsigned row, qint64 time) const override
     {
         if (row >= m_rowPrograms.size()) {
             return -1;
@@ -363,7 +363,7 @@ public:
         return *item;
     }
 
-    virtual qint64 headerItemAt(unsigned row, qint64 time) const
+    virtual qint64 headerItemAt(unsigned row, qint64 time) const override
     {
         if (row >= m_rowPrograms.size()) {
             return -1;
@@ -394,7 +394,7 @@ public:
         return -1;
     }
 
-    virtual void itemDoubleClicked(qint64 index) const
+    virtual void itemDoubleClicked(qint64 index) const override
     {
         if (index < 0 || index >= m_profile->calls.size()) {
             return;
@@ -404,7 +404,7 @@ public:
         Profiling::jumpToCall(call.no);
     }
 
-    virtual QString itemTooltip(qint64 index) const
+    virtual QString itemTooltip(qint64 index) const override
     {
         if (index >= m_profile->calls.size()) {
             return QString();
@@ -428,7 +428,7 @@ public:
         return text;
     }
 
-    virtual void setSelectionState(SelectionState* state)
+    virtual void setSelectionState(SelectionState* state) override
     {
         m_selectionState = state;
     }

@@ -67,7 +67,7 @@ public:
         endResetModel();
     }
 
-    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override
     {
         if (!index.isValid() || index.row() >= m_fileList.size())
             return QVariant();
@@ -113,7 +113,7 @@ public:
         return ret;
     }
     virtual QVariant headerData(int section, Qt::Orientation orientation,
-                                int role = Qt::DisplayRole) const {
+                                int role = Qt::DisplayRole) const override {
         if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
             return QVariant();
 
@@ -129,12 +129,12 @@ public:
         return ret;
     }
 
-    virtual int columnCount(const QModelIndex &parent = QModelIndex()) const
+    virtual int columnCount(const QModelIndex &parent = QModelIndex()) const override
     {
         return 2;
     }
 
-    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override
     {
         if (parent.isValid())
             return 0;

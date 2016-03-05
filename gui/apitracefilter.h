@@ -32,7 +32,7 @@ public:
 
     QModelIndex indexForCall(ApiTraceCall *call) const;
 protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
 private:
     QRegExp m_regexp;

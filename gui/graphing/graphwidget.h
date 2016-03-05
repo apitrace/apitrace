@@ -35,7 +35,7 @@ public:
     void setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy policy);
     void setVerticalScrollBarPolicy(Qt::ScrollBarPolicy policy);
 
-    virtual void resizeEvent(QResizeEvent *e);
+    virtual void resizeEvent(QResizeEvent *e) override;
 
 protected:
     /* Used if a selection would be shared between graphs with different axis */
