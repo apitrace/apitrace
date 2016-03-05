@@ -42,14 +42,14 @@ public:
         delete parser;
     }
 
-    Call *parse_call(void);
+    Call *parse_call(void) override;
 
     // Delegate to Parser
-    void getBookmark(ParseBookmark &bookmark) { parser->getBookmark(bookmark); }
-    void setBookmark(const ParseBookmark &bookmark) { parser->setBookmark(bookmark); }
-    bool open(const char *filename);
-    void close(void) { parser->close(); }
-    unsigned long long getVersion(void) const { return parser->getVersion(); }
+    void getBookmark(ParseBookmark &bookmark) override { parser->getBookmark(bookmark); }
+    void setBookmark(const ParseBookmark &bookmark) override { parser->setBookmark(bookmark); }
+    bool open(const char *filename) override;
+    void close(void) override { parser->close(); }
+    unsigned long long getVersion(void) const override { return parser->getVersion(); }
 private:
     int loopCount;
     AbstractParser *parser;

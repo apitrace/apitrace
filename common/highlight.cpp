@@ -78,7 +78,7 @@ namespace highlight {
 class PlainAttribute : public Attribute {
 public:
     PlainAttribute(void) {}
-    virtual void apply(std::ostream &) const {}
+    virtual void apply(std::ostream &) const override {}
 };
 
 static const PlainAttribute plainAttribute;
@@ -87,11 +87,11 @@ static const PlainAttribute plainAttribute;
 class PlainHighlighter : public Highlighter {
 public:
     PlainHighlighter(void) {}
-    virtual const Attribute & normal(void) const { return plainAttribute; }
-    virtual const Attribute & bold(void) const { return plainAttribute; }
-    virtual const Attribute & italic(void) const { return plainAttribute; }
-    virtual const Attribute & strike(void) const { return plainAttribute; }
-    virtual const Attribute & color(Color) const { return plainAttribute; }
+    virtual const Attribute & normal(void) const override { return plainAttribute; }
+    virtual const Attribute & bold(void) const override { return plainAttribute; }
+    virtual const Attribute & italic(void) const override { return plainAttribute; }
+    virtual const Attribute & strike(void) const override { return plainAttribute; }
+    virtual const Attribute & color(Color) const override { return plainAttribute; }
 };
 
 static const PlainHighlighter plainHighlighter;
@@ -106,7 +106,7 @@ public:
         escape(_escape)
     {}
 
-    void apply(std::ostream& os) const {
+    void apply(std::ostream& os) const override {
         os << "\33[" << escape;
     }
 };
@@ -129,17 +129,17 @@ static const AnsiAttribute ansiGray("37m");
 class AnsiHighlighter : public Highlighter {
 public:
     AnsiHighlighter(void) {}
-    virtual const Attribute & normal(void) const { return ansiNormal; }
-    virtual const Attribute & bold(void) const { return ansiBold; }
-    virtual const Attribute & italic(void) const {
+    virtual const Attribute & normal(void) const override { return ansiNormal; }
+    virtual const Attribute & bold(void) const override { return ansiBold; }
+    virtual const Attribute & italic(void) const override {
         /* Italic is not widely supported, or worse, implemented with a reverse */
         if (0)
             return ansiItalic;
         else
             return plainAttribute;
     }
-    virtual const Attribute & strike(void) const { return ansiStrike; }
-    virtual const Attribute & color(Color c) const {
+    virtual const Attribute & strike(void) const override { return ansiStrike; }
+    virtual const Attribute & color(Color c) const override {
         switch (c) {
         case RED:
             return ansiRed;

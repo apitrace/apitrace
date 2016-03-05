@@ -222,9 +222,9 @@ void Dumper::visit(Array *array) {
     else {
         const char *sep = "";
         os << "{";
-        for (std::vector<Value *>::iterator it = array->values.begin(); it != array->values.end(); ++it) {
+        for (auto & value : array->values) {
             os << sep;
-            _visit(*it);
+            _visit(value);
             sep = ", ";
         }
         os << "}";
@@ -248,8 +248,8 @@ void Dumper::visit(StackFrame *frame) {
 }
 
 void Dumper::visit(Backtrace & backtrace) {
-    for (int i = 0; i < backtrace.size(); i ++) {
-        visit(backtrace[i]);
+    for (auto & frame : backtrace) {
+        visit(frame);
         os << "\n";
     }
 }

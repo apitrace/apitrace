@@ -47,8 +47,8 @@ public:
     virtual ~ZLibOutStream();
 
 protected:
-    virtual bool write(const void *buffer, size_t length);
-    virtual void flush();
+    virtual bool write(const void *buffer, size_t length) override;
+    virtual void flush() override;
 private:
     gzFile m_gzFile;
 };

@@ -133,19 +133,19 @@ public:
 class Null : public Value
 {
 public:
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void *toPointer(void) const;
-    void *toPointer(bool bind);
-    unsigned long long toUIntPtr(void) const;
-    const char *toString(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void *toPointer(void) const override;
+    void *toPointer(bool bind) override;
+    unsigned long long toUIntPtr(void) const override;
+    const char *toString(void) const override;
+    void visit(Visitor &visitor) override;
 
-    const Null *toNull(void) const { return this; }
-    Null *toNull(void) { return this; }
+    const Null *toNull(void) const override { return this; }
+    Null *toNull(void) override { return this; }
 };
 
 
@@ -154,12 +154,12 @@ class Bool : public Value
 public:
     Bool(bool _value) : value(_value) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void visit(Visitor &visitor) override;
 
     bool value;
 };
@@ -170,12 +170,12 @@ class SInt : public Value
 public:
     SInt(signed long long _value) : value(_value) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void visit(Visitor &visitor) override;
 
     signed long long value;
 };
@@ -186,12 +186,12 @@ class UInt : public Value
 public:
     UInt(unsigned long long _value) : value(_value) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void visit(Visitor &visitor) override;
 
     unsigned long long value;
 };
@@ -202,12 +202,12 @@ class Float : public Value
 public:
     Float(float _value) : value(_value) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void visit(Visitor &visitor) override;
 
     float value;
 };
@@ -218,12 +218,12 @@ class Double : public Value
 public:
     Double(double _value) : value(_value) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    signed long long toSInt(void) const override;
+    unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
+    void visit(Visitor &visitor) override;
 
     double value;
 };
@@ -235,9 +235,9 @@ public:
     String(const char * _value) : value(_value) {}
     ~String();
 
-    bool toBool(void) const;
-    const char *toString(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    const char *toString(void) const override;
+    void visit(Visitor &visitor) override;
 
     const char * value;
 };
@@ -249,8 +249,8 @@ public:
     WString(const wchar_t * _value) : value(_value) {}
     ~WString();
 
-    bool toBool(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    void visit(Visitor &visitor) override;
 
     const wchar_t * value;
 };
@@ -261,7 +261,7 @@ class Enum : public SInt
 public:
     Enum(const EnumSig *_sig, signed long long _value) : SInt(_value), sig(_sig) {}
 
-    void visit(Visitor &visitor);
+    void visit(Visitor &visitor) override;
 
     const EnumSig *sig;
 
@@ -283,7 +283,7 @@ class Bitmask : public UInt
 public:
     Bitmask(const BitmaskSig *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
 
-    void visit(Visitor &visitor);
+    void visit(Visitor &visitor) override;
 
     const BitmaskSig *sig;
 };
@@ -295,11 +295,11 @@ public:
     Struct(StructSig *_sig) : sig(_sig), members(_sig->num_members) { }
     ~Struct();
 
-    bool toBool(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    void visit(Visitor &visitor) override;
 
-    const Struct *toStruct(void) const { return this; }
-    Struct *toStruct(void) { return this; }
+    const Struct *toStruct(void) const override { return this; }
+    Struct *toStruct(void) override { return this; }
 
     const StructSig *sig;
     std::vector<Value *> members;
@@ -312,11 +312,11 @@ public:
     Array(size_t len) : values(len) {}
     ~Array();
 
-    bool toBool(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    void visit(Visitor &visitor) override;
 
-    const Array *toArray(void) const { return this; }
-    Array *toArray(void) { return this; }
+    const Array *toArray(void) const override { return this; }
+    Array *toArray(void) override { return this; }
 
     std::vector<Value *> values;
 
@@ -338,14 +338,14 @@ public:
 
     ~Blob();
 
-    bool toBool(void) const;
-    void *toPointer(void) const;
-    void *toPointer(bool bind);
+    bool toBool(void) const override;
+    void *toPointer(void) const override;
+    void *toPointer(bool bind) override;
 
-    void visit(Visitor &visitor);
+    void visit(Visitor &visitor) override;
 
-    const Blob *toBlob(void) const { return this; }
-    Blob *toBlob(void) { return this; }
+    const Blob *toBlob(void) const override { return this; }
+    Blob *toBlob(void) override { return this; }
 
     size_t size;
     char *buf;
@@ -358,11 +358,11 @@ class Pointer : public UInt
 public:
     Pointer(unsigned long long value) : UInt(value) {}
 
-    bool toBool(void) const;
-    void *toPointer(void) const;
-    void *toPointer(bool bind);
-    unsigned long long toUIntPtr(void) const;
-    void visit(Visitor &visitor);
+    bool toBool(void) const override;
+    void *toPointer(void) const override;
+    void *toPointer(bool bind) override;
+    unsigned long long toUIntPtr(void) const override;
+    void visit(Visitor &visitor) override;
 };
 
 
@@ -380,18 +380,18 @@ public:
     /** Machine-readible value */
     Value *machineValue;
     
-    virtual bool toBool(void) const;
-    virtual signed long long toSInt(void) const;
-    virtual unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
+    virtual bool toBool(void) const override;
+    virtual signed long long toSInt(void) const override;
+    virtual unsigned long long toUInt(void) const override;
+    virtual float toFloat(void) const override;
+    virtual double toDouble(void) const override;
 
-    virtual void *toPointer(void) const;
-    virtual void *toPointer(bool bind);
-    virtual unsigned long long toUIntPtr(void) const;
-    virtual const char *toString(void) const;
+    virtual void *toPointer(void) const override;
+    virtual void *toPointer(bool bind) override;
+    virtual unsigned long long toUIntPtr(void) const override;
+    virtual const char *toString(void) const override;
 
-    void visit(Visitor &visitor);
+    void visit(Visitor &visitor) override;
 };
 
 struct RawStackFrame {

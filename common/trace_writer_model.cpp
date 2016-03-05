@@ -40,47 +40,47 @@ public:
         writer(_writer) {
     }
 
-    void visit(Null *) {
+    void visit(Null *) override {
         writer.writeNull();
     }
 
-    void visit(Bool *node) {
+    void visit(Bool *node) override {
         writer.writeBool(node->value);
     }
 
-    void visit(SInt *node) {
+    void visit(SInt *node) override {
         writer.writeSInt(node->value);
     }
 
-    void visit(UInt *node) {
+    void visit(UInt *node) override {
         writer.writeUInt(node->value);
     }
 
-    void visit(Float *node) {
+    void visit(Float *node) override {
         writer.writeFloat(node->value);
     }
 
-    void visit(Double *node) {
+    void visit(Double *node) override {
         writer.writeDouble(node->value);
     }
 
-    void visit(String *node) {
+    void visit(String *node) override {
         writer.writeString(node->value);
     }
 
-    void visit(WString *node) {
+    void visit(WString *node) override {
         writer.writeWString(node->value);
     }
 
-    void visit(Enum *node) {
+    void visit(Enum *node) override {
         writer.writeEnum(node->sig, node->value);
     }
 
-    void visit(Bitmask *node) {
+    void visit(Bitmask *node) override {
         writer.writeBitmask(node->sig, node->value);
     }
 
-    void visit(Struct *node) {
+    void visit(Struct *node) override {
         writer.beginStruct(node->sig);
         for (unsigned i = 0; i < node->sig->num_members; ++i) {
             _visit(node->members[i]);
@@ -88,23 +88,23 @@ public:
         writer.endStruct();
     }
 
-    void visit(Array *node) {
+    void visit(Array *node) override {
         writer.beginArray(node->values.size());
-        for (std::vector<Value *>::iterator it = node->values.begin(); it != node->values.end(); ++it) {
-            _visit(*it);
+        for (auto & value : node->values) {
+            _visit(value);
         }
         writer.endArray();
     }
 
-    void visit(Blob *node) {
+    void visit(Blob *node) override {
         writer.writeBlob(node->buf, node->size);
     }
 
-    void visit(Pointer *node) {
+    void visit(Pointer *node) override {
         writer.writePointer(node->value);
     }
 
-    void visit(Repr *node) {
+    void visit(Repr *node) override {
         writer.beginRepr();
         _visit(node->humanValue);
         _visit(node->machineValue);
@@ -115,8 +115,8 @@ public:
         unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
         if (call->backtrace != NULL) {
             writer.beginBacktrace(call->backtrace->size());
-            for (unsigned i = 0; i < call->backtrace->size(); ++i) {
-                writer.writeStackFrame((*call->backtrace)[i]);
+            for (auto & frame : *call->backtrace) {
+                writer.writeStackFrame(frame);
             }
             writer.endBacktrace();
         }

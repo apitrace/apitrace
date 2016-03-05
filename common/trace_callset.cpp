@@ -182,7 +182,7 @@ public:
         lookahead = *buf;
     }
 
-    char consume() {
+    char consume() override {
         char c = lookahead;
         if (lookahead) {
             ++buf;
@@ -210,7 +210,7 @@ public:
         stream.get(lookahead);
     }
 
-    char consume() {
+    char consume() override {
         char c = lookahead;
         if (stream.eof()) {
             lookahead = 0;

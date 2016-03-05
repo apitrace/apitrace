@@ -117,11 +117,11 @@ public:
 
     ~Parser();
 
-    bool open(const char *filename);
+    bool open(const char *filename) override;
 
-    void close(void);
+    void close(void) override;
 
-    Call *parse_call(void) {
+    Call *parse_call(void) override {
         return parse_call(FULL);
     }
 
@@ -130,11 +130,11 @@ public:
         return file->supportsOffsets();
     }
 
-    void getBookmark(ParseBookmark &bookmark);
+    void getBookmark(ParseBookmark &bookmark) override;
 
-    void setBookmark(const ParseBookmark &bookmark);
+    void setBookmark(const ParseBookmark &bookmark) override;
 
-    unsigned long long getVersion(void) const {
+    unsigned long long getVersion(void) const override {
         return version;
     }
 

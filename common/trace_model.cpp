@@ -37,8 +37,8 @@ static Null null;
 
 
 Call::~Call() {
-    for (unsigned i = 0; i < args.size(); ++i) {
-        delete args[i].value;
+    for (auto & arg : args) {
+        delete arg.value;
     }
 
     if (ret) {
@@ -68,15 +68,15 @@ WString::~WString() {
 
 
 Struct::~Struct() {
-    for (std::vector<Value *>::iterator it = members.begin(); it != members.end(); ++it) {
-        delete *it;
+    for (auto & member : members) {
+        delete member;
     }
 }
 
 
 Array::~Array() {
-    for (std::vector<Value *>::iterator it = values.begin(); it != values.end(); ++it) {
-        delete *it;
+    for (auto & value : values) {
+        delete value;
     }
 }
 

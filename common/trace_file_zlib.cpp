@@ -54,15 +54,15 @@ public:
     virtual ~ZLibFile();
 
 
-    virtual bool supportsOffsets() const;
-    virtual File::Offset currentOffset();
+    virtual bool supportsOffsets() const override;
+    virtual File::Offset currentOffset() override;
 protected:
-    virtual bool rawOpen(const std::string &filename);
-    virtual size_t rawRead(void *buffer, size_t length);
-    virtual int rawGetc();
-    virtual void rawClose();
-    virtual bool rawSkip(size_t length);
-    virtual int  rawPercentRead();
+    virtual bool rawOpen(const std::string &filename) override;
+    virtual size_t rawRead(void *buffer, size_t length) override;
+    virtual int rawGetc() override;
+    virtual void rawClose() override;
+    virtual bool rawSkip(size_t length) override;
+    virtual int  rawPercentRead() override;
 private:
     int fd;
     gzFile m_gzFile;

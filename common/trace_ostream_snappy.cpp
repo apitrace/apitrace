@@ -50,8 +50,8 @@ public:
     ~SnappyOutStream();
 
     SnappyOutStream(void);
-    bool write(const void *buffer, size_t length);
-    void flush(void);
+    bool write(const void *buffer, size_t length) override;
+    void flush(void) override;
     bool isOpen(void) {
         return m_stream.is_open();
     }
