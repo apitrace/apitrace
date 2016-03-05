@@ -56,7 +56,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         pMMI->ptMaxTrackSize.y = 60000;
         break;
     case WM_CLOSE:
-        exit(0);
+        // This is run on a thread other than the main thread and the retrace
+        // threads, which are still alive and running, so we must bypass
+        // destructors here to avoid crashes.
+        _exit(EXIT_SUCCESS);
         break;
     default:
         break;
