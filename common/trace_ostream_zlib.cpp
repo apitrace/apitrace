@@ -48,7 +48,6 @@ public:
 
 protected:
     virtual bool write(const void *buffer, size_t length);
-    virtual void close();
     virtual void flush();
 private:
     gzFile m_gzFile;
@@ -61,20 +60,15 @@ ZLibOutStream::ZLibOutStream(gzFile file)
 
 ZLibOutStream::~ZLibOutStream()
 {
-    close();
+    if (m_gzFile) {
+        gzclose(m_gzFile);
+        m_gzFile = nullptr;
+    }
 }
 
 bool ZLibOutStream::write(const void *buffer, size_t length)
 {
     return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
-}
-
-void ZLibOutStream::close()
-{
-    if (m_gzFile) {
-        gzclose(m_gzFile);
-        m_gzFile = nullptr;
-    }
 }
 
 void ZLibOutStream::flush()
