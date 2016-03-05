@@ -155,7 +155,7 @@ public:
     }
 
     void
-    resize(int w, int h) {
+    resize(int w, int h) override {
         if (w == width && h == height) {
             return;
         }
@@ -195,7 +195,7 @@ public:
         assert(eglHeight == height);
     }
 
-    void show(void) {
+    void show(void) override {
         if (visible) {
             return;
         }
@@ -209,7 +209,7 @@ public:
         Drawable::show();
     }
 
-    void swapBuffers(void) {
+    void swapBuffers(void) override {
         bindAPI(api);
         eglSwapBuffers(eglDisplay, surface);
         processKeys(window);

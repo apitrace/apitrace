@@ -684,8 +684,7 @@ dumpTextures(StateWriter &writer, Context &context)
         GLenum texture = GL_TEXTURE0 + unit;
         glActiveTexture(texture);
 
-        for (unsigned i = 0; i < numTextureTargets; ++i) {
-            GLenum target = textureTargets[i];
+        for (auto target : textureTargets) {
 
             // Whether this fixed-function stage is enabled
             GLboolean enabled = GL_FALSE;
@@ -847,8 +846,7 @@ getTextureTarget(Context &context, GLuint texture)
             glDebugMessageCallback(NULL, NULL);
         }
 
-        for (unsigned i = 0; i < numTextureTargets; ++i) {
-            GLenum target = textureTargets[i];
+        for (auto target : textureTargets) {
             GLenum binding = getTextureBinding(target);
 
             GLint bound_texture = 0;

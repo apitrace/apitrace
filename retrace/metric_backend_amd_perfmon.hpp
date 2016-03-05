@@ -55,17 +55,17 @@ public:
     GLenum size();
 
 
-    unsigned id();
+    unsigned id() override;
 
-    unsigned groupId();
+    unsigned groupId() override;
 
-    std::string name();
+    std::string name() override;
 
-    std::string description();
+    std::string description() override;
 
-    MetricNumType numType();
+    MetricNumType numType() override;
 
-    MetricType type();
+    MetricType type() override;
 };
 
 
@@ -137,40 +137,40 @@ private:
     void generatePassesBoundary(QueryBoundary boundary);
 
 public:
-    bool isSupported();
+    bool isSupported() override;
 
-    void enumGroups(enumGroupsCallback callback, void* userData = nullptr);
+    void enumGroups(enumGroupsCallback callback, void* userData = nullptr) override;
 
     void enumMetrics(unsigned group, enumMetricsCallback callback,
-                     void* userData = nullptr);
+                     void* userData = nullptr) override;
 
-    std::unique_ptr<Metric> getMetricById(unsigned groupId, unsigned metricId);
+    std::unique_ptr<Metric> getMetricById(unsigned groupId, unsigned metricId) override;
 
-    std::unique_ptr<Metric> getMetricByName(std::string metricName);
+    std::unique_ptr<Metric> getMetricByName(std::string metricName) override;
 
-    std::string getGroupName(unsigned group);
+    std::string getGroupName(unsigned group) override;
 
-    int enableMetric(Metric* metric, QueryBoundary pollingRule = QUERY_BOUNDARY_DRAWCALL);
+    int enableMetric(Metric* metric, QueryBoundary pollingRule = QUERY_BOUNDARY_DRAWCALL) override;
 
-    unsigned generatePasses();
+    unsigned generatePasses() override;
 
-    void beginPass();
+    void beginPass() override;
 
-    void endPass();
+    void endPass() override;
 
-    void pausePass();
+    void pausePass() override;
 
-    void continuePass();
+    void continuePass() override;
 
-    void beginQuery(QueryBoundary boundary = QUERY_BOUNDARY_DRAWCALL);
+    void beginQuery(QueryBoundary boundary = QUERY_BOUNDARY_DRAWCALL) override;
 
-    void endQuery(QueryBoundary boundary = QUERY_BOUNDARY_DRAWCALL);
+    void endQuery(QueryBoundary boundary = QUERY_BOUNDARY_DRAWCALL) override;
 
     void enumDataQueryId(unsigned id, enumDataCallback callback,
                          QueryBoundary boundary,
-                         void* userData = nullptr);
+                         void* userData = nullptr) override;
 
-    unsigned getNumPasses();
+    unsigned getNumPasses() override;
 
     static MetricBackend_AMD_perfmon& getInstance(glretrace::Context* context,
                                                   MmapAllocator<char> &alloc);

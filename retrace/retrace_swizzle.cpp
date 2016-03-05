@@ -232,17 +232,17 @@ protected:
     size_t len;
 
 protected:
-    void visit(trace::Null *) {
+    void visit(trace::Null *) override {
         ptr = NULL;
         len = 0;
     }
 
-    void visit(trace::Blob *blob) {
+    void visit(trace::Blob *blob) override {
         ptr = blob->toPointer(bind);
         len = blob->size;
     }
 
-    void visit(trace::Pointer *p) {
+    void visit(trace::Pointer *p) override {
         lookupAddress(p->value, ptr, len);
     }
 

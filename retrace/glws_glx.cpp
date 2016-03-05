@@ -97,7 +97,7 @@ public:
     }
 
     void
-    resize(int w, int h) {
+    resize(int w, int h) override {
         if (!window) {
             return;
         }
@@ -120,7 +120,7 @@ public:
         glXWaitX();
     }
 
-    void show(void) {
+    void show(void) override {
         if (!window ||
             visible) {
             return;
@@ -135,7 +135,7 @@ public:
         Drawable::show();
     }
 
-    void copySubBuffer(int x, int y, int width, int height) {
+    void copySubBuffer(int x, int y, int width, int height) override {
         glXCopySubBufferMESA(display, drawable, x, y, width, height);
 
         if (window) {
@@ -143,7 +143,7 @@ public:
         }
     }
 
-    void swapBuffers(void) {
+    void swapBuffers(void) override {
         assert(!pbuffer);
         glXSwapBuffers(display, drawable);
         if (window) {

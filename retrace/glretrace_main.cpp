@@ -263,8 +263,8 @@ completeCallQuery(CallQuery& query) {
 
 void
 flushQueries() {
-    for (std::list<CallQuery>::iterator itr = callQueries.begin(); itr != callQueries.end(); ++itr) {
-        completeCallQuery(*itr);
+    for (auto & callQuerie : callQueries) {
+        completeCallQuery(callQuerie);
     }
 
     callQueries.clear();
@@ -793,7 +793,7 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 class GLDumper : public retrace::Dumper {
 public:
     image::Image *
-    getSnapshot(void) {
+    getSnapshot(void) override {
         if (!glretrace::getCurrentContext()) {
             return NULL;
         }
@@ -801,7 +801,7 @@ public:
     }
 
     bool
-    canDump(void) {
+    canDump(void) override {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (!currentContext ||
             currentContext->insideBeginEnd) {
@@ -812,7 +812,7 @@ public:
     }
 
     void
-    dumpState(StateWriter &writer) {
+    dumpState(StateWriter &writer) override {
         glstate::dumpCurrentContext(writer);
     }
 };

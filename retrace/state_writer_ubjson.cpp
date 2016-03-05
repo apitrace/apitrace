@@ -57,12 +57,12 @@ public:
     }
 
     void
-    beginObject(void) {
+    beginObject(void) override {
         os.put(MARKER_OBJECT_BEGIN);
     }
 
     void
-    endObject(void) {
+    endObject(void) override {
         os.put(MARKER_OBJECT_END);
     }
 
@@ -81,27 +81,27 @@ public:
     }
 
     void
-    beginMember(const char * name) {
+    beginMember(const char * name) override {
         size_t len = strlen(name);
         _writeString(name, len);
     }
 
     void
-    endMember(void) {
+    endMember(void) override {
     }
 
     void
-    beginArray(void) {
+    beginArray(void) override {
         os.put(MARKER_ARRAY_BEGIN);
     }
 
     void
-    endArray(void) {
+    endArray(void) override {
         os.put(MARKER_ARRAY_END);
     }
 
     void
-    writeString(const char *s) {
+    writeString(const char *s) override {
         size_t len = strlen(s);
         if (len == 1 && (signed char)s[0] >= 0) {
             os.put(MARKER_CHAR);
@@ -113,7 +113,7 @@ public:
     }
 
     void
-    writeBlob(const void *bytes, size_t size) {
+    writeBlob(const void *bytes, size_t size) override {
         // Encode as a strongly-typed array of uint8 values
         // http://ubjson.org/type-reference/binary-data/
         // http://ubjson.org/type-reference/container-types/#optimized-format
@@ -126,17 +126,17 @@ public:
     }
 
     void
-    writeNull(void) {
+    writeNull(void) override {
         os.put(MARKER_NULL);
     }
 
     void
-    writeBool(bool b) {
+    writeBool(bool b) override {
         os.put(b ? MARKER_TRUE : MARKER_FALSE);
     }
 
     void
-    writeSInt(signed long long i) {
+    writeSInt(signed long long i) override {
         if (INT8_MIN <= i && i <= INT8_MAX) {
             os.put(MARKER_INT8);
             os.put((char)i);
@@ -165,7 +165,7 @@ public:
     }
 
     void
-    writeUInt(unsigned long long u) {
+    writeUInt(unsigned long long u) override {
         if (u <= UINT8_MAX) {
             os.put(MARKER_UINT8);
             uint8_t u8 = u;
@@ -191,7 +191,7 @@ public:
     }
 
     void
-    writeFloat(float f) {
+    writeFloat(float f) override {
         os.put(MARKER_FLOAT32);
         Float32 u;
         u.f = f;
@@ -200,7 +200,7 @@ public:
     }
 
     void
-    writeFloat(double f) {
+    writeFloat(double f) override {
         os.put(MARKER_FLOAT64);
         Float64 u;
         u.f = f;

@@ -45,72 +45,72 @@ public:
     }
 
     void
-    beginObject(void) {
+    beginObject(void) override {
         json.beginObject();
     }
 
     void
-    endObject(void) {
+    endObject(void) override {
         json.endObject();
     }
 
     void
-    beginMember(const char * name) {
+    beginMember(const char * name) override {
         json.beginMember(name);
     }
 
     void
-    endMember(void) {
+    endMember(void) override {
         json.endMember();
     }
 
     void
-    beginArray(void) {
+    beginArray(void) override {
         json.beginArray();
     }
 
     void
-    endArray(void) {
+    endArray(void) override {
         json.endArray();
     }
 
     void
-    writeString(const char *s) {
+    writeString(const char *s) override {
         json.writeString(s);
     }
 
     void
-    writeBlob(const void *bytes, size_t size) {
+    writeBlob(const void *bytes, size_t size) override {
         json.writeBase64(bytes, size);
     }
 
     void
-    writeNull(void) {
+    writeNull(void) override {
         json.writeNull();
     }
 
     void
-    writeBool(bool b) {
+    writeBool(bool b) override {
         json.writeBool(b);
     }
 
     void
-    writeSInt(signed long long i) {
+    writeSInt(signed long long i) override {
         json.writeInt(i);
     }
 
     void
-    writeUInt(unsigned long long u) {
+    writeUInt(unsigned long long u) override {
         json.writeInt(u);
     }
 
     void
-    writeFloat(float f) {
+    writeFloat(float f) override {
         json.writeFloat(f);
     }
 
     void
-    writeFloat(double f) {
+    writeFloat(double f) override {
         json.writeFloat(f);
     }
 };

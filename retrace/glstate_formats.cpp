@@ -334,9 +334,9 @@ defaultInternalFormatDesc = {
 const InternalFormatDesc &
 getInternalFormatDesc(GLenum internalFormat)
 {
-    for (unsigned i = 0; i < sizeof internalFormatDescs / sizeof internalFormatDescs[0]; ++i) {
-        if (internalFormatDescs[i].internalFormat == internalFormat) {
-            return internalFormatDescs[i];
+    for (auto & internalFormatDesc : internalFormatDescs) {
+        if (internalFormatDesc.internalFormat == internalFormat) {
+            return internalFormatDesc;
         }
     }
 
@@ -547,12 +547,12 @@ public:
     }
 
     size_t
-    size(void) const {
+    size(void) const override {
         return sizeof(Type) * components;
     }
 
     void
-    unpackSpan(const uint8_t *inSpan, float *outSpan, unsigned width) const
+    unpackSpan(const uint8_t *inSpan, float *outSpan, unsigned width) const override
     {
         const Type *inPixel = reinterpret_cast<const Type *>(inSpan);
 

@@ -289,8 +289,8 @@ void MetricBackend_AMD_perfmon::beginPass() {
     glGenPerfMonitorsAMD(NUM_MONITORS, monitors);
     for (Metric_AMD_perfmon &c : passes[curPass]) {
         unsigned id = c.id();
-        for (int k = 0; k < NUM_MONITORS; k++) {
-            glSelectPerfMonitorCountersAMD(monitors[k], 1, c.groupId(), 1, &id);
+        for (auto & monitor : monitors) {
+            glSelectPerfMonitorCountersAMD(monitor, 1, c.groupId(), 1, &id);
         }
     }
     curMonitor = 0;

@@ -125,17 +125,17 @@ class DefaultDumper: public Dumper
 {
 public:
     image::Image *
-    getSnapshot(void) {
+    getSnapshot(void) override {
         return NULL;
     }
 
     bool
-    canDump(void) {
+    canDump(void) override {
         return false;
     }
 
     void
-    dumpState(StateWriter &writer) {
+    dumpState(StateWriter &writer) override {
         assert(0);
     }
 };
