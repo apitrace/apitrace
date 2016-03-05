@@ -271,7 +271,8 @@ class GlRetracer(Retracer):
             is_draw_arrays or
             is_draw_elements or
             is_misc_draw or
-            function.name == 'glBegin'
+            function.name == 'glBegin' or
+            function.name.startswith('glDispatchCompute')
         )
 
         # Keep track of active program for call lists
