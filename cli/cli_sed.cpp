@@ -88,25 +88,25 @@ public:
     ~Replacer() {
     }
 
-    void visit(Null *) {
+    void visit(Null *) override {
     }
 
-    void visit(Bool *node) {
+    void visit(Bool *node) override {
     }
 
-    void visit(SInt *node) {
+    void visit(SInt *node) override {
     }
 
-    void visit(UInt *node) {
+    void visit(UInt *node) override {
     }
 
-    void visit(Float *node) {
+    void visit(Float *node) override {
     }
 
-    void visit(Double *node) {
+    void visit(Double *node) override {
     }
 
-    void visit(String *node) {
+    void visit(String *node) override {
         if (!searchName.compare(node->value)) {
             size_t len = replaceName.length() + 1;
             delete [] node->value;
@@ -116,10 +116,10 @@ public:
         }
     }
 
-    void visit(WString *node) {
+    void visit(WString *node) override {
     }
 
-    void visit(Enum *node) {
+    void visit(Enum *node) override {
         const EnumValue *it = node->lookup();
         if (it) {
             if (searchName.compare(it->name) == 0) {
@@ -134,36 +134,35 @@ public:
         }
     }
 
-    void visit(Bitmask *bitmask) {
+    void visit(Bitmask *bitmask) override {
     }
 
-    void visit(Struct *s) {
-        for (unsigned i = 0; i < s->members.size(); ++i) {
-            Value *memberValue = s->members[i];
+    void visit(Struct *s) override {
+        for (auto memberValue : s->members) {
             _visit(memberValue);
         }
     }
 
-    void visit(Array *array) {
-        for (std::vector<Value *>::iterator it = array->values.begin(); it != array->values.end(); ++it) {
-            _visit(*it);
+    void visit(Array *array) override {
+        for (auto & value : array->values) {
+            _visit(value);
         }
     }
 
-    void visit(Blob *blob) {
+    void visit(Blob *blob) override {
     }
 
-    void visit(Pointer *p) {
+    void visit(Pointer *p) override {
     }
 
-    void visit(Repr *r) {
+    void visit(Repr *r) override {
         _visit(r->humanValue);
     }
 
     void visit(Call *call) {
-        for (unsigned i = 0; i < call->args.size(); ++i) {
-            if (call->args[i].value) {
-                _visit(call->args[i].value);
+        for (auto & arg : call->args) {
+            if (arg.value) {
+                _visit(arg.value);
             }
         }
 
@@ -204,8 +203,8 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
     trace::Call *call;
     while ((call = p.parse_call())) {
 
-        for (Replacements::iterator it = replacements.begin(); it != replacements.end(); ++it) {
-            it->visit(call);
+        for (auto & replacement : replacements) {
+            replacement.visit(call);
         }
 
         writer.writeCall(call);

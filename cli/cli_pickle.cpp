@@ -55,39 +55,39 @@ public:
         symbolic(_symbolic) {
     }
 
-    void visit(Null *node) {
+    void visit(Null *node) override {
         writer.writeInt(0);
     }
 
-    void visit(Bool *node) {
+    void visit(Bool *node) override {
         writer.writeBool(node->value);
     }
 
-    void visit(SInt *node) {
+    void visit(SInt *node) override {
         writer.writeInt(node->value);
     }
 
-    void visit(UInt *node) {
+    void visit(UInt *node) override {
         writer.writeInt(node->value);
     }
 
-    void visit(Float *node) {
+    void visit(Float *node) override {
         writer.writeFloat(node->value);
     }
 
-    void visit(Double *node) {
+    void visit(Double *node) override {
         writer.writeFloat(node->value);
     }
 
-    void visit(String *node) {
+    void visit(String *node) override {
         writer.writeString(node->value);
     }
 
-    void visit(WString *node) {
+    void visit(WString *node) override {
         writer.writeWString(node->value);
     }
 
-    void visit(Enum *node) {
+    void visit(Enum *node) override {
         if (symbolic) {
             const EnumValue *it = node->lookup();
             if (it) {
@@ -98,7 +98,7 @@ public:
         writer.writeInt(node->value);
     }
 
-    void visit(Bitmask *node) {
+    void visit(Bitmask *node) override {
         if (symbolic) {
             unsigned long long value = node->value;
             const BitmaskSig *sig = node->sig;
@@ -122,7 +122,7 @@ public:
         }
     }
 
-    void visit(Struct *node) {
+    void visit(Struct *node) override {
         if (true) {
             // Structures as dictionaries
             writer.beginDict();
@@ -143,23 +143,23 @@ public:
         }
     }
 
-    void visit(Array *node) {
+    void visit(Array *node) override {
         writer.beginList();
-        for (std::vector<Value *>::iterator it = node->values.begin(); it != node->values.end(); ++it) {
-            _visit(*it);
+        for (auto & value : node->values) {
+            _visit(value);
         }
         writer.endList();
     }
 
-    void visit(Blob *node) {
+    void visit(Blob *node) override {
         writer.writeByteArray(node->buf, node->size);
     }
 
-    void visit(Pointer *node) {
+    void visit(Pointer *node) override {
         writer.writePointer(node->value);
     }
 
-    void visit(Repr *r) {
+    void visit(Repr *r) override {
         if (symbolic) {
             _visit(r->humanValue);
         } else {

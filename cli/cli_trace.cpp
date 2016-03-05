@@ -257,14 +257,14 @@ traceProgram(trace::API api,
 
         if (verbose) {
             const char *sep = "";
-            for (unsigned i = 0; i < args.size(); ++i) {
+            for (auto & arg : args) {
                 const char *quote;
-                if (strchr(args[i], ' ') != NULL) {
+                if (strchr(arg, ' ') != NULL) {
                     quote = "\"";
                 } else {
                     quote = "";
                 }
-                std::cerr << sep << quote << args[i] << quote;
+                std::cerr << sep << quote << arg << quote;
                 sep = " ";
             }
             std::cerr << "\n";

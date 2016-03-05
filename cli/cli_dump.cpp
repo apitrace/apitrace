@@ -118,7 +118,7 @@ public:
     {
     }
 
-    void visit(trace::Blob *blob) {
+    void visit(trace::Blob *blob) override {
         std::string fileName = "blob_call" + std::to_string(callNo);
         if (blobNo) {
             fileName += "_";
@@ -136,7 +136,7 @@ public:
         ++blobNo;
     }
 
-    void visit(trace::Call *call) {
+    void visit(trace::Call *call) override {
         callNo = call->no;
         blobNo = 0;
         Dumper::visit(call);
