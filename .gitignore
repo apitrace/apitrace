@@ -34,6 +34,8 @@ CMakeFiles
 CMakeLists.txt.user
 Makefile
 apitrace
+btest
+stest
 build
 dxsdk
 eglretrace
