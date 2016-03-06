@@ -220,6 +220,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
             DEPENDS
                 d2d1trace.py
+                dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/specs/d2d1.py
                 ${CMAKE_SOURCE_DIR}/specs/dwrite.py
@@ -246,6 +247,7 @@ if (WIN32)
         DEPENDS
                 wgltrace.py
                 gltrace.py
+                dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/wglapi.py
