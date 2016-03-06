@@ -181,7 +181,7 @@ simplest way to determine what API an application uses is to:
 * list the DLLs by pressing `Ctrl + D`
 
 * sort DLLs alphabetically, and look for the DLLs such as `opengl32.dll`,
-  `d3d9.dll`, `d3d10.dll`, etc.
+  `d3d9.dll`, etc.
 
 Copy the appropriate `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the
 wrappers directory to the directory with the application you want to trace.

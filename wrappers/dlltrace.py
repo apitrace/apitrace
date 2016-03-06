@@ -36,35 +36,19 @@ from specs.stdapi import API
 class DllDispatcher(Dispatcher):
 
     def dispatchModule(self, module):
-        tag = module.name.upper()
-        print r'HMODULE g_h%sModule = NULL;' % (tag,)
-        print r''
-        print r'static PROC'
-        print r'_get%sProcAddress(LPCSTR lpProcName) {' % tag
-        print r'    if (!g_h%sModule) {' % tag
-        print r'        char szDll[MAX_PATH] = {0};'
-        print r'        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {'
-        print r'            return NULL;'
-        print r'        }'
-        print r'        strcat(szDll, "\\%s.dll");' % module.name
-        print r'        g_h%sModule = LoadLibraryA(szDll);' % tag
-        print r'        if (!g_h%sModule) {' % tag
-        print r'            return NULL;'
-        print r'        }'
-        print r'    }'
-        print r'    return GetProcAddress(g_h%sModule, lpProcName);' % tag
-        print r'}'
-        print r''
+        print r'Module g_mod%s("%s");' % (module.name.upper(), module.name)
 
         Dispatcher.dispatchModule(self, module)
 
     def getProcAddressName(self, module, function):
-        return '_get%sProcAddress' % (module.name.upper())
+        return r'g_mod%s.getProcAddress' % (module.name.upper(),)
 
 
 class DllTracer(Tracer):
 
     def header(self, api):
+        print r'#include "dlltrace.hpp"'
+        print
 
         for module in api.modules:
             dispatcher = DllDispatcher()
