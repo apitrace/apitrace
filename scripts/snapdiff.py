@@ -211,7 +211,7 @@ def main():
 
     ref_images = find_images(ref_prefix)
     src_images = find_images(src_prefix)
-    images = list(set(ref_images).intersection(set(src_images)))
+    images = list(set(ref_images).union(set(src_images)))
     images.sort()
 
     if options.output:
@@ -240,21 +240,26 @@ def main():
                 result = 'MISMATCH'
                 failures += 1
                 bgcolor = '#ff2020'
-            if options.verbose:
-                sys.stdout.write(' %s\n' % (result,))
-            html.write('      <tr>\n')
-            html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
-            if not match or options.show_all:
-                if options.overwrite \
-                   or not os.path.exists(delta_image) \
-                   or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
-                       and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-                    comparer.write_diff(delta_image, fuzz=options.fuzz)
-                surface(html, ref_image)
-                surface(html, src_image)
-                surface(html, delta_image)
-            html.write('      </tr>\n')
-            html.flush()
+        else:
+            result = 'MISSING'
+            failures += 1
+            bgcolor = '#ff2020'
+
+        if options.verbose:
+            sys.stdout.write(' %s\n' % (result,))
+        html.write('      <tr>\n')
+        html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
+        if not match or options.show_all:
+            if options.overwrite \
+               or not os.path.exists(delta_image) \
+               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
+                comparer.write_diff(delta_image, fuzz=options.fuzz)
+            surface(html, ref_image)
+            surface(html, src_image)
+            surface(html, delta_image)
+        html.write('      </tr>\n')
+        html.flush()
     html.write('    </table>\n')
     html.write('  </body>\n')
     html.write('</html>\n')
