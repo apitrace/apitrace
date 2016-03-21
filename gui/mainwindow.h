@@ -74,7 +74,6 @@ private slots:
     void showSettings();
     void leakTrace();
     void leakTraceFinished();
-    void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
     void saveSelectedSurface();

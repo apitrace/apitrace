@@ -16,7 +16,7 @@ matrix:
   - os: linux
     env:
     - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.9 g++-4.9 libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
+    - APT_PACKAGES="gcc-4.9 g++-4.9 libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
     - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DENABLE_GUI=1"
   - os: linux
     env:
@@ -25,7 +25,7 @@ matrix:
     - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - os: linux
     env:
-    - APT_PACKAGES="clang-3.6 libc++-dev libc++abi-dev libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev"
+    - APT_PACKAGES="clang-3.6 libc++-dev libc++abi-dev libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
     - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=clang-3.6 -DCMAKE_CXX_COMPILER=clang++-3.6 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
   - os: linux
     env:

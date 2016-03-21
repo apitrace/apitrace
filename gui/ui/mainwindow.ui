@@ -134,17 +134,15 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QWebView" name="detailsWebView">
+      <widget class="QTextBrowser" name="detailsWebView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="url">
-        <url>
-         <string>about:blank</string>
-        </url>
+       <property name="openExternalLinks">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -790,13 +788,6 @@
   <zorder>errorsDock</zorder>
   <zorder>backtraceDock</zorder>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QWebView</class>
-   <extends>QWidget</extends>
-   <header>QtWebKitWidgets/QWebView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../qapitrace.qrc"/>
  </resources>

@@ -40,8 +40,7 @@
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
-#include <QWebPage>
-#include <QWebView>
+#include <QTextBrowser>
 
 typedef QLatin1String _;
 
@@ -886,11 +885,6 @@ void MainWindow::leakTraceFinished(){
     delete t;
 }
 
-void MainWindow::openHelp(const QUrl &url)
-{
-    QDesktopServices::openUrl(url);
-}
-
 void MainWindow::showSurfacesMenu(const QPoint &pos)
 {
     QTreeWidget *tree = m_ui.surfacesTreeWidget;
@@ -1005,9 +999,6 @@ void MainWindow::initObjects()
 
     m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    m_ui.detailsWebView->page()->setLinkDelegationPolicy(
-        QWebPage::DelegateExternalLinks);
-
     m_jumpWidget = new JumpWidget(this);
     m_ui.centralLayout->addWidget(m_jumpWidget);
     m_jumpWidget->hide();
@@ -1120,9 +1111,6 @@ void MainWindow::initConnections()
     connect(m_ui.surfacesTreeWidget,
             SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
             SLOT(showSelectedSurface()));
-
-    connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
-            this, SLOT(openHelp(const QUrl&)));
 
     connect(m_ui.nonDefaultsCB, SIGNAL(toggled(bool)),
             this, SLOT(fillState(bool)));

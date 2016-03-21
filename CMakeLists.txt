@@ -112,7 +112,7 @@ if (ENABLE_GUI)
         cmake_policy (SET CMP0020 NEW)
     endif()
     find_package (Qt5Widgets ${REQUIRE_GUI})
-    find_package (Qt5WebKitWidgets ${REQUIRE_GUI})
+    find_package (Qt5Network ${REQUIRE_GUI})
 endif ()
 
 if (MSVC)
@@ -526,7 +526,7 @@ endif ()
 ##############################################################################
 # GUI
 
-if (ENABLE_GUI AND Qt5Widgets_FOUND AND Qt5WebKitWidgets_FOUND)
+if (ENABLE_GUI AND Qt5Widgets_FOUND AND Qt5Network_FOUND)
   add_subdirectory(gui)
 endif ()
 

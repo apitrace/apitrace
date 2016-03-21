@@ -101,11 +101,11 @@ add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 if (Qt5Core_VERSION_STRING VERSION_LESS 5.2.0)
     qt5_use_modules (qubjson Widgets)
     qt5_use_modules (qubjson_test Widgets)
-    qt5_use_modules (qapitrace Widgets WebKitWidgets)
+    qt5_use_modules (qapitrace Widgets Network)
 else ()
     target_link_libraries (qubjson Qt5::Widgets)
     target_link_libraries (qubjson_test Qt5::Widgets)
-    target_link_libraries (qapitrace Qt5::Widgets Qt5::WebKitWidgets)
+    target_link_libraries (qapitrace Qt5::Widgets Qt5::Network)
 endif ()
 
 target_link_libraries (qapitrace
