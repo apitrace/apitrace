@@ -37,6 +37,5 @@ after_build:
 - cmake --build build --config "%CONFIGURATION%" --target check -- %MSBUILD_FLAGS%
 - cmake --build build --config "%CONFIGURATION%" --target package -- %MSBUILD_FLAGS%
 
-#artifacts:
-#- path: build/apitrace-*.7z
-#  name: apitrace
+artifacts:
+- path: build/apitrace-*.7z
