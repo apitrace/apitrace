@@ -28,8 +28,8 @@
 //
 // Various stubs for the unit tests for the open-source version of Snappy.
 
-#ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
-#define UTIL_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
+#ifndef THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
+#define THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
 
 #include <iostream>
 #include <string>
@@ -52,7 +52,6 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -132,7 +131,7 @@ namespace File {
 }  // namespace File
 
 namespace file {
-  int Defaults() { }
+  int Defaults() { return 0; }
 
   class DummyStatus {
    public:
@@ -158,6 +157,8 @@ namespace file {
     }
 
     fclose(fp);
+
+    return DummyStatus();
   }
 
   DummyStatus SetContents(const string& filename,
@@ -176,6 +177,8 @@ namespace file {
     }
 
     fclose(fp);
+
+    return DummyStatus();
   }
 }  // namespace file
 
@@ -544,6 +547,13 @@ class LogMessage {
     PREDICT_TRUE(condition) ? (void)0 : \
     snappy::LogMessageVoidify() & snappy::LogMessageCrash()
 
+#ifdef _MSC_VER
+// ~LogMessageCrash calls abort() and therefore never exits. This is by design
+// so temporarily disable warning C4722.
+#pragma warning(push)
+#pragma warning(disable:4722)
+#endif
+
 class LogMessageCrash : public LogMessage {
  public:
   LogMessageCrash() { }
@@ -552,6 +562,10 @@ class LogMessageCrash : public LogMessage {
     abort();
   }
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 // This class is used to explicitly ignore values in the conditional
 // logging macros.  This avoids compiler warnings like "value computed
@@ -572,6 +586,7 @@ class LogMessageVoidify {
 #define CHECK_NE(a, b) CRASH_UNLESS((a) != (b))
 #define CHECK_LT(a, b) CRASH_UNLESS((a) < (b))
 #define CHECK_GT(a, b) CRASH_UNLESS((a) > (b))
+#define CHECK_OK(cond) (cond).CheckSuccess()
 
 }  // namespace
 
@@ -579,4 +594,4 @@ using snappy::CompressFile;
 using snappy::UncompressFile;
 using snappy::MeasureFile;
 
-#endif  // UTIL_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_
+#endif  // THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_TEST_H_

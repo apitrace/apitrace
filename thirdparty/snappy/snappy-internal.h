@@ -28,8 +28,8 @@
 //
 // Internals shared between the Snappy implementation and its unittest.
 
-#ifndef UTIL_SNAPPY_SNAPPY_INTERNAL_H_
-#define UTIL_SNAPPY_SNAPPY_INTERNAL_H_
+#ifndef THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_
+#define THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_
 
 #include "snappy-stubs-internal.h"
 
@@ -93,7 +93,7 @@ static inline int FindMatchLength(const char* s1,
   // the first non-matching bit and use that to calculate the total
   // length of the match.
   while (PREDICT_TRUE(s2 <= s2_limit - 8)) {
-    if (PREDICT_FALSE(UNALIGNED_LOAD64(s2) == UNALIGNED_LOAD64(s1 + matched))) {
+    if (UNALIGNED_LOAD64(s2) == UNALIGNED_LOAD64(s1 + matched)) {
       s2 += 8;
       matched += 8;
     } else {
@@ -108,7 +108,7 @@ static inline int FindMatchLength(const char* s1,
     }
   }
   while (PREDICT_TRUE(s2 < s2_limit)) {
-    if (PREDICT_TRUE(s1[matched] == *s2)) {
+    if (s1[matched] == *s2) {
       ++s2;
       ++matched;
     } else {
@@ -147,4 +147,4 @@ static inline int FindMatchLength(const char* s1,
 }  // end namespace internal
 }  // end namespace snappy
 
-#endif  // UTIL_SNAPPY_SNAPPY_INTERNAL_H_
+#endif  // THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_

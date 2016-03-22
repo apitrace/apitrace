@@ -59,7 +59,6 @@ DEFINE_bool(fastlz, false,
             "Run FastLZ compression (http://www.fastlz.org/");
 DEFINE_bool(snappy, true, "Run snappy compression");
 
-
 DEFINE_bool(write_compressed, false,
             "Write compressed versions of each file to <file>.comp");
 DEFINE_bool(write_uncompressed, false,
@@ -161,6 +160,7 @@ static size_t MinimumRequiredOutputSpace(size_t input_size,
 
     default:
       LOG(FATAL) << "Unknown compression type number " << comp;
+      return 0;
   }
 }
 
@@ -278,7 +278,6 @@ static bool Compress(const char* input, size_t input_size, CompressorType comp,
       break;
     }
 
-
     default: {
       return false;     // the asked-for library wasn't compiled in
     }
@@ -370,7 +369,6 @@ static bool Uncompress(const string& compressed, CompressorType comp,
       break;
     }
 
-
     default: {
       return false;     // the asked-for library wasn't compiled in
     }
@@ -448,7 +446,7 @@ static void Measure(const char* data,
     }
 
     compressed_size = 0;
-    for (int i = 0; i < compressed.size(); i++) {
+    for (size_t i = 0; i < compressed.size(); i++) {
       compressed_size += compressed[i].size();
     }
   }
@@ -474,7 +472,6 @@ static void Measure(const char* data,
          urate.c_str());
 }
 
-
 static int VerifyString(const string& input) {
   string compressed;
   DataEndingAtUnreadablePage i(input);
@@ -491,6 +488,23 @@ static int VerifyString(const string& input) {
   return uncompressed.size();
 }
 
+static void VerifyStringSink(const string& input) {
+  string compressed;
+  DataEndingAtUnreadablePage i(input);
+  const size_t written = snappy::Compress(i.data(), i.size(), &compressed);
+  CHECK_EQ(written, compressed.size());
+  CHECK_LE(compressed.size(),
+           snappy::MaxCompressedLength(input.size()));
+  CHECK(snappy::IsValidCompressedBuffer(compressed.data(), compressed.size()));
+
+  string uncompressed;
+  uncompressed.resize(input.size());
+  snappy::UncheckedByteArraySink sink(string_as_array(&uncompressed));
+  DataEndingAtUnreadablePage c(compressed);
+  snappy::ByteArraySource source(c.data(), c.size());
+  CHECK(snappy::Uncompress(&source, &sink));
+  CHECK_EQ(uncompressed, input);
+}
 
 static void VerifyIOVec(const string& input) {
   string compressed;
@@ -505,13 +519,13 @@ static void VerifyIOVec(const string& input) {
   // ranging from 1 to 10.
   char* buf = new char[input.size()];
   ACMRandom rnd(input.size());
-  int num = rnd.Next() % 10 + 1;
+  size_t num = rnd.Next() % 10 + 1;
   if (input.size() < num) {
     num = input.size();
   }
   struct iovec* iov = new iovec[num];
   int used_so_far = 0;
-  for (int i = 0; i < num; ++i) {
+  for (size_t i = 0; i < num; ++i) {
     iov[i].iov_base = buf + used_so_far;
     if (i == num - 1) {
       iov[i].iov_len = input.size() - used_so_far;
@@ -562,6 +576,28 @@ static void VerifyNonBlockedCompression(const string& input) {
   CHECK(snappy::Uncompress(compressed.data(), compressed.size(), &uncomp_str));
   CHECK_EQ(uncomp_str, input);
 
+  // Uncompress using source/sink
+  string uncomp_str2;
+  uncomp_str2.resize(input.size());
+  snappy::UncheckedByteArraySink sink(string_as_array(&uncomp_str2));
+  snappy::ByteArraySource source(compressed.data(), compressed.size());
+  CHECK(snappy::Uncompress(&source, &sink));
+  CHECK_EQ(uncomp_str2, input);
+
+  // Uncompress into iovec
+  {
+    static const int kNumBlocks = 10;
+    struct iovec vec[kNumBlocks];
+    const int block_size = 1 + input.size() / kNumBlocks;
+    string iovec_data(block_size * kNumBlocks, 'x');
+    for (int i = 0; i < kNumBlocks; i++) {
+      vec[i].iov_base = string_as_array(&iovec_data) + i * block_size;
+      vec[i].iov_len = block_size;
+    }
+    CHECK(snappy::RawUncompressToIOVec(compressed.data(), compressed.size(),
+                                       vec, kNumBlocks));
+    CHECK_EQ(string(iovec_data.data(), input.size()), input);
+  }
 }
 
 // Expand the input so that it is at least K times as big as block size
@@ -580,6 +616,8 @@ static int Verify(const string& input) {
   // Compress using string based routines
   const int result = VerifyString(input);
 
+  // Verify using sink based routines
+  VerifyStringSink(input);
 
   VerifyNonBlockedCompression(input);
   VerifyIOVec(input);
@@ -589,12 +627,9 @@ static int Verify(const string& input) {
     VerifyIOVec(input);
   }
 
-
   return result;
 }
 
-// This test checks to ensure that snappy doesn't coredump if it gets
-// corrupted data.
 
 static bool IsValidCompressedBuffer(const string& c) {
   return snappy::IsValidCompressedBuffer(c.data(), c.size());
@@ -603,11 +638,13 @@ static bool Uncompress(const string& c, string* u) {
   return snappy::Uncompress(c.data(), c.size(), u);
 }
 
-TYPED_TEST(CorruptedTest, VerifyCorrupted) {
+// This test checks to ensure that snappy doesn't coredump if it gets
+// corrupted data.
+TEST(CorruptedTest, VerifyCorrupted) {
   string source = "making sure we don't crash with corrupted input";
   VLOG(1) << source;
   string dest;
-  TypeParam uncmp;
+  string uncmp;
   snappy::Compress(source.data(), source.size(), &dest);
 
   // Mess around with the data. It's hard to simulate all possible
@@ -616,19 +653,19 @@ TYPED_TEST(CorruptedTest, VerifyCorrupted) {
   dest[1]--;
   dest[3]++;
   // this really ought to fail.
-  CHECK(!IsValidCompressedBuffer(TypeParam(dest)));
-  CHECK(!Uncompress(TypeParam(dest), &uncmp));
+  CHECK(!IsValidCompressedBuffer(dest));
+  CHECK(!Uncompress(dest, &uncmp));
 
   // This is testing for a security bug - a buffer that decompresses to 100k
   // but we lie in the snappy header and only reserve 0 bytes of memory :)
   source.resize(100000);
-  for (int i = 0; i < source.length(); ++i) {
+  for (size_t i = 0; i < source.length(); ++i) {
     source[i] = 'A';
   }
   snappy::Compress(source.data(), source.size(), &dest);
   dest[0] = dest[1] = dest[2] = dest[3] = 0;
-  CHECK(!IsValidCompressedBuffer(TypeParam(dest)));
-  CHECK(!Uncompress(TypeParam(dest), &uncmp));
+  CHECK(!IsValidCompressedBuffer(dest));
+  CHECK(!Uncompress(dest, &uncmp));
 
   if (sizeof(void *) == 4) {
     // Another security check; check a crazy big length can't DoS us with an
@@ -637,20 +674,20 @@ TYPED_TEST(CorruptedTest, VerifyCorrupted) {
     // where 3 GB might be an acceptable allocation size, Uncompress()
     // attempts to decompress, and sometimes causes the test to run out of
     // memory.
-    dest[0] = dest[1] = dest[2] = dest[3] = 0xff;
+    dest[0] = dest[1] = dest[2] = dest[3] = '\xff';
     // This decodes to a really large size, i.e., about 3 GB.
     dest[4] = 'k';
-    CHECK(!IsValidCompressedBuffer(TypeParam(dest)));
-    CHECK(!Uncompress(TypeParam(dest), &uncmp));
+    CHECK(!IsValidCompressedBuffer(dest));
+    CHECK(!Uncompress(dest, &uncmp));
   } else {
     LOG(WARNING) << "Crazy decompression lengths not checked on 64-bit build";
   }
 
   // This decodes to about 2 MB; much smaller, but should still fail.
-  dest[0] = dest[1] = dest[2] = 0xff;
+  dest[0] = dest[1] = dest[2] = '\xff';
   dest[3] = 0x00;
-  CHECK(!IsValidCompressedBuffer(TypeParam(dest)));
-  CHECK(!Uncompress(TypeParam(dest), &uncmp));
+  CHECK(!IsValidCompressedBuffer(dest));
+  CHECK(!Uncompress(dest, &uncmp));
 
   // try reading stuff in from a bad file.
   for (int i = 1; i <= 3; ++i) {
@@ -665,8 +702,8 @@ TYPED_TEST(CorruptedTest, VerifyCorrupted) {
     snappy::ByteArraySource source(data.data(), data.size());
     CHECK(!snappy::GetUncompressedLength(&source, &ulen2) ||
           (ulen2 < (1<<20)));
-    CHECK(!IsValidCompressedBuffer(TypeParam(data)));
-    CHECK(!Uncompress(TypeParam(data), &uncmp));
+    CHECK(!IsValidCompressedBuffer(data));
+    CHECK(!Uncompress(data, &uncmp));
   }
 }
 
@@ -764,7 +801,7 @@ TEST(Snappy, RandomData) {
     }
 
     string x;
-    int len = rnd.Uniform(4096);
+    size_t len = rnd.Uniform(4096);
     if (i < 100) {
       len = 65536 + rnd.Uniform(65536);
     }
@@ -929,7 +966,6 @@ TEST(Snappy, IOVecCopyOverflow) {
   }
 }
 
-
 static bool CheckUncompressedLength(const string& compressed,
                                     size_t* ulength) {
   const bool result1 = snappy::GetUncompressedLength(compressed.data(),
@@ -956,11 +992,11 @@ TEST(SnappyCorruption, TruncatedVarint) {
 TEST(SnappyCorruption, UnterminatedVarint) {
   string compressed, uncompressed;
   size_t ulength;
-  compressed.push_back(128);
-  compressed.push_back(128);
-  compressed.push_back(128);
-  compressed.push_back(128);
-  compressed.push_back(128);
+  compressed.push_back('\x80');
+  compressed.push_back('\x80');
+  compressed.push_back('\x80');
+  compressed.push_back('\x80');
+  compressed.push_back('\x80');
   compressed.push_back(10);
   CHECK(!CheckUncompressedLength(compressed, &ulength));
   CHECK(!snappy::IsValidCompressedBuffer(compressed.data(), compressed.size()));
@@ -997,7 +1033,6 @@ TEST(Snappy, ZeroOffsetCopyValidation) {
   //  \x12\x00\x00      Copy with offset==0, length==5
   EXPECT_FALSE(snappy::IsValidCompressedBuffer(compressed, 4));
 }
-
 
 namespace {
 
@@ -1125,21 +1160,20 @@ TEST(Snappy, FindMatchLengthRandom) {
   }
 }
 
-
 static void CompressFile(const char* fname) {
   string fullinput;
-  file::GetContents(fname, &fullinput, file::Defaults()).CheckSuccess();
+  CHECK_OK(file::GetContents(fname, &fullinput, file::Defaults()));
 
   string compressed;
   Compress(fullinput.data(), fullinput.size(), SNAPPY, &compressed, false);
 
-  file::SetContents(string(fname).append(".comp"), compressed, file::Defaults())
-      .CheckSuccess();
+  CHECK_OK(file::SetContents(string(fname).append(".comp"), compressed,
+                             file::Defaults()));
 }
 
 static void UncompressFile(const char* fname) {
   string fullinput;
-  file::GetContents(fname, &fullinput, file::Defaults()).CheckSuccess();
+  CHECK_OK(file::GetContents(fname, &fullinput, file::Defaults()));
 
   size_t uncompLength;
   CHECK(CheckUncompressedLength(fullinput, &uncompLength));
@@ -1148,13 +1182,13 @@ static void UncompressFile(const char* fname) {
   uncompressed.resize(uncompLength);
   CHECK(snappy::Uncompress(fullinput.data(), fullinput.size(), &uncompressed));
 
-  file::SetContents(string(fname).append(".uncomp"), uncompressed,
-                    file::Defaults()).CheckSuccess();
+  CHECK_OK(file::SetContents(string(fname).append(".uncomp"), uncompressed,
+                             file::Defaults()));
 }
 
 static void MeasureFile(const char* fname) {
   string fullinput;
-  file::GetContents(fname, &fullinput, file::Defaults()).CheckSuccess();
+  CHECK_OK(file::GetContents(fname, &fullinput, file::Defaults()));
   printf("%-40s :\n", fname);
 
   int start_len = (FLAGS_start_len < 0) ? fullinput.size() : FLAGS_start_len;
@@ -1298,6 +1332,37 @@ static void BM_UIOVec(int iters, int arg) {
 }
 BENCHMARK(BM_UIOVec)->DenseRange(0, 4);
 
+static void BM_UFlatSink(int iters, int arg) {
+  StopBenchmarkTiming();
+
+  // Pick file to process based on "arg"
+  CHECK_GE(arg, 0);
+  CHECK_LT(arg, ARRAYSIZE(files));
+  string contents = ReadTestDataFile(files[arg].filename,
+                                     files[arg].size_limit);
+
+  string zcontents;
+  snappy::Compress(contents.data(), contents.size(), &zcontents);
+  char* dst = new char[contents.size()];
+
+  SetBenchmarkBytesProcessed(static_cast<int64>(iters) *
+                             static_cast<int64>(contents.size()));
+  SetBenchmarkLabel(files[arg].label);
+  StartBenchmarkTiming();
+  while (iters-- > 0) {
+    snappy::ByteArraySource source(zcontents.data(), zcontents.size());
+    snappy::UncheckedByteArraySink sink(dst);
+    CHECK(snappy::Uncompress(&source, &sink));
+  }
+  StopBenchmarkTiming();
+
+  string s(dst, contents.size());
+  CHECK_EQ(contents, s);
+
+  delete[] dst;
+}
+
+BENCHMARK(BM_UFlatSink)->DenseRange(0, ARRAYSIZE(files) - 1);
 
 static void BM_ZFlat(int iters, int arg) {
   StopBenchmarkTiming();
@@ -1329,14 +1394,12 @@ static void BM_ZFlat(int iters, int arg) {
 }
 BENCHMARK(BM_ZFlat)->DenseRange(0, ARRAYSIZE(files) - 1);
 
-
 }  // namespace snappy
 
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   RunSpecifiedBenchmarks();
-
 
   if (argc >= 2) {
     for (int arg = 1; arg < argc; arg++) {
