@@ -158,7 +158,7 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
                 \"Path=${QT_BIN_DIR_NATIVE};\$ENV{SystemRoot}\\\\System32;\$ENV{SystemRoot}\"
                 \"${QT_WINDEPLOYQT_EXECUTABLE}\"
                 \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
-                --verbose 0)
+            )
         ")
     endif ()
 endif ()
