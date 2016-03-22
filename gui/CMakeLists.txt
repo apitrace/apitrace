@@ -133,3 +133,32 @@ endif ()
 install (TARGETS qapitrace RUNTIME DESTINATION bin)
 install_pdb (qapitrace RUNTIME DESTINATION bin)
 #install (FILES qapitrace.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
+
+# Deployt Qt dependencies
+#
+# See:
+# - http://doc.qt.io/qt-5/windows-deployment.html
+#
+# XXX: windeployqt can fail if there's weird stuff in the Path env var, so we
+# invoke it with a sanitized Path, via `cmake -E env` that was introduced in
+# CMake 3.1.
+if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
+    # http://stackoverflow.com/a/24676432
+    get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+    get_filename_component (QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
+    find_program (QT_WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+    if (QT_WINDEPLOYQT_EXECUTABLE)
+        file (TO_NATIVE_PATH "${QT_BIN_DIR}" QT_BIN_DIR_NATIVE)
+        # It's safer to use `\` separateors in the Path, but we need to escape them
+        string (REPLACE "\\" "\\\\" QT_BIN_DIR_NATIVE "${QT_BIN_DIR_NATIVE}")
+        install (CODE "
+            message (STATUS \"Running Qt Deploy Tool...\")
+            execute_process (COMMAND
+                \"${CMAKE_COMMAND}\" -E env
+                \"Path=${QT_BIN_DIR_NATIVE};\$ENV{SystemRoot}\\\\System32;\$ENV{SystemRoot}\"
+                \"${QT_WINDEPLOYQT_EXECUTABLE}\"
+                \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
+                --verbose 0)
+        ")
+    endif ()
+endif ()
