@@ -153,10 +153,18 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
         string (REPLACE "\\" "\\\\" QT_BIN_DIR_NATIVE "${QT_BIN_DIR_NATIVE}")
         install (CODE "
             message (STATUS \"Running Qt Deploy Tool...\")
+            if (CMAKE_INSTALL_CONFIG_NAME STREQUAL \"Debug\")
+                list (APPEND QT_WINDEPLOYQT_FLAGS --debug)
+            elseif (CMAKE_INSTALL_CONFIG_NAME STREQUAL \"RelWithDebInfo\")
+                list (APPEND QT_WINDEPLOYQT_FLAGS --release-with-debug-info)
+            else ()
+                list (APPEND QT_WINDEPLOYQT_FLAGS --release)
+            endif ()
             execute_process (COMMAND
                 \"${CMAKE_COMMAND}\" -E env
                 \"Path=${QT_BIN_DIR_NATIVE};\$ENV{SystemRoot}\\\\System32;\$ENV{SystemRoot}\"
                 \"${QT_WINDEPLOYQT_EXECUTABLE}\"
+                \${QT_WINDEPLOYQT_FLAGS}
                 \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
             )
         ")
