@@ -61,6 +61,8 @@ Context::Context(void) {
     EXT_debug_label = ext.has("GL_EXT_debug_label");
     ARB_direct_state_access = ext.has("GL_ARB_direct_state_access");
     ARB_shader_image_load_store = ext.has("GL_ARB_shader_image_load_store");
+    ARB_shader_storage_buffer_object = ext.has("GL_ARB_shader_storage_buffer_object");
+    ARB_program_interface_query = ext.has("GL_ARB_program_interface_query");
 
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 }

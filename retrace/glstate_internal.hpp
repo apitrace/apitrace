@@ -52,6 +52,8 @@ struct Context
     unsigned NV_read_depth_stencil:1;  /* ES only */
     unsigned ARB_shader_image_load_store:1;
     unsigned ARB_direct_state_access:1;
+    unsigned ARB_shader_storage_buffer_object:1;
+    unsigned ARB_program_interface_query:1;
 
     Context(void);
 };

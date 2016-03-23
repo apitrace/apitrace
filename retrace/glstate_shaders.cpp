@@ -971,6 +971,133 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
     writer.endMember();
 }
 
+
+static std::vector<GLint>
+getProgramResourcei(GLuint program, GLenum programInterface,
+                    GLuint index,
+                    std::vector<GLenum> const &properties,
+                    GLsizei expectedNumberOfResults) {
+    std::vector<GLint> result;
+    result.resize(expectedNumberOfResults, GL_INVALID_VALUE);
+    GLint actuallyWrittenProperties = -1;
+    glGetProgramResourceiv(program, programInterface, index, properties.size(),
+                           properties.data(), result.size(),
+                           &actuallyWrittenProperties, result.data());
+    result.resize(std::max(0, actuallyWrittenProperties));
+    return result;
+}
+
+/**
+ * Expects one result per property
+ */
+static std::vector<GLint>
+getProgramResourcei(GLuint program, GLenum programInterface,
+                    GLuint index,
+                    std::vector<GLenum> const &properties)
+{
+    return getProgramResourcei(program, programInterface, index, properties,
+                               properties.size());
+}
+
+static GLint
+getProgramResourcei(GLuint program, GLenum programInterface, GLuint index,
+                    GLenum property)
+{
+    auto result = getProgramResourcei(program, programInterface, index,
+                                      std::vector<GLenum>{property});
+    return result.at(0);
+}
+
+static std::string
+getProgramResourceName(GLuint program, GLenum programInterface,
+                       GLuint index)
+{
+    auto nameLength = getProgramResourcei(program, programInterface, index,
+                                          std::vector<GLenum>{GL_NAME_LENGTH})
+                          .at(0);
+    std::vector<char> buffer;
+    buffer.resize(nameLength);
+    glGetProgramResourceName(program, programInterface, index, nameLength, nullptr, buffer.data());
+    return {buffer.begin(), buffer.end()};
+}
+
+static void
+dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
+                               GLuint program)
+{
+    if (!(context.ARB_shader_storage_buffer_object &&
+          context.ARB_program_interface_query)) {
+        return;
+    }
+
+    GLint numberOfActiveSSBBs = -1;
+    glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK,
+                            GL_ACTIVE_RESOURCES, &numberOfActiveSSBBs);
+    if (numberOfActiveSSBBs > 0) {
+        for (GLint ssbbResourceIndex = 0;
+             ssbbResourceIndex < numberOfActiveSSBBs; ++ssbbResourceIndex) {
+            GLint numberOfActiveVariables =
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_NUM_ACTIVE_VARIABLES);
+            auto ssbbName = getProgramResourceName(
+                program, GL_SHADER_STORAGE_BLOCK, ssbbResourceIndex);
+            auto activeVariables = getProgramResourcei(
+                program, GL_SHADER_STORAGE_BLOCK, ssbbResourceIndex,
+                {GL_ACTIVE_VARIABLES}, numberOfActiveVariables);
+            writer.beginMember(ssbbName);
+            writer.beginObject();
+            const GLint bufferBinding =
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_BUFFER_BINDING);
+            writer.writeIntMember("GL_BUFFER_BINDING", bufferBinding);
+            writer.writeIntMember(
+                "GL_BUFFER_DATA_SIZE",
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_BUFFER_DATA_SIZE));
+
+            for (auto property : {GL_REFERENCED_BY_VERTEX_SHADER,
+                                    GL_REFERENCED_BY_TESS_CONTROL_SHADER,
+                                    GL_REFERENCED_BY_TESS_EVALUATION_SHADER,
+                                    GL_REFERENCED_BY_GEOMETRY_SHADER,
+                                    GL_REFERENCED_BY_FRAGMENT_SHADER,
+                                    GL_REFERENCED_BY_COMPUTE_SHADER}) {
+                const auto value =
+                    getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                        ssbbResourceIndex, property);
+                if (value) {
+                    writer.writeBoolMember(enumToString(property), true);
+                }
+            }
+
+            writer.beginMember("activeVariables");
+            writer.beginObject();
+            for (GLint variableIndex : activeVariables) {
+                auto variableName = getProgramResourceName(
+                    program, GL_BUFFER_VARIABLE, variableIndex);
+                writer.beginMember(variableName);
+                writer.beginObject();
+
+                for (auto property :
+                     {GL_TYPE, GL_ARRAY_SIZE, GL_OFFSET, GL_BLOCK_INDEX,
+                      GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR,
+                      GL_TOP_LEVEL_ARRAY_SIZE, GL_TOP_LEVEL_ARRAY_STRIDE}) {
+                    int value = getProgramResourcei(program, GL_BUFFER_VARIABLE,
+                                                    variableIndex, property);
+                    writer.writeIntMember(enumToString(property), value);
+                }
+
+                writer.endObject();
+                writer.endMember(); // variableName
+            }
+            writer.endObject();
+            writer.endMember(); // activeVariables
+            writer.endObject();
+            writer.endMember(); // ssbbName
+        }
+    }
+}
+
+
 void
 dumpShadersUniforms(StateWriter &writer, Context &context)
 {
@@ -1049,6 +1176,21 @@ dumpShadersUniforms(StateWriter &writer, Context &context)
     }
     writer.endObject();
     writer.endMember(); // buffers
+
+    writer.beginMember("shaderstoragebufferblocks");
+    writer.beginObject();
+    if (pipeline) {
+        dumpShadersStorageBufferBlocks(writer, context, vertex_program);
+        dumpShadersStorageBufferBlocks(writer, context, fragment_program);
+        dumpShadersStorageBufferBlocks(writer, context, geometry_program);
+        dumpShadersStorageBufferBlocks(writer, context, tess_control_program);
+        dumpShadersStorageBufferBlocks(writer, context, tess_evaluation_program);
+        dumpShadersStorageBufferBlocks(writer, context, compute_program);
+    } else if (program) {
+        dumpShadersStorageBufferBlocks(writer, context, program);
+    }
+    writer.endObject();
+    writer.endMember(); // shaderstoragebufferblocks
 }
 
 
