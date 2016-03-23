@@ -76,24 +76,24 @@ public:
     SnappyFile(const std::string &filename = std::string());
     virtual ~SnappyFile();
 
-    virtual bool supportsOffsets() const override;
-    virtual File::Offset currentOffset() override;
+    virtual bool supportsOffsets(void) const override;
+    virtual File::Offset currentOffset(void) override;
     virtual void setCurrentOffset(const File::Offset &offset) override;
 protected:
     virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
-    virtual int rawGetc() override;
-    virtual void rawClose() override;
+    virtual int rawGetc(void) override;
+    virtual void rawClose(void) override;
     virtual bool rawSkip(size_t length) override;
-    virtual int rawPercentRead() override;
+    virtual int rawPercentRead(void) override;
 
 private:
-    inline size_t usedCacheSize() const
+    inline size_t usedCacheSize(void) const
     {
         assert(m_cachePtr >= m_cache);
         return m_cachePtr - m_cache;
     }
-    inline size_t freeCacheSize() const
+    inline size_t freeCacheSize(void) const
     {
         assert(m_cacheSize >= usedCacheSize());
         if (m_cacheSize > 0) {
@@ -102,11 +102,11 @@ private:
             return 0;
         }
     }
-    inline bool endOfData() const
+    inline bool endOfData(void) const
     {
         return m_stream.eof() && freeCacheSize() == 0;
     }
-    void flushWriteCache();
+    void flushWriteCache(void);
     void flushReadCache(size_t skipLength = 0);
     void createCache(size_t size);
     size_t readCompressedLength();
@@ -196,7 +196,7 @@ size_t SnappyFile::rawRead(void *buffer, size_t length)
     return length;
 }
 
-int SnappyFile::rawGetc()
+int SnappyFile::rawGetc(void)
 {
     unsigned char c = 0;
     if (rawRead(&c, 1) != 1)
@@ -204,7 +204,7 @@ int SnappyFile::rawGetc()
     return c;
 }
 
-void SnappyFile::rawClose()
+void SnappyFile::rawClose(void)
 {
     m_stream.close();
     delete [] m_cache;
@@ -289,7 +289,7 @@ size_t SnappyFile::readCompressedLength()
     return length;
 }
 
-bool SnappyFile::supportsOffsets() const
+bool SnappyFile::supportsOffsets(void) const
 {
     return true;
 }
@@ -340,7 +340,7 @@ bool SnappyFile::rawSkip(size_t length)
     return true;
 }
 
-int SnappyFile::rawPercentRead()
+int SnappyFile::rawPercentRead(void)
 {
     return int(100 * (double(m_stream.tellg()) / double(m_endPos)));
 }

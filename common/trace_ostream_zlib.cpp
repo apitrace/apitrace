@@ -48,7 +48,7 @@ public:
 
 protected:
     virtual bool write(const void *buffer, size_t length) override;
-    virtual void flush() override;
+    virtual void flush(void) override;
 private:
     gzFile m_gzFile;
 };
@@ -71,7 +71,7 @@ bool ZLibOutStream::write(const void *buffer, size_t length)
     return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
 }
 
-void ZLibOutStream::flush()
+void ZLibOutStream::flush(void)
 {
     gzflush(m_gzFile, Z_SYNC_FLUSH);
 }

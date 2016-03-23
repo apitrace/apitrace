@@ -51,31 +51,31 @@ public:
     File(void);
     virtual ~File();
 
-    bool isOpened() const;
+    bool isOpened(void) const;
 
     bool open(const char *filename);
     size_t read(void *buffer, size_t length);
-    void close();
-    int getc();
+    void close(void);
+    int getc(void);
     bool skip(size_t length);
-    int percentRead();
+    int percentRead(void);
 
-    virtual bool supportsOffsets() const = 0;
-    virtual File::Offset currentOffset() = 0;
+    virtual bool supportsOffsets(void) const = 0;
+    virtual File::Offset currentOffset(void) = 0;
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const char *filename) = 0;
     virtual size_t rawRead(void *buffer, size_t length) = 0;
-    virtual int rawGetc() = 0;
-    virtual void rawClose() = 0;
+    virtual int rawGetc(void) = 0;
+    virtual void rawClose(void) = 0;
     virtual bool rawSkip(size_t length) = 0;
-    virtual int rawPercentRead() = 0;
+    virtual int rawPercentRead(void) = 0;
 
 protected:
     bool m_isOpened = false;
 };
 
-inline bool File::isOpened() const
+inline bool File::isOpened(void) const
 {
     return m_isOpened;
 }
@@ -98,7 +98,7 @@ inline size_t File::read(void *buffer, size_t length)
     return rawRead(buffer, length);
 }
 
-inline int File::percentRead()
+inline int File::percentRead(void)
 {
     if (!m_isOpened) {
         return 0;
@@ -106,7 +106,7 @@ inline int File::percentRead()
     return rawPercentRead();
 }
 
-inline void File::close()
+inline void File::close(void)
 {
     if (m_isOpened) {
         rawClose();
@@ -114,7 +114,7 @@ inline void File::close()
     }
 }
 
-inline int File::getc()
+inline int File::getc(void)
 {
     if (!m_isOpened) {
         return -1;

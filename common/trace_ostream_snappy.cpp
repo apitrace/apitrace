@@ -58,14 +58,14 @@ public:
 
 
 private:
-    void close();
+    void close(void);
 
-    inline size_t usedCacheSize() const
+    inline size_t usedCacheSize(void) const
     {
         assert(m_cachePtr >= m_cache);
         return m_cachePtr - m_cache;
     }
-    inline size_t freeCacheSize() const
+    inline size_t freeCacheSize(void) const
     {
         assert(m_cacheSize >= usedCacheSize());
         if (m_cacheSize > 0) {
@@ -74,11 +74,11 @@ private:
             return 0;
         }
     }
-    inline bool endOfData() const
+    inline bool endOfData(void) const
     {
         return m_stream.eof() && freeCacheSize() == 0;
     }
-    void flushWriteCache();
+    void flushWriteCache(void);
     void createCache(size_t size);
     void writeCompressedLength(size_t length);
 private:
@@ -149,7 +149,7 @@ bool SnappyOutStream::write(const void *buffer, size_t length)
     return true;
 }
 
-void SnappyOutStream::close()
+void SnappyOutStream::close(void)
 {
     flushWriteCache();
     m_stream.close();
