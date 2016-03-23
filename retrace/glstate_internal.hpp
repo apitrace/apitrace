@@ -52,6 +52,8 @@ struct Context
     unsigned NV_read_depth_stencil:1;  /* ES only */
     unsigned ARB_shader_image_load_store:1;
     unsigned ARB_direct_state_access:1;
+    unsigned ARB_shader_storage_buffer_object:1;
+    unsigned ARB_program_interface_query:1;
 
     Context(void);
 };
@@ -191,6 +193,8 @@ void dumpObjectLabel(StateWriter &writer, Context &context, GLenum identifier, G
 void dumpParameters(StateWriter &writer, Context &context);
 
 void dumpShadersUniforms(StateWriter &writer, Context &context);
+
+void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context, GLuint program);
 
 void dumpTextures(StateWriter &writer, Context &context);
 

@@ -1049,6 +1049,136 @@ dumpShadersUniforms(StateWriter &writer, Context &context)
     }
     writer.endObject();
     writer.endMember(); // buffers
+
+    writer.beginMember("shaderstoragebufferblocks");
+    writer.beginObject();
+    if (pipeline) {
+        dumpShadersStorageBufferBlocks(writer, context, vertex_program);
+        dumpShadersStorageBufferBlocks(writer, context, fragment_program);
+        dumpShadersStorageBufferBlocks(writer, context, geometry_program);
+        dumpShadersStorageBufferBlocks(writer, context, tess_control_program);
+        dumpShadersStorageBufferBlocks(writer, context, tess_evaluation_program);
+        dumpShadersStorageBufferBlocks(writer, context, compute_program);
+    } else if (program) {
+        dumpShadersStorageBufferBlocks(writer, context, program);
+    }
+    writer.endObject();
+    writer.endMember(); // shaderstoragebufferblocks
+}
+
+std::vector<GLint> getProgramResourcei(GLuint program, GLenum programInterface,
+                                       GLuint index,
+                                       std::vector<GLenum> const &properties,
+                                       GLsizei expectedNumberOfResults) {
+    std::vector<GLint> result;
+    result.resize(expectedNumberOfResults, GL_INVALID_VALUE);
+    GLint actuallyWrittenProperties = -1;
+    glGetProgramResourceiv(program, programInterface, index, properties.size(),
+                           properties.data(), result.size(),
+                           &actuallyWrittenProperties, result.data());
+    result.resize(std::max(0, actuallyWrittenProperties));
+    return result;
+}
+
+/**
+ * Expects one result per property
+ */
+std::vector<GLint> getProgramResourcei(GLuint program, GLenum programInterface,
+                                       GLuint index,
+                                       std::vector<GLenum> const &properties) {
+    return getProgramResourcei(program, programInterface, index, properties,
+                               properties.size());
+}
+
+GLint getProgramResourcei(GLuint program, GLenum programInterface, GLuint index,
+                          GLenum property) {
+    auto result = getProgramResourcei(program, programInterface, index,
+                                      std::vector<GLenum>{property});
+    return result.at(0);
+}
+
+std::string getProgramResourceName(GLuint program, GLenum programInterface,
+                                   GLuint index) {
+    auto nameLength = getProgramResourcei(program, programInterface, index,
+                                          std::vector<GLenum>{GL_NAME_LENGTH})
+                          .at(0);
+    std::vector<char> buffer;
+    buffer.resize(nameLength);
+    glGetProgramResourceName(program, programInterface, index, nameLength, nullptr, buffer.data());
+    return {buffer.begin(), buffer.end()};
+}
+
+void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
+                                    GLuint program) {
+    if (!(context.ARB_shader_storage_buffer_object &&
+          context.ARB_program_interface_query))
+        return;
+    GLint numberOfActiveSSBBs = -1;
+    glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK,
+                            GL_ACTIVE_RESOURCES, &numberOfActiveSSBBs);
+    //writer.writeIntMember("GL_ACTIVE_RESOURCES", numberOfActiveSSBBs);
+    if (numberOfActiveSSBBs > 0) {
+        for (GLint ssbbResourceIndex = 0;
+             ssbbResourceIndex < numberOfActiveSSBBs; ++ssbbResourceIndex) {
+            GLint numberOfActiveVariables =
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_NUM_ACTIVE_VARIABLES);
+            auto ssbbName = getProgramResourceName(
+                program, GL_SHADER_STORAGE_BLOCK, ssbbResourceIndex);
+            auto activeVariables = getProgramResourcei(
+                program, GL_SHADER_STORAGE_BLOCK, ssbbResourceIndex,
+                {GL_ACTIVE_VARIABLES}, numberOfActiveVariables);
+            writer.beginMember(ssbbName);
+            writer.beginObject();
+            const GLint bufferBinding =
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_BUFFER_BINDING);
+            writer.writeIntMember("GL_BUFFER_BINDING", bufferBinding);
+            writer.writeIntMember(
+                "GL_BUFFER_DATA_SIZE",
+                getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                    ssbbResourceIndex, GL_BUFFER_DATA_SIZE));
+            GLint bufferName = 0;
+            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, bufferBinding, &bufferName);
+            if(bufferName != 0) {
+               writer.writeIntMember("Buffer", bufferName);
+            }
+            writer.beginMember("activeVariables");
+            writer.beginObject();
+            for (GLint variableIndex : activeVariables) {
+                auto variableName = getProgramResourceName(
+                    program, GL_BUFFER_VARIABLE, variableIndex);
+                writer.beginMember(variableName);
+                writer.beginObject();
+
+#define DUMP_BUFFER_VARIABLE_INT(NAME)                                         \
+    do {                                                                       \
+        int value = getProgramResourcei(program, GL_BUFFER_VARIABLE,           \
+                                        variableIndex, NAME);                  \
+        writer.writeIntMember(#NAME, value);                                   \
+    } while (false)
+
+                DUMP_BUFFER_VARIABLE_INT(GL_TYPE);
+                DUMP_BUFFER_VARIABLE_INT(GL_ARRAY_SIZE);
+                DUMP_BUFFER_VARIABLE_INT(GL_OFFSET);
+                DUMP_BUFFER_VARIABLE_INT(GL_BLOCK_INDEX);
+                DUMP_BUFFER_VARIABLE_INT(GL_ARRAY_STRIDE);
+                DUMP_BUFFER_VARIABLE_INT(GL_MATRIX_STRIDE);
+                DUMP_BUFFER_VARIABLE_INT(GL_IS_ROW_MAJOR);
+                DUMP_BUFFER_VARIABLE_INT(GL_TOP_LEVEL_ARRAY_SIZE);
+                DUMP_BUFFER_VARIABLE_INT(GL_TOP_LEVEL_ARRAY_STRIDE);
+
+#undef DUMP_BUFFER_VARIABLE_INT
+
+                writer.endObject();
+                writer.endMember();// variableName
+            }
+            writer.endObject();
+            writer.endMember();// activeVariables
+            writer.endObject();
+            writer.endMember();// ssbbName
+        }
+    }
 }
 
 
