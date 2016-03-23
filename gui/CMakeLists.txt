@@ -151,6 +151,19 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
         file (TO_NATIVE_PATH "${QT_BIN_DIR}" QT_BIN_DIR_NATIVE)
         # It's safer to use `\` separateors in the Path, but we need to escape them
         string (REPLACE "\\" "\\\\" QT_BIN_DIR_NATIVE "${QT_BIN_DIR_NATIVE}")
+
+        # windeployqt needs VCINSTALLDIR to copy MSVC Runtime files, but it's
+        # usually not define with MSBuild builds.
+        if ($ENV{VCINSTALLDIR})
+            set (VCINSTALLDIR "$ENV{VCINSTALLDIR}")
+        elseif (MSVC12)
+            set (VCINSTALLDIR "\$ENV{VS120COMNTOOLS}/../../VC")
+        elseif (MSVC14)
+            set (VCINSTALLDIR "\$ENV{VS140COMNTOOLS}/../../VC")
+        else ()
+            message (FATAL_ERROR "Unsupported MSVC version ${MSVC_VERSION}")
+        endif ()
+
         install (CODE "
             message (STATUS \"Running Qt Deploy Tool...\")
             if (CMAKE_INSTALL_CONFIG_NAME STREQUAL \"Debug\")
@@ -163,6 +176,7 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
             execute_process (COMMAND
                 \"${CMAKE_COMMAND}\" -E env
                 \"Path=${QT_BIN_DIR_NATIVE};\$ENV{SystemRoot}\\\\System32;\$ENV{SystemRoot}\"
+                \"VCINSTALLDIR=${VCINSTALLDIR}\"
                 \"${QT_WINDEPLOYQT_EXECUTABLE}\"
                 \${QT_WINDEPLOYQT_FLAGS}
                 \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
