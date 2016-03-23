@@ -52,6 +52,7 @@
 
 
 #include <snappy.h>
+#include <snappy-sinksource.h>
 
 #include <iostream>
 #include <algorithm>
@@ -225,18 +226,34 @@ void SnappyFile::flushReadCache(size_t skipLength)
 
     m_stream.read((char*)m_compressedCache, compressedLength);
     if (m_stream.fail()) {
-        // XXX: Unforunately Snappy's interface is not expressive enough
-        // to allow recovering part of the uncompressed bytes.
         std::cerr << "warning: unexpected end of file while reading trace\n";
+
+        compressedLength = m_stream.gcount();
+        if (!snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                           &m_cacheSize)) {
+            createCache(0);
+            return;
+        }
+
+        createCache(m_cacheSize);
+        snappy::ByteArraySource source(m_compressedCache, compressedLength);
+
+        snappy::UncheckedByteArraySink sink(m_cache);
+        m_cacheSize = snappy::UncompressAsMuchAsPossible(&source, &sink);
+
+        return;
+    }
+
+    if (!snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                       &m_cacheSize)) {
         createCache(0);
         return;
     }
-    ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
-                                    &m_cacheSize);
+
     createCache(m_cacheSize);
     if (skipLength < m_cacheSize) {
-        ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                m_cache);
+        snappy::RawUncompress(m_compressedCache, compressedLength,
+                              m_cache);
     }
 }
 
