@@ -1,5 +1,6 @@
 include_directories (
     ${CMAKE_SOURCE_DIR}/guids
+    ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
 if (WIN32)
@@ -17,6 +18,7 @@ add_convenience_library (common
     trace_file.cpp
     trace_file_read.cpp
     trace_file_zlib.cpp
+    trace_file_brotli.cpp
     trace_file_snappy.cpp
     trace_model.cpp
     trace_parser.cpp
@@ -38,6 +40,7 @@ add_convenience_library (common
 target_link_libraries (common
     guids
     ${LIBBACKTRACE_LIBRARIES}
+    brotli_dec_bundled
 )
 if (WIN32)
     target_link_libraries (common

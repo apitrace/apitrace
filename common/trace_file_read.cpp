@@ -53,8 +53,8 @@ File::createForRead(const char *filename)
     } else if (byte1 == 0x1f && byte2 == 0x8b) {
         file = File::createZLib();
     } else  {
-        os::log("error: %s: unkwnown compression\n", filename);
-        return NULL;
+        // XXX: Brotli has no magic header
+        file = File::createBrotli();
     }
     if (!file) {
         return NULL;
