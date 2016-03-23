@@ -856,11 +856,11 @@ void MainWindow::fillStateForFrame()
     m_ui.stateDock->show();
 
     {
-        const bool hasSSBs = state.shaderStorageBufferBlocks().size() > 0;
         m_ui.ssbsTreeWidget->clear();
         QList<QTreeWidgetItem *> buffersItems;
         variantMapToItems(state.shaderStorageBufferBlocks(), QVariantMap(),
                           buffersItems);
+        const bool hasSSBs = buffersItems.size() > 0;
         for (auto const &bufferItem : buffersItems) {
             if (bufferItem->child(0)->text(0) == "Buffer") {
                 bufferItem->setText(
@@ -868,7 +868,7 @@ void MainWindow::fillStateForFrame()
             }
         }
         m_ui.ssbsTreeWidget->insertTopLevelItems(0, buffersItems);
-        m_ui.ssbsTreeWidget->setVisible(hasSSBs);
+        m_ui.ssbTab->setEnabled(hasSSBs);
     }
 }
 
