@@ -483,6 +483,9 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
     m_buffers = parsedJson[QLatin1String("buffers")].toMap();
 
+    m_shaderStorageBufferBlocks =
+        parsedJson[QLatin1String("shaderstoragebufferblocks")].toMap();
+
     {
         QVariantMap textures =
             parsedJson[QLatin1String("textures")].toMap();
@@ -539,6 +542,11 @@ const QVariantMap & ApiTraceState::uniforms() const
 const QVariantMap & ApiTraceState::buffers() const
 {
     return m_buffers;
+}
+
+const QVariantMap &ApiTraceState::shaderStorageBufferBlocks() const
+{
+    return m_shaderStorageBufferBlocks;
 }
 
 bool ApiTraceState::isEmpty() const
