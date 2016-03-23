@@ -422,6 +422,8 @@ if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
 endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
+add_subdirectory (thirdparty/brotli)
+
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
     # gzip traces (e.g., apitrace-tests/traces/zlib-no-eof.trace).
