@@ -1138,6 +1138,28 @@ void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
                 "GL_BUFFER_DATA_SIZE",
                 getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
                                     ssbbResourceIndex, GL_BUFFER_DATA_SIZE));
+
+            auto outputIfReferenced = [&writer,ssbbResourceIndex, program](
+                const char *propertyName, GLenum property) {
+                const auto value =
+                    getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
+                                        ssbbResourceIndex, property);
+                if (value) {
+                    writer.writeBoolMember(propertyName, true);
+                }
+            };
+#ifdef OUTPUT_IF_REFERENCED
+#error "OUTPUT_IF_REFERENCED should not be defined here!"
+#endif
+#define OUTPUT_IF_REFERENCED(NAME) outputIfReferenced(#NAME, NAME)
+
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_VERTEX_SHADER);
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_TESS_CONTROL_SHADER);
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_TESS_EVALUATION_SHADER);
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_GEOMETRY_SHADER);
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_FRAGMENT_SHADER);
+            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_COMPUTE_SHADER);
+#undef OUTPUT_IF_REFERENCED
             GLint bufferName = 0;
             glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, bufferBinding, &bufferName);
             if(bufferName != 0) {
