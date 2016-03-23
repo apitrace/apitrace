@@ -50,28 +50,25 @@ using namespace trace;
 
 class ZLibFile : public File {
 public:
-    ZLibFile(const std::string &filename = std::string());
+    ZLibFile(void);
     virtual ~ZLibFile();
-
 
     virtual bool supportsOffsets() const override;
     virtual File::Offset currentOffset() override;
 protected:
-    virtual bool rawOpen(const std::string &filename) override;
+    virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
     virtual int rawGetc() override;
     virtual void rawClose() override;
     virtual bool rawSkip(size_t length) override;
     virtual int  rawPercentRead() override;
 private:
-    int fd;
-    gzFile m_gzFile;
-    double m_endOffset;
+    int fd = 0;
+    gzFile m_gzFile = nullptr;
+    double m_endOffset = 0.0;
 };
 
-ZLibFile::ZLibFile(const std::string &filename)
-    : File(filename),
-      m_gzFile(NULL)
+ZLibFile::ZLibFile(void)
 {
 }
 
@@ -80,7 +77,7 @@ ZLibFile::~ZLibFile()
     close();
 }
 
-bool ZLibFile::rawOpen(const std::string &filename)
+bool ZLibFile::rawOpen(const char *filename)
 {
     int flags = O_RDONLY;
 #ifdef O_BINARY
@@ -91,9 +88,9 @@ bool ZLibFile::rawOpen(const std::string &filename)
 #endif
 
 #ifdef _WIN32
-    fd = _open(filename.c_str(), flags, 0666);
+    fd = _open(filename, flags, 0666);
 #else
-    fd = ::open(filename.c_str(), flags, 0666);
+    fd = ::open(filename, flags, 0666);
 #endif
     if (fd < 0) {
         return false;

@@ -79,7 +79,7 @@ public:
     virtual File::Offset currentOffset() override;
     virtual void setCurrentOffset(const File::Offset &offset) override;
 protected:
-    virtual bool rawOpen(const std::string &filename) override;
+    virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
     virtual int rawGetc() override;
     virtual void rawClose() override;
@@ -108,10 +108,9 @@ private:
     void flushWriteCache();
     void flushReadCache(size_t skipLength = 0);
     void createCache(size_t size);
-    void writeCompressedLength(size_t length);
     size_t readCompressedLength();
 private:
-    std::fstream m_stream;
+    std::ifstream m_stream;
     size_t m_cacheMaxSize;
     size_t m_cacheSize;
     char *m_cache;
@@ -142,12 +141,12 @@ SnappyFile::~SnappyFile()
     delete [] m_cache;
 }
 
-bool SnappyFile::rawOpen(const std::string &filename)
+bool SnappyFile::rawOpen(const char *filename)
 {
     std::ios_base::openmode fmode = std::fstream::binary
                                   | std::fstream::in;
 
-    m_stream.open(filename.c_str(), fmode);
+    m_stream.open(filename, fmode);
 
     //read in the initial buffer if we're reading
     if (m_stream.is_open()) {
@@ -255,17 +254,6 @@ void SnappyFile::createCache(size_t size)
 
     m_cachePtr = m_cache;
     m_cacheSize = size;
-}
-
-void SnappyFile::writeCompressedLength(size_t length)
-{
-    unsigned char buf[4];
-    buf[0] = length & 0xff; length >>= 8;
-    buf[1] = length & 0xff; length >>= 8;
-    buf[2] = length & 0xff; length >>= 8;
-    buf[3] = length & 0xff; length >>= 8;
-    assert(length == 0);
-    m_stream.write((const char *)buf, sizeof buf);
 }
 
 size_t SnappyFile::readCompressedLength()

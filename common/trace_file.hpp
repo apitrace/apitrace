@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <string>
 #include <fstream>
 #include <stdint.h>
 
@@ -49,12 +48,12 @@ public:
     static File *createSnappy(void);
     static File *createForRead(const char *filename);
 public:
-    File(const std::string &filename = std::string());
+    File(void);
     virtual ~File();
 
     bool isOpened() const;
 
-    bool open(const std::string &filename);
+    bool open(const char *filename);
     size_t read(void *buffer, size_t length);
     void close();
     int getc();
@@ -65,7 +64,7 @@ public:
     virtual File::Offset currentOffset() = 0;
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
-    virtual bool rawOpen(const std::string &filename) = 0;
+    virtual bool rawOpen(const char *filename) = 0;
     virtual size_t rawRead(void *buffer, size_t length) = 0;
     virtual int rawGetc() = 0;
     virtual void rawClose() = 0;
@@ -73,7 +72,7 @@ protected:
     virtual int rawPercentRead() = 0;
 
 protected:
-    bool m_isOpened;
+    bool m_isOpened = false;
 };
 
 inline bool File::isOpened() const
@@ -81,7 +80,7 @@ inline bool File::isOpened() const
     return m_isOpened;
 }
 
-inline bool File::open(const std::string &filename)
+inline bool File::open(const char *filename)
 {
     if (m_isOpened) {
         close();

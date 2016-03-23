@@ -27,6 +27,8 @@
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
 
+#include <string>
+
 #include "cli.hpp"
 
 #include "os_string.hpp"

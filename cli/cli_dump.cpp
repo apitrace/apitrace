@@ -1,3 +1,4 @@
+
 /**************************************************************************
  *
  * Copyright 2011 Jose Fonseca
@@ -34,6 +35,7 @@
 
 #include <memory>
 #include <fstream>
+#include <string>
 
 #include "cxx_compat.hpp" // for std::to_string
 
