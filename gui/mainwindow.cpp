@@ -797,6 +797,58 @@ void MainWindow::addSurfaces(const QList<Surface> &surfaces, const char *label) 
     }
 }
 
+static void setValueOfSSBBItem(const ApiTraceState &state,
+                               QTreeWidgetItem *bufferItem)
+{
+    assert(bufferItem);
+    const auto &bufferBindingItem = bufferItem->child(0);
+    assert(bufferBindingItem->text(0) == "GL_BUFFER_BINDING");
+    const int bufferBindingIndex = bufferBindingItem->text(1).toInt();
+    qDebug() << bufferBindingIndex;
+    assert(state.parameters().count("GL_SHADER_STORAGE_BUFFER"));
+    assert(state.parameters()["GL_SHADER_STORAGE_BUFFER"].toMap().count("i"));
+    assert(bufferBindingIndex < state.parameters()["GL_SHADER_STORAGE_BUFFER"]
+                                    .toMap()["i"]
+                                    .toList()
+                                    .size());
+    const auto &SSB = state.parameters()["GL_SHADER_STORAGE_BUFFER"]
+                          .toMap()["i"]
+                          .toList()[bufferBindingIndex]
+                          .toMap();
+
+    assert(SSB.count("GL_SHADER_STORAGE_BUFFER_START"));
+    auto start = SSB["GL_SHADER_STORAGE_BUFFER_START"].toInt();
+
+    assert(SSB.count("GL_SHADER_STORAGE_BUFFER_SIZE"));
+    auto size = SSB["GL_SHADER_STORAGE_BUFFER_SIZE"].toInt();
+
+    assert(SSB.count("GL_SHADER_STORAGE_BUFFER_BINDING"));
+    auto bufferName = SSB["GL_SHADER_STORAGE_BUFFER_BINDING"].toInt();
+
+    QString bindingText = QString("Binding %0").arg(bufferBindingIndex);
+    QString bufferText;
+    if (bufferName != 0) {
+        bufferText = QString("Buffer %0").arg(bufferName);
+        if (size != 0) {
+            if (start != 0) {
+                bufferText +=
+                    QString(" (%0 Bytes starting at %1)").arg(size).arg(start);
+            } else {
+                bufferText += QString(" (first %0 Bytes)").arg(size);
+            }
+        } else {
+            if (start != 0) {
+                bufferText += QString(" (starting at offset %0)").arg(start);
+            }
+        }
+    }
+    if (bufferText.isEmpty()) {
+        bufferItem->setText(1, bindingText);
+    } else {
+        bufferItem->setText(1, bindingText + "; " + bufferText);
+    }
+}
+
 void MainWindow::fillStateForFrame()
 {
     if (!m_selectedEvent || !m_selectedEvent->hasState()) {
@@ -862,10 +914,7 @@ void MainWindow::fillStateForFrame()
                           buffersItems);
         const bool hasSSBs = buffersItems.size() > 0;
         for (auto const &bufferItem : buffersItems) {
-            if (bufferItem->child(0)->text(0) == "Buffer") {
-                bufferItem->setText(
-                    1, QString("Buffer %0").arg(bufferItem->child(0)->text(1)));
-            }
+            setValueOfSSBBItem(state, bufferItem);
         }
         m_ui.ssbsTreeWidget->insertTopLevelItems(0, buffersItems);
         m_ui.ssbTab->setEnabled(hasSSBs);

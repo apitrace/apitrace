@@ -1152,11 +1152,7 @@ void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
                     writer.writeBoolMember(enumToString(property), true);
                 }
             }
-            GLint bufferName = 0;
-            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, bufferBinding, &bufferName);
-            if(bufferName != 0) {
-               writer.writeIntMember("Buffer", bufferName);
-            }
+
             writer.beginMember("activeVariables");
             writer.beginObject();
             for (GLint variableIndex : activeVariables) {
