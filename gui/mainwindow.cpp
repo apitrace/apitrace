@@ -826,6 +826,32 @@ static void setValueOfSSBBItem(const ApiTraceState &state,
     auto bufferName = SSB["GL_SHADER_STORAGE_BUFFER_BINDING"].toInt();
 
     QString bindingText = QString("Binding %0").arg(bufferBindingIndex);
+    QStringList referencingShaders = {"GL_REFERENCED_BY_VERTEX_SHADER"};
+
+    for(int i = 0; i < bufferItem->childCount(); ++i) {
+        const auto &text = bufferItem->child(i)->text(0);
+        if (text.startsWith("GL_REFERENCED_BY_") && text.endsWith("_SHADER")) {
+            referencingShaders.append(text);
+        }
+    }
+
+    static QMap<QString, QString> map = {
+            {"GL_REFERENCED_BY_VERTEX_SHADER", "VS"},
+            {"GL_REFERENCED_BY_TESS_CONTROL_SHADER", "TCS"},
+            {"GL_REFERENCED_BY_TESS_EVALUATION_SHADER", "TES"},
+            {"GL_REFERENCED_BY_GEOMETRY_SHADER", "GS"},
+            {"GL_REFERENCED_BY_FRAGMENT_SHADER", "FS"},
+            {"GL_REFERENCED_BY_COMPUTE_SHADER", "CS"}};
+    // shorten list
+    for(auto &referencingShader: referencingShaders) {
+        assert(map.count(referencingShader));
+        referencingShader = map[referencingShader];
+    }
+    if (!referencingShaders.empty()) {
+        bindingText += " in ";
+        bindingText += referencingShaders.join(", ");
+    }
+
     QString bufferText;
     if (bufferName != 0) {
         bufferText = QString("Buffer %0").arg(bufferName);
