@@ -1139,27 +1139,19 @@ void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
                 getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
                                     ssbbResourceIndex, GL_BUFFER_DATA_SIZE));
 
-            auto outputIfReferenced = [&writer,ssbbResourceIndex, program](
-                const char *propertyName, GLenum property) {
+            for (auto property : {GL_REFERENCED_BY_VERTEX_SHADER,
+                                    GL_REFERENCED_BY_TESS_CONTROL_SHADER,
+                                    GL_REFERENCED_BY_TESS_EVALUATION_SHADER,
+                                    GL_REFERENCED_BY_GEOMETRY_SHADER,
+                                    GL_REFERENCED_BY_FRAGMENT_SHADER,
+                                    GL_REFERENCED_BY_COMPUTE_SHADER}) {
                 const auto value =
                     getProgramResourcei(program, GL_SHADER_STORAGE_BLOCK,
                                         ssbbResourceIndex, property);
                 if (value) {
-                    writer.writeBoolMember(propertyName, true);
+                    writer.writeBoolMember(enumToString(property), true);
                 }
-            };
-#ifdef OUTPUT_IF_REFERENCED
-#error "OUTPUT_IF_REFERENCED should not be defined here!"
-#endif
-#define OUTPUT_IF_REFERENCED(NAME) outputIfReferenced(#NAME, NAME)
-
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_VERTEX_SHADER);
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_TESS_CONTROL_SHADER);
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_TESS_EVALUATION_SHADER);
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_GEOMETRY_SHADER);
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_FRAGMENT_SHADER);
-            OUTPUT_IF_REFERENCED(GL_REFERENCED_BY_COMPUTE_SHADER);
-#undef OUTPUT_IF_REFERENCED
+            }
             GLint bufferName = 0;
             glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, bufferBinding, &bufferName);
             if(bufferName != 0) {
@@ -1173,24 +1165,14 @@ void dumpShadersStorageBufferBlocks(StateWriter &writer, Context &context,
                 writer.beginMember(variableName);
                 writer.beginObject();
 
-#define DUMP_BUFFER_VARIABLE_INT(NAME)                                         \
-    do {                                                                       \
-        int value = getProgramResourcei(program, GL_BUFFER_VARIABLE,           \
-                                        variableIndex, NAME);                  \
-        writer.writeIntMember(#NAME, value);                                   \
-    } while (false)
-
-                DUMP_BUFFER_VARIABLE_INT(GL_TYPE);
-                DUMP_BUFFER_VARIABLE_INT(GL_ARRAY_SIZE);
-                DUMP_BUFFER_VARIABLE_INT(GL_OFFSET);
-                DUMP_BUFFER_VARIABLE_INT(GL_BLOCK_INDEX);
-                DUMP_BUFFER_VARIABLE_INT(GL_ARRAY_STRIDE);
-                DUMP_BUFFER_VARIABLE_INT(GL_MATRIX_STRIDE);
-                DUMP_BUFFER_VARIABLE_INT(GL_IS_ROW_MAJOR);
-                DUMP_BUFFER_VARIABLE_INT(GL_TOP_LEVEL_ARRAY_SIZE);
-                DUMP_BUFFER_VARIABLE_INT(GL_TOP_LEVEL_ARRAY_STRIDE);
-
-#undef DUMP_BUFFER_VARIABLE_INT
+                for (auto property :
+                     {GL_TYPE, GL_ARRAY_SIZE, GL_OFFSET, GL_BLOCK_INDEX,
+                      GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR,
+                      GL_TOP_LEVEL_ARRAY_SIZE, GL_TOP_LEVEL_ARRAY_STRIDE}) {
+                    int value = getProgramResourcei(program, GL_BUFFER_VARIABLE,
+                                                    variableIndex, property);
+                    writer.writeIntMember(enumToString(property), value);
+                }
 
                 writer.endObject();
                 writer.endMember();// variableName
