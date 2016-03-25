@@ -60,8 +60,8 @@ public:
     bool skip(size_t length);
     int percentRead(void);
 
-    virtual bool supportsOffsets(void) const = 0;
-    virtual File::Offset currentOffset(void) = 0;
+    virtual bool supportsOffsets(void) const;
+    virtual File::Offset currentOffset(void) const;
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const char *filename) = 0;

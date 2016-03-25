@@ -53,8 +53,6 @@ public:
     ZLibFile(void);
     virtual ~ZLibFile();
 
-    virtual bool supportsOffsets(void) const override;
-    virtual File::Offset currentOffset(void) override;
 protected:
     virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
@@ -65,7 +63,7 @@ protected:
 private:
     int fd = 0;
     gzFile m_gzFile = nullptr;
-    double m_endOffset = 0.0;
+    off_t m_endOffset = 0;
 };
 
 ZLibFile::ZLibFile(void)
@@ -128,16 +126,6 @@ void ZLibFile::rawClose()
         gzclose(m_gzFile);
         m_gzFile = NULL;
     }
-}
-
-File::Offset ZLibFile::currentOffset(void)
-{
-    return File::Offset(gztell(m_gzFile));
-}
-
-bool ZLibFile::supportsOffsets(void) const
-{
-    return false;
 }
 
 bool ZLibFile::rawSkip(size_t)

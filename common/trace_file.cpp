@@ -43,6 +43,16 @@ File::~File()
 }
 
 
+bool File::supportsOffsets(void) const
+{
+    return false;
+}
+
+File::Offset File::currentOffset(void) const
+{
+    return 0;
+}
+
 void File::setCurrentOffset(const File::Offset &offset)
 {
     assert(0);

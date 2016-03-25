@@ -73,11 +73,11 @@ using namespace trace;
 
 class SnappyFile : public File {
 public:
-    SnappyFile(const std::string &filename = std::string());
+    SnappyFile(void);
     virtual ~SnappyFile();
 
     virtual bool supportsOffsets(void) const override;
-    virtual File::Offset currentOffset(void) override;
+    virtual File::Offset currentOffset(void) const override;
     virtual void setCurrentOffset(const File::Offset &offset) override;
 protected:
     virtual bool rawOpen(const char *filename) override;
@@ -119,11 +119,11 @@ private:
 
     char *m_compressedCache;
 
-    File::Offset m_currentOffset;
+    uint64_t m_currentChunkOffset;
     std::streampos m_endPos;
 };
 
-SnappyFile::SnappyFile(const std::string &filename)
+SnappyFile::SnappyFile(void)
     : File(),
       m_cacheMaxSize(SNAPPY_CHUNK_SIZE),
       m_cacheSize(m_cacheMaxSize),
@@ -215,7 +215,7 @@ void SnappyFile::rawClose(void)
 void SnappyFile::flushReadCache(size_t skipLength)
 {
     //assert(m_cachePtr == m_cache + m_cacheSize);
-    m_currentOffset.chunk = m_stream.tellg();
+    m_currentChunkOffset = m_stream.tellg();
     size_t compressedLength;
     compressedLength = readCompressedLength();
     if (!compressedLength) {
@@ -294,10 +294,12 @@ bool SnappyFile::supportsOffsets(void) const
     return true;
 }
 
-File::Offset SnappyFile::currentOffset()
+File::Offset SnappyFile::currentOffset(void) const
 {
-    m_currentOffset.offsetInChunk = m_cachePtr - m_cache;
-    return m_currentOffset;
+    File::Offset offset;
+    offset.chunk = m_currentChunkOffset;
+    offset.offsetInChunk = m_cachePtr - m_cache;
+    return offset;
 }
 
 void SnappyFile::setCurrentOffset(const File::Offset &offset)

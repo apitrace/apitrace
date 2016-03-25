@@ -25,33 +25,6 @@
  **************************************************************************/
 
 
-/*
- * Snappy file format.
- * -------------------
- *
- * Snappy at its core is just a compressoin algorithm so we're
- * creating a new file format which uses snappy compression
- * to hold the trace data.
- *
- * The file is composed of a number of chunks, they are:
- * chunk {
- *     uint32 - specifying the length of the compressed data
- *     compressed data, in little endian
- * }
- * File can contain any number of such chunks.
- * The default size of an uncompressed chunk is specified in
- * SNAPPY_CHUNK_SIZE.
- *
- * Note:
- * Currently the default size for a a to-be-compressed data is
- * 1mb, meaning that the compressed data will be <= 1mb.
- * The reason it's 1mb is because it seems
- * to offer a pretty good compression/disk io speed ratio
- * but that might change.
- *
- */
-
-
 #pragma once
 
 
