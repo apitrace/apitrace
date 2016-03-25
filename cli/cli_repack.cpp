@@ -31,6 +31,8 @@
 
 #include "cli.hpp"
 
+#include <brotli/enc/encode.h>
+
 #include "trace_file.hpp"
 #include "trace_ostream.hpp"
 
@@ -47,16 +49,18 @@ usage(void)
         << "Snappy compression allows for faster replay and smaller memory footprint,\n"
         << "at the expense of a slightly smaller compression ratio than zlib\n"
         << "\n"
-        << "    -z,--zlib    Use ZLib compression instead\n"
+        << "    -b,--brotli  Use Brotli compression\n"
+        << "    -z,--zlib    Use ZLib compression\n"
         << "\n";
 }
 
 const static char *
-shortOptions = "hz";
+shortOptions = "hbz";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
+    {"brotli", no_argument, 0, 'b'},
     {"zlib", no_argument, 0, 'z'},
     {0, 0, 0, 0}
 };
@@ -64,28 +68,48 @@ longOptions[] = {
 enum Format {
     FORMAT_SNAPPY = 0,
     FORMAT_ZLIB,
+    FORMAT_BROTLI,
 };
 
-static int
-repack(const char *inFileName, const char *outFileName, Format format)
+
+class BrotliTraceIn : public brotli::BrotliIn
 {
-    trace::File *inFile = trace::File::createForRead(inFileName);
-    if (!inFile) {
-        return 1;
+private:
+    trace::File *stream;
+    char buf[1 << 16];
+    bool eof = false;
+
+public:
+    BrotliTraceIn(trace::File *s) :
+        stream(s)
+    {
     }
 
-    trace::OutStream *outFile;
-    if (format == FORMAT_SNAPPY) {
-        outFile = trace::createSnappyStream(outFileName);
-    } else {
-        outFile = trace::createZLibStream(outFileName);
-    }
-    if (!outFile) {
-        delete inFile;
-        return 1;
+    ~BrotliTraceIn() {
     }
 
-    size_t size = 8192;
+    const void *
+    Read(size_t n, size_t* bytes_read) override
+    {
+        if (n > sizeof buf) {
+            n = sizeof buf;
+        } else if (n == 0) {
+            return eof ? nullptr : buf;
+        }
+        *bytes_read = stream->read(buf, n);
+        if (*bytes_read == 0) {
+            eof = true;
+            return nullptr;
+        }
+        return buf;
+    }
+};
+
+
+static int
+repack_generic(trace::File *inFile, trace::OutStream *outFile)
+{
+    const size_t size = 8192;
     char *buf = new char[size];
     size_t read;
 
@@ -94,10 +118,60 @@ repack(const char *inFileName, const char *outFileName, Format format)
     }
 
     delete [] buf;
-    delete outFile;
+
+    return EXIT_SUCCESS;
+}
+
+
+static int
+repack_brotli(trace::File *inFile, const char *outFileName)
+{
+    brotli::BrotliParams params;
+
+    BrotliTraceIn in(inFile);
+    FILE *fout = fopen(outFileName, "wb");
+    if (!fout) {
+        return EXIT_FAILURE;
+    }
+    assert(fout);
+    brotli::BrotliFileOut out(fout);
+    if (!BrotliCompress(params, &in, &out)) {
+        std::cerr << "error: brotli compression failed\n";
+        return EXIT_FAILURE;
+    }
+    fclose(fout);
+
+    return EXIT_SUCCESS;
+}
+
+static int
+repack(const char *inFileName, const char *outFileName, Format format)
+{
+    int ret = EXIT_FAILURE;
+
+    trace::File *inFile = trace::File::createForRead(inFileName);
+    if (!inFile) {
+        return 1;
+    }
+
+    trace::OutStream *outFile = nullptr;
+    if (format == FORMAT_SNAPPY) {
+        outFile = trace::createSnappyStream(outFileName);
+    } else if (format == FORMAT_BROTLI) {
+        ret = repack_brotli(inFile, outFileName);
+        delete inFile;
+        return ret;
+    } else if (format == FORMAT_ZLIB) {
+        outFile = trace::createZLibStream(outFileName);
+    }
+    if (outFile) {
+        ret = repack_generic(inFile, outFile);
+        delete outFile;
+    }
+
     delete inFile;
 
-    return 0;
+    return ret;
 }
 
 static int
@@ -110,6 +184,9 @@ command(int argc, char *argv[])
         case 'h':
             usage();
             return 0;
+        case 'b':
+            format = FORMAT_BROTLI;
+            break;
         case 'z':
             format = FORMAT_ZLIB;
             break;

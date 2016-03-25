@@ -14,6 +14,10 @@ else ()
     add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE}")
 endif ()
 
+include_directories (
+    ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
 add_executable (apitrace
     cli_main.cpp
     cli_diff.cpp
@@ -36,6 +40,7 @@ add_executable (apitrace
 
 target_link_libraries (apitrace
     common
+    brotli_enc_bundled
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
