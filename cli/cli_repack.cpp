@@ -60,7 +60,7 @@ shortOptions = "hbz";
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
-    {"brotli", no_argument, 0, 'b'},
+    {"brotli", optional_argument, 0, 'b'},
     {"zlib", no_argument, 0, 'z'},
     {0, 0, 0, 0}
 };
@@ -124,9 +124,13 @@ repack_generic(trace::File *inFile, trace::OutStream *outFile)
 
 
 static int
-repack_brotli(trace::File *inFile, const char *outFileName)
+repack_brotli(trace::File *inFile, const char *outFileName, int quality)
 {
     brotli::BrotliParams params;
+
+    if (quality > 0) {
+        params.quality = quality;
+    }
 
     BrotliTraceIn in(inFile);
     FILE *fout = fopen(outFileName, "wb");
@@ -145,7 +149,7 @@ repack_brotli(trace::File *inFile, const char *outFileName)
 }
 
 static int
-repack(const char *inFileName, const char *outFileName, Format format)
+repack(const char *inFileName, const char *outFileName, Format format, int quality)
 {
     int ret = EXIT_FAILURE;
 
@@ -158,7 +162,7 @@ repack(const char *inFileName, const char *outFileName, Format format)
     if (format == FORMAT_SNAPPY) {
         outFile = trace::createSnappyStream(outFileName);
     } else if (format == FORMAT_BROTLI) {
-        ret = repack_brotli(inFile, outFileName);
+        ret = repack_brotli(inFile, outFileName, quality);
         delete inFile;
         return ret;
     } else if (format == FORMAT_ZLIB) {
@@ -179,6 +183,7 @@ command(int argc, char *argv[])
 {
     Format format = FORMAT_SNAPPY;
     int opt;
+    int quality = -1;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
@@ -186,6 +191,9 @@ command(int argc, char *argv[])
             return 0;
         case 'b':
             format = FORMAT_BROTLI;
+            if (optarg) {
+                quality = atoi(optarg);
+            }
             break;
         case 'z':
             format = FORMAT_ZLIB;
@@ -203,7 +211,7 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    return repack(argv[optind], argv[optind + 1], format);
+    return repack(argv[optind], argv[optind + 1], format, quality);
 }
 
 const Command repack_command = {
