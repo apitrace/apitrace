@@ -1,3 +1,5 @@
+force_release_build ()
+
 add_definitions (
     -DNDEBUG
     -DHAVE_CONFIG_H

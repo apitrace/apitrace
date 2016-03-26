@@ -1,5 +1,4 @@
-add_definitions (
-)
+force_release_build ()
 
 add_convenience_library (brotli_dec_bundled EXCLUDE_FROM_ALL
 
