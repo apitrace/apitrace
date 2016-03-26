@@ -36,3 +36,11 @@ after_build:
 
 artifacts:
 - path: build/apitrace-*.7z
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: a79IHXDoZN60ADwPX1OfJYJUjaWSeKWqFfQu+531AaSuH5a03sR8ZKeNWutklAQU
+  artifact: /.*\.7z/
+  on:
+    appveyor_repo_tag: true
