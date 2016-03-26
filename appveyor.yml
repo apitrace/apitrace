@@ -22,18 +22,15 @@ environment:
 matrix:
   fast_finish: true
 
-configuration: Debug
-
 before_build:
 - set Path=%QT5%\bin;%Path%
 - cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 
-build:
-  project: build\apitrace.sln
-  verbosity: minimal
+build_script:
+- if "%APPVEYOR_REPO_TAG%"=="true" (set CONFIGURATION=RelWithDebInfo) else (set CONFIGURATION=Debug)
+- cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
 
 after_build:
-- cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
 - cmake --build build --config "%CONFIGURATION%" --target check -- %MSBUILD_FLAGS%
 - cmake --build build --config "%CONFIGURATION%" --target package -- %MSBUILD_FLAGS%
 
