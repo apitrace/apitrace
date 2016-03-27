@@ -15,9 +15,9 @@ environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
   - CMAKE_GENERATOR: "Visual Studio 12"
-    QT5: C:\Qt\5.5\msvc2013
+    QT5: C:\Qt\5.6\msvc2013
   - CMAKE_GENERATOR: "Visual Studio 12 Win64"
-    QT5: C:\Qt\5.5\msvc2013_64
+    QT5: C:\Qt\5.6\msvc2013_64
 
 matrix:
   fast_finish: true
