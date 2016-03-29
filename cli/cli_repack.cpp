@@ -28,10 +28,12 @@
 #include <getopt.h>
 
 #include <iostream>
+#include <memory>
 
 #include "cli.hpp"
 
 #include <brotli/enc/encode.h>
+#include <zlib.h>  // for crc32
 
 #include "trace_file.hpp"
 #include "trace_ostream.hpp"
@@ -80,9 +82,12 @@ private:
     bool eof = false;
 
 public:
+    uLong crc;
+
     BrotliTraceIn(trace::File *s) :
         stream(s)
     {
+        crc = crc32(0L, Z_NULL, 0);
     }
 
     ~BrotliTraceIn() {
@@ -101,6 +106,7 @@ public:
             eof = true;
             return nullptr;
         }
+        crc32(crc, reinterpret_cast<const Bytef *>(buf), *bytes_read);
         return buf;
     }
 };
@@ -157,6 +163,22 @@ repack_brotli(trace::File *inFile, const char *outFileName, int quality)
         return EXIT_FAILURE;
     }
     fclose(fout);
+
+    std::unique_ptr<trace::File> outFileIn(trace::File::createBrotli());
+    if (!outFileIn->open(outFileName)) {
+        std::cerr << "error: failed to open " << outFileName << " for reading\n";
+        return EXIT_FAILURE;
+    }
+    BrotliTraceIn outIn(outFileIn.get());
+    size_t bytes_read;
+    do {
+        outIn.Read(65536, &bytes_read);
+    } while (bytes_read > 0);
+
+    if (in.crc != outIn.crc) {
+        std::cerr << "error: CRC mismatch reading " << outFileName << "\n";
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
