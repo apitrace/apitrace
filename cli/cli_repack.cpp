@@ -128,6 +128,19 @@ repack_brotli(trace::File *inFile, const char *outFileName, int quality)
 {
     brotli::BrotliParams params;
 
+    // Brotli default quality is 11, but there are problems using quality
+    // higher than 9:
+    //
+    // - Some traces cause compression to be extremely slow.  Possibly the same
+    //   issue as https://github.com/google/brotli/issues/330
+    // - Some traces get lower compression ratio with 11 than 9.  Possibly the
+    //   same issue as https://github.com/google/brotli/issues/222
+    params.quality = 9;
+
+    // The larger the window, the higher the compression ratio and
+    // decompression speeds, so choose the maximum.
+    params.lgwin = 24;
+
     if (quality > 0) {
         params.quality = quality;
     }
