@@ -114,6 +114,15 @@ void MainWindow::saveTrace()
                 tr("Trace Files (*.trace);;All Files (*)"));
 
     if (!fileName.isEmpty()) {
+        // copy won't overwrite existing files!
+        if (QFile::exists(fileName)) {
+            if (!QFile::remove(fileName)) {
+                QMessageBox::warning(
+                    this, tr("Could not overwrite file"),
+                    tr("The existing file %0 could not be replaced!")
+                        .arg(fileName));
+            }
+        }
         QFile::copy(localFile, fileName);
     }
 }
