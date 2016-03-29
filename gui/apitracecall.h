@@ -149,6 +149,7 @@ public:
     const QMap<QString, QString> & shaderSources() const;
     const QVariantMap & uniforms() const;
     const QVariantMap & buffers() const;
+    const QVariantMap & shaderStorageBufferBlocks() const;
     const QList<ApiTexture> & textures() const;
     const QList<ApiFramebuffer> & framebuffers() const;
 
@@ -158,6 +159,7 @@ private:
     QMap<QString, QString> m_shaderSources;
     QVariantMap m_uniforms;
     QVariantMap m_buffers;
+    QVariantMap m_shaderStorageBufferBlocks;
     QList<ApiTexture> m_textures;
     QList<ApiFramebuffer> m_framebuffers;
 };
