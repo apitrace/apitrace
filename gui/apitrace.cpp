@@ -178,11 +178,8 @@ void ApiTrace::callEdited(ApiTraceCall *call)
     if (!m_editedCalls.contains(call)) {
         // Lets generate a temp filename
         QFileInfo fileInfo(m_fileName);
-        QString tempPath = QDir::tempPath();
-        m_tempFileName = QDir::tempPath();
-        m_tempFileName += QDir::separator();
-        m_tempFileName += fileInfo.fileName();
-        m_tempFileName += QString::fromLatin1(".edited");
+        m_tempFileName = QDir::temp().filePath(fileInfo.fileName() +
+                                               QString::fromLatin1(".edited"));
     }
     m_editedCalls.insert(call);
     m_needsSaving = true;
