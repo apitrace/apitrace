@@ -31,7 +31,7 @@
 
 
 /*
- * Emulate std::to_string on Android
+ * Emulate std::to_string on Android.
  *
  * XXX: There might be different solutions per
  * http://stackoverflow.com/questions/26095886/error-to-string-is-not-a-member-of-std
@@ -48,3 +48,18 @@ namespace std {
     }
 }
 #endif /* ANDROID */
+
+
+/*
+ * Implement std::make_unique on C++11.
+ */
+#if !defined(_MSC_VER) && __cplusplus < 201402L
+#include <memory>
+#include <utility>
+namespace std {
+    template< typename T, typename... Args >
+    unique_ptr<T> make_unique(Args&&... args) {
+        return unique_ptr<T>(new T(forward<Args>(args)...));
+    }
+}
+#endif

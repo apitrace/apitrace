@@ -37,7 +37,7 @@
 #include <fstream>
 #include <string>
 
-#include "cxx_compat.hpp" // for std::to_string
+#include "cxx_compat.hpp" // for std::to_string, std::make_unique
 
 #include "cli.hpp"
 #include "cli_pager.hpp"
@@ -224,9 +224,9 @@ command(int argc, char *argv[])
     std::unique_ptr<trace::Dumper> dumper;
 
     if (blobs) {
-        dumper = std::unique_ptr<trace::Dumper>(new BlobDumper(std::cout, dumpFlags));
+        dumper = std::make_unique<BlobDumper>(std::cout, dumpFlags);
     } else {
-        dumper = std::unique_ptr<trace::Dumper>(new trace::Dumper(std::cout, dumpFlags));
+        dumper = std::make_unique<trace::Dumper>(std::cout, dumpFlags);
     }
 
     for (int i = optind; i < argc; ++i) {
