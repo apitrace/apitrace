@@ -244,7 +244,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
 
-    if (profile.api != glprofile::API_GL) {
+    if (profile.api != glfeatures::API_GL) {
         return NULL;
     }
 

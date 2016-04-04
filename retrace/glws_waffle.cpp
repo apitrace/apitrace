@@ -173,9 +173,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     struct waffle_config *cfg;
 
     int waffle_api;
-    if (profile.api == glprofile::API_GL) {
+    if (profile.api == glfeatures::API_GL) {
         waffle_api = WAFFLE_CONTEXT_OPENGL;
-    } else if (profile.api == glprofile::API_GLES) {
+    } else if (profile.api == glfeatures::API_GLES) {
         switch (profile.major) {
         case 1:
             waffle_api = WAFFLE_CONTEXT_OPENGL_ES1;
@@ -204,7 +204,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
     Attributes<int32_t> config_attrib_list;
     config_attrib_list.add(WAFFLE_CONTEXT_API, waffle_api);
-    if (profile.api == glprofile::API_GL) {
+    if (profile.api == glfeatures::API_GL) {
         config_attrib_list.add(WAFFLE_CONTEXT_MAJOR_VERSION, profile.major);
         config_attrib_list.add(WAFFLE_CONTEXT_MINOR_VERSION, profile.minor);
         if (profile.versionGreaterOrEqual(3, 2)) {

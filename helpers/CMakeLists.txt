@@ -8,7 +8,7 @@ include_directories (
 )
 
 add_convenience_library (glhelpers
-    glprofile.cpp
+    glfeatures.cpp
     eglsize.cpp
 )
 add_dependencies (glhelpers glproc)

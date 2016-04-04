@@ -44,13 +44,13 @@
 namespace glretrace {
 
 
-static std::map<glprofile::Profile, glws::Visual *>
+static std::map<glfeatures::Profile, glws::Visual *>
 visuals;
 
 
 inline glws::Visual *
-getVisual(glprofile::Profile profile) {
-    std::map<glprofile::Profile, glws::Visual *>::iterator it = visuals.find(profile);
+getVisual(glfeatures::Profile profile) {
+    std::map<glfeatures::Profile, glws::Visual *>::iterator it = visuals.find(profile);
     if (it == visuals.end()) {
         glws::Visual *visual = NULL;
         unsigned samples = retrace::samples;
@@ -76,7 +76,7 @@ getVisual(glprofile::Profile profile) {
 
 
 static glws::Drawable *
-createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32,
+createDrawableHelper(glfeatures::Profile profile, int width = 32, int height = 32,
                      const glws::pbuffer_info *pbInfo = NULL) {
     glws::Visual *visual = getVisual(profile);
     glws::Drawable *draw = glws::createDrawable(visual, width, height, pbInfo);
@@ -93,7 +93,7 @@ createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32
 
 
 glws::Drawable *
-createDrawable(glprofile::Profile profile) {
+createDrawable(glfeatures::Profile profile) {
     return createDrawableHelper(profile);
 }
 
@@ -116,7 +116,7 @@ createPbuffer(int width, int height, const glws::pbuffer_info *pbInfo) {
 
 
 Context *
-createContext(Context *shareContext, glprofile::Profile profile) {
+createContext(Context *shareContext, glfeatures::Profile profile) {
     glws::Visual *visual = getVisual(profile);
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
     glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug);
@@ -281,7 +281,7 @@ parseAttrib(const trace::Value *attribs, int param, int default_, int terminator
 /**
  * Parse GLX/WGL_ARB_create_context attribute list.
  */
-glprofile::Profile
+glfeatures::Profile
 parseContextAttribList(const trace::Value *attribs)
 {
     // {GLX,WGL}_CONTEXT_MAJOR_VERSION_ARB
@@ -308,11 +308,11 @@ parseContextAttribList(const trace::Value *attribs)
     // {GLX,WGL}_CONTEXT_ES_PROFILE_BIT_EXT
     bool es_profile = profile_mask & 0x0004;
 
-    glprofile::Profile profile;
+    glfeatures::Profile profile;
     if (es_profile) {
-        profile.api = glprofile::API_GLES;
+        profile.api = glfeatures::API_GLES;
     } else {
-        profile.api = glprofile::API_GL;
+        profile.api = glfeatures::API_GL;
         profile.core = core_profile;
         profile.forwardCompatible = forward_compatible;
     }

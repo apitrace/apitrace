@@ -217,7 +217,7 @@ public:
 
     bool
     createARB(HDC hDC) {
-        bool required = profile.api != glprofile::API_GL ||
+        bool required = profile.api != glfeatures::API_GL ||
                         profile.versionGreaterOrEqual(3, 1);
 
         // We need to create context through WGL_ARB_create_context.  This
@@ -293,7 +293,7 @@ public:
 
         Attributes<int> attribs;
         int contextFlags = 0;
-        if (profile.api == glprofile::API_GL) {
+        if (profile.api == glfeatures::API_GL) {
             attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);
             attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, profile.minor);
             if (profile.versionGreaterOrEqual(3, 2)) {
@@ -308,7 +308,7 @@ public:
                     contextFlags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
                 }
             }
-        } else if (profile.api == glprofile::API_GLES) {
+        } else if (profile.api == glfeatures::API_GLES) {
             if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
                 attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
                 attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);

@@ -47,12 +47,12 @@ static bool has_EGL_KHR_create_context = false;
 
 
 static EGLenum
-translateAPI(glprofile::Profile profile)
+translateAPI(glfeatures::Profile profile)
 {
     switch (profile.api) {
-    case glprofile::API_GL:
+    case glfeatures::API_GL:
         return EGL_OPENGL_API;
-    case glprofile::API_GLES:
+    case glfeatures::API_GLES:
         return EGL_OPENGL_ES_API;
     default:
         assert(0);
@@ -294,12 +294,12 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     EGLint api_bits;
-    if (profile.api == glprofile::API_GL) {
+    if (profile.api == glfeatures::API_GL) {
         api_bits = EGL_OPENGL_BIT;
         if (profile.core && !has_EGL_KHR_create_context) {
             return NULL;
         }
-    } else if (profile.api == glprofile::API_GLES) {
+    } else if (profile.api == glfeatures::API_GLES) {
         switch (profile.major) {
         case 1:
             api_bits = EGL_OPENGL_ES_BIT;
@@ -413,7 +413,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
     }
 
     int contextFlags = 0;
-    if (profile.api == glprofile::API_GL) {
+    if (profile.api == glfeatures::API_GL) {
         load("libGL.so.1");
 
         if (has_EGL_KHR_create_context) {
@@ -428,7 +428,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             std::cerr << "error: EGL_KHR_create_context not supported\n";
             return NULL;
         }
-    } else if (profile.api == glprofile::API_GLES) {
+    } else if (profile.api == glfeatures::API_GLES) {
         if (profile.major >= 2) {
             load("libGLESv2.so.2");
         } else {

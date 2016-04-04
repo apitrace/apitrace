@@ -153,7 +153,7 @@ class GlTracer(Tracer):
         print '        return false;'
         print '    }'
         print
-        print '    glprofile::Profile profile = ctx->profile;'
+        print '    glfeatures::Profile profile = ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
         print
 
@@ -969,7 +969,7 @@ class GlTracer(Tracer):
         print '{'
         print '    gltrace::Context *ctx = gltrace::getContext();'
         print
-        print '    glprofile::Profile profile = ctx->profile;'
+        print '    glfeatures::Profile profile = ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
         print
 

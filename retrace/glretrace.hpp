@@ -60,12 +60,12 @@ struct Context {
     bool KHR_debug;
     GLsizei maxDebugMessageLength = 0;
 
-    inline glprofile::Profile
+    inline glfeatures::Profile
     profile(void) const {
         return wsContext->profile;
     }
 
-    inline glprofile::Profile
+    inline glfeatures::Profile
     actualProfile(void) const {
         return wsContext->actualProfile;
     }
@@ -84,7 +84,7 @@ extern std::vector<MetricBackend*> metricBackends;
 extern MetricBackend* curMetricBackend;
 extern MetricWriter profiler;
 
-extern glprofile::Profile defaultProfile;
+extern glfeatures::Profile defaultProfile;
 
 extern bool supportsARBShaderObjects;
 
@@ -101,12 +101,12 @@ getCurrentContext(void) {
 int
 parseAttrib(const trace::Value *attribs, int param, int default_ = 0, int terminator = 0);
 
-glprofile::Profile
+glfeatures::Profile
 parseContextAttribList(const trace::Value *attribs);
 
 
 glws::Drawable *
-createDrawable(glprofile::Profile profile);
+createDrawable(glfeatures::Profile profile);
 
 glws::Drawable *
 createDrawable(void);
@@ -115,7 +115,7 @@ glws::Drawable *
 createPbuffer(int width, int height, const glws::pbuffer_info *info);
 
 Context *
-createContext(Context *shareContext, glprofile::Profile profile);
+createContext(Context *shareContext, glfeatures::Profile profile);
 
 Context *
 createContext(Context *shareContext = 0);

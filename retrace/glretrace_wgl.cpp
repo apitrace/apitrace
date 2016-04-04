@@ -147,7 +147,7 @@ static void retrace_wglShareLists(trace::Call &call) {
     Context *share_context = getContext(hglrc1);
     Context *old_context = getContext(hglrc2);
 
-    glprofile::Profile profile = old_context->profile();
+    glfeatures::Profile profile = old_context->profile();
     Context *new_context = glretrace::createContext(share_context, profile);
     if (new_context) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
@@ -279,7 +279,7 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     Context *share_context = getContext(call.arg(1).toUIntPtr());
 
     const trace::Value * attribList = &call.arg(2);
-    glprofile::Profile profile = parseContextAttribList(attribList);
+    glfeatures::Profile profile = parseContextAttribList(attribList);
 
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;

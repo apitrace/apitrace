@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#include "glprofile.hpp"
+#include "glfeatures.hpp"
 
 #include <assert.h>
 
@@ -34,7 +34,7 @@
 #include "glproc.hpp"
 
 
-namespace glprofile {
+namespace glfeatures {
 
 
 bool
@@ -322,4 +322,4 @@ Extensions::has(const char *string) const
 }
 
 
-} /* namespace glprofile */
+} /* namespace glfeatures */

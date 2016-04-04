@@ -44,8 +44,8 @@ namespace glstate {
 Context::Context(void) {
     memset(this, 0, sizeof *this);
 
-    glprofile::Profile profile = glprofile::getCurrentContextProfile();
-    glprofile::Extensions ext;
+    glfeatures::Profile profile = glfeatures::getCurrentContextProfile();
+    glfeatures::Extensions ext;
 
     ext.getCurrentContextExtensions(profile);
 

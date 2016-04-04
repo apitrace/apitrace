@@ -35,13 +35,13 @@
 #include <vector>
 #include <string>
 
-#include "glprofile.hpp"
+#include "glfeatures.hpp"
 
 
 namespace glws {
 
 
-using glprofile::Profile;
+using glfeatures::Profile;
 
 class Drawable;
 
@@ -164,7 +164,7 @@ public:
 
     // Created profile
     Profile actualProfile;
-    glprofile::Extensions actualExtensions;
+    glfeatures::Extensions actualExtensions;
 
     Context(const Visual *vis) :
         visual(vis),

@@ -49,7 +49,7 @@
 
 namespace glretrace {
 
-glprofile::Profile defaultProfile(glprofile::API_GL, 1, 0);
+glfeatures::Profile defaultProfile(glfeatures::API_GL, 1, 0);
 
 bool supportsARBShaderObjects = false;
 
@@ -155,7 +155,7 @@ insertCallMarker(trace::Call &call, Context *currentContext)
         return;
     }
 
-    glprofile::Profile currentProfile = currentContext->actualProfile();
+    glfeatures::Profile currentProfile = currentContext->actualProfile();
 
     std::stringstream ss;
     trace::dump(call, ss,
@@ -431,11 +431,11 @@ initContext() {
     assert(currentContext);
 
     /* Ensure we have adequate extension support */
-    glprofile::Profile currentProfile = currentContext->actualProfile();
-    supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
+    glfeatures::Profile currentProfile = currentContext->actualProfile();
+    supportsTimestamp   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 3, 3) ||
                           currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
-    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
+    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 1, 5);
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
 
     currentContext->KHR_debug = currentContext->hasExtension("GL_KHR_debug");
@@ -823,7 +823,7 @@ static GLDumper glDumper;
 void
 retrace::setFeatureLevel(const char *featureLevel)
 {
-    glretrace::defaultProfile = glprofile::Profile(glprofile::API_GL, 3, 2, true);
+    glretrace::defaultProfile = glfeatures::Profile(glfeatures::API_GL, 3, 2, true);
 }
 
 

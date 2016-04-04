@@ -77,11 +77,11 @@ MetricBackend_opengl::MetricBackend_opengl(glretrace::Context* context,
                                            MmapAllocator<char> &alloc)
     : alloc(alloc)
 {
-    glprofile::Profile currentProfile = context->actualProfile();
-    supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
+    glfeatures::Profile currentProfile = context->actualProfile();
+    supportsTimestamp   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 3, 3) ||
                           context->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = context->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
-    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
+    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 1, 5);
 
     #ifdef __APPLE__
         // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.

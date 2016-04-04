@@ -32,7 +32,7 @@
 
 #include "glimports.hpp"
 
-#include "glprofile.hpp"
+#include "glfeatures.hpp"
 
 
 namespace gltrace {
@@ -85,7 +85,7 @@ public:
 
 class Context {
 public:
-    glprofile::Profile profile;
+    glfeatures::Profile profile;
     bool user_arrays;
     bool user_arrays_nv;
     bool userArraysOnBegin;
@@ -98,7 +98,7 @@ public:
     std::map <GLuint, Buffer> buffers;
 
     Context(void) :
-        profile(glprofile::API_GL, 1, 0),
+        profile(glfeatures::API_GL, 1, 0),
         user_arrays(false),
         user_arrays_nv(false),
         userArraysOnBegin(false),

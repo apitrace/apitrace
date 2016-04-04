@@ -47,7 +47,7 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
-typedef std::map<unsigned long long, glprofile::Profile> ProfileMap;
+typedef std::map<unsigned long long, glfeatures::Profile> ProfileMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
 static ProfileMap profile_map;
@@ -61,7 +61,7 @@ static unsigned int current_api = EGL_OPENGL_ES_API;
  * instead of guessing.  For now, start with a guess of ES2 profile, which
  * should be the most common case for EGL.
  */
-static glprofile::Profile last_profile(glprofile::API_GLES, 2, 0);
+static glfeatures::Profile last_profile(glfeatures::API_GLES, 2, 0);
 
 static glws::Drawable *null_drawable = NULL;
 
@@ -103,7 +103,7 @@ getContext(unsigned long long context_ptr) {
 static void createDrawable(unsigned long long orig_config, unsigned long long orig_surface)
 {
     ProfileMap::iterator it = profile_map.find(orig_config);
-    glprofile::Profile profile;
+    glfeatures::Profile profile;
 
     // If the requested config is associated with a profile, use that
     // profile. Otherwise, assume that the last used profile is what
@@ -130,13 +130,13 @@ static void retrace_eglChooseConfig(trace::Call &call) {
         return;
     }
 
-    glprofile::Profile profile;
+    glfeatures::Profile profile;
     unsigned renderableType = parseAttrib(attrib_array, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES_BIT);
     std::cerr << "renderableType = " << renderableType << "\n";
     if (renderableType & EGL_OPENGL_BIT) {
-        profile = glprofile::Profile(glprofile::API_GL, 1, 0);
+        profile = glfeatures::Profile(glfeatures::API_GL, 1, 0);
     } else {
-        profile.api = glprofile::API_GLES;
+        profile.api = glfeatures::API_GLES;
         if (renderableType & EGL_OPENGL_ES3_BIT) {
             profile.major = 3;
         } else if (renderableType & EGL_OPENGL_ES2_BIT) {
@@ -195,11 +195,11 @@ static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_config = call.arg(1).toUIntPtr();
     Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = call.arg(3).toArray();
-    glprofile::Profile profile;
+    glfeatures::Profile profile;
 
     switch (current_api) {
     case EGL_OPENGL_API:
-        profile.api = glprofile::API_GL;
+        profile.api = glfeatures::API_GL;
         profile.major = parseAttrib(attrib_array, EGL_CONTEXT_MAJOR_VERSION, 1);
         profile.minor = parseAttrib(attrib_array, EGL_CONTEXT_MINOR_VERSION, 0);
         if (profile.versionGreaterOrEqual(3,2)) {
@@ -215,7 +215,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
         break;
     case EGL_OPENGL_ES_API:
     default:
-        profile.api = glprofile::API_GLES;
+        profile.api = glfeatures::API_GLES;
         profile.major = parseAttrib(attrib_array, EGL_CONTEXT_MAJOR_VERSION, 1);
         profile.minor = parseAttrib(attrib_array, EGL_CONTEXT_MINOR_VERSION, 0);
         break;

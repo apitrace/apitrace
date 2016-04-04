@@ -101,9 +101,9 @@ const struct ExtensionsDesc *
 getExtraExtensions(const Context *ctx)
 {
     switch (ctx->profile.api) {
-    case glprofile::API_GL:
+    case glfeatures::API_GL:
         return &extraExtensionsFull;
-    case glprofile::API_GLES:
+    case glfeatures::API_GLES:
         return &extraExtensionsES;
     default:
         assert(0);

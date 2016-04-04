@@ -37,7 +37,7 @@
 #include <string>
 
 
-namespace glprofile {
+namespace glfeatures {
 
 
 enum Api {
@@ -138,6 +138,4 @@ struct Extensions
 
 
 
-} /* namespace glprofile */
-
-
+} /* namespace glfeatures */
