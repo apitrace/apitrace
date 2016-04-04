@@ -86,6 +86,9 @@ public:
 class Context {
 public:
     glfeatures::Profile profile;
+    glfeatures::Extensions extensions;
+    glfeatures::Features features;
+
     bool user_arrays;
     bool user_arrays_nv;
     bool userArraysOnBegin;

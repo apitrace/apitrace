@@ -142,6 +142,8 @@ void setContext(uintptr_t context_id)
 
     if (!ctx->bound) {
         ctx->profile = glfeatures::getCurrentContextProfile();
+        ctx->extensions.getCurrentContextExtensions(ctx->profile);
+        ctx->features.load(ctx->profile, ctx->extensions);
 
         /*
          * The default viewport and scissor state is set when a context is

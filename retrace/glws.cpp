@@ -81,6 +81,7 @@ Context::initialize(void)
 
     actualProfile = glfeatures::getCurrentContextProfile();
     actualExtensions.getCurrentContextExtensions(actualProfile);
+    actualFeatures.load(actualProfile, actualExtensions);
 
     /* Ensure we got a matching profile.
      *

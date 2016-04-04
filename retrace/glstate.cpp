@@ -41,32 +41,6 @@
 namespace glstate {
 
 
-Context::Context(void) {
-    memset(this, 0, sizeof *this);
-
-    glfeatures::Profile profile = glfeatures::getCurrentContextProfile();
-    glfeatures::Extensions ext;
-
-    ext.getCurrentContextExtensions(profile);
-
-    ES = profile.es();
-    core = profile.core;
-
-    ARB_draw_buffers = !ES;
-
-    // Check extensions we use.
-    ARB_sampler_objects = ext.has("GL_ARB_sampler_objects");
-    ARB_get_program_binary = ext.has("GL_ARB_get_program_binary");
-    KHR_debug = !ES && ext.has("GL_KHR_debug");
-    EXT_debug_label = ext.has("GL_EXT_debug_label");
-    ARB_direct_state_access = ext.has("GL_ARB_direct_state_access");
-    ARB_shader_image_load_store = ext.has("GL_ARB_shader_image_load_store");
-    ARB_shader_storage_buffer_object = ext.has("GL_ARB_shader_storage_buffer_object");
-    ARB_program_interface_query = ext.has("GL_ARB_program_interface_query");
-
-    NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
-}
-
 PixelPackState::PixelPackState(const Context &context) {
     ES = context.ES;
 

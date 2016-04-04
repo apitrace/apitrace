@@ -165,6 +165,7 @@ public:
     // Created profile
     Profile actualProfile;
     glfeatures::Extensions actualExtensions;
+    glfeatures::Features actualFeatures;
 
     Context(const Visual *vis) :
         visual(vis),

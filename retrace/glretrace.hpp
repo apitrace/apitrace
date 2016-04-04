@@ -70,6 +70,11 @@ struct Context {
         return wsContext->actualProfile;
     }
 
+    inline const glfeatures::Features &
+    features(void) const {
+        return wsContext->actualFeatures;
+    }
+
     inline bool
     hasExtension(const char *extension) const {
         return wsContext->hasExtension(extension);

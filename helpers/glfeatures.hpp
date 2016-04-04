@@ -125,10 +125,12 @@ Profile
 getCurrentContextProfile(void);
 
 
-struct Extensions
+class Extensions
 {
+private:
     std::set<std::string> strings;
 
+public:
     void
     getCurrentContextExtensions(const Profile & profile);
 
@@ -136,6 +138,32 @@ struct Extensions
     has(const char *string) const;
 };
 
+
+struct Features
+{
+    unsigned ES:1;
+    unsigned core:1;
+
+    unsigned ARB_draw_buffers:1;
+    unsigned ARB_sampler_objects:1;
+    unsigned ARB_get_program_binary:1;
+    unsigned KHR_debug:1;
+    unsigned EXT_debug_label:1;
+    unsigned NV_read_depth_stencil:1;  /* ES only */
+    unsigned ARB_shader_image_load_store:1;
+    unsigned ARB_direct_state_access:1;
+    unsigned ARB_shader_storage_buffer_object:1;
+    unsigned ARB_program_interface_query:1;
+
+    Features(void);
+
+    void
+    load(const Profile & profile, const Extensions & exts);
+
+    // Load from current context
+    void
+    load(void);
+};
 
 
 } /* namespace glfeatures */
