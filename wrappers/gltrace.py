@@ -933,7 +933,7 @@ class GlTracer(Tracer):
             print '    {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->profile.desktop())'
+            print '        if (ctx->features.pixel_buffer_object)'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
             print '        if (_unpack_buffer) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name

@@ -347,6 +347,15 @@ Features::load(const Profile & profile, const Extensions & ext)
     ARB_program_interface_query = ext.has("GL_ARB_program_interface_query");
 
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
+
+    if (profile.es()) {
+        pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
+                              ext.has("GL_NV_pixel_buffer_object");
+    } else {
+        pixel_buffer_object = profile.versionGreaterOrEqual(2, 1) ||
+                              ext.has("GL_ARB_pixel_buffer_object") ||
+                              ext.has("GL_EXT_pixel_buffer_object");
+    }
 }
 
 

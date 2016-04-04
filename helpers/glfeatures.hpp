@@ -155,6 +155,8 @@ struct Features
     unsigned ARB_shader_storage_buffer_object:1;
     unsigned ARB_program_interface_query:1;
 
+    unsigned pixel_buffer_object:1;
+
     Features(void);
 
     void
