@@ -943,6 +943,20 @@ class GlTracer(Tracer):
             print '    }'
             return
 
+        # Recognize offsets instead of pointers when query buffer is bound
+        if function.name.startswith('glGetQueryObject') and arg.output:
+            print r'    gltrace::Context *_ctx = gltrace::getContext();'
+            print r'    GLint _query_buffer = 0;'
+            print r'    if (_ctx->features.query_buffer_object) {'
+            print r'        _query_buffer = _glGetInteger(GL_QUERY_BUFFER_BINDING);'
+            print r'    }'
+            print r'    if (_query_buffer) {'
+            print r'        trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
+            print r'    } else {'
+            Tracer.serializeArgValue(self, function, arg)
+            print r'    }'
+            return
+
         # Several GL state functions take GLenum symbolic names as
         # integer/floats; so dump the symbolic name whenever possible
         if function.name.startswith('gl') \

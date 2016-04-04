@@ -69,7 +69,7 @@ struct Profile {
     }
 
     inline bool
-    desktop(void) {
+    desktop(void) const {
         return api == API_GL;
     }
 
@@ -156,6 +156,7 @@ struct Features
     unsigned ARB_program_interface_query:1;
 
     unsigned pixel_buffer_object:1;
+    unsigned query_buffer_object:1;
 
     Features(void);
 

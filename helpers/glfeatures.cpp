@@ -356,6 +356,14 @@ Features::load(const Profile & profile, const Extensions & ext)
                               ext.has("GL_ARB_pixel_buffer_object") ||
                               ext.has("GL_EXT_pixel_buffer_object");
     }
+
+    if (profile.desktop()) {
+        query_buffer_object = profile.versionGreaterOrEqual(4, 4) ||
+                              ext.has("GL_ARB_query_buffer_object") ||
+                              ext.has("GL_AMD_query_buffer_object");
+    } else {
+        query_buffer_object = 0;
+    }
 }
 
 

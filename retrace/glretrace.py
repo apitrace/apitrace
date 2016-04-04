@@ -43,9 +43,11 @@ class GlRetracer(Retracer):
         # Ensure pack function have side effects
         abort = False
         for function in api.getAllFunctions():
-            if not function.sideeffects and self.pack_function_regex.match(function.name):
-                sys.stderr.write('error: function %s must have sideeffects\n' % function.name)
-                abort = True
+            if not function.sideeffects:
+                if self.pack_function_regex.match(function.name) or \
+                   function.name.startswith('glGetQueryObject'):
+                    sys.stderr.write('error: function %s must have sideeffects\n' % function.name)
+                    abort = True
         if abort:
             sys.exit(1)
 
@@ -125,6 +127,24 @@ class GlRetracer(Retracer):
         is_draw_indirect = self.draw_indirect_function_regex.match(function.name) is not None
         is_misc_draw = self.misc_draw_function_regex.match(function.name)
 
+        if function.name.startswith('gl') and not function.name.startswith('glX'):
+            # The Windows OpenGL runtime will skip calls when there's no
+            # context bound to the current context, but this might cause
+            # crashes on other systems, particularly with NVIDIA Linux drivers.
+            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print r'    if (!currentContext) {'
+            print r'        if (retrace::debug) {'
+            print r'            retrace::warning(call) << "no current context\n";'
+            print r'        }'
+            print r'#ifndef _WIN32'
+            print r'        return;'
+            print r'#endif'
+            print r'    }'
+
+            print r'    if (retrace::markers) {'
+            print r'        glretrace::insertCallMarker(call, currentContext);'
+            print r'    }'
+
         # For backwards compatibility with old traces where non VBO drawing was supported
         if (is_array_pointer or is_draw_arrays or is_draw_elements) and not is_draw_indirect:
             print '    if (retrace::parser->getVersion() < 1) {'
@@ -152,6 +172,16 @@ class GlRetracer(Retracer):
             print '    if (!_pack_buffer) {'
             print '        return;'
             print '    }'
+
+        # When no query buffer object is bound, glGetQueryObject is a no-op.
+        if function.name.startswith('glGetQueryObject'):
+            print r'    GLint _query_buffer = 0;'
+            print r'    if (currentContext->features().query_buffer_object) {'
+            print r'        glGetIntegerv(GL_QUERY_BUFFER_BINDING, &_query_buffer);'
+            print r'    }'
+            print r'    if (!_query_buffer) {'
+            print r'        return;'
+            print r'    }'
 
         # Pre-snapshots
         if self.bind_framebuffer_function_regex.match(function.name):
@@ -196,24 +226,6 @@ class GlRetracer(Retracer):
             # Some applications do all their rendering in a framebuffer, and
             # then just blit to the drawable without ever calling glViewport.
             print '    glretrace::updateDrawable(std::max(dstX0, dstX1), std::max(dstY0, dstY1));'
-
-        if function.name.startswith('gl') and not function.name.startswith('glX'):
-            # The Windows OpenGL runtime will skip calls when there's no
-            # context bound to the current context, but this might cause
-            # crashes on other systems, particularly with NVIDIA Linux drivers.
-            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
-            print r'    if (!currentContext) {'
-            print r'        if (retrace::debug) {'
-            print r'            retrace::warning(call) << "no current context\n";'
-            print r'        }'
-            print r'#ifndef _WIN32'
-            print r'        return;'
-            print r'#endif'
-            print r'    }'
-
-            print r'    if (retrace::markers) {'
-            print r'        glretrace::insertCallMarker(call, currentContext);'
-            print r'    }'
 
         if function.name == "glEnd":
             print r'    if (currentContext) {'
@@ -498,6 +510,9 @@ class GlRetracer(Retracer):
         # object.
         if self.pack_function_regex.match(function.name) and arg.output:
             assert isinstance(arg_type, (stdapi.Pointer, stdapi.Array, stdapi.Blob, stdapi.Opaque))
+            print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue)
+            return
+        if function.name.startswith('glGetQueryObject') and arg.output:
             print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue)
             return
 
