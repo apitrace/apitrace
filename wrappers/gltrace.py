@@ -126,12 +126,12 @@ class GlTracer(Tracer):
         print '};'
         print
         print 'static vertex_attrib _get_vertex_attrib(void) {'
-        print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    if (ctx->user_arrays_nv) {'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print '    if (_ctx->user_arrays_nv) {'
         print '        GLboolean _vertex_program = GL_FALSE;'
         print '        _glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &_vertex_program);'
         print '        if (_vertex_program) {'
-        print '            if (ctx->user_arrays_nv) {'
+        print '            if (_ctx->user_arrays_nv) {'
         print '                GLint _vertex_program_binding_nv = _glGetInteger(GL_VERTEX_PROGRAM_BINDING_NV);'
         print '                if (_vertex_program_binding_nv) {'
         print '                    return VERTEX_ATTRIB_NV;'
@@ -148,12 +148,12 @@ class GlTracer(Tracer):
         # Whether we need user arrays
         print 'static inline bool _need_user_arrays(void)'
         print '{'
-        print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    if (!ctx->user_arrays) {'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print '    if (!_ctx->user_arrays) {'
         print '        return false;'
         print '    }'
         print
-        print '    glfeatures::Profile profile = ctx->profile;'
+        print '    glfeatures::Profile profile = _ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
         print
 
@@ -276,8 +276,8 @@ class GlTracer(Tracer):
         # states such as GL_UNPACK_ROW_LENGTH are not available in GLES
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
-        print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    return ctx->profile.desktop();'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print '    return _ctx->profile.desktop();'
         print '}'
         print
 
@@ -338,26 +338,26 @@ class GlTracer(Tracer):
         print 'void _shadow_glGetBufferSubData(GLenum target, GLintptr offset,'
         print '                                GLsizeiptr size, GLvoid *data)'
         print '{'
-        print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    if (!ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print '    if (!_ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
         print '        _glGetBufferSubData(target, offset, size, data);'
         print '        return;'
         print '    }'
         print
         print '    GLint buffer_binding = _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);'
         print '    if (buffer_binding > 0) {'
-        print '        gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '        gltrace::Buffer & buf = _ctx->buffers[buffer_binding];'
         print '        buf.getSubData(offset, size, data);'
         print '    }'
         print '}'
 
     def shadowBufferMethod(self, method):
         # Emit code to fetch the shadow buffer, and invoke a method
-        print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print '    if (_ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
         print '        GLint buffer_binding = _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);'
         print '        if (buffer_binding > 0) {'
-        print '            gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '            gltrace::Buffer & buf = _ctx->buffers[buffer_binding];'
         print '            buf.' + method + ';'
         print '        }'
         print '    }'
@@ -371,10 +371,10 @@ class GlTracer(Tracer):
             self.shadowBufferMethod('bufferSubData(offset, size, data)')
 
         if function.name == 'glDeleteBuffers':
-            print '    gltrace::Context *ctx = gltrace::getContext();'
-            print '    if (ctx->needsShadowBuffers()) {'
+            print '    gltrace::Context *_ctx = gltrace::getContext();'
+            print '    if (_ctx->needsShadowBuffers()) {'
             print '        for (GLsizei i = 0; i < n; i++) {'
-            print '            ctx->buffers.erase(buffer[i]);'
+            print '            _ctx->buffers.erase(buffer[i]);'
             print '        }'
             print '    }'
 
@@ -440,10 +440,10 @@ class GlTracer(Tracer):
             print '            warned = true;'
             print '            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/docs/BUGS.markdown#tracing)\\n", __FUNCTION__);'
             print '        }'
-            print '        gltrace::Context *ctx = gltrace::getContext();'
-            print '        ctx->user_arrays = true;'
+            print '        gltrace::Context *_ctx = gltrace::getContext();'
+            print '        _ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerNV":
-                print '        ctx->user_arrays_nv = true;'
+                print '        _ctx->user_arrays_nv = true;'
             self.invokeFunction(function)
 
             # And also break down glInterleavedArrays into the individual calls
@@ -531,13 +531,13 @@ class GlTracer(Tracer):
 
         # Warn if user arrays are used with glBegin/glArrayElement/glEnd.
         if function.name == 'glBegin':
-            print r'    gltrace::Context *ctx = gltrace::getContext();'
-            print r'    ctx->userArraysOnBegin = _need_user_arrays();'
+            print r'    gltrace::Context *_ctx = gltrace::getContext();'
+            print r'    _ctx->userArraysOnBegin = _need_user_arrays();'
         if function.name.startswith('glArrayElement'):
-            print r'    gltrace::Context *ctx = gltrace::getContext();'
-            print r'    if (ctx->userArraysOnBegin) {'
+            print r'    gltrace::Context *_ctx = gltrace::getContext();'
+            print r'    if (_ctx->userArraysOnBegin) {'
             print r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://github.com/apitrace/apitrace/issues/276)\n");'
-            print r'        ctx->userArraysOnBegin = false;'
+            print r'        _ctx->userArraysOnBegin = false;'
             print r'    }'
         
         # Emit a fake memcpy on buffer uploads
@@ -931,9 +931,9 @@ class GlTracer(Tracer):
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
             print '    {'
-            print '        gltrace::Context *ctx = gltrace::getContext();'
+            print '        gltrace::Context *_ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->features.pixel_buffer_object)'
+            print '        if (_ctx->features.pixel_buffer_object)'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
             print '        if (_unpack_buffer) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
@@ -967,9 +967,9 @@ class GlTracer(Tracer):
         # update the state
         print 'static void _trace_user_arrays(GLuint count)'
         print '{'
-        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    gltrace::Context *_ctx = gltrace::getContext();'
         print
-        print '    glfeatures::Profile profile = ctx->profile;'
+        print '    glfeatures::Profile profile = _ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
         print
 
@@ -1130,7 +1130,7 @@ class GlTracer(Tracer):
     def array_prolog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
             print '    GLint max_units = 0;'
-            print '    if (ctx->profile.desktop())'
+            print '    if (_ctx->profile.desktop())'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_units);'
             print '    else'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_units);'
