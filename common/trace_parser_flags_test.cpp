@@ -631,7 +631,7 @@ TEST(common_parser, lookupCallFlags)
     for (ConstIterator it = first; it != last; ++it) {
         CallFlags flags = Parser::lookupCallFlags(it->name);
         
-        EXPECT_EQ(flags, it->value) << "flags differ for " << it->name;
+        EXPECT_EQ(it->value, flags) << "flags differ for " << it->name;
     }
 }
 
