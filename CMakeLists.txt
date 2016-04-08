@@ -1,4 +1,8 @@
-cmake_minimum_required (VERSION 2.8.11)
+if (MSVC)
+    cmake_minimum_required (VERSION 3.4.0)
+else ()
+    cmake_minimum_required (VERSION 2.8.11)
+endif ()
 
 
 if (CMAKE_GENERATOR STREQUAL "Xcode")
@@ -127,7 +131,11 @@ if (WIN32)
     find_package (DirectX)
 
     if (DEFINED MSVC_VERSION AND NOT DirectX_D3D11_3_INCLUDE_FOUND AND NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
-        message (WARNING "Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk) is required for D3D11.3 support")
+        if (${MSVC_VERSION} LESS 1900)
+            message (FATAL_ERROR "Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk) must be installed for D3D11.3 support")
+        else ()
+            message (FATAL_ERROR "Windows 10 SDK must be selected (-DCMAKE_SYSTEM_VERSION=10.0) for D3D11.3 support")
+        endif ()
     endif ()
 
     set (ENABLE_EGL false)
