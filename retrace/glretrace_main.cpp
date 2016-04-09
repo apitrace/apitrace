@@ -157,15 +157,15 @@ insertCallMarker(trace::Call &call, Context *currentContext)
 
     glfeatures::Profile currentProfile = currentContext->actualProfile();
 
-    std::stringstream ss;
+    std::ostringstream ss;
     trace::dump(call, ss,
                 trace::DUMP_FLAG_NO_COLOR |
                 trace::DUMP_FLAG_NO_ARG_NAMES |
                 trace::DUMP_FLAG_NO_MULTILINE);
 
     std::string msg = ss.str();
-    GLsizei length = msg.length() > currentContext->maxDebugMessageLength
-                   ? currentContext->maxDebugMessageLength
+    GLsizei length = msg.length() > currentContext->maxDebugMessageLength - 1
+                   ? currentContext->maxDebugMessageLength - 1
                    : msg.length();
 
     auto pfnGlDebugMessageInsert = currentProfile.desktop()
@@ -441,7 +441,7 @@ initContext() {
     currentContext->KHR_debug = currentContext->hasExtension("GL_KHR_debug");
     if (currentContext->KHR_debug) {
         glGetIntegerv(GL_MAX_DEBUG_MESSAGE_LENGTH, &currentContext->maxDebugMessageLength);
-        assert(currentContext->maxDebugMessageLength > 0);
+        assert(currentContext->maxDebugMessageLength > 1);
     }
 
 #ifdef __APPLE__
