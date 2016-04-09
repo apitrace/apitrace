@@ -137,6 +137,25 @@ class D3DCommonTracer(DllTracer):
             print '        _MapDesc.Size = 0;'
             print '    }'
 
+    def invokeMethod(self, interface, base, method):
+        DllTracer.invokeMethod(self, interface, base, method)
+
+        # When D2D is used on top of WARP software rasterizer it seems to do
+        # most of its rendering via the undocumented and opaque IWarpPrivateAPI
+        # interface.  Althought hiding this interface will affect behavior,
+        # there's little point in traces that use it, as they lack enough
+        # information to replay correctly.
+        #
+        # Returning E_NOINTERFACE when for IID_IWarpPrivateAPI matches what
+        # happens when D2D is used with drivers other than WARP.
+        if method.name == 'QueryInterface':
+            print r'    if (_result == S_OK && riid == IID_IWarpPrivateAPI && ppvObj && *ppvObj) {'
+            print r'        static_cast<IUnknown *>(*ppvObj)->Release();'
+            print r'        *ppvObj = nullptr;'
+            print r'        _result = E_NOINTERFACE;'
+            print r'        os::log("apitrace: warning: hiding IWarpPrivateAPI interface\n");'
+            print r'    }'
+
 
 if __name__ == '__main__':
     print r'#include "guids_defs.hpp"'
