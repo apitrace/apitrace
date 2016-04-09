@@ -54,7 +54,3 @@ struct IDXGIFactoryDWM: public IUnknown
 
 
 DEFINE_GUID(IID_IWarpPrivateAPI,0xF13EBCD1,0x672C,0x4F8B,0xA6,0x31,0x95,0x39,0xCA,0x74,0x8D,0x71);
-struct IWarpPrivateAPI: public IUnknown
-{
-    virtual HRESULT STDMETHODCALLTYPE WarpEscape(void *pData) = 0;
-};

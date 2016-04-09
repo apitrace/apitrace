@@ -910,12 +910,6 @@ IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
 ]
 
-IWarpPrivateAPI = Interface("IWarpPrivateAPI", IUnknown)
-IWarpPrivateAPI.methods += [
-    StdMethod(HRESULT, "WarpEscape", [(OpaquePointer(Void), "pData")]),
-]
-
 dxgi.addInterfaces([
     IDXGIFactoryDWM,
-    IWarpPrivateAPI,
 ])
