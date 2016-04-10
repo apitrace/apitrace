@@ -156,6 +156,8 @@ struct Features
     unsigned ARB_program_interface_query:1;
 
     unsigned pixel_buffer_object:1;
+    unsigned framebuffer_object:1;
+    unsigned read_framebuffer_object:1;
     unsigned query_buffer_object:1;
 
     Features(void);

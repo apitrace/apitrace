@@ -348,20 +348,30 @@ Features::load(const Profile & profile, const Extensions & ext)
 
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 
-    if (profile.es()) {
-        pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
-                              ext.has("GL_NV_pixel_buffer_object");
-    } else {
+    if (profile.desktop()) {
         pixel_buffer_object = profile.versionGreaterOrEqual(2, 1) ||
                               ext.has("GL_ARB_pixel_buffer_object") ||
                               ext.has("GL_EXT_pixel_buffer_object");
-    }
 
-    if (profile.desktop()) {
+        framebuffer_object = profile.versionGreaterOrEqual(3, 0) ||
+                             ext.has("GL_ARB_framebuffer_object") ||
+                             ext.has("GL_EXT_framebuffer_object");
+        read_framebuffer_object = framebuffer_object;
+
         query_buffer_object = profile.versionGreaterOrEqual(4, 4) ||
                               ext.has("GL_ARB_query_buffer_object") ||
                               ext.has("GL_AMD_query_buffer_object");
     } else {
+        pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
+                              ext.has("GL_NV_pixel_buffer_object");
+
+        framebuffer_object = profile.versionGreaterOrEqual(2, 0) ||
+                             ext.has("GL_OES_framebuffer_object");
+
+        read_framebuffer_object = ext.has("GL_ANGLE_framebuffer_blit") ||
+                                  ext.has("GL_APPLE_framebuffer_multisample") ||
+                                  ext.has("GL_NV_framebuffer_blit");
+
         query_buffer_object = 0;
     }
 }

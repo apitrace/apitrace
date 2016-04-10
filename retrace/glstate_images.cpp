@@ -961,21 +961,23 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 
 
 image::Image *
-getDrawBufferImage() {
+getDrawBufferImage()
+{
     Context context;
 
     GLenum framebuffer_binding;
     GLenum framebuffer_target;
-    if (context.ES) {
-        framebuffer_binding = GL_FRAMEBUFFER_BINDING;
-        framebuffer_target = GL_FRAMEBUFFER;
-    } else {
+    if (context.read_framebuffer_object) {
         framebuffer_binding = GL_DRAW_FRAMEBUFFER_BINDING;
         framebuffer_target = GL_DRAW_FRAMEBUFFER;
+    } else {
+        framebuffer_binding = GL_FRAMEBUFFER_BINDING;
+        framebuffer_target = GL_FRAMEBUFFER;
     }
-
     GLint draw_framebuffer = 0;
-    glGetIntegerv(framebuffer_binding, &draw_framebuffer);
+    if (context.framebuffer_object) {
+        glGetIntegerv(framebuffer_binding, &draw_framebuffer);
+    }
 
     GLint draw_buffer = GL_NONE;
     ImageDesc desc;
@@ -1042,7 +1044,7 @@ getDrawBufferImage() {
 
     GLint read_framebuffer = 0;
     GLint read_buffer = GL_NONE;
-    if (!context.ES) {
+    if (context.read_framebuffer_object) {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, draw_framebuffer);
 
@@ -1057,7 +1059,7 @@ getDrawBufferImage() {
     }
 
 
-    if (!context.ES) {
+    if (context.read_framebuffer_object) {
         glReadBuffer(read_buffer);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
     }
@@ -1286,12 +1288,12 @@ dumpDrawableImages(StateWriter &writer, Context &context)
 
     // Reset read framebuffer
     GLint read_framebuffer = 0;
-    if (context.ES) {
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &read_framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    } else {
+    if (context.read_framebuffer_object) {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    } else if (context.framebuffer_object) {
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &read_framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     if (draw_buffer != GL_NONE) {
@@ -1342,10 +1344,10 @@ dumpDrawableImages(StateWriter &writer, Context &context)
     }
     
     // Restore original read framebuffer
-    if (context.ES) {
-        glBindFramebuffer(GL_FRAMEBUFFER, read_framebuffer);
-    } else {
+    if (context.read_framebuffer_object) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
+    } else if (context.framebuffer_object) {
+        glBindFramebuffer(GL_FRAMEBUFFER, read_framebuffer);
     }
 }
 
