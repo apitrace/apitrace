@@ -268,6 +268,11 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
                 params[0] = 256;
             }
             break;
+        case GL_MAX_DEBUG_MESSAGE_LENGTH:
+            if (params[0] == 0) {
+                params[0] = 4096;
+            }
+            break;
         }
     }
 }
