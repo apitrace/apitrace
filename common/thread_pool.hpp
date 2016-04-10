@@ -31,7 +31,6 @@
 #include <cstddef>
 #include <functional>
 #include <queue>
-#include <stdexcept>
 #include <vector>
 
 #include "os_thread.hpp"
@@ -94,8 +93,7 @@ void ThreadPool::enqueue(F&& f, Args&&... args)
         os::unique_lock<os::mutex> lock(queue_mutex);
 
         // don't allow enqueueing after stopping the pool
-        if(stop)
-            throw std::runtime_error("enqueue on stopped ThreadPool");
+        assert(!stop);
 
         tasks.emplace(task);
     }
