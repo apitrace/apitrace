@@ -32,6 +32,8 @@ endif ()
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
+option (WINDOWS_XP "Target Windows XP (on MinGW)" OFF)
+
 option (ENABLE_CLI "Enable command Line interface." ON)
 
 option (ENABLE_EGL "Enable EGL support." ON)
@@ -128,9 +130,24 @@ if (MSVC)
 endif ()
 
 if (WIN32)
+    if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+        set (WINDOWS_XP TRUE)
+    endif ()
+
+    # http://msdn.microsoft.com/en-us/library/aa383745.aspx
+    if (WINDOWS_XP)
+        # Windows XP
+        add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+    else ()
+        # Windows 8
+        add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
+    endif ()
+
     find_package (DirectX)
 
-    if (DEFINED MSVC_VERSION AND NOT DirectX_D3D11_3_INCLUDE_FOUND AND NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+    if (WINDOWS_XP)
+        set (DirectX_D3D11_3_INCLUDE_FOUND FALSE)
+    elseif (DEFINED MSVC_VERSION AND NOT DirectX_D3D11_3_INCLUDE_FOUND)
         if (${MSVC_VERSION} LESS 1900)
             message (FATAL_ERROR "Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk) must be installed for D3D11.3 support")
         else ()
@@ -185,14 +202,6 @@ add_definitions (
 )
 
 if (WIN32)
-    # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    if (MINGW OR CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
-        # Windows XP
-        add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
-    else ()
-        # Windows 7
-        add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
-    endif ()
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
