@@ -349,6 +349,9 @@ Features::load(const Profile & profile, const Extensions & ext)
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 
     if (profile.desktop()) {
+        texture_3d = profile.versionGreaterOrEqual(1, 2) ||
+                     ext.has("GL_EXT_texture3D");
+
         pixel_buffer_object = profile.versionGreaterOrEqual(2, 1) ||
                               ext.has("GL_ARB_pixel_buffer_object") ||
                               ext.has("GL_EXT_pixel_buffer_object");
@@ -364,6 +367,8 @@ Features::load(const Profile & profile, const Extensions & ext)
                               ext.has("GL_ARB_query_buffer_object") ||
                               ext.has("GL_AMD_query_buffer_object");
     } else {
+        texture_3d = 1;
+
         pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
                               ext.has("GL_NV_pixel_buffer_object");
 

@@ -57,7 +57,9 @@ public:
     ~PixelPackState();
 
 private:
-    bool ES;
+    bool desktop;
+    bool texture_3d;
+    bool pixel_buffer_object;
 
     // Pack state
     GLint pack_alignment;
