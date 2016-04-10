@@ -349,8 +349,8 @@ Features::load(const Profile & profile, const Extensions & ext)
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 
     if (profile.desktop()) {
-        texture_3d = profile.versionGreaterOrEqual(1, 2) ||
-                     ext.has("GL_EXT_texture3D");
+        // GL_EXT_texture3D uses different entrypoints
+        texture_3d = profile.versionGreaterOrEqual(1, 2);
 
         pixel_buffer_object = profile.versionGreaterOrEqual(2, 1) ||
                               ext.has("GL_ARB_pixel_buffer_object") ||
@@ -358,9 +358,10 @@ Features::load(const Profile & profile, const Extensions & ext)
 
         read_buffer = 1;
 
+        // GL_EXT_framebuffer_object requires different entry points
         framebuffer_object = profile.versionGreaterOrEqual(3, 0) ||
-                             ext.has("GL_ARB_framebuffer_object") ||
-                             ext.has("GL_EXT_framebuffer_object");
+                             ext.has("GL_ARB_framebuffer_object");
+
         read_framebuffer_object = framebuffer_object;
 
         query_buffer_object = profile.versionGreaterOrEqual(4, 4) ||
@@ -372,15 +373,17 @@ Features::load(const Profile & profile, const Extensions & ext)
         pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
                               ext.has("GL_NV_pixel_buffer_object");
 
-        read_buffer = ext.has("GL_EXT_multiview_draw_buffers") ||
-                      ext.has("GL_NV_read_buffer");
+        // GL_EXT_multiview_draw_buffers requires different entry points
+        // GL_NV_read_buffer requires different entry points
+        read_buffer = 0;
 
-        framebuffer_object = profile.versionGreaterOrEqual(2, 0) ||
-                             ext.has("GL_OES_framebuffer_object");
+        // GL_OES_framebuffer_object requires different entry points
+        framebuffer_object = profile.versionGreaterOrEqual(2, 0);
 
-        read_framebuffer_object = ext.has("GL_ANGLE_framebuffer_blit") ||
-                                  ext.has("GL_APPLE_framebuffer_multisample") ||
-                                  ext.has("GL_NV_framebuffer_blit");
+        // GL_ANGLE_framebuffer_blit requires different entry points
+        // GL_APPLE_framebuffer_multisample requires different entry points
+        // GL_NV_framebuffer_blit requires different entry points
+        read_framebuffer_object = 0;
 
         query_buffer_object = 0;
     }
