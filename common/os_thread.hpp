@@ -38,10 +38,11 @@
  *
  * - MinGW's C++11 threads implementation is often either missing or relies on
  *   winpthreads
- *
- * - clang 3.4 (used in Travis) fails to compile some of libstdc++ C++11 thread
- *   headers
  */
+
+#if !defined(_WIN32)
+#define HAVE_CXX11_THREADS
+#endif
 
 
 #ifdef HAVE_CXX11_THREADS
