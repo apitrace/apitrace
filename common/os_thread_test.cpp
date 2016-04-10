@@ -69,63 +69,83 @@ TEST(os_thread, thread)
 
 struct Data
 {
-    bool cvb[NUM_THREADS];
+    bool notified[NUM_THREADS] = { false };
     os::condition_variable cv;
     os::mutex mutex;
-    volatile unsigned c;
+    bool notify = false;
+    volatile unsigned waiting = 0;
+    volatile unsigned c = 0;
 };
+
+
+static os::mutex cerr_mutex;
+
+#define WITH_CERR_MUTEX(_stmts) \
+    { \
+        os::unique_lock<os::mutex> cerr_lock(cerr_mutex); \
+        _stmts \
+    }
 
 
 static void cvf(Data *data, unsigned idx)
 {
-    std::cerr << idx << " started" << std::endl;
+    WITH_CERR_MUTEX( std::cerr << idx << " started.\n"; )
 
     {
         os::unique_lock<os::mutex> l(data->mutex);
-        data->c += 1;
+        data->waiting += 1;
     }
 
-    os::mutex mutex;
-    os::unique_lock<os::mutex> lock(mutex);
-    std::cerr << idx << " waiting..." << std::endl;
-    data->cv.wait(lock);
-    data->cvb[idx] = true;
-    std::cerr << idx << " finished." << std::endl;
+    WITH_CERR_MUTEX( std::cerr << idx << " waiting...\n"; )
+
+    {
+        os::unique_lock<os::mutex> lock(data->mutex);
+        while (!data->notify) {
+            data->cv.wait(lock);
+        }
+        data->notified[idx] = true;
+    }
+
+    WITH_CERR_MUTEX( std::cerr << idx << " notified.\n"; )
 }
 
 
-TEST(os_thread, cv)
+TEST(os_thread, condition_variable)
 {
     os::thread t[NUM_THREADS];
     Data data;
     unsigned i;
 
-    data.c = 0;
     for (i = 0; i < NUM_THREADS; ++i) {
-        data.cvb[i] = false;
         t[i] = os::thread(cvf, &data, i);
     }
 
     for (i = 0; i < NUM_THREADS; ++i) {
-        EXPECT_FALSE(data.cvb[i]);
+        EXPECT_FALSE(data.notified[i]);
     }
 
-    std::cerr << "waiting..." << std::endl;
+    WITH_CERR_MUTEX( std::cerr << "M waiting...\n"; )
 
     do {
         os::unique_lock<os::mutex> l(data.mutex);
-        if (data.c == NUM_THREADS) {
+        if (data.waiting == NUM_THREADS) {
             break;
         }
     } while(true);
 
-    std::cerr << "notifying..." << std::endl;
+    WITH_CERR_MUTEX( std::cerr << "M notifying...\n"; )
+
+    {
+        os::unique_lock<os::mutex> l(data.mutex);
+        data.notify = true;
+    }
+
     data.cv.notify_all();
 
-    std::cerr << "joining" << std::endl;
+    WITH_CERR_MUTEX( std::cerr << "M joining...\n"; )
     for (i = 0; i < NUM_THREADS; ++i) {
         t[i].join();
-        EXPECT_TRUE(data.cvb[i]);
+        EXPECT_TRUE(data.notified[i]);
     }
 }
 
