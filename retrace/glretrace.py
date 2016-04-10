@@ -167,11 +167,13 @@ class GlRetracer(Retracer):
 
         # When no pack buffer object is bound, the pack functions are no-ops.
         if self.pack_function_regex.match(function.name):
-            print '    GLint _pack_buffer = 0;'
-            print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);'
-            print '    if (!_pack_buffer) {'
-            print '        return;'
-            print '    }'
+            print r'    GLint _pack_buffer = 0;'
+            print r'    if (currentContext->features().pixel_buffer_object) {'
+            print r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);'
+            print r'    }'
+            print r'    if (!_pack_buffer) {'
+            print r'        return;'
+            print r'    }'
 
         # When no query buffer object is bound, glGetQueryObject is a no-op.
         if function.name.startswith('glGetQueryObject'):
