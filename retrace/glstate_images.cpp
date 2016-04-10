@@ -1047,7 +1047,9 @@ getDrawBufferImage()
     if (context.read_framebuffer_object) {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, draw_framebuffer);
+    }
 
+    if (context.read_buffer) {
         glGetIntegerv(GL_READ_BUFFER, &read_buffer);
         glReadBuffer(draw_buffer);
     }
@@ -1059,8 +1061,10 @@ getDrawBufferImage()
     }
 
 
-    if (context.read_framebuffer_object) {
+    if (context.read_buffer) {
         glReadBuffer(read_buffer);
+    }
+    if (context.read_framebuffer_object) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
     }
 
@@ -1299,7 +1303,7 @@ dumpDrawableImages(StateWriter &writer, Context &context)
     if (draw_buffer != GL_NONE) {
         // Read from current draw buffer
         GLint read_buffer = GL_NONE;
-        if (!context.ES) {
+        if (context.read_buffer) {
             glGetIntegerv(GL_READ_BUFFER, &read_buffer);
             glReadBuffer(draw_buffer);
         }
@@ -1315,7 +1319,7 @@ dumpDrawableImages(StateWriter &writer, Context &context)
         dumpReadBufferImage(writer, context, enumToString(draw_buffer), NULL, width, height, format, type);
 
         // Restore original read buffer
-        if (!context.ES) {
+        if (context.read_buffer) {
             glReadBuffer(read_buffer);
         }
     }

@@ -353,6 +353,8 @@ Features::load(const Profile & profile, const Extensions & ext)
                               ext.has("GL_ARB_pixel_buffer_object") ||
                               ext.has("GL_EXT_pixel_buffer_object");
 
+        read_buffer = 1;
+
         framebuffer_object = profile.versionGreaterOrEqual(3, 0) ||
                              ext.has("GL_ARB_framebuffer_object") ||
                              ext.has("GL_EXT_framebuffer_object");
@@ -364,6 +366,9 @@ Features::load(const Profile & profile, const Extensions & ext)
     } else {
         pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
                               ext.has("GL_NV_pixel_buffer_object");
+
+        read_buffer = ext.has("GL_EXT_multiview_draw_buffers") ||
+                      ext.has("GL_NV_read_buffer");
 
         framebuffer_object = profile.versionGreaterOrEqual(2, 0) ||
                              ext.has("GL_OES_framebuffer_object");
