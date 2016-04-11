@@ -322,8 +322,9 @@ namespace os {
 
         inline void
         wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
-            while (!pred)
+            while (!pred) {
                 wait(lock);
+            }
         }
     };
 
@@ -442,31 +443,6 @@ namespace os {
             return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
         }
-
-#if 0
-        template< typename Function, typename... Args >
-        class thread_data
-        {
-        public:
-            thread_data(Function &&f, Args&&... args) :
-                _f(std::forward<Function>(f)),
-                _args(std::forward<Args...>(args...))
-            {}
-
-            thread_data(const thread_data&) = delete;
-            thread_data& operator=(const thread_data&) = delete;
-
-            void operator() (void) {
-                //auto f = std::bind(std::forward<Function>(_f), std::forward<Args>(_args)...);
-                //f();
-                _f(std::tie(_args));
-            }
-
-        private:
-            typename std::decay<Function>::type _f;
-            std::tuple<typename std::decay<Args>::type...> _args;
-        };
-#endif
 
         template< class Function, class... Args >
         explicit thread(Function &&f, Args&&... args) {

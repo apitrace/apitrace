@@ -77,14 +77,16 @@ struct Data
     volatile unsigned c = 0;
 };
 
-
-static os::mutex cerr_mutex;
-
-#define WITH_CERR_MUTEX(_stmts) \
-    { \
-        os::unique_lock<os::mutex> cerr_lock(cerr_mutex); \
-        _stmts \
-    }
+#if 0
+    static os::mutex cerr_mutex;
+#   define WITH_CERR_MUTEX(_stmts) \
+        { \
+            os::unique_lock<os::mutex> cerr_lock(cerr_mutex); \
+            _stmts \
+        }
+#else
+#   define WITH_CERR_MUTEX(_stmts)
+#endif
 
 
 static void cvf(Data *data, unsigned idx)
