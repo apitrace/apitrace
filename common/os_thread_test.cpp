@@ -69,7 +69,7 @@ TEST(os_thread, thread)
 
 struct Data
 {
-    bool notified[NUM_THREADS] = { false };
+    bool notified[NUM_THREADS];
     os::condition_variable cv;
     os::mutex mutex;
     bool notify = false;
@@ -119,6 +119,7 @@ TEST(os_thread, condition_variable)
     unsigned i;
 
     for (i = 0; i < NUM_THREADS; ++i) {
+        data.notified[i] = false;
         t[i] = os::thread(cvf, &data, i);
     }
 
