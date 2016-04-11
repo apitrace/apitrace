@@ -47,3 +47,4 @@ qubjson_test
 trace_parser_flags_test
 traces
 Testing
+os_thread_test

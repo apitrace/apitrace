@@ -65,6 +65,7 @@ namespace os {
 #else /* !HAVE_CXX11_THREADS */
 
 
+#include <assert.h>
 #ifdef _WIN32
 #  include <process.h>
 #  include <windows.h>
@@ -73,7 +74,10 @@ namespace os {
 #  endif
 #else
 #  include <pthread.h>
+#  include <unistd.h>
 #endif
+
+#include <functional>
 
 
 namespace os {
@@ -224,7 +228,12 @@ namespace os {
 #else
         // http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
         LONG cWaiters;
-        HANDLE hEvent;
+        enum {
+            EVENT_ONE = 0,
+            EVENT_ALL,
+            EVENT_COUNT
+        };
+        HANDLE hEvents[EVENT_COUNT];
 #endif
 #else
         typedef pthread_cond_t native_handle_type;
@@ -238,7 +247,8 @@ namespace os {
             InitializeConditionVariable(&_native_handle);
 #  else
             cWaiters = 0;
-            hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+            hEvents[EVENT_ONE] = CreateEvent(NULL, FALSE, FALSE, NULL);
+            hEvents[EVENT_ALL] = CreateEvent(NULL, TRUE, FALSE, NULL);
 #  endif
 #else
             pthread_cond_init(&_native_handle, NULL);
@@ -250,7 +260,8 @@ namespace os {
 #  ifdef HAVE_WIN32_CONDITION_VARIABLES
             /* No-op */
 #  else
-            CloseHandle(hEvent);
+            CloseHandle(hEvents[EVENT_ALL]);
+            CloseHandle(hEvents[EVENT_ONE]);
 #  endif
 #else
             pthread_cond_destroy(&_native_handle);
@@ -264,11 +275,26 @@ namespace os {
             WakeConditionVariable(&_native_handle);
 #  else
             if (cWaiters) {
-                SetEvent(hEvent);
+                SetEvent(hEvents[EVENT_ONE]);
             }
 #  endif
 #else
             pthread_cond_signal(&_native_handle);
+#endif
+        }
+
+        inline void
+        notify_all(void) {
+#ifdef _WIN32
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+            WakeAllConditionVariable(&_native_handle);
+#  else
+            if (cWaiters) {
+                SetEvent(hEvents[EVENT_ALL]);
+            }
+#  endif
+#else
+            pthread_cond_broadcast(&_native_handle);
 #endif
         }
 
@@ -281,13 +307,24 @@ namespace os {
 #  else
             InterlockedIncrement(&cWaiters);
             LeaveCriticalSection(&mutex_native_handle);
-            WaitForSingleObject(hEvent, INFINITE);
+            DWORD dwResult;
+            dwResult = WaitForMultipleObjects(EVENT_COUNT, hEvents, FALSE, INFINITE);
             EnterCriticalSection(&mutex_native_handle);
-            InterlockedDecrement(&cWaiters);
+            if (InterlockedDecrement(&cWaiters) == 0 &&
+                dwResult == WAIT_OBJECT_0 + EVENT_ALL) {
+                ResetEvent(hEvents[EVENT_ALL]);
+            }
 #  endif
 #else
             pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
+            while (!pred) {
+                wait(lock);
+            }
         }
     };
 
@@ -384,25 +421,41 @@ namespace os {
         }
 
         inline
-        thread(const thread &other) :
+        thread(thread &&other) :
             _native_handle(other._native_handle)
         {
+            other._native_handle = 0;
         }
+
+        thread(const thread &other) = delete;
 
         inline
         ~thread() {
         }
 
-        template< class Function, class Arg >
-        explicit thread( Function &f, Arg arg ) {
-            typedef CallbackParam< Function, Arg > Param;
-            Param *pParam = new Param(f, arg);
-            _native_handle = _create(pParam);
+        static unsigned
+        hardware_concurrency(void) {
+#ifdef _WIN32
+            SYSTEM_INFO si;
+            GetSystemInfo(&si);
+            return si.dwNumberOfProcessors;
+#else
+            return sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+        }
+
+        template< class Function, class... Args >
+        explicit thread(Function &&f, Args&&... args) {
+            auto bound = std::bind(std::forward<Function>(f), std::forward<Args>(args)...);
+            auto data = new decltype(bound) (std::move(bound));
+            _native_handle = _create(data);
         }
 
         inline thread &
-        operator =(const thread &other) {
+        operator =(thread &&other) {
+            assert(_native_handle == 0);
             _native_handle = other._native_handle;
+            other._native_handle = 0;
             return *this;
         }
 
@@ -423,23 +476,6 @@ namespace os {
     private:
         native_handle_type _native_handle;
 
-        template< typename Function, typename Arg >
-        struct CallbackParam {
-            Function &f;
-            Arg arg;
-
-            inline
-            CallbackParam(Function &_f, Arg _arg) :
-                f(_f),
-                arg(_arg)
-            {}
-
-            inline void
-            operator () (void) {
-                f(arg);
-            }
-        };
-
         template< typename Param >
         static
 #ifdef _WIN32
@@ -456,13 +492,13 @@ namespace os {
 
         template< typename Param >
         static inline native_handle_type
-        _create(Param *pParam) {
+        _create(Param *function) {
 #ifdef _WIN32
-            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, static_cast<void *>(pParam), 0, NULL);
+            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, function, 0, NULL);
             return reinterpret_cast<HANDLE>(handle);
 #else
             pthread_t t;
-            pthread_create(&t, NULL, &_callback<Param>, static_cast<void *>(pParam));
+            pthread_create(&t, NULL, &_callback<Param>, function);
             return t;
 #endif
         }

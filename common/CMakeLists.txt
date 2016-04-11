@@ -59,5 +59,8 @@ if (APPLE)
     )
 endif ()
 
+add_gtest (os_thread_test os_thread_test.cpp)
+target_link_libraries (os_thread_test common)
+
 add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
 target_link_libraries (trace_parser_flags_test common)
