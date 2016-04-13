@@ -411,11 +411,11 @@ endif()
 if (WIN32 OR APPLE)
     # On Windows/MacOSX, applications are usually installed on a directory of
     # their own
-    set (DOC_INSTALL_DIR doc)
+    set (DOC_DEFAULT_INSTALL_DIR doc)
     set (LIB_INSTALL_DIR lib)
     set (LIB_ARCH_INSTALL_DIR lib)
 else ()
-    set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
+    set (DOC_DEFAULT_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
     set (LIB_INSTALL_DIR lib${LIB_SUFFIX}/${CMAKE_PROJECT_NAME})
     if (ARCH_SUBDIR)
         set (LIB_ARCH_INSTALL_DIR lib/${ARCH_SUBDIR}/${CMAKE_PROJECT_NAME})
@@ -423,6 +423,10 @@ else ()
         set (LIB_ARCH_INSTALL_DIR lib${LIB_SUFFIX}/${CMAKE_PROJECT_NAME})
     endif ()
 endif ()
+
+# Allow customization of the doc installation dir (Slackware uses different
+# location)
+set (DOC_INSTALL_DIR "${DOC_DEFAULT_INSTALL_DIR}" CACHE STRING "Documentation installation directory")
 
 set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
