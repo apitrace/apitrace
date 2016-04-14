@@ -51,6 +51,7 @@ struct Context {
     GLuint activeProgram = 0;
     bool insideBeginEnd = false;
     bool insideList = false;
+    bool needsFlush = false;
 
     bool used = false;
 

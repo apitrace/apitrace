@@ -160,6 +160,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
     if (currentContext) {
         glFlush();
+        currentContext->needsFlush = false;
         if (!retrace::doubleBuffer) {
             frame_complete(call);
         }

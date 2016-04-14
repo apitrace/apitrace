@@ -375,6 +375,19 @@ class GlRetracer(Retracer):
         else:
             Retracer.invokeFunction(self, function)
 
+        # Ensure this context flushes before switching to another thread to
+        # prevent deadlock.
+        # TODO: Defer flushing until another thread actually invokes
+        # ClientWaitSync.
+        if function.name.startswith("glFenceSync"):
+            print '    if (currentContext) {'
+            print '        currentContext->needsFlush = true;'
+            print '    }'
+        if function.name in ("glFlush", "glFinish"):
+            print '    if (currentContext) {'
+            print '        currentContext->needsFlush = false;'
+            print '    }'
+
         if function.name == "glBegin":
             print '    if (currentContext) {'
             print '        currentContext->insideBeginEnd = true;'

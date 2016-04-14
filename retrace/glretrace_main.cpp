@@ -850,6 +850,10 @@ retrace::flushRendering(void) {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (currentContext) {
         glretrace::flushQueries();
+        if (currentContext->needsFlush) {
+            glFlush();
+            currentContext->needsFlush = false;
+        }
     }
 }
 
