@@ -37,10 +37,7 @@ namespace glretrace {
 
 struct Context {
     Context(glws::Context* context)
-        : wsContext(context),
-          drawable(0),
-          activeProgram(0),
-          used(false)
+        : wsContext(context)
     {
     }
 
@@ -49,15 +46,15 @@ struct Context {
     glws::Context* wsContext;
 
     // Bound drawable
-    glws::Drawable *drawable;
+    glws::Drawable *drawable = nullptr;
 
-    GLuint activeProgram;
+    GLuint activeProgram = 0;
     bool insideBeginEnd = false;
     bool insideList = false;
 
-    bool used;
+    bool used = false;
 
-    bool KHR_debug;
+    bool KHR_debug = false;
     GLsizei maxDebugMessageLength = 0;
 
     inline glfeatures::Profile
