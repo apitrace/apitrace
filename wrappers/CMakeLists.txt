@@ -56,6 +56,21 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/guids
 )
 
+if (NOT WIN32 AND NOT APPLE)
+    # Prevent symbol relocations internal to our wrapper library to be
+    # overwritten by the application.  And fail if there are missing
+    # symbols.
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic -Wl,-Bsymbolic-functions")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-Bsymbolic -Wl,-Bsymbolic-functions")
+
+    # Fail if there are missing symbols, except when using Address Sanitizer
+    # since libasan symbols are supposed to be preloaded.
+    if (NOT ENABLE_ASAN)
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,defs")
+    endif ()
+endif ()
+
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_convenience_library (trace
@@ -351,10 +366,6 @@ elseif (X11_FOUND)
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
-        # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.  And fail if there are missing
-        # symbols.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (glxtrace
@@ -402,10 +413,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     set_target_properties (egltrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
-        # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.  And fail if there are missing
-        # symbols.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (egltrace
