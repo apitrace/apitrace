@@ -338,6 +338,8 @@ namespace os {
     class thread_specific
     {
     private:
+        static_assert(sizeof(T) == sizeof(void *), "Size mismatch");
+
 #ifdef _WIN32
         DWORD dwTlsIndex;
 #else
@@ -513,17 +515,25 @@ namespace os {
 /**
  * Compiler TLS.
  *
+ * It's not portable to use for DLLs on Windows XP, or non-POD types.
+ *
  * See also:
  * - http://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Thread_002dLocal.html
  * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
+ * - https://msdn.microsoft.com/en-us/library/y5f6w579.aspx
  */
+#if defined(__GNUC__)
+#  define OS_THREAD_LOCAL __thread
+#elif defined(_MSC_VER)
+#  define OS_THREAD_LOCAL __declspec(thread)
+#else
+#  error
+#endif
+
 #if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0600
 #  define OS_THREAD_SPECIFIC(_type) os::thread_specific< _type >
-#elif defined(__GNUC__)
-#  define OS_THREAD_SPECIFIC(_type) __thread _type
-#elif defined(_MSC_VER)
-#  define OS_THREAD_SPECIFIC(_type) __declspec(thread) _type
 #else
-#  define OS_THREAD_SPECIFIC(_type) os::thread_specific< _type >
+#  define OS_THREAD_SPECIFIC(_type) OS_THREAD_LOCAL _type
 #endif
+
 #define OS_THREAD_SPECIFIC_PTR(_type) OS_THREAD_SPECIFIC(_type *)

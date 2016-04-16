@@ -30,8 +30,8 @@
 
 
 #include <string.h>
-#include <algorithm>
 
+#include <algorithm>
 #include <map>
 
 #include "os_thread.hpp"
@@ -144,7 +144,7 @@ Context::~Context()
 }
 
 
-OS_THREAD_SPECIFIC_PTR(Context)
+OS_THREAD_LOCAL Context *
 currentContextPtr;
 
 

@@ -91,7 +91,7 @@ extern glfeatures::Profile defaultProfile;
 
 extern bool supportsARBShaderObjects;
 
-extern OS_THREAD_SPECIFIC_PTR(Context)
+extern OS_THREAD_LOCAL Context *
 currentContextPtr;
 
 
