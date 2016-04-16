@@ -47,7 +47,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "os_thread.hpp"
 #include "glws.hpp"
 
 
@@ -78,8 +77,8 @@
 namespace glws {
 
 
-static OS_THREAD_SPECIFIC_PTR(NSAutoreleasePool)
-autoreleasePool;
+static __thread NSAutoreleasePool *
+autoreleasePool = nil;
 
 
 class CocoaVisual : public Visual
