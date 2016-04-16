@@ -104,6 +104,7 @@ private slots:
     void slotFoundFrameEnd(ApiTraceFrame *frame);
     void slotJumpToResult(ApiTraceCall *call);
     void replayTrace(bool dumpState, bool dumpThumbnails);
+    void updateSurfacesView();
 
 private:
     void initObjects();
@@ -113,6 +114,7 @@ private:
     void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
     void trimEvent();
+    void updateSurfacesView(const ApiTraceState &state);
     void fillStateForFrame();
 
     /* there's a difference between selected frame/call and
@@ -130,6 +132,7 @@ private:
     QString linkedAndroidTrace(const QString &localFile);
     void addSurface(const ApiTexture &image, QTreeWidgetItem *parent);
     void addSurface(const ApiFramebuffer &image, QTreeWidgetItem *parent);
+    void addSurface(const ApiSurface &surface, const QString &label, QTreeWidgetItem *parent);
     template <typename Surface>
     void addSurfaces(const QList<Surface> &images, const char *label);
 

@@ -215,8 +215,22 @@
         <attribute name="title">
          <string>Surfaces</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
-         <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="surfacesOpaqueCB">
+           <property name="text">
+            <string>opaque</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="surfacesAlphaCB">
+           <property name="text">
+            <string>alpha</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
           <widget class="QTreeWidget" name="surfacesTreeWidget">
            <column>
             <property name="text">
