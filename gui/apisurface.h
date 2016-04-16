@@ -23,9 +23,9 @@ public:
     void setFormatName(const QString &str);
 
     void setData(const QByteArray &data);
+    QImage calculateThumbnail(bool opaque, bool alpha) const;
 
     QByteArray data() const;
-    QImage thumb() const;
 
     static image::Image *imageFromData(const QByteArray &data);
     static QImage qimageFromRawImage(const image::Image *img,
@@ -35,13 +35,15 @@ public:
                                      bool alpha = false);
 
 private:
+
     QSize  m_size;
     QByteArray m_data;
-    QImage m_thumb;
     int m_depth;
     QString m_formatName;
-};
 
+    QImage calculateThumbnail(const QByteArray &data, bool opaque,
+                              bool alpha) const;
+};
 
 class ApiTexture : public ApiSurface
 {
