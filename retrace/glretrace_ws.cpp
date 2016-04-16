@@ -177,7 +177,15 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         exit(1);
     }
 
-    currentContextPtr = context;
+    if (context != currentContext) {
+        if (context) {
+            context->aquire();
+        }
+        currentContextPtr = context;
+        if (currentContext) {
+            currentContext->release();
+        }
+    }
 
     if (drawable && context) {
         context->drawable = drawable;

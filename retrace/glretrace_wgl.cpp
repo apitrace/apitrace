@@ -91,7 +91,7 @@ static void retrace_wglDeleteContext(trace::Call &call) {
         return;
     }
 
-    delete it->second;
+    it->second->release();
     
     context_map.erase(it);
 }
@@ -157,7 +157,7 @@ static void retrace_wglShareLists(trace::Call &call) {
 
         context_map[hglrc2] = new_context;
         
-        delete old_context;
+        old_context->release();
     }
 }
 

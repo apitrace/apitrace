@@ -35,13 +35,32 @@
 
 namespace glretrace {
 
-struct Context {
+class Context
+{
+public:
     Context(glws::Context* context)
         : wsContext(context)
     {
     }
 
+private:
+    unsigned refCount = 1;
     ~Context();
+
+public:
+    inline void
+    aquire(void) {
+        assert(refCount);
+        ++refCount;
+    }
+
+    inline void
+    release(void) {
+        assert(refCount);
+        if (--refCount == 0) {
+            delete this;
+        }
+    }
 
     glws::Context* wsContext;
 

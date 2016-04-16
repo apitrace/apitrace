@@ -123,7 +123,7 @@ static void retrace_glXDestroyContext(trace::Call &call) {
         return;
     }
 
-    delete it->second;
+    it->second->release();
 
     context_map.erase(it);
 }

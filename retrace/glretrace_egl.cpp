@@ -240,7 +240,7 @@ static void retrace_eglDestroyContext(trace::Call &call) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (it->second != currentContext) {
             // TODO: reference count
-            delete it->second;
+            it->second->release();
         }
         context_map.erase(it);
     }
