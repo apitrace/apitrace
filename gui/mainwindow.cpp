@@ -835,7 +835,7 @@ static void setValueOfSSBBItem(const ApiTraceState &state,
     auto bufferName = SSB["GL_SHADER_STORAGE_BUFFER_BINDING"].toInt();
 
     QString bindingText = QString("Binding %0").arg(bufferBindingIndex);
-    QStringList referencingShaders = {"GL_REFERENCED_BY_VERTEX_SHADER"};
+    QStringList referencingShaders;
 
     for(int i = 0; i < bufferItem->childCount(); ++i) {
         const auto &text = bufferItem->child(i)->text(0);
