@@ -61,6 +61,13 @@
 #define SA_RESTART 0 // QNX does not have SA_RESTART
 #endif
 
+#ifndef __has_feature
+#  define __has_feature(x) 0
+#endif
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#  include <sanitizer/asan_interface.h>
+#endif
+
 #include "os.hpp"
 #include "os_string.hpp"
 #include "os_backtrace.hpp"
@@ -403,6 +410,10 @@ setExceptionCallback(void (*callback)(void))
                 sigaction(sig,  &new_action, NULL);
             }
         }
+
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+    __asan_set_death_callback(callback);
+#endif
     }
 }
 
@@ -410,6 +421,9 @@ void
 resetExceptionCallback(void)
 {
     gCallback = NULL;
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+    __asan_set_death_callback(NULL);
+#endif
 }
 
 #ifdef __ANDROID__
