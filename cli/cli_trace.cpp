@@ -34,6 +34,10 @@
 #include <iostream>
 #include <fstream>
 
+#ifndef __has_feature
+#  define __has_feature(x) 0
+#endif
+
 #include "os_string.hpp"
 #include "os_process.hpp"
 #include "os_version.hpp"
@@ -187,8 +191,16 @@ traceProgram(trace::API api,
 #if defined(TRACE_VARIABLE)
         const char *oldEnvVarValue = getenv(TRACE_VARIABLE);
         if (oldEnvVarValue) {
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+            /* Ensure libasan.so is preloaded first. */
+            os::String tmp = oldEnvVarValue;
+            tmp.append(OS_PATH_SEP);
+            tmp.append(wrapperPath);
+            wrapperPath = tmp;
+#else
             wrapperPath.append(OS_PATH_SEP);
             wrapperPath.append(oldEnvVarValue);
+#endif
         }
 
         std::string ex;
