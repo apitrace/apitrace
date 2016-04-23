@@ -148,7 +148,9 @@ Additional requirements:
 
 ### CMake GUI ###
 
-To build with Visual Studio first invoke CMake GUI as:
+To build with Visual Studio first open a Command Prompt window (*not* Visual
+Studio Command Prompt window), change into the Apitrace source, and invoke
+CMake GUI as:
 
     cmake-gui -H. -Bbuild -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
 
