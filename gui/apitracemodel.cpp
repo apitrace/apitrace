@@ -75,7 +75,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
                         ", %1kb";
 
                 ApiFramebuffer fbo = frame->state()->colorBuffer();
-                QImage thumb = fbo.thumb();
+                QImage thumb = fbo.calculateThumbnail(false, false);
                 if (!thumb.isNull()) {
                     QByteArray ba;
                     QBuffer buffer(&ba);

@@ -2,6 +2,7 @@
 #include "thumbnail.h"
 
 #include <sstream>
+#include <memory>
 
 #include <QDebug>
 #include <QSysInfo>
@@ -31,28 +32,32 @@ struct ByteArrayBuf : public std::streambuf
     }
 };
 
-void ApiSurface::setData(const QByteArray &data)
+QImage ApiSurface::calculateThumbnail(bool opaque, bool alpha) const
 {
-    m_data = data;
+    return m_data.isEmpty() ? QImage{} : calculateThumbnail(m_data, opaque, alpha);
+}
 
+QImage ApiSurface::calculateThumbnail(const QByteArray &data, bool opaque,
+                                      bool alpha) const
+{
     /*
      * We need to do the conversion to create the thumbnail
      */
-    image::Image *image = imageFromData(data);
+    std::unique_ptr<image::Image> image{imageFromData(data)};
     Q_ASSERT(image);
-    QImage img = qimageFromRawImage(image);
-    m_thumb = thumbnail(img);
-    delete image;
+    QImage img = qimageFromRawImage(image.get(), DefaultLowerValue,
+                                    DefaultUpperValue, opaque, alpha);
+    return thumbnail(img);
+}
+
+void ApiSurface::setData(const QByteArray &data)
+{
+    m_data = data;
 }
 
 QByteArray ApiSurface::data() const
 {
     return m_data;
-}
-
-QImage ApiSurface::thumb() const
-{
-    return m_thumb;
 }
 
 int ApiSurface::depth() const

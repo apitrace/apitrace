@@ -753,9 +753,10 @@ variantToItem(const QString &key, const QVariant &var,
 static void addSurfaceItem(const ApiSurface &surface,
                            const QString &label,
                            QTreeWidgetItem *parent,
-                           QTreeWidget *tree)
+                           QTreeWidget *tree,
+                           bool opaque, bool alpha)
 {
-    QIcon icon(QPixmap::fromImage(surface.thumb()));
+    QIcon icon(QPixmap::fromImage(surface.calculateThumbnail(opaque, alpha)));
     QTreeWidgetItem *item = new QTreeWidgetItem(parent);
     item->setIcon(0, icon);
 
@@ -785,11 +786,19 @@ static void addSurfaceItem(const ApiSurface &surface,
 }
 
 void MainWindow::addSurface(const ApiTexture &image, QTreeWidgetItem *parent) {
-    addSurfaceItem(image, image.label(), parent, m_ui.surfacesTreeWidget);
+    addSurface(image, image.label(), parent);
 }
 
 void MainWindow::addSurface(const ApiFramebuffer &fbo, QTreeWidgetItem *parent) {
-    addSurfaceItem(fbo, fbo.type(), parent, m_ui.surfacesTreeWidget);
+    addSurface(fbo, fbo.type(), parent);
+}
+
+void MainWindow::addSurface(const ApiSurface &surface, const QString &label,
+                            QTreeWidgetItem *parent)
+{
+    addSurfaceItem(surface, label, parent,
+                   m_ui.surfacesTreeWidget, m_ui.surfacesOpaqueCB->isChecked(),
+                   m_ui.surfacesAlphaCB->isChecked());
 }
 
 template <typename Surface>
@@ -884,6 +893,29 @@ static void setValueOfSSBBItem(const ApiTraceState &state,
     }
 }
 
+void MainWindow::updateSurfacesView()
+{
+    updateSurfacesView(*m_selectedEvent->state());
+}
+
+void MainWindow::updateSurfacesView(const ApiTraceState &state)
+{
+    const QList<ApiTexture> &textures =
+        state.textures();
+    const QList<ApiFramebuffer> &fbos =
+        state.framebuffers();
+
+    m_ui.surfacesTreeWidget->clear();
+    if (textures.isEmpty() && fbos.isEmpty()) {
+        m_ui.surfacesTab->setDisabled(false);
+    } else {
+        m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
+        addSurfaces(textures, "Textures");
+        addSurfaces(fbos, "Framebuffers");
+        m_ui.surfacesTab->setEnabled(true);
+    }
+}
+
 void MainWindow::fillStateForFrame()
 {
     if (!m_selectedEvent || !m_selectedEvent->hasState()) {
@@ -926,20 +958,7 @@ void MainWindow::fillStateForFrame()
     variantMapToItems(state.buffers(), QVariantMap(), buffersItems);
     m_ui.buffersTreeWidget->insertTopLevelItems(0, buffersItems);
 
-    const QList<ApiTexture> &textures =
-        state.textures();
-    const QList<ApiFramebuffer> &fbos =
-        state.framebuffers();
-
-    m_ui.surfacesTreeWidget->clear();
-    if (textures.isEmpty() && fbos.isEmpty()) {
-        m_ui.surfacesTab->setDisabled(false);
-    } else {
-        m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
-        addSurfaces(textures, "Textures");
-        addSurfaces(fbos, "Framebuffers");
-        m_ui.surfacesTab->setEnabled(true);
-    }
+    updateSurfacesView(state);
     m_ui.stateDock->show();
 
     {
@@ -1021,7 +1040,9 @@ void MainWindow::showSelectedSurface()
         return;
     }
 
-    ImageViewer *viewer = new ImageViewer(this);
+    ImageViewer *viewer =
+        new ImageViewer(this, m_ui.surfacesOpaqueCB->isChecked(),
+                        m_ui.surfacesAlphaCB->isChecked());
 
     QString title;
     if (selectedCall()) {
@@ -1247,6 +1268,11 @@ void MainWindow::initConnections()
             m_profileDialog, SLOT(show()));
     connect(m_profileDialog, SIGNAL(jumpToCall(int)),
             this, SLOT(slotJumpTo(int)));
+
+    connect(m_ui.surfacesOpaqueCB, SIGNAL(stateChanged(int)), this,
+            SLOT(updateSurfacesView()));
+    connect(m_ui.surfacesAlphaCB, SIGNAL(stateChanged(int)), this,
+            SLOT(updateSurfacesView()));
 }
 
 void MainWindow::initRetraceConnections()

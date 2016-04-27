@@ -10,11 +10,13 @@
 #include <QPixmap>
 #include <QScrollBar>
 
-ImageViewer::ImageViewer(QWidget *parent)
+ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     : QDialog(parent),
       m_image(0)
 {
     setupUi(this);
+    opaqueCheckBox->setChecked(opaque);
+    alphaCheckBox->setChecked(alpha);
 
     connect(lowerSpinBox, SIGNAL(valueChanged(double)),
             SLOT(slotUpdate()));
@@ -65,9 +67,7 @@ void ImageViewer::setData(const QByteArray &data)
 {
     delete m_image;
     m_image = ApiSurface::imageFromData(data);
-    m_convertedImage = ApiSurface::qimageFromRawImage(m_image);
-    m_pixelWidget->setSurface(m_convertedImage);
-    updateGeometry();
+    slotUpdate();
 }
 
 void ImageViewer::slotUpdate()

@@ -14,7 +14,7 @@ class ImageViewer : public QDialog, public Ui_ImageViewer
 {
     Q_OBJECT
 public:
-    ImageViewer(QWidget *parent = 0);
+    ImageViewer(QWidget *parent = 0, bool opaque = false, bool alpha = false);
     ~ImageViewer();
 
     void setData(const QByteArray &data);
