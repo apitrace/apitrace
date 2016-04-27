@@ -100,7 +100,12 @@ class D3D9Tracer(DllTracer):
             else:
                 # FIXME: handle recursive locks
                 assert method.getArgByName('Level') is None
-                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+                if method.name == 'Lock':
+                    # Ignore D3DLOCK_READONLY for buffers.
+                    # https://github.com/apitrace/apitrace/issues/435
+                    print '    if (SUCCEEDED(_result)) {'
+                else:
+                    print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
                 print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
                 print '    } else {'
                 print '        m_pbData = NULL;'
