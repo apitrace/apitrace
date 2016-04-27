@@ -57,7 +57,7 @@ class D3D9Tracer(DllTracer):
         if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
-            if interface.name in ['IDirect3DTexture9']:
+            if interface.base.name == 'IDirect3DBaseTexture9':
                 variables += [
                     ('std::map<UINT, std::pair<size_t, VOID *> >', '_MappedData', 'std::map<UINT, std::pair<size_t, VOID *> >()'),
                 ]
@@ -71,13 +71,15 @@ class D3D9Tracer(DllTracer):
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            if interface.name in ['IDirect3DTexture9']:
+            if interface.base.name == 'IDirect3DBaseTexture9':
+                assert method.getArgByName('Level') is not None
                 print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(Level);'
                 print '    if (it != _MappedData.end()) {'
                 self.emit_memcpy('(LPBYTE)it->second.second', 'it->second.first')
                 print '        _MappedData.erase(it);'
                 print '    }'
             else:
+                assert method.getArgByName('Level') is None
                 print '    if (_MappedSize && m_pbData) {'
                 self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
                 print '    }'
@@ -85,7 +87,8 @@ class D3D9Tracer(DllTracer):
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
-            if interface.name in ['IDirect3DTexture9']:
+            if interface.base.name == 'IDirect3DBaseTexture9':
+                assert method.getArgByName('Level') is not None
                 print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
                 print '        size_t mappedSize;'
                 print '        VOID * pbData;'
@@ -96,6 +99,7 @@ class D3D9Tracer(DllTracer):
                 print '    }'
             else:
                 # FIXME: handle recursive locks
+                assert method.getArgByName('Level') is None
                 print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
                 print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
                 print '    } else {'
