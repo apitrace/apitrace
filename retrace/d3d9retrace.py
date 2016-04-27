@@ -236,7 +236,12 @@ class D3DRetracer(Retracer):
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
-            print '    if (!(Flags & D3DLOCK_READONLY)) {'
+            if method.name == 'Lock':
+                # Ignore D3DLOCK_READONLY for buffers.
+                # https://github.com/apitrace/apitrace/issues/435
+                print '    if (true) {'
+            else:
+                print '    if (!(Flags & D3DLOCK_READONLY)) {'
             print '        _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
             print '    }'
             print '    if (_MappedSize) {'
