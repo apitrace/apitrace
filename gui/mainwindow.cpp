@@ -815,8 +815,36 @@ void MainWindow::addSurfaces(const QList<Surface> &surfaces, const char *label) 
     }
 }
 
-static void setValueOfSSBBItem(const ApiTraceState &state,
-                               QTreeWidgetItem *bufferItem)
+namespace {
+QStringList shortenReferencingShaderNames(QStringList referencingShaders)
+{
+    static QMap<QString, QString> map = {
+        {"GL_REFERENCED_BY_VERTEX_SHADER", "VS"},
+        {"GL_REFERENCED_BY_TESS_CONTROL_SHADER", "TCS"},
+        {"GL_REFERENCED_BY_TESS_EVALUATION_SHADER", "TES"},
+        {"GL_REFERENCED_BY_GEOMETRY_SHADER", "GS"},
+        {"GL_REFERENCED_BY_FRAGMENT_SHADER", "FS"},
+        {"GL_REFERENCED_BY_COMPUTE_SHADER", "CS"}};
+    for (auto &referencingShader : referencingShaders) {
+        assert(map.count(referencingShader));
+        referencingShader = map[referencingShader];
+    }
+    return referencingShaders;
+}
+
+QStringList getReferencingShaders(QTreeWidgetItem *bufferItem)
+{
+    QStringList referencingShaders;
+    for (int i = 0; i < bufferItem->childCount(); ++i) {
+        const auto &text = bufferItem->child(i)->text(0);
+        if (text.startsWith("GL_REFERENCED_BY_") && text.endsWith("_SHADER")) {
+            referencingShaders.append(text);
+        }
+    }
+    return referencingShaders;
+}
+
+void setValueOfSSBBItem(const ApiTraceState &state, QTreeWidgetItem *bufferItem)
 {
     assert(bufferItem);
     const auto &bufferBindingItem = bufferItem->child(0);
@@ -843,28 +871,12 @@ static void setValueOfSSBBItem(const ApiTraceState &state,
     assert(SSB.count("GL_SHADER_STORAGE_BUFFER_BINDING"));
     auto bufferName = SSB["GL_SHADER_STORAGE_BUFFER_BINDING"].toInt();
 
+    // Build overview text like:
+    // "Binding 1 in VS, FS; Buffer 16 (6 Bytes starting at 2)"
     QString bindingText = QString("Binding %0").arg(bufferBindingIndex);
-    QStringList referencingShaders = {"GL_REFERENCED_BY_VERTEX_SHADER"};
 
-    for(int i = 0; i < bufferItem->childCount(); ++i) {
-        const auto &text = bufferItem->child(i)->text(0);
-        if (text.startsWith("GL_REFERENCED_BY_") && text.endsWith("_SHADER")) {
-            referencingShaders.append(text);
-        }
-    }
-
-    static QMap<QString, QString> map = {
-            {"GL_REFERENCED_BY_VERTEX_SHADER", "VS"},
-            {"GL_REFERENCED_BY_TESS_CONTROL_SHADER", "TCS"},
-            {"GL_REFERENCED_BY_TESS_EVALUATION_SHADER", "TES"},
-            {"GL_REFERENCED_BY_GEOMETRY_SHADER", "GS"},
-            {"GL_REFERENCED_BY_FRAGMENT_SHADER", "FS"},
-            {"GL_REFERENCED_BY_COMPUTE_SHADER", "CS"}};
-    // shorten list
-    for(auto &referencingShader: referencingShaders) {
-        assert(map.count(referencingShader));
-        referencingShader = map[referencingShader];
-    }
+    QStringList referencingShaders =
+        shortenReferencingShaderNames(getReferencingShaders(bufferItem));
     if (!referencingShaders.empty()) {
         bindingText += " in ";
         bindingText += referencingShaders.join(", ");
@@ -891,6 +903,7 @@ static void setValueOfSSBBItem(const ApiTraceState &state,
     } else {
         bufferItem->setText(1, bindingText + "; " + bufferText);
     }
+}
 }
 
 void MainWindow::updateSurfacesView()
