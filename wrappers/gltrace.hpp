@@ -89,24 +89,19 @@ public:
     glfeatures::Extensions extensions;
     glfeatures::Features features;
 
-    bool user_arrays;
-    bool user_arrays_nv;
-    bool userArraysOnBegin;
-    unsigned retain_count;
+    bool user_arrays = false;
+    bool user_arrays_nv = false;
+    bool userArraysOnBegin = false;
+    unsigned retain_count = 0;
 
     // Whether it has been bound before
-    bool bound;
+    bool bound = false;
 
     // TODO: This will fail for buffers shared by multiple contexts.
     std::map <GLuint, Buffer> buffers;
 
     Context(void) :
-        profile(glfeatures::API_GL, 1, 0),
-        user_arrays(false),
-        user_arrays_nv(false),
-        userArraysOnBegin(false),
-        retain_count(0),
-        bound(false)
+        profile(glfeatures::API_GL, 1, 0)
     { }
 
     inline bool
