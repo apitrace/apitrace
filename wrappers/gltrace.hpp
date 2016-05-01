@@ -96,6 +96,8 @@ public:
 
     // Whether it has been bound before
     bool bound = false;
+    // Whether it has been bound to a drawable
+    bool boundDrawable = false;
 
     // TODO: This will fail for buffers shared by multiple contexts.
     std::map <GLuint, Buffer> buffers;
