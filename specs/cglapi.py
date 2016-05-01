@@ -93,10 +93,11 @@ CGLPixelFormatAttributes = [
     ("kCGLPFAMPSafe", None),
     ("kCGLPFAMultiScreen", None),
     ("kCGLPFAFullScreen", None),
+    (1262, None),  # XXX: Undocumented, but looks like a boolean
 ]
 
 CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute",
-    [attrib for attrib, _ in CGLPixelFormatAttributes]
+    [attrib for attrib, _ in CGLPixelFormatAttributes if isinstance(attrib, str)]
 )
 
 CGLPixelFormatAttribs = AttribArray(
