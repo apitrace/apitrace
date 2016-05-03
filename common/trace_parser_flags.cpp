@@ -139,6 +139,8 @@ callFlagTable[] = {
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },
+    { "eglSwapBuffersWithDamageEXT",                   CALL_FLAG_SWAPBUFFERS },
+    { "eglSwapBuffersWithDamageKHR",                   CALL_FLAG_SWAPBUFFERS },
     { "glAreProgramsResidentNV",                       CALL_FLAG_NO_SIDE_EFFECTS },
     { "glAreTexturesResident",                         CALL_FLAG_NO_SIDE_EFFECTS },
     { "glAreTexturesResidentEXT",                      CALL_FLAG_NO_SIDE_EFFECTS },
