@@ -48,20 +48,24 @@ EGLBoolean = Enum("EGLBoolean", [
 
 EGLint = Alias("EGLint", Int32)
 
-# an alias of EGLenum
+# An EGLenum disguised as an int
 EGLint_enum = Alias("EGLint", EGLenum)
-EGLattrib = EGLint_enum
+EGLAttrib = Alias("EGLAttrib", IntPtr)
+
+EGLSync = Opaque("EGLSync")
+EGLImage = Opaque("EGLImage")
+EGLTime = Alias("EGLTime", UInt64)
 
 # EGL_KHR_image_base
-EGLImageKHR = Opaque("EGLImageKHR")
+EGLImageKHR = Alias("EGLImageKHR", EGLImage)
 
 # EGL_KHR_reusable_sync
-EGLSyncKHR = Opaque("EGLSyncKHR")
-EGLTimeKHR = Alias("EGLTimeKHR", UInt64)
+EGLSyncKHR = Alias("EGLSyncKHR", EGLSync)
+EGLTimeKHR = Alias("EGLTimeKHR", EGLTime)
 
 # EGL_NV_sync
-EGLSyncNV = Alias("EGLSyncNV", EGLSyncKHR)
-EGLTimeNV = Alias("EGLTimeNV", EGLTimeKHR)
+EGLSyncNV = Alias("EGLSyncNV", EGLSync)
+EGLTimeNV = Alias("EGLTimeNV", EGLTime)
 
 # EGL_HI_clientpixmap
 EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
@@ -99,10 +103,13 @@ EGLVGColorspace = FakeEnum(Int, ['EGL_VG_COLORSPACE_sRGB', 'EGL_VG_COLORSPACE_LI
 EGLTextureFormat = FakeEnum(Int, ['EGL_NO_TEXTURE', 'EGL_TEXTURE_RGB', 'EGL_TEXTURE_RGBA'])
 EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE'])
 
-def EGLAttribArray(values):
+def EGLIntArray(values):
     return AttribArray(Const(EGLint_enum), values, terminator = 'EGL_NONE')
 
-EGLConfigAttribs = EGLAttribArray([
+def EGLAttribArray(values):
+    return AttribArray(Const(EGLAttrib), values, terminator = 'EGL_NONE')
+
+EGLConfigAttribs = EGLIntArray([
     ('EGL_ALPHA_MASK_SIZE', UInt),
     ('EGL_ALPHA_SIZE', UInt),
     ('EGL_BIND_TO_TEXTURE_RGB', EGLBoolean),
@@ -133,17 +140,17 @@ EGLConfigAttribs = EGLAttribArray([
     ('EGL_TRANSPARENT_BLUE_VALUE ', Int)
 ])
 
-EGLWindowsSurfaceAttribs = EGLAttribArray([
+EGLWindowsSurfaceAttribs = EGLIntArray([
     ('EGL_RENDER_BUFFER', FakeEnum(Int, ['EGL_SINGLE_BUFFER', 'EGL_BACK_BUFFER'])),
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace)])
 
-EGLPixmapSurfaceAttribs = EGLAttribArray([
+EGLPixmapSurfaceAttribs = EGLIntArray([
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace)
 ])
 
-EGLPbufferAttribs = EGLAttribArray([
+EGLPbufferAttribs = EGLIntArray([
     ('EGL_HEIGHT', Int),
     ('EGL_LARGEST_PBUFFER', EGLBoolean),
     ('EGL_MIPMAP_TEXTURE', UInt),
@@ -154,13 +161,13 @@ EGLPbufferAttribs = EGLAttribArray([
     ('EGL_WIDTH', Int)
 ])
 
-EGLPbufferFromClientBufferAttribs = EGLAttribArray([
+EGLPbufferFromClientBufferAttribs = EGLIntArray([
     ('EGL_MIPMAP_TEXTURE', EGLBoolean),
     ('EGL_TEXTURE_FORMAT', EGLTextureFormat),
     ('EGL_TEXTURE_TARGET', EGLTextureTarget)
 ])
 
-EGLContextAttribs = EGLAttribArray([
+EGLContextAttribs = EGLIntArray([
     ('EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT', EGLBoolean),
     ('EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT', EGLenum),
     ('EGL_CONTEXT_MAJOR_VERSION', Int), # Alias for EGL_CONTEXT_CLIENT_VERSION
@@ -177,21 +184,25 @@ EGLContextAttribs = EGLAttribArray([
     ('EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY', EGLenum),
 ])
 
-EGLDrmImageMesaAttribs = EGLAttribArray([
+EGLDrmImageMesaAttribs = EGLIntArray([
     ('EGL_DRM_BUFFER_FORMAT_MESA', FakeEnum(Int, ['EGL_DRM_BUFFER_FORMAT_ARGB32_MESA'])),
     ('EGL_DRM_BUFFER_USE_MESA', Flags(Int, ['EGL_DRM_BUFFER_USE_SCANOUT_MESA', 'EGL_DRM_BUFFER_USE_SHARE_MESA']))
 ])
 
-EGLLockSurfaceKHRAttribs = EGLAttribArray([
+EGLLockSurfaceKHRAttribs = EGLIntArray([
     ('EGL_MAP_PRESERVE_PIXELS_KHR', EGLBoolean),
     ('EGL_LOCK_USAGE_HINT_KHR', Flags(Int, ['EGL_READ_SURFACE_BIT_KHR', 'EGL_WRITE_SURFACE_BIT_KHR']))
 ])
 
-EGLFenceSyncNVAttribs = EGLAttribArray([
+EGLFenceSyncNVAttribs = EGLIntArray([
     ('EGL_SYNC_STATUS_NV', Flags(Int, ['EGL_SIGNALED_NV', 'EGL_UNSIGNALED_NV']))
 ])
 
 EGLPlatformDisplayAttribs = EGLAttribArray([
+    ('EGL_PLATFORM_X11_SCREEN_EXT', Int),
+])
+
+EGLPlatformDisplayAttribsEXT = EGLIntArray([
     ('EGL_PLATFORM_X11_SCREEN_EXT', Int),
 ])
 
@@ -211,27 +222,27 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreateWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativeWindowType, "win"), (EGLWindowsSurfaceAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx")]),
     GlFunction(EGLBoolean, "eglDestroySurface", [(EGLDisplay, "dpy"), (EGLSurface, "surface")]),
-    GlFunction(EGLBoolean, "eglGetConfigAttrib", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglGetConfigAttrib", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
     GlFunction(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), Out(Array(EGLConfig, "*num_config"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     GlFunction(EGLDisplay, "eglGetCurrentDisplay", [], sideeffects=False),
-    GlFunction(EGLSurface, "eglGetCurrentSurface", [(EGLattrib, "readdraw")], sideeffects=False),
+    GlFunction(EGLSurface, "eglGetCurrentSurface", [(EGLint_enum, "readdraw")], sideeffects=False),
     GlFunction(EGLDisplay, "eglGetDisplay", [(EGLNativeDisplayType, "display_id")]),
     GlFunction(EGLint_enum, "eglGetError", [], sideeffects=False),
     GlFunction(EGLProc, "eglGetProcAddress", [(ConstCString, "procname")]),
     GlFunction(EGLBoolean, "eglInitialize", [(EGLDisplay, "dpy"), Out(Pointer(EGLint), "major"), Out(Pointer(EGLint), "minor")]),
     GlFunction(EGLBoolean, "eglMakeCurrent", [(EGLDisplay, "dpy"), (EGLSurface, "draw"), (EGLSurface, "read"), (EGLContext, "ctx")]),
-    GlFunction(EGLBoolean, "eglQueryContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQueryContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
     GlFunction(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLint_enum, "name")], sideeffects=False),
-    GlFunction(EGLBoolean, "eglQuerySurface", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQuerySurface", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
     GlFunction(EGLBoolean, "eglSwapBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface")]),
     GlFunction(EGLBoolean, "eglTerminate", [(EGLDisplay, "dpy")]),
     GlFunction(EGLBoolean, "eglWaitGL", []),
-    GlFunction(EGLBoolean, "eglWaitNative", [(EGLattrib, "engine")]),
+    GlFunction(EGLBoolean, "eglWaitNative", [(EGLint_enum, "engine")]),
 
     # EGL_VERSION_1_1
-    GlFunction(EGLBoolean, "eglBindTexImage", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLattrib, "buffer")]),
-    GlFunction(EGLBoolean, "eglReleaseTexImage", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLattrib, "buffer")]),
-    GlFunction(EGLBoolean, "eglSurfaceAttrib", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLattrib, "attribute"), (EGLint, "value")]),
+    GlFunction(EGLBoolean, "eglBindTexImage", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "buffer")]),
+    GlFunction(EGLBoolean, "eglReleaseTexImage", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "buffer")]),
+    GlFunction(EGLBoolean, "eglSurfaceAttrib", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "attribute"), (EGLint, "value")]),
     GlFunction(EGLBoolean, "eglSwapInterval", [(EGLDisplay, "dpy"), (EGLint, "interval")]),
 
     # EGL_VERSION_1_2
@@ -244,14 +255,25 @@ eglapi.addFunctions([
     # EGL_VERSION_1_4
     GlFunction(EGLContext, "eglGetCurrentContext", [], sideeffects=False),
 
+    # EGL_VERSION_1_5
+    GlFunction(EGLSync, "eglCreateSync", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLBoolean, "eglDestroySync", [(EGLDisplay, "dpy"), (EGLSync, "sync")]),
+    GlFunction(EGLint, "eglClientWaitSync", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint, "flags"), (EGLTime, "timeout")]),
+    GlFunction(EGLBoolean, "eglGetSyncAttrib", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLAttrib), "value")], sideeffects=False),
+    GlFunction(EGLImage, "eglCreateImage", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLAttribArray([('EGL_IMAGE_PRESERVED', EGLBoolean)]), "attrib_list")]),
+    GlFunction(EGLBoolean, "eglDestroyImage", [(EGLDisplay, "dpy"), (EGLImage, "image")]),
+    GlFunction(EGLDisplay, "eglGetPlatformDisplay", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribs, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLBoolean, "eglWaitSync", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint, "flags")]),
 
     # EGL_ANGLE_query_surface_pointer
-    GlFunction(EGLBoolean, "eglQuerySurfacePointerANGLE", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLattrib, "attribute"), Out(Pointer(OpaquePointer(Void)), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQuerySurfacePointerANGLE", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "attribute"), Out(Pointer(OpaquePointer(Void)), "value")], sideeffects=False),
 
     # EGL_EXT_platform_base
-    GlFunction(EGLDisplay, "eglGetPlatformDisplayEXT", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribs, "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreatePlatformWindowSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLAttribArray([]), "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLDisplay, "eglGetPlatformDisplayEXT", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribsEXT, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformWindowSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLIntArray([]), "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLIntArray([]), "attrib_list")]),
 
     # EGL_EXT_swap_buffers_with_damage
     GlFunction(EGLBoolean, "eglSwapBuffersWithDamageEXT", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
@@ -260,13 +282,13 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreatePixmapSurfaceHI", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (Pointer(EGLClientPixmapHI), "pixmap")]),
 
     # EGL_KHR_fence_sync
-    GlFunction(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLIntArray([]), "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroySyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync")]),
     GlFunction(EGLint, "eglClientWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags"), (EGLTimeKHR, "timeout")]),
-    GlFunction(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     # EGL_KHR_image
-    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLAttribArray([('EGL_IMAGE_PRESERVED_KHR', EGLBoolean)]), "attrib_list")]),
+    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLIntArray([('EGL_IMAGE_PRESERVED_KHR', EGLBoolean)]), "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
 
     # EGL_KHR_image_base
@@ -281,13 +303,16 @@ eglapi.addFunctions([
     # EGL_KHR_swap_buffers_with_damage
     GlFunction(EGLBoolean, "eglSwapBuffersWithDamageKHR", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
 
+    # EGL_KHR_wait_sync
+    GlFunction(EGLint, "eglWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags")]),
+
     # EGL_NV_sync
     GlFunction(EGLSyncNV, "eglCreateFenceSyncNV", [(EGLDisplay, "dpy"), (EGLenum, "condition"), (EGLFenceSyncNVAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroySyncNV", [(EGLSyncNV, "sync")]),
     GlFunction(EGLBoolean, "eglFenceNV", [(EGLSyncNV, "sync")]),
     GlFunction(EGLint, "eglClientWaitSyncNV", [(EGLSyncNV, "sync"), (EGLint, "flags"), (EGLTimeNV, "timeout")]),
     GlFunction(EGLBoolean, "eglSignalSyncNV", [(EGLSyncNV, "sync"), (EGLenum, "mode")]),
-    GlFunction(EGLBoolean, "eglGetSyncAttribNV", [(EGLSyncNV, "sync"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglGetSyncAttribNV", [(EGLSyncNV, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     # EGL_MESA_drm_image
     GlFunction(EGLImageKHR, "eglCreateDRMImageMESA", [(EGLDisplay, "dpy"), (EGLDrmImageMesaAttribs, "attrib_list")]),
