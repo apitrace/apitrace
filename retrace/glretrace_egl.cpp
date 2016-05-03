@@ -316,6 +316,8 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglWaitNative", &retrace::ignore},
     {"eglReleaseThread", &retrace::ignore},
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
+    {"eglSwapBuffersWithDamageEXT", &retrace_eglSwapBuffers},  // ignores additional params
+    {"eglSwapBuffersWithDamageKHR", &retrace_eglSwapBuffers},  // ignores additional params
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
     {"eglCreateImageKHR", &retrace::ignore},
