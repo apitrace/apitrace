@@ -67,7 +67,13 @@ public:
     // Bound drawable
     glws::Drawable *drawable = nullptr;
 
-    GLuint activeProgram = 0;
+    // Active program (unswizzled) for profiling
+    GLuint currentUserProgram = 0;
+
+    // Current program (swizzled) for uniform swizzling
+    GLuint currentProgram = 0;
+    GLuint currentPipeline = 0;
+
     bool insideBeginEnd = false;
     bool insideList = false;
     bool needsFlush = false;

@@ -280,7 +280,7 @@ beginProfile(trace::Call &call, bool isDraw) {
             }
             if (isLastPass() && curMetricBackend) {
                 Context *currentContext = getCurrentContext();
-                GLuint program = currentContext ? currentContext->activeProgram : 0;
+                GLuint program = currentContext ? currentContext->currentUserProgram : 0;
                 unsigned eventId = profilingBoundariesIndex[QUERY_BOUNDARY_CALL]++;
                 ProfilerCall::data callData = {false,
                                                call.no,
@@ -305,7 +305,7 @@ beginProfile(trace::Call &call, bool isDraw) {
     query.isDraw = isDraw;
     query.call = call.no;
     query.sig = call.sig;
-    query.program = currentContext ? currentContext->activeProgram : 0;
+    query.program = currentContext ? currentContext->currentUserProgram : 0;
 
     glGenQueries(NUM_QUERIES, query.ids);
 

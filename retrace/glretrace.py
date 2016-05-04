@@ -266,12 +266,6 @@ class GlRetracer(Retracer):
             print r'            retrace::warning(call) << "failed to get mapped pointer\n";'
             print r'        }'
 
-        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
-            # Note if glBindProgramPipeline has ever been called
-            print r'    if (pipeline) {'
-            print r'        _pipelineHasBeenBound = true;'
-            print r'    }'
-
         if function.name.startswith('glCopyImageSubData'):
             print r'    if (srcTarget == GL_RENDERBUFFER || dstTarget == GL_RENDERBUFFER) {'
             print r'        retrace::warning(call) << " renderbuffer targets unsupported (https://github.com/apitrace/apitrace/issues/404)\n";'
@@ -289,10 +283,15 @@ class GlRetracer(Retracer):
             function.name.startswith('glDispatchCompute')
         )
 
-        # Keep track of active program for call lists
+        # Keep track of current program/pipeline
         if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
             print r'    if (currentContext) {'
-            print r'        currentContext->activeProgram = call.arg(0).toUInt();'
+            print r'        currentContext->currentUserProgram = call.arg(0).toUInt();'
+            print r'        currentContext->currentProgram = %s;' % function.args[0].name
+            print r'    }'
+        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
+            print r'    if (currentContext) {'
+            print r'        currentContext->currentPipeline = %s;' % function.args[0].name
             print r'    }'
 
         # Only profile if not inside a list as the queries get inserted into list
@@ -574,9 +573,7 @@ if __name__ == '__main__':
 #include "glproc.hpp"
 #include "glretrace.hpp"
 #include "glstate.hpp"
-
-
-static bool _pipelineHasBeenBound = false;
+#include "glsize.hpp"
 
 
 static GLint
@@ -597,18 +594,13 @@ _getActiveProgram(void)
 {
     GLint program = -1;
     glretrace::Context *currentContext = glretrace::getCurrentContext();
-    if (currentContext && currentContext->insideList) {
-        // glUseProgram & glUseProgramObjectARB are display-list-able
-        program = _program_map[currentContext->activeProgram];
-    } else {
-        GLint pipeline = 0;
-        if (_pipelineHasBeenBound) {
-            glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
-        }
+    if (currentContext) {
+        GLint pipeline = currentContext->currentPipeline;
         if (pipeline) {
             glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);
         } else {
-            glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+            program = currentContext->currentProgram;
+            assert(program == _glGetInteger(GL_CURRENT_PROGRAM));
         }
     }
     return program;
@@ -627,15 +619,12 @@ _validateActiveProgram(trace::Call &call)
         return;
     }
 
-    GLint pipeline = 0;
-    if (_pipelineHasBeenBound) {
-        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
-    }
+    GLint pipeline = currentContext->currentPipeline;
     if (pipeline) {
         // TODO
     } else {
-        GLint program = 0;
-        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        GLint program = currentContext->currentProgram;
+        assert(program == _glGetInteger(GL_CURRENT_PROGRAM));
         if (!program) {
             return;
         }
