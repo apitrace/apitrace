@@ -983,7 +983,7 @@ parameters = [
     ("",	X,	1,	"GL_UNKNOWN_CONTEXT_RESET"),	# 0x8255
     ("glGet",	E,	1,	"GL_RESET_NOTIFICATION_STRATEGY"),	# 0x8256
     ("glGetProgram",	B,	1,	"GL_PROGRAM_BINARY_RETRIEVABLE_HINT"),	# 0x8257
-    ("",	X,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
+    ("glGetProgram",	B,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
     ("glGet",	I,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
     ("glGet",	I,	1,	"GL_PROGRAM_PIPELINE_BINDING"),	# 0x825A
     ("glGet",	I,	1,	"GL_MAX_VIEWPORTS"),	# 0x825B
