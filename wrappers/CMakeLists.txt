@@ -54,6 +54,7 @@ include_directories (
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/lib/guids
+    ${CMAKE_SOURCE_DIR}/thirdparty/crc32c
 )
 
 if (NOT WIN32 AND NOT APPLE)
@@ -75,10 +76,13 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_convenience_library (trace
     assert.cpp
+    memtrace.hpp
+    memtrace.cpp
 )
 target_link_libraries (trace
     common
     guids
+    crc32c
     ${SNAPPY_LIBRARIES}
 )
 
