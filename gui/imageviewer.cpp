@@ -2,7 +2,7 @@
 #include "pixelwidget.h"
 #include "apisurface.h"
 
-#include "image/image.hpp"
+#include "image.hpp"
 
 #include <QDebug>
 #include <QDesktopWidget>

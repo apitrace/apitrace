@@ -4,6 +4,7 @@ include_directories (
 )
 
 add_library (image STATIC
+    image.hpp
     image_bmp.cpp
     image_png.cpp
     image_pnm.cpp

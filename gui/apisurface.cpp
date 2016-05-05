@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QSysInfo>
 
-#include "image/image.hpp"
+#include "image.hpp"
 
 
 ApiSurface::ApiSurface()

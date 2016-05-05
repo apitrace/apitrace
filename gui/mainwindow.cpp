@@ -23,7 +23,7 @@
 #include "ui_profilereplaydialog.h"
 #include "vertexdatainterpreter.h"
 #include "trace_profiler.hpp"
-#include "image/image.hpp"
+#include "image.hpp"
 #include "leaktracethread.h"
 
 #include <QAction>

@@ -4,7 +4,7 @@
 
 #include "thumbnail.h"
 
-#include "image/image.hpp"
+#include "image.hpp"
 #include "trace_profiler.hpp"
 
 #include <QHostAddress>

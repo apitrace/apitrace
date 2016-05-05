@@ -535,7 +535,6 @@ add_subdirectory (common)
 add_subdirectory (dispatch)
 add_subdirectory (helpers)
 add_subdirectory (wrappers)
-add_subdirectory (image)
 add_subdirectory (retrace)
 
 
