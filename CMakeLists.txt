@@ -526,13 +526,12 @@ endmacro ()
 # Common libraries / utilities
 
 include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/trace
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/os
-    ${CMAKE_CURRENT_SOURCE_DIR}/common
     ${CMAKE_CURRENT_SOURCE_DIR}/compat
 )
 
 add_subdirectory (lib)
-add_subdirectory (common)
 add_subdirectory (dispatch)
 add_subdirectory (helpers)
 add_subdirectory (wrappers)

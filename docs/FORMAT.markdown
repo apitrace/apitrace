@@ -3,7 +3,7 @@
 This document specifies the binary format of trace streams.
 
 Trace streams are not written verbatim to file, but compressed, nowadays with
-snappy (see `common/trace_file_snappy.cpp` for details).  Previously they used
+snappy (see `lib/trace/trace_file_snappy.cpp` for details).  Previously they used
 to be compressed with gzip.
 
 
