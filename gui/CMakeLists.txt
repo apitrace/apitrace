@@ -90,6 +90,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
+    ${CMAKE_SOURCE_DIR}/lib/ubjson
 )
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})

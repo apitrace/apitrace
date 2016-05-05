@@ -8,6 +8,7 @@ include_directories (
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/lib/image
+    ${CMAKE_SOURCE_DIR}/lib/ubjson
     ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
 )
 
