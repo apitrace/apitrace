@@ -1,5 +1,5 @@
 include_directories (
-    ${CMAKE_SOURCE_DIR}/guids
+    ${CMAKE_SOURCE_DIR}/lib/guids
     ${CMAKE_SOURCE_DIR}/thirdparty
 )
 

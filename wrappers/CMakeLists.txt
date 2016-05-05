@@ -53,7 +53,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/guids
+    ${CMAKE_SOURCE_DIR}/lib/guids
 )
 
 if (NOT WIN32 AND NOT APPLE)
