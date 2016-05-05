@@ -4,14 +4,6 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
-if (WIN32)
-    set (os os_win32.cpp)
-elseif (APPLE)
-    set (os os_posix.cpp os_osx.mm)
-else ()
-    set (os os_posix.cpp)
-endif ()
-
 add_convenience_library (common
     trace_callset.cpp
     trace_dump.cpp
@@ -32,36 +24,14 @@ add_convenience_library (common
     trace_option.cpp
     trace_ostream_snappy.cpp
     trace_ostream_zlib.cpp
-    ${os}
-    os_backtrace.cpp
-    os_crtdbg.cpp
 )
 
 target_link_libraries (common
     guids
     highlight
-    ${LIBBACKTRACE_LIBRARIES}
+    os
     brotli_dec_bundled
 )
-if (WIN32)
-    target_link_libraries (common
-        shell32
-    )
-endif ()
-if (ANDROID)
-    target_link_libraries (common
-        log
-    )
-endif ()
-
-if (APPLE)
-    target_link_libraries (common
-        "-framework Foundation"
-    )
-endif ()
-
-add_gtest (os_thread_test os_thread_test.cpp)
-target_link_libraries (os_thread_test common)
 
 add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
 target_link_libraries (trace_parser_flags_test common)
