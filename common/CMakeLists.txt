@@ -1,5 +1,6 @@
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/guids
+    ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
@@ -34,11 +35,11 @@ add_convenience_library (common
     ${os}
     os_backtrace.cpp
     os_crtdbg.cpp
-    highlight.cpp
 )
 
 target_link_libraries (common
     guids
+    highlight
     ${LIBBACKTRACE_LIBRARIES}
     brotli_dec_bundled
 )
