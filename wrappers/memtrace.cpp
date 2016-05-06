@@ -36,14 +36,17 @@
 
 
 #if \
-    defined(__i386__) /* gcc */ || defined(_M_IX86) /* msvc */ || \
-    defined(__x86_64__) /* gcc */ || defined(_M_X64) /* msvc */ || defined(_M_AMD64) /* msvc */
+    (defined(__i386__) && defined(__SSE2__)) /* gcc */ || \
+    defined(_M_IX86) /* msvc */ || \
+    defined(__x86_64__) /* gcc */ || \
+    defined(_M_X64) /* msvc */ || \
+    defined(_M_AMD64) /* msvc */
 
-#define HAVE_SSE2
+#  define HAVE_SSE2
 
 // TODO: Detect and leverage SSE 4.1 and 4.2 at runtime
-#undef HAVE_SSE41
-#undef HAVE_SSE42
+#  undef HAVE_SSE41
+#  undef HAVE_SSE42
 
 #endif
 
