@@ -31,8 +31,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef _WIN32
-#include <endian.h>
+// define endianess and some integer data types
+#if defined(_WIN32)
+    #define __LITTLE_ENDIAN 1234
+    #define __BIG_ENDIAN    4321
+    #define __BYTE_ORDER    __LITTLE_ENDIAN
+#else
+    // defines __BYTE_ORDER as __LITTLE_ENDIAN or __BIG_ENDIAN
+    #include <sys/param.h>
 #endif
 
 
