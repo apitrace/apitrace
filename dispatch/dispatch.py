@@ -58,13 +58,18 @@ class Dispatcher:
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
         # functions
-        print('#ifdef RETRACE')
-        for function in module.functions:
-            print('#define %s _%s' % (function.name, function.name))
-        print('#endif /* RETRACE */')
-        print()
+        #print('#ifdef RETRACE')
+        #for function in module.functions:
+        #    print('#define %s _%s' % (function.name, function.name))
+        #print('#endif /* RETRACE */')
+        #print()
     
     def dispatchFunctionDecl(self, module, function):
+        print('extern "C" ' + function.prototype() + ';')
+        print('#define _%s %s' % (function.name, function.name))
+        print()
+        return
+
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print('typedef ' + function.prototype('* %s' % ptype) + ';')
@@ -72,6 +77,7 @@ class Dispatcher:
         print()
 
     def dispatchModuleImpl(self, module):
+        return
         for function in module.functions:
             self.dispatchFunctionImpl(module, function)
 

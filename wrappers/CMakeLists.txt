@@ -374,22 +374,19 @@ elseif (APPLE)
     add_dependencies (cgltrace glproc)
 
     set_target_properties (cgltrace PROPERTIES
-        # OpenGL framework name
-        OUTPUT_NAME "OpenGL"
-        # Mac framework
-        FRAMEWORK true
-        # Specificy the version and reexport GLU symbols
-        LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0 -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib"
+        # avoid the default "lib" prefix
+        PREFIX ""
     )
 
     target_link_libraries (cgltrace
         gltrace_common
-        glproc
+        "-framework OpenGL" # CGL*
+        ${OPENGL_gl_LIBRARY}
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
 
-    install (TARGETS cgltrace FRAMEWORK DESTINATION ${WRAPPER_INSTALL_DIR})
+    install (TARGETS cgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 elseif (X11_FOUND)
     # libGL.so
     add_custom_command (

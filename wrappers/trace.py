@@ -556,12 +556,18 @@ class Tracer:
     def isFunctionPublic(self, function):
         return True
 
-    def traceFunctionImpl(self, function):
+    def traceFunctionProto(self, function):
         if self.isFunctionPublic(function):
             print('extern "C" PUBLIC')
         else:
             print('extern "C" PRIVATE')
-        print(function.prototype() + ' {')
+        print(function.prototype())
+
+    def traceFunctionImpl(self, function):
+        self.traceFunctionProto(function)
+
+        print('{')
+
         if function.type is not stdapi.Void:
             print('    %s _result;' % function.type)
 
