@@ -949,6 +949,10 @@ glapi.addFunctions([
     GlFunction(GLenum, "glObjectUnpurgeableAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "option")]),
     GlFunction(Void, "glGetObjectParameterivAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
+    # GL_APPLE_vertex_point_size
+    GlFunction(Void, "glPointSizePointerAPPLE", [(GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glVertexPointSizefAPPLE", [(GLfloat, "size")]),
+
     # GL_APPLE_sync
     GlFunction(GLsync, "glFenceSyncAPPLE", [(GLenum, "condition"), (GLbitfield, "flags")]),
     GlFunction(GLboolean, "glIsSyncAPPLE", [(GLsync, "sync")], sideeffects=False),
@@ -1870,6 +1874,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetTexBumpParameterivATI", [(GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "param")], sideeffects=False),
     GlFunction(Void, "glGetTexBumpParameterfvATI", [(GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "param")], sideeffects=False),
 
+    # GL_ATI_blend_equation_separate
+    GlFunction(Void, "glBlendEquationSeparateATI", [(GLenum, "equationRGB"), (GLenum, "equationAlpha")]),
+
     # GL_ATI_fragment_shader
     GlFunction(Handle("fragmentShaderATI", GLuint, "range"), "glGenFragmentShadersATI", [(GLuint, "range")]),
     GlFunction(Void, "glBindFragmentShaderATI", [(GLfragmentShaderATI, "id")]),
@@ -1893,6 +1900,10 @@ glapi.addFunctions([
     # GL_ATI_pn_triangles
     GlFunction(Void, "glPNTrianglesiATI", [(GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glPNTrianglesfATI", [(GLenum, "pname"), (GLfloat, "param")]),
+
+    # GL_ATIX_pn_triangles
+    GlFunction(Void, "glPNTrianglesiATIX", [(GLenum, "pname"), (GLint, "param")]),
+    GlFunction(Void, "glPNTrianglesfATIX", [(GLenum, "pname"), (GLfloat, "param")]),
 
     # GL_ATI_separate_stencil
     GlFunction(Void, "glStencilOpSeparateATI", [(GLenum, "face"), (GLenum, "sfail"), (GLenum, "dpfail"), (GLenum, "dppass")]),
