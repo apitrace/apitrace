@@ -1071,7 +1071,7 @@ class GlTracer(Tracer):
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
         print
-        for suffix in ['', 'NV']:
+        for suffix in ['']:
             if suffix:
                 SUFFIX = '_' + suffix
             else:
