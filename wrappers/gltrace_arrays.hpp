@@ -30,6 +30,11 @@
 #include "glsize.hpp"
 
 
+namespace gltrace {
+    class Context;
+};
+
+
 /*
  * TODO: Unify all draw params structure into a single structure.
  */
@@ -80,13 +85,13 @@ struct MultiDrawElementsParams
 
 
 GLuint
-_glDraw_count(const DrawArraysParams &params);
+_glDraw_count(gltrace::Context *ctx, const DrawArraysParams &params);
 
 GLuint
-_glDraw_count(const DrawElementsParams &params);
+_glDraw_count(gltrace::Context *ctx, const DrawElementsParams &params);
 
 GLuint
-_glDraw_count(const MultiDrawArraysParams &params);
+_glDraw_count(gltrace::Context *ctx, const MultiDrawArraysParams &params);
 
 GLuint
-_glDraw_count(const MultiDrawElementsParams &params);
+_glDraw_count(gltrace::Context *ctx, const MultiDrawElementsParams &params);

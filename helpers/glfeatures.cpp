@@ -367,6 +367,9 @@ Features::load(const Profile & profile, const Extensions & ext)
         query_buffer_object = profile.versionGreaterOrEqual(4, 4) ||
                               ext.has("GL_ARB_query_buffer_object") ||
                               ext.has("GL_AMD_query_buffer_object");
+
+        primitive_restart = profile.versionGreaterOrEqual(3, 1) ||
+                            ext.has("GL_NV_primitive_restart");
     } else {
         texture_3d = 1;
 
@@ -386,6 +389,8 @@ Features::load(const Profile & profile, const Extensions & ext)
         read_framebuffer_object = 0;
 
         query_buffer_object = 0;
+
+        primitive_restart = 0;
     }
 }
 

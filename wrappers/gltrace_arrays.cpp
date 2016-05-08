@@ -25,13 +25,14 @@
 
 
 #include "gltrace_arrays.hpp"
+#include "gltrace.hpp"
 
 
 /* FIXME take in consideration instancing */
 
 
 GLuint
-_glDraw_count(const DrawArraysParams &params)
+_glDraw_count(gltrace::Context *ctx, const DrawArraysParams &params)
 {
     if (!params.count) {
         return 0;
@@ -41,7 +42,7 @@ _glDraw_count(const DrawArraysParams &params)
 
 
 GLuint
-_glDraw_count(const DrawElementsParams &params)
+_glDraw_count(gltrace::Context *ctx, const DrawElementsParams &params)
 {
     if (params.end < params.start ||
         params.count <= 0) {
@@ -82,13 +83,13 @@ _glDraw_count(const DrawElementsParams &params)
 
     GLuint maxindex = 0;
 
-    GLboolean restart_enabled = _glIsEnabled(GL_PRIMITIVE_RESTART);
-    while ((_glGetError() == GL_INVALID_ENUM))
-        ;
-
+    GLboolean restart_enabled = GL_FALSE;
     GLuint restart_index = 0;
-    if (restart_enabled) {
-        restart_index = (GLuint)_glGetInteger(GL_PRIMITIVE_RESTART_INDEX);
+    if (ctx->features.primitive_restart) {
+        _glIsEnabled(GL_PRIMITIVE_RESTART);
+        if (restart_enabled) {
+            restart_index = (GLuint)_glGetInteger(GL_PRIMITIVE_RESTART_INDEX);
+        }
     }
 
     GLsizei i;
@@ -140,7 +141,7 @@ _glDraw_count(const DrawElementsParams &params)
 
 
 GLuint
-_glDraw_count(const MultiDrawArraysParams &params)
+_glDraw_count(gltrace::Context *ctx, const MultiDrawArraysParams &params)
 {
     GLuint _count = 0;
     for (GLsizei draw = 0; draw < params.drawcount; ++draw) {
@@ -153,7 +154,7 @@ _glDraw_count(const MultiDrawArraysParams &params)
         }
         params_draw.instancecount = params.instancecount;
         params_draw.baseinstance = params.baseinstance;
-        GLuint _count_draw = _glDraw_count(params_draw);
+        GLuint _count_draw = _glDraw_count(ctx, params_draw);
         _count = std::max(_count, _count_draw);
     }
     return _count;
@@ -161,7 +162,7 @@ _glDraw_count(const MultiDrawArraysParams &params)
 
 
 GLuint
-_glDraw_count(const MultiDrawElementsParams &params)
+_glDraw_count(gltrace::Context *ctx, const MultiDrawElementsParams &params)
 {
     GLuint _count = 0;
     for (GLsizei draw = 0; draw < params.drawcount; ++draw) {
@@ -178,7 +179,7 @@ _glDraw_count(const MultiDrawElementsParams &params)
         }
         params_draw.instancecount = params.instancecount;
         params_draw.baseinstance = params.baseinstance;
-        GLuint _count_draw = _glDraw_count(params_draw);
+        GLuint _count_draw = _glDraw_count(ctx, params_draw);
         _count = std::max(_count, _count_draw);
     }
     return _count;

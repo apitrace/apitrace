@@ -491,7 +491,7 @@ class GlTracer(Tracer):
                         continue
                     print r'    _params.%s = %s;' % (paramsMember, arg.name)
 
-                print '        GLuint _count = _glDraw_count(_params);'
+                print '        GLuint _count = _glDraw_count(_ctx, _params);'
                 # Some apps, in particular Quake3, can tell the driver to lock more
                 # vertices than those actually required for the draw call.
                 print '        if (_checkLockArraysEXT) {'
