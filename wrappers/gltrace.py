@@ -126,8 +126,9 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
-        print 'static vertex_attrib _get_vertex_attrib(void) {'
-        print '    gltrace::Context *_ctx = gltrace::getContext();'
+        print 'static vertex_attrib'
+        print '_get_vertex_attrib(gltrace::Context *_ctx)'
+        print '{'
         print '    if (_ctx->user_arrays_nv) {'
         print '        GLboolean _vertex_program = GL_FALSE;'
         print '        _glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &_vertex_program);'
@@ -145,9 +146,8 @@ class GlTracer(Tracer):
         print
 
         # Whether we need user arrays
-        print 'static inline bool _need_user_arrays(void)'
+        print 'static inline bool _need_user_arrays(gltrace::Context *_ctx)'
         print '{'
-        print '    gltrace::Context *_ctx = gltrace::getContext();'
         print '    if (!_ctx->user_arrays) {'
         print '        return false;'
         print '    }'
@@ -181,7 +181,7 @@ class GlTracer(Tracer):
         print '    if (es1)'
         print '        return false;'
         print
-        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
+        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib(_ctx);'
         print
         print '    // glVertexAttribPointer'
         print '    if (_vertex_attrib == VERTEX_ATTRIB) {'
@@ -208,7 +208,7 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        print r'static void _trace_user_arrays(GLuint count);'
+        print r'static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count);'
         print
 
         print r'static void _fakeStringMarker(GLsizei len, const GLvoid * string);'
@@ -466,7 +466,8 @@ class GlTracer(Tracer):
 
         # ... to the draw calls
         if self.draw_function_regex.match(function.name):
-            print '    if (_need_user_arrays()) {'
+            print '    gltrace::Context *_ctx = gltrace::getContext();'
+            print '    if (_need_user_arrays(_ctx)) {'
             if 'Indirect' in function.name:
                 print r'        os::log("apitrace: warning: %s: indirect user arrays not supported\n");' % (function.name,)
             else:
@@ -479,7 +480,7 @@ class GlTracer(Tracer):
                 print '                                 + _glGetInteger(GL_ARRAY_ELEMENT_LOCK_COUNT_EXT);'
                 print '            _count = std::max(_count, _locked_count);'
                 print '        }'
-                print '        _trace_user_arrays(_count);'
+                print '        _trace_user_arrays(_ctx, _count);'
             print '    }'
         if function.name == 'glLockArraysEXT':
             print '        _checkLockArraysEXT = true;'
@@ -487,7 +488,7 @@ class GlTracer(Tracer):
         # Warn if user arrays are used with glBegin/glArrayElement/glEnd.
         if function.name == 'glBegin':
             print r'    gltrace::Context *_ctx = gltrace::getContext();'
-            print r'    _ctx->userArraysOnBegin = _need_user_arrays();'
+            print r'    _ctx->userArraysOnBegin = _need_user_arrays(_ctx);'
         if function.name.startswith('glArrayElement'):
             print r'    gltrace::Context *_ctx = gltrace::getContext();'
             print r'    if (_ctx->userArraysOnBegin) {'
@@ -941,10 +942,8 @@ class GlTracer(Tracer):
 
         # A simple state tracker to track the pointer values
         # update the state
-        print 'static void _trace_user_arrays(GLuint count)'
+        print 'static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count)'
         print '{'
-        print '    gltrace::Context *_ctx = gltrace::getContext();'
-        print
         print '    glfeatures::Profile profile = _ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
         print
@@ -1021,7 +1020,7 @@ class GlTracer(Tracer):
         print '    if (es1)'
         print '        return;'
         print
-        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
+        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib(_ctx);'
         print
         for suffix in ['', 'NV']:
             if suffix:
