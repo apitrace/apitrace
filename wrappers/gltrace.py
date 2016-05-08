@@ -119,31 +119,6 @@ class GlTracer(Tracer):
         print '#include "gltrace.hpp"'
         print '#include "gltrace_arrays.hpp"'
         print
-        
-        # Which glVertexAttrib* variant to use
-        print 'enum vertex_attrib {'
-        print '    VERTEX_ATTRIB,'
-        print '    VERTEX_ATTRIB_NV,'
-        print '};'
-        print
-        print 'static vertex_attrib'
-        print '_get_vertex_attrib(gltrace::Context *_ctx)'
-        print '{'
-        print '    if (_ctx->user_arrays_nv) {'
-        print '        GLboolean _vertex_program = GL_FALSE;'
-        print '        _glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &_vertex_program);'
-        print '        if (_vertex_program) {'
-        print '            if (_ctx->user_arrays_nv) {'
-        print '                GLint _vertex_program_binding_nv = _glGetInteger(GL_VERTEX_PROGRAM_BINDING_NV);'
-        print '                if (_vertex_program_binding_nv) {'
-        print '                    return VERTEX_ATTRIB_NV;'
-        print '                }'
-        print '            }'
-        print '        }'
-        print '    }'
-        print '    return VERTEX_ATTRIB;'
-        print '}'
-        print
 
         # Whether we need user arrays
         print 'static inline bool _need_user_arrays(gltrace::Context *_ctx)'
@@ -181,25 +156,12 @@ class GlTracer(Tracer):
         print '    if (es1)'
         print '        return false;'
         print
-        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib(_ctx);'
-        print
         print '    // glVertexAttribPointer'
-        print '    if (_vertex_attrib == VERTEX_ATTRIB) {'
-        print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
-        print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
-        print '            if (_glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED) &&'
-        print '                _glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING) == 0) {'
-        print '                return true;'
-        print '            }'
-        print '        }'
-        print '    }'
-        print
-        print '    // glVertexAttribPointerNV'
-        print '    if (_vertex_attrib == VERTEX_ATTRIB_NV) {'
-        print '        for (GLint index = 0; index < 16; ++index) {'
-        print '            if (_glIsEnabled(GL_VERTEX_ATTRIB_ARRAY0_NV + index)) {'
-        print '                return true;'
-        print '            }'
+        print '    GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
+        print '    for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
+        print '        if (_glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED) &&'
+        print '            _glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING) == 0) {'
+        print '            return true;'
         print '        }'
         print '    }'
         print
@@ -398,7 +360,7 @@ class GlTracer(Tracer):
             print '        gltrace::Context *_ctx = gltrace::getContext();'
             print '        _ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerNV":
-                print '        _ctx->user_arrays_nv = true;'
+                print r'        os::log("apitrace: warning: %s: user memory arrays with NV_vertex_program longer supported\n", __FUNCTION__);'
             self.invokeFunction(function)
 
             # And also break down glInterleavedArrays into the individual calls
@@ -1039,67 +1001,48 @@ class GlTracer(Tracer):
         print '    if (es1)'
         print '        return;'
         print
-        print '    vertex_attrib _vertex_attrib = _get_vertex_attrib(_ctx);'
+
+        function_name = 'glVertexAttribPointer'
+        function = api.getFunctionByName(function_name)
+
+        print '    // %s' % function.prototype()
+        print '    GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
+        print '    for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
+        print '        GLint _enabled = 0;'
+        print '        _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &_enabled);'
+        print '        if (_enabled) {'
+        print '            GLint _binding = 0;'
+        print '            _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &_binding);'
+        print '            if (!_binding) {'
+
+        # Get the arguments via glGet*
+        for arg in function.args[1:]:
+            arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper())
+            arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
+            print '                %s %s = 0;' % (arg_type, arg.name)
+            print '                _%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+
+        arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
+        print '                size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
+
+        # Emit a fake function
+        print '                unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
+        for arg in function.args:
+            assert not arg.output
+            print '                trace::localWriter.beginArg(%u);' % (arg.index,)
+            if arg.name != 'pointer':
+                self.serializeValue(arg.type, arg.name)
+            else:
+                print '                trace::localWriter.writeBlob((const void *)%s, _size);' % (arg.name)
+            print '                trace::localWriter.endArg();'
+
+        print '                trace::localWriter.endEnter();'
+        print '                trace::localWriter.beginLeave(_call);'
+        print '                trace::localWriter.endLeave();'
+        print '            }'
+        print '        }'
+        print '    }'
         print
-        for suffix in ['', 'NV']:
-            if suffix:
-                SUFFIX = '_' + suffix
-            else:
-                SUFFIX = suffix
-            function_name = 'glVertexAttribPointer' + suffix
-            function = api.getFunctionByName(function_name)
-
-            print '    // %s' % function.prototype()
-            print '    if (_vertex_attrib == VERTEX_ATTRIB%s) {' % SUFFIX
-            if suffix == 'NV':
-                print '        GLint _max_vertex_attribs = 16;'
-            else:
-                print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
-            print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
-            print '            GLint _enabled = 0;'
-            if suffix == 'NV':
-                print '            _glGetIntegerv(GL_VERTEX_ATTRIB_ARRAY0_NV + index, &_enabled);'
-            else:
-                print '            _glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED%s, &_enabled);' % (suffix, SUFFIX)
-            print '            if (_enabled) {'
-            print '                GLint _binding = 0;'
-            if suffix != 'NV':
-                # It doesn't seem possible to use VBOs with NV_vertex_program.
-                print '                _glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING%s, &_binding);' % (suffix, SUFFIX)
-            print '                if (!_binding) {'
-
-            # Get the arguments via glGet*
-            for arg in function.args[1:]:
-                if suffix == 'NV':
-                    arg_get_enum = 'GL_ATTRIB_ARRAY_%s%s' % (arg.name.upper(), SUFFIX)
-                else:
-                    arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s%s' % (arg.name.upper(), SUFFIX)
-                arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False, suffix).visit(arg.type)
-                print '                    %s %s = 0;' % (arg_type, arg.name)
-                print '                    _%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
-            
-            arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-            print '                    size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
-
-            # Emit a fake function
-            print '                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
-            for arg in function.args:
-                assert not arg.output
-                print '                    trace::localWriter.beginArg(%u);' % (arg.index,)
-                if arg.name != 'pointer':
-                    self.serializeValue(arg.type, arg.name)
-                else:
-                    print '                    trace::localWriter.writeBlob((const void *)%s, _size);' % (arg.name)
-                print '                    trace::localWriter.endArg();'
-            
-            print '                    trace::localWriter.endEnter();'
-            print '                    trace::localWriter.beginLeave(_call);'
-            print '                    trace::localWriter.endLeave();'
-            print '                }'
-            print '            }'
-            print '        }'
-            print '    }'
-            print
 
         # Restore the original array_buffer
         print '    if (_array_buffer) {'

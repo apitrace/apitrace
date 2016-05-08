@@ -41,7 +41,6 @@ public:
     glfeatures::Features features;
 
     bool user_arrays = false;
-    bool user_arrays_nv = false;
     bool userArraysOnBegin = false;
     unsigned retain_count = 0;
 
