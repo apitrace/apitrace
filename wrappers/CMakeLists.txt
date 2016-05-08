@@ -74,6 +74,7 @@ endif ()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# Code shared across all APIs
 add_convenience_library (trace
     assert.cpp
     memtrace.hpp
@@ -84,6 +85,18 @@ target_link_libraries (trace
     guids
     crc32c
     ${SNAPPY_LIBRARIES}
+)
+
+# Code shared across all OpenGL variants
+add_convenience_library (gltrace_common
+    glcaps.cpp
+    config.cpp
+    gltrace_state.cpp
+)
+add_dependencies (gltrace_common glproc)
+target_link_libraries (gltrace_common
+    glhelpers
+    trace
 )
 
 if (WIN32)
@@ -279,15 +292,11 @@ if (WIN32)
     )
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
-        glcaps.cpp
-        config.cpp
-        gltrace_state.cpp
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
-        glhelpers
+        gltrace_common
         glproc_gl
-        trace
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
@@ -315,9 +324,6 @@ elseif (APPLE)
 
     add_library (cgltrace SHARED
         cgltrace.cpp
-        glcaps.cpp
-        config.cpp
-        gltrace_state.cpp
     )
 
     add_dependencies (cgltrace glproc)
@@ -332,9 +338,8 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
-        glhelpers
+        gltrace_common
         glproc_gl
-        trace
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -359,9 +364,6 @@ elseif (X11_FOUND)
 
     add_library (glxtrace SHARED
         glxtrace.cpp
-        glcaps.cpp
-        config.cpp
-        gltrace_state.cpp
         dlsym.cpp
     )
 
@@ -373,9 +375,8 @@ elseif (X11_FOUND)
     )
 
     target_link_libraries (glxtrace
-        glhelpers
+        gltrace_common
         glproc_gl
-        trace
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -406,9 +407,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     add_library (egltrace SHARED
         egltrace.cpp
-        glcaps.cpp
-        config.cpp
-        gltrace_state.cpp
         dlsym.cpp
     )
 
@@ -420,9 +418,8 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (egltrace
-        glhelpers
+        gltrace_common
         glproc_egl
-        trace
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
