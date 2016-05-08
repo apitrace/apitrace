@@ -366,7 +366,7 @@ class GlTracer(Tracer):
     ))
 
     # XXX: We currently ignore the gl*Draw*ElementArray* functions
-    draw_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?(Arrays|Elements)([A-Z][a-zA-Z]*)?$' )
+    draw_function_regex = re.compile(r'^(?P<radical>gl([A-Z][a-z]+)*Draw(Range)?(Arrays|Elements))(?P<suffix>[A-Z][a-zA-Z]*)?$' )
 
     interleaved_formats = [
          'GL_V2F',
@@ -465,14 +465,33 @@ class GlTracer(Tracer):
             print '    }'
 
         # ... to the draw calls
-        if self.draw_function_regex.match(function.name):
+        mo = self.draw_function_regex.match(function.name)
+        if mo:
+            functionRadical = mo.group('radical')
             print '    gltrace::Context *_ctx = gltrace::getContext();'
             print '    if (_need_user_arrays(_ctx)) {'
             if 'Indirect' in function.name:
                 print r'        os::log("apitrace: warning: %s: indirect user arrays not supported\n");' % (function.name,)
             else:
-                arg_names = ', '.join([arg.name for arg in function.args[1:]])
-                print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
+                # Pick the corresponding *Params
+                if 'Arrays' in functionRadical:
+                    paramsType = 'DrawArraysParams'
+                elif 'Elements' in functionRadical:
+                    paramsType = 'DrawElementsParams'
+                else:
+                    assert 0
+                if 'Multi' in functionRadical:
+                    assert 'drawcount' in function.argNames()
+                    paramsType = 'Multi' + paramsType
+                print r'        %s _params;' % paramsType
+
+                for arg in function.args:
+                    paramsMember = arg.name.lower()
+                    if paramsMember in ('mode', 'modestride'):
+                        continue
+                    print r'    _params.%s = %s;' % (paramsMember, arg.name)
+
+                print '        GLuint _count = _glDraw_count(_params);'
                 # Some apps, in particular Quake3, can tell the driver to lock more
                 # vertices than those actually required for the draw call.
                 print '        if (_checkLockArraysEXT) {'

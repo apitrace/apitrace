@@ -27,19 +27,35 @@
 #include "gltrace_arrays.hpp"
 
 
+/* FIXME take in consideration instancing */
+
+
 GLuint
-_glDrawArrays_count(GLint first, GLsizei count)
+_glDraw_count(const DrawArraysParams &params)
 {
-    if (!count) {
+    if (!params.count) {
         return 0;
     }
-    return first + count;
+    return params.first + params.count;
 }
 
 
 GLuint
-_glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
+_glDraw_count(const DrawElementsParams &params)
 {
+    if (params.end < params.start ||
+        params.count <= 0) {
+        return 0;
+    }
+
+    if (params.end != ~0U) {
+        return params.end + params.basevertex + 1;
+    }
+
+    GLuint count = params.count;
+    GLenum type = params.type;
+    const void *indices = params.indices;
+
     GLvoid *temp = 0;
 
     if (!count) {
@@ -117,30 +133,27 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
         free(temp);
     }
 
-    maxindex += basevertex;
+    maxindex += params.basevertex;
 
     return maxindex + 1;
 }
 
 
 GLuint
-_glDrawRangeElementsBaseVertex_count(GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex)
-{
-    if (end < start ||
-        count < 0) {
-        return 0;
-    }
-
-    return end + basevertex + 1;
-}
-
-
-GLuint
-_glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawcount)
+_glDraw_count(const MultiDrawArraysParams &params)
 {
     GLuint _count = 0;
-    for (GLsizei draw = 0; draw < drawcount; ++draw) {
-        GLuint _count_draw = _glDrawArrays_count(first[draw], count[draw]);
+    for (GLsizei draw = 0; draw < params.drawcount; ++draw) {
+        DrawArraysParams params_draw;
+        if (params.first) {
+            params_draw.first = params.first[draw];
+        }
+        if (params.count) {
+            params_draw.count = params.count[draw];
+        }
+        params_draw.instancecount = params.instancecount;
+        params_draw.baseinstance = params.baseinstance;
+        GLuint _count_draw = _glDraw_count(params_draw);
         _count = std::max(_count, _count_draw);
     }
     return _count;
@@ -148,24 +161,26 @@ _glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawc
 
 
 GLuint
-_glMultiDrawElements_count(const GLsizei *count, GLenum type, const GLvoid* const *indices, GLsizei drawcount)
+_glDraw_count(const MultiDrawElementsParams &params)
 {
     GLuint _count = 0;
-    for (GLsizei draw = 0; draw < drawcount; ++draw) {
-        GLuint _count_draw = _glDrawElements_count(count[draw], type, indices[draw]);
+    for (GLsizei draw = 0; draw < params.drawcount; ++draw) {
+        DrawElementsParams params_draw;
+        if (params.count) {
+            params_draw.count = params.count[draw];
+        }
+        params_draw.type = params.type;
+        if (params.indices) {
+            params_draw.indices = params.indices[draw];
+        }
+        if (params.basevertex) {
+            params_draw.basevertex = params.basevertex[draw];
+        }
+        params_draw.instancecount = params.instancecount;
+        params_draw.baseinstance = params.baseinstance;
+        GLuint _count_draw = _glDraw_count(params_draw);
         _count = std::max(_count, _count_draw);
     }
     return _count;
 }
 
-
-GLuint
-_glMultiDrawElementsBaseVertex_count(const GLsizei *count, GLenum type, const GLvoid* const *indices, GLsizei drawcount, const GLint * basevertex)
-{
-    GLuint _count = 0;
-    for (GLsizei draw = 0; draw < drawcount; ++draw) {
-        GLuint _count_draw = _glDrawElementsBaseVertex_count(count[draw], type, indices[draw], basevertex[draw]);
-        _count = std::max(_count, _count_draw);
-    }
-    return _count;
-}
