@@ -404,11 +404,6 @@ _glDrawArrays_count(GLint first, GLsizei count)
 
 #define _glDrawArraysEXT_count _glDrawArrays_count
 
-/* Forward declaration for definition in gltrace.py */
-void
-_shadow_glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
-                              GLvoid *data);
-
 static inline GLuint
 _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
 {
@@ -428,7 +423,7 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
             return 0;
         }
         memset(temp, 0, size);
-        _shadow_glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, temp);
+        _glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, temp);
         indices = temp;
     } else {
         if (!indices) {
