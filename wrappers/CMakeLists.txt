@@ -91,6 +91,7 @@ target_link_libraries (trace
 add_convenience_library (gltrace_common
     glcaps.cpp
     config.cpp
+    gltrace_arrays.cpp
     gltrace_state.cpp
 )
 add_dependencies (gltrace_common glproc)

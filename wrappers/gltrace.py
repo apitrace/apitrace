@@ -117,6 +117,7 @@ class GlTracer(Tracer):
         print '#include <algorithm>'
         print
         print '#include "gltrace.hpp"'
+        print '#include "gltrace_arrays.hpp"'
         print
         
         # Which glVertexAttrib* variant to use
