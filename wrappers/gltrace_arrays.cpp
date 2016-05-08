@@ -66,6 +66,12 @@ _glDraw_count(gltrace::Context *ctx, const DrawElementsParams &params)
     GLint element_array_buffer = _element_array_buffer_binding();
     if (element_array_buffer) {
         // Read indices from index buffer object
+        if (ctx->profile.es()) {
+            // We could try to implement this on top of GL_OES_mapbuffer but should seldom be needed
+            os::log("apitrace: warning: %s: element array buffer with memory vertex arrays no longer supported on ES\n", __FUNCTION__);
+            return 0;
+        }
+
         GLintptr offset = (GLintptr)indices;
         GLsizeiptr size = count*_gl_type_size(type);
         temp = malloc(size);
