@@ -271,7 +271,7 @@ else ()
     # We require at least GCC 4.9 for decent C++11 support
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
         CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-        message (WARNING "GCC 4.9 or later recommended -- https://github.com/apitrace/apitrace/wiki/GCC")
+        message (FATAL_ERROR "GCC 4.9 or later required -- https://github.com/apitrace/apitrace/wiki/GCC")
     endif ()
 
     # Adjust warnings
