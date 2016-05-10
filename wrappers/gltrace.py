@@ -181,10 +181,6 @@ class GlTracer(Tracer):
         print r'}'
         print
 
-        print '// whether glLockArraysEXT() has ever been called'
-        print 'static bool _checkLockArraysEXT = false;'
-        print
-
         # Buffer mappings
         print '// whether glMapBufferRange(GL_MAP_WRITE_BIT) has ever been called'
         print 'static bool _checkBufferMapRange = false;'
@@ -451,20 +447,16 @@ class GlTracer(Tracer):
                     paramsMember = arg.name.lower()
                     if paramsMember in ('mode', 'modestride'):
                         continue
-                    print r'    _params.%s = %s;' % (paramsMember, arg.name)
+                    print r'        _params.%s = %s;' % (paramsMember, arg.name)
 
                 print '        GLuint _count = _glDraw_count(_ctx, _params);'
-                # Some apps, in particular Quake3, can tell the driver to lock more
-                # vertices than those actually required for the draw call.
-                print '        if (_checkLockArraysEXT) {'
-                print '            GLuint _locked_count = _glGetInteger(GL_ARRAY_ELEMENT_LOCK_FIRST_EXT)'
-                print '                                 + _glGetInteger(GL_ARRAY_ELEMENT_LOCK_COUNT_EXT);'
-                print '            _count = std::max(_count, _locked_count);'
-                print '        }'
                 print '        _trace_user_arrays(_ctx, _count);'
             print '    }'
         if function.name == 'glLockArraysEXT':
-            print '        _checkLockArraysEXT = true;'
+            print '    gltrace::Context *_ctx = gltrace::getContext();'
+            print '    if (_ctx) {'
+            print '        _ctx->lockedArrayCount = first + count;'
+            print '    }'
 
         # Warn if user arrays are used with glBegin/glArrayElement/glEnd.
         if function.name == 'glBegin':
@@ -927,6 +919,11 @@ class GlTracer(Tracer):
         print '{'
         print '    glfeatures::Profile profile = _ctx->profile;'
         print '    bool es1 = profile.es() && profile.major == 1;'
+        print
+
+        # Some apps, in particular Quake3, can tell the driver to lock more
+        # vertices than those actually required for the draw call.
+        print '    count = std::max(count, _ctx->lockedArrayCount);'
         print
 
         # Temporarily unbind the array buffer

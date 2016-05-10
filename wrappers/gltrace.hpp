@@ -49,6 +49,9 @@ public:
     // Whether it has been bound to a drawable
     bool boundDrawable = false;
 
+    // whether glLockArraysEXT() has ever been called
+    GLuint lockedArrayCount;
+
     Context(void) :
         profile(glfeatures::API_GL, 1, 0)
     { }
