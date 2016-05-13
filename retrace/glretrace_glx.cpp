@@ -103,7 +103,7 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
 }
 
 static void retrace_glXMakeCurrent(trace::Call &call) {
-    if (call.ret && !call.ret->toBool()) {
+    if (call.ret && !call.ret->toBool() && !retrace::ignoreRetvals) {
         // If false was returned then any previously current rendering context
         // and drawable remain unchanged.
         return;
@@ -190,7 +190,7 @@ static void retrace_glXDestroyPbuffer(trace::Call &call) {
 }
 
 static void retrace_glXMakeContextCurrent(trace::Call &call) {
-    if (call.ret && !call.ret->toBool()) {
+    if (call.ret && !call.ret->toBool() && !retrace::ignoreRetvals) {
         // If false was returned then any previously current rendering context
         // and drawable remain unchanged.
         return;

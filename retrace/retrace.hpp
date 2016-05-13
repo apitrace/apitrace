@@ -136,6 +136,14 @@ extern bool snapshotAlpha;
 extern bool forceWindowed;
 
 /**
+ * Whether to ignore the call's recorded return value.  For a call like
+ * glx/wglMakeCurrent() it means that if the call failed during recording and
+ * returned FALSE, we ignore that at replay time and try to execute the
+ * glx/wglMakeCurrent() normally (instead of no-oping it).
+ */
+extern bool ignoreRetvals;
+
+/**
  * Add profiling data to the dump when retracing.
  */
 extern unsigned curPass;

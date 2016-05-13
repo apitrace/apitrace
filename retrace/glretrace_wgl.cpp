@@ -101,7 +101,7 @@ static void retrace_wglMakeCurrent(trace::Call &call) {
 
     glws::Drawable *new_drawable = NULL;
     Context *new_context = NULL;
-    if (ret) {
+    if (ret || retrace::ignoreRetvals) {
         unsigned long long hglrc = call.arg(1).toUIntPtr();
         if (hglrc) {
             new_drawable = getDrawable(call.arg(0).toUIntPtr());
@@ -118,7 +118,7 @@ static void retrace_wglMakeContextCurrentARB(trace::Call &call) {
     glws::Drawable *new_drawable = NULL;
     glws::Drawable *new_readable = NULL;
     Context *new_context = NULL;
-    if (ret) {
+    if (ret || retrace::ignoreRetvals) {
         unsigned long long hglrc = call.arg(2).toUIntPtr();
         if (hglrc) {
             new_drawable = getDrawable(call.arg(0).toUIntPtr());
@@ -131,8 +131,12 @@ static void retrace_wglMakeContextCurrentARB(trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
+    if (!call.ret) {
+        // incomplete call recorded - return, don't crash
+        return;
+    }
     bool ret = call.ret->toBool();
-    if (!ret) {
+    if (!ret && !retrace::ignoreRetvals) {
         return;
     }
 
@@ -155,7 +159,7 @@ static void retrace_wglSwapBuffers(trace::Call &call) {
 
 static void retrace_wglShareLists(trace::Call &call) {
     bool ret = call.ret->toBool();
-    if (!ret) {
+    if (!ret && !retrace::ignoreRetvals) {
         return;
     }
 
@@ -389,7 +393,7 @@ static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
 static void retrace_wglUseFontBitmapsAW(trace::Call &call)
 {
     bool ret = call.ret->toBool();
-    if (!ret) {
+    if (!ret && !retrace::ignoreRetvals) {
         return;
     }
 

@@ -106,6 +106,7 @@ bool profilingPixelsDrawn = false;
 bool profilingMemoryUsage = false;
 bool useCallNos = true;
 bool singleThread = false;
+bool ignoreRetvals = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
@@ -667,7 +668,9 @@ usage(const char *argv0) {
         "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
         "  -w, --wait              waitOnFinish on final frame\n"
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
-        "      --singlethread      use a single thread to replay command stream\n";
+        "      --singlethread      use a single thread to replay command stream\n"
+        "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
+    ;
 }
 
 enum {
@@ -690,6 +693,7 @@ enum {
     SB_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
+    IGNORE_RETVALS_OPT,
     SNAPSHOT_ALPHA_OPT,
     SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
@@ -736,6 +740,7 @@ longOptions[] = {
     {"wait", no_argument, 0, 'w'},
     {"loop", optional_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
+    {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
     {0, 0, 0, 0}
 };
 
@@ -884,6 +889,9 @@ int main(int argc, char **argv)
             break;
         case SINGLETHREAD_OPT:
             retrace::singleThread = true;
+            break;
+        case IGNORE_RETVALS_OPT:
+            retrace::ignoreRetvals = true;
             break;
         case 's':
             dumpingSnapshots = true;
