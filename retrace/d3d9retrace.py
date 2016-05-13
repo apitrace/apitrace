@@ -260,6 +260,19 @@ class D3DRetracer(Retracer):
             print '        _maps[_mappingKey] = 0;'
             print '    }'
 
+        if interface.name == 'IDirectXVideoDecoder':
+            if method.name == 'GetBuffer':
+                print '    if (*ppBuffer && *pBufferSize) {'
+                print '        _maps[MappingKey(_this, BufferType)] = *ppBuffer;'
+                print '    }'
+            if method.name == 'ReleaseBuffer':
+                print '    MappingKey _mappingKey(_this, BufferType);'
+                print '    void *_pBuffer = _maps[_mappingKey];'
+                print '    if (_pBuffer) {'
+                print '        retrace::delRegionByPointer(_pBuffer);'
+                print '        _maps[_mappingKey] = 0;'
+                print '    }'
+
 
 def main():
     print r'#include <string.h>'
