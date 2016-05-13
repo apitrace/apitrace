@@ -67,6 +67,11 @@ class D3D9Tracer(DllTracer):
                     ('VOID *', 'm_pbData', '0'),
                 ]
 
+        if interface.name == 'IDirectXVideoDecoder':
+            variables += [
+                ('std::map<UINT, std::pair<void *, UINT> >', '_MappedData', None),
+            ]
+
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
@@ -83,6 +88,13 @@ class D3D9Tracer(DllTracer):
                 print '    if (_MappedSize && m_pbData) {'
                 self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
                 print '    }'
+
+        if interface.name == 'IDirectXVideoDecoder' and method.name == 'ReleaseBuffer':
+            print '    std::map<UINT, std::pair<void *, UINT> >::iterator it = _MappedData.find(BufferType);'
+            print '    if (it != _MappedData.end()) {'
+            self.emit_memcpy('it->second.first', 'it->second.second')
+            print '        _MappedData.erase(it);'
+            print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
@@ -111,6 +123,13 @@ class D3D9Tracer(DllTracer):
                 print '        m_pbData = NULL;'
                 print '        _MappedSize = 0;'
                 print '    }'
+
+        if interface.name == 'IDirectXVideoDecoder' and method.name == 'GetBuffer':
+            print '    if (SUCCEEDED(_result)) {'
+            print '        _MappedData[BufferType] = std::make_pair(*ppBuffer, *pBufferSize);'
+            print '    } else {'
+            print '        _MappedData[BufferType] = std::make_pair(nullptr, 0);'
+            print '    }'
 
 
 if __name__ == '__main__':
