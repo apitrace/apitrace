@@ -155,10 +155,10 @@ class WglTracer(GlTracer):
             print r'        bmi->bmiColors[1].rgbReserved = 0;'
             print
             print r'        for (DWORD i = 0; i < count; ++i) {'
-            self.fake_call(glNewList, ['listBase + i', 'GL_COMPILE'])
-
+            print r'            _fake_glNewList(listBase + i, GL_COMPILE);'
+            print
             print r'            char cChar = first + i;'
-
+            print
             print r'            // TODO: Use GetCharABSWidths'
             print r'            // http://www.codeproject.com/Articles/14915/Width-of-text-in-italic-font'
             print r'            // https://support.microsoft.com/en-us/kb/94646'
@@ -212,12 +212,12 @@ class WglTracer(GlTracer):
 
             # FIXME: glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
             # FIXME: glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-            self.fake_call(glBitmap, ['width', 'height', 'xorig', 'yorig', 'xmove', 'ymove', 'bitmap'])
-
+            print
+            print r'                _fake_glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap);'
+            print
             print r'                free(lpvBits);'
             print r'            }'
-            self.fake_call(glEndList, [])
+            print r'            _fake_glEndList();'
             print r'        }'
             print
             print r'        DeleteDC(memDC);'

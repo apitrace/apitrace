@@ -170,8 +170,8 @@ void setContext(uintptr_t context_id)
          * we might be called before both are set, so ignore empty boxes.
          */
         if (viewport[2] && viewport[3] && scissor[2] && scissor[3]) {
-            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
+            _fake_glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            _fake_glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
             ctx->boundDrawable = true;
         }
     }

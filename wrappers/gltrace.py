@@ -173,11 +173,14 @@ class GlTracer(Tracer):
         print r'static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count);'
         print
 
-        print r'static void _fakeStringMarker(GLsizei len, const GLvoid * string);'
+        # Declare helper functions to emit fake function calls into the trace
+        for function in api.getAllFunctions():
+            if function.name in self.fake_function_names:
+                print function.prototype('_fake_' + function.name) + ';'
         print
         print r'static inline void'
         print r'_fakeStringMarker(const std::string &s) {'
-        print r'    _fakeStringMarker(s.length(), s.data());'
+        print r'    _fake_glStringMarkerGREMEDY(s.length(), s.data());'
         print r'}'
         print
 
@@ -389,15 +392,10 @@ class GlTracer(Tracer):
                     enable_name = 'GL_%s_ARRAY' % uppercase_name
 
                     # Emit a fake function
-                    print '        {'
-                    print '            static const trace::FunctionSig &_sig = %s ? _glEnableClientState_sig : _glDisableClientState_sig;' % flag_name
-                    print '            unsigned _call = trace::localWriter.beginEnter(&_sig, true);'
-                    print '            trace::localWriter.beginArg(0);'
-                    self.serializeValue(glapi.GLenum, enable_name)
-                    print '            trace::localWriter.endArg();'
-                    print '            trace::localWriter.endEnter();'
-                    print '            trace::localWriter.beginLeave(_call);'
-                    print '            trace::localWriter.endLeave();'
+                    print '        if (%s) {' % flag_name
+                    print '            _fake_glEnableClientState(%s);' % enable_name
+                    print '        } else {'
+                    print '            _fake_glDisableClientState(%s);' % enable_name
                     print '        }'
 
             # Warn about buggy glGet(GL_*ARRAY_SIZE) not returning GL_BGRA
@@ -666,8 +664,7 @@ class GlTracer(Tracer):
             print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
             print '            GLint location = _glGetAttribLocation(program, name);'
             print '            if (location >= 0) {'
-            bind_function = glapi.glapi.getFunctionByName('glBindAttribLocation')
-            self.fake_call(bind_function, ['program', 'location', 'name'])
+            print '                _fake_glBindAttribLocation(program, location, name);'
             print '            }'
             print '        }'
             print '    }'
@@ -684,8 +681,7 @@ class GlTracer(Tracer):
             print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
             print '            GLint location = _glGetAttribLocationARB(programObj, name);'
             print '            if (location >= 0) {'
-            bind_function = glapi.glapi.getFunctionByName('glBindAttribLocationARB')
-            self.fake_call(bind_function, ['programObj', 'location', 'name'])
+            print '                _fake_glBindAttribLocationARB(programObj, location, name);'
             print '            }'
             print '        }'
             print '    }'
@@ -910,8 +906,33 @@ class GlTracer(Tracer):
 
         Tracer.serializeArgValue(self, function, arg)
 
+    fake_function_names = [
+        'glBindAttribLocation',
+        'glBindAttribLocationARB',
+        'glBindBuffer',
+        'glBitmap',
+        'glClientActiveTexture',
+        'glDisableClientState',
+        'glEnableClientState',
+        'glEndList',
+        'glNewList',
+        'glScissor',
+        'glStringMarkerGREMEDY',
+        'glTexImage2D',
+        'glViewport',
+    ]
+
     def footer(self, api):
         Tracer.footer(self, api)
+
+        # Generate helper functions to emit fake function calls into the trace
+        for function in api.getAllFunctions():
+            if function.name in self.fake_function_names:
+                print function.prototype('_fake_' + function.name)
+                print r'{'
+                self.fake_call(function, function.argNames())
+                print r'}'
+                print
 
         # A simple state tracker to track the pointer values
         # update the state
@@ -929,7 +950,7 @@ class GlTracer(Tracer):
         # Temporarily unbind the array buffer
         print '    GLint _array_buffer = _glGetInteger(GL_ARRAY_BUFFER_BINDING);'
         print '    if (_array_buffer) {'
-        self.fake_glBindBuffer(api, 'GL_ARRAY_BUFFER', '0')
+        print '        _fake_glBindBuffer(GL_ARRAY_BUFFER, 0);'
         print '    }'
         print
 
@@ -1043,18 +1064,12 @@ class GlTracer(Tracer):
 
         # Restore the original array_buffer
         print '    if (_array_buffer) {'
-        self.fake_glBindBuffer(api, 'GL_ARRAY_BUFFER', '_array_buffer')
+        print '        _fake_glBindBuffer(GL_ARRAY_BUFFER, _array_buffer);'
         print '    }'
         print
 
         print '}'
         print
-
-        # Fake glStringMarkerGREMEDY
-        print r'static void _fakeStringMarker(GLsizei len, const GLvoid * string) {'
-        glStringMarkerGREMEDY = api.getFunctionByName('glStringMarkerGREMEDY')
-        self.fake_call(glStringMarkerGREMEDY, ['len', 'string'])
-        print r'}'
 
     #
     # Hooks for glTexCoordPointer, which is identical to the other array
@@ -1098,41 +1113,15 @@ class GlTracer(Tracer):
         if uppercase_name == 'TEXTURE_COORD':
             print '    if (texture != client_active_texture || client_active_texture_dirty) {'
             print '        client_active_texture_dirty = true;'
-            self.fake_glClientActiveTexture_call(api, "texture");
+            print '        _fake_glClientActiveTexture(texture);'
             print '    }'
 
     def array_trace_epilog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
             print '    if (client_active_texture_dirty) {'
-            self.fake_glClientActiveTexture_call(api, "client_active_texture");
+            print '        _fake_glClientActiveTexture(client_active_texture);'
             print '    }'
 
-    def fake_glBindBuffer(self, api, target, buffer):
-        function = api.getFunctionByName('glBindBuffer')
-        self.fake_call(function, [target, buffer])
-
-    def fake_glClientActiveTexture_call(self, api, texture):
-        function = api.getFunctionByName('glClientActiveTexture')
-        self.fake_call(function, [texture])
-
     def emitFakeTexture2D(self):
-        function = glapi.glapi.getFunctionByName('glTexImage2D')
-        instances = function.argNames()
-        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
-        for arg in function.args:
-            assert not arg.output
-            self.serializeArg(function, arg)
-        print '        trace::localWriter.endEnter();'
-        print '        trace::localWriter.beginLeave(_fake_call);'
-        print '        trace::localWriter.endLeave();'
-
-
-
-
-
-
-
-
-
-
+        print r'    _fake_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);'
 

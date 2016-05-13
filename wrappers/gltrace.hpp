@@ -31,6 +31,10 @@
 #include "glfeatures.hpp"
 
 
+void APIENTRY _fake_glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+void APIENTRY _fake_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+
 namespace gltrace {
 
 
@@ -86,5 +90,3 @@ _glGetStringi_override(GLenum name, GLuint index);
 
 
 } /* namespace gltrace */
-
-
