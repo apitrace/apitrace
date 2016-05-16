@@ -69,6 +69,16 @@ class D3DRetracer(Retracer):
         'CreateDeviceEx',
     ]
 
+    def doInvokeInterfaceMethod(self, interface, method):
+        Retracer.doInvokeInterfaceMethod(self, interface, method)
+
+        # Keep retrying IDirectXVideoDecoder::BeginFrame when returns E_PENDING
+        if interface.name == 'IDirectXVideoDecoder' and method.name == 'BeginFrame':
+            print r'    while (_result == E_PENDING) {'
+            print r'        Sleep(1);'
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print r'    }'
+
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):

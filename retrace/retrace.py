@@ -502,7 +502,11 @@ class Retracer:
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
-    def invokeInterfaceMethod(self, interface, method):
+    def doInvokeInterfaceMethod(self, interface, method):
+        # Same as invokeInterfaceMethod, but without error checking
+        #
+        # XXX: Find a better name
+
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
@@ -523,9 +527,6 @@ class Retracer:
             print r'        }'
             print r'    }'
 
-        if method.type is not stdapi.Void:
-            self.checkResult(interface, method)
-
         # Debug COM reference counting.  Disabled by default as reported
         # reference counts depend on internal implementation details.
         if method.name in ('AddRef', 'Release'):
@@ -541,6 +542,12 @@ class Retracer:
             print r'        }'
             print r'        retrace::delObj(call.arg(0));'
             print r'    }'
+
+    def invokeInterfaceMethod(self, interface, method):
+        self.doInvokeInterfaceMethod(interface, method)
+
+        if method.type is not stdapi.Void:
+            self.checkResult(interface, method)
 
     def checkResult(self, interface, methodOrFunction):
         assert methodOrFunction.type is not stdapi.Void
