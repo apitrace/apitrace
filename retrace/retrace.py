@@ -156,6 +156,11 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         tmp = '_a_' + pointer.tag + '_' + str(self.seq)
         self.seq += 1
 
+        if self.insideStruct:
+            # Member is a pointer to an object, hence must be allocated
+            print r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue
+            print r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue)
+
         print '    if (%s) {' % (lvalue,)
         print '        const trace::Array *%s = (%s).toArray();' % (tmp, rvalue)
         try:
