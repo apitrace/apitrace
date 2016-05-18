@@ -359,37 +359,21 @@ def main():
     winsdk = True
     if winsdk:
         # Set up Clang compiler flags to use MinGW runtime
-        if 0:
-            # XXX: This doesn't work
-            # http://stackoverflow.com/a/19839946
-            p = subprocess.Popen(
-                ["x86_64-w64-mingw32-g++", "-x", "c++", "-E", "-Wp,-v", '-', '-fsyntax-only'],
-                stdin = open(os.devnull, 'rt'),
-                stdout = open(os.devnull, 'wt'),
-                stderr=subprocess.PIPE)
-            includes.append('/usr/share/castxml/clang/include')
-            for line in p.stderr:
-                if line.startswith(' '):
-                    include = line.strip()
-                    if os.path.isdir(include):
-                        includes.append(os.path.normpath(include))
-        elif 0:
-            # XXX: This matches what wclang does, but doensn't work neither
-            cxxflags += [
-                "-target", "x86_64-w64-mingw32",
-                "-nostdinc",
-                "-isystem", "/usr/lib/clang/3.6.0/include",
-                "-isystem", "/usr/x86_64-w64-mingw32/include",
-                "-isystem", "/usr/lib/gcc/x86_64-w64-mingw32/4.9-win32/include/c++",
-                "-isystem", "/usr/lib/gcc/x86_64-w64-mingw32/4.9-win32/include/c++/x86_64-w64-mingw32",
-            ]
-        else:
-            # This works somehow, but seems brittle
-            includes += [
-                '/usr/x86_64-w64-mingw32/include',
-                '/usr/lib/gcc/x86_64-w64-mingw32/4.9-win32/include/c++',
-                '/usr/lib/gcc/x86_64-w64-mingw32/4.9-win32/include/c++/x86_64-w64-mingw32',
-            ]
+        # http://stackoverflow.com/a/19839946
+        p = subprocess.Popen(
+            ["x86_64-w64-mingw32-g++", "-x", "c++", "-E", "-Wp,-v", '-', '-fsyntax-only'],
+            stdin=open(os.devnull, 'rt'),
+            stdout=open(os.devnull, 'wt'),
+            stderr=subprocess.PIPE)
+        includes.append('/usr/share/castxml/clang/include')
+        for line in p.stderr:
+            if line.startswith(' '):
+                include = line.strip()
+                if os.path.isdir(include):
+                    if os.path.exists(os.path.join(include, 'ia32intrin.h')):
+                        # XXX: We must use Clang's intrinsic headers
+                        continue
+                    includes.append(os.path.normpath(include))
 
         winver = 0x0602
 
