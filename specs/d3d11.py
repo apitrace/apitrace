@@ -2644,7 +2644,7 @@ ID3D11Device3.methods += [
     StdMethod(HRESULT, "CreateQuery1", [(Pointer(Const(D3D11_QUERY_DESC1)), "pQueryDesc1"), Out(Pointer(ObjPointer(ID3D11Query1)), "ppQuery1")]),
     StdMethod(Void, "GetImmediateContext3", [Out(Pointer(ObjPointer(ID3D11DeviceContext3)), "ppImmediateContext")]),
     StdMethod(HRESULT, "CreateDeferredContext3", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext3)), "ppDeferredContext")]),
-    StdMethod(Void, "WriteToSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]), # FIXME
+    StdMethod(Void, "WriteToSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), '_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)'), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     StdMethod(Void, "ReadFromSubresource", [Out(OpaquePointer(Void), "pDstData"), (UINT, "DstRowPitch"), (UINT, "DstDepthPitch"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox")], sideeffects=False), # FIXME
 ]
 
