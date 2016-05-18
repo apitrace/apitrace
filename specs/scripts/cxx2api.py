@@ -151,7 +151,13 @@ class type_dumper_t(type_visitor.type_visitor_t):
         self.result = "Double"
 
     def visit_array(self):
-        raise NotImplementedError
+        base_type = dump_type(self.type.base)
+        length = self.type.size
+        try:
+            int(length)
+        except ValueError:
+            length = '"%s"' % length
+        self.result = 'Array(%s, %s)' % (base_type, length)
 
     def visit_pointer(self):
         base_type = dump_type(self.type.base)
@@ -176,7 +182,13 @@ class type_dumper_t(type_visitor.type_visitor_t):
         self.result = 'Pointer(%s)' % base_type
 
     def visit_reference(self):
-        self.result = 'Reference(%s)' % dump_type(self.type.base)
+        base_type = dump_type(self.type.base)
+        if base_type == 'Const(IID)':
+            self.result = 'REFIID'
+        elif base_type == 'Const(GUID)':
+            self.result = 'REFGUID'
+        else:
+            self.result = 'Reference(%s)' % base_type
 
     def visit_const(self):
         self.result = 'Const(%s)' % dump_type(self.type.base)
@@ -184,6 +196,9 @@ class type_dumper_t(type_visitor.type_visitor_t):
     def visit_declarated(self):
         decl = self.type.declaration
         self.result = dump_decl(decl)
+
+    def visit_free_function_type(self):
+        self.result = 'Opaque("%s")' % self.type
 
 
 def dump_type(type):
@@ -251,7 +266,7 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
     def visit_struct(self, decl_name, decl):
         struct = decl
         print(r'%s = Struct(%r, [' % (decl_name, decl_name))
-        for variable in struct.variables():
+        for variable in struct.variables(allow_empty=True):
             var_type = dump_type(variable.type)
             print(r'    (%s, %r),' % (var_type, variable.name))
         print(r'])')
@@ -335,6 +350,9 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
         arg_types = self.convert_args(function.arguments)
         s.write('    StdFunction(%s, %r, [%s]),\n' % (ret_type, function.name, arg_types))
 
+    def visit_free_operator(self):
+        pass
+
 
 def main():
     defines = []
@@ -393,6 +411,8 @@ def main():
             '_WIN32_WINNT=0x%04X' % winver,
             'WINVER=0x%04X' % winver,
             'NTDDI_VERSION=0x%04X0000' % winver,
+            # Prevent headers from requiring a rpcndr.h version beyond MinGW's
+            '__REQUIRED_RPCNDR_H_VERSION__=475',
             # Avoid C++ helper classes
             'D3D10_NO_HELPERS',
             'D3D11_NO_HELPERS',
@@ -455,6 +475,10 @@ def main():
     for decl in global_ns.declarations:
         if not decl_filter(decl):
             continue
+
+        if sys.stdout.isatty():
+            print('# ' + str(decl))
+
         visitor.decl = decl
         algorithm.apply_visitor(visitor, decl)
     visitor.finish()
