@@ -268,6 +268,10 @@ class Bitmask(Type):
 Flags = Bitmask
 
 
+def EnumFlags(name, values):
+    return Flags(Alias(name, UInt), values)
+
+
 class Array(Type):
 
     def __init__(self, type_, length):
