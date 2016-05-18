@@ -32,6 +32,7 @@ from specs.stdapi import API
 from specs import dxgi
 from specs import d3d10
 from specs import d3d11
+from specs import d3d12
 from specs import dcomp
 from specs import d3d9
 
@@ -90,6 +91,7 @@ class D3DCommonTracer(DllTracer):
     mapInterfaces = (
         dxgi.IDXGISurface,
         d3d10.ID3D10Resource,
+        d3d12.ID3D12Resource,
     )
     
     def enumWrapperInterfaceVariables(self, interface):
@@ -146,8 +148,11 @@ class D3DCommonTracer(DllTracer):
             if interface.name.startswith('IDXGI'):
                 print '            (void)_MapShadow;'
             else:
-                print '            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;'
-                print '            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);'
+                if method.getArgByName('MapType') is not None:
+                    print '            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;'
+                    print '            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);'
+                else:
+                    print '            (void)_MapShadow;'
             print '        }'
             print '    } else {'
             print '        _MapDesc.pData = NULL;'
@@ -195,6 +200,7 @@ if __name__ == '__main__':
     api.addModule(d3d10.d3d10)
     api.addModule(d3d10.d3d10_1)
     api.addModule(d3d11.d3d11)
+    api.addModule(d3d12.d3d12)
     api.addModule(dcomp.dcomp)
     api.addModule(d3d9.d3dperf)
 

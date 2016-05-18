@@ -49,6 +49,9 @@ INT64 = Alias("INT64", Int64)
 UINT64 = Alias("UINT64", UInt64)
 FLOAT32 = Alias("FLOAT32", Float)
 
+LONG_PTR = Alias("LONG_PTR", IntPtr)
+ULONG_PTR = Alias("ULONG_PTR", UIntPtr)
+
 BYTE = Alias("BYTE", UInt8)
 WORD = Alias("WORD", UInt16)
 DWORD = Alias("DWORD", UInt32)

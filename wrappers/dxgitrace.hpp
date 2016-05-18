@@ -40,6 +40,8 @@
 #include "d3d10size.hpp"
 #include "d3d11imports.hpp"
 #include "d3d11size.hpp"
+#include "d3d12imports.hpp"
+#include "d3d12size.hpp"
 #include "dcompimports.hpp"
 #include "d2dimports.hpp" // WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT
 #include "d3d9imports.hpp" // D3DPERF_*
@@ -71,6 +73,15 @@ _shouldShadowMap(ID3D11Resource *pResource)
     D3D11_RESOURCE_DIMENSION Type = D3D11_RESOURCE_DIMENSION_UNKNOWN;
     pResource->GetType(&Type);
     return Type == D3D11_RESOURCE_DIMENSION_BUFFER;
+}
+
+inline bool
+_shouldShadowMap(ID3D12Resource *pResource)
+{
+    // ID3D12Resource::Unmap receives the written ranges, so no point in shadow mapping
+    // FIXME: Except with persistent mappings (D3D12_HEAP_TYPE_UPLOAD)
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dn788712.aspx
+    return false;
 }
 
 

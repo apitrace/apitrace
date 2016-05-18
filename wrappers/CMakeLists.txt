@@ -218,6 +218,8 @@ if (WIN32)
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d12.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d12sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/dcomp.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
