@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+from __future__ import print_function
+
 copyright = '''
 ##########################################################################
 #
@@ -156,7 +159,7 @@ class type_dumper_t(type_visitor.type_visitor_t):
         #if isinstance(self.type.base, declarations.cpptypes.declarated_t):
         #    decl = self.type.base.declaration
         #    if isinstance(decl, declarations.typedef.typedef_t):
-        #        print decl.type, type(decl.type)
+        #        print(decl.type, type(decl.type))
         #    if isinstance(decl, declarations.class_declaration.class_t):
         #        if decl.public_members:
         #            self.result = 'ObjPointer(%s)' % decl.name
@@ -216,11 +219,11 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
         self.functions = StringIO.StringIO()
 
     def start(self):
-        print copyright.strip()
-        print
-        print
-        print r'from winapi import *'
-        print
+        print(copyright.strip())
+        print()
+        print()
+        print(r'from winapi import *')
+        print()
 
     def finish(self):
         sys.stdout.write(self.interfaces.getvalue())
@@ -247,12 +250,12 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
 
     def visit_struct(self, decl_name, decl):
         struct = decl
-        print r'%s = Struct(%r, [' % (decl_name, decl_name)
+        print(r'%s = Struct(%r, [' % (decl_name, decl_name))
         for variable in struct.variables():
             var_type = dump_type(variable.type)
-            print r'    (%s, %r),' % (var_type, variable.name)
-        print r'])'
-        print
+            print(r'    (%s, %r),' % (var_type, variable.name))
+        print(r'])')
+        print()
 
     def visit_interface(self):
         class_ = self.decl
@@ -308,16 +311,16 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
                 base_decl = typedef.type.declaration
                 self.visit_struct(typedef.name, base_decl)
                 return
-        print r'%s = Alias(%r, %s)' % (typedef.name, typedef.name, base_type)
-        print
+        print(r'%s = Alias(%r, %s)' % (typedef.name, typedef.name, base_type))
+        print()
 
     def visit_enumeration(self):
         enum = self.decl
-        print r'%s = Enum(%r, [' % (enum.name, enum.name)
+        print(r'%s = Enum(%r, [' % (enum.name, enum.name))
         for name, value in enum.values:
-            print r'    %r,' % (name,)
-        print r'])'
-        print
+            print(r'    %r,' % (name,))
+        print(r'])')
+        print()
 
     def visit_variable(self):
         pass
