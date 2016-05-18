@@ -38,7 +38,6 @@ ID3DBlob.methods += [
 
 
 ID3D12RootSignature = Interface('ID3D12RootSignature', ID3D12DeviceChild)
-ID3D12RootSignatureDeserializer = Interface('ID3D12RootSignatureDeserializer', IUnknown)
 ID3D12CommandAllocator = Interface('ID3D12CommandAllocator', ID3D12Pageable)
 ID3D12Fence = Interface('ID3D12Fence', ID3D12Pageable)
 ID3D12PipelineState = Interface('ID3D12PipelineState', ID3D12Pageable)
@@ -1254,111 +1253,6 @@ D3D12_DESCRIPTOR_HEAP_DESC = Struct('D3D12_DESCRIPTOR_HEAP_DESC', [
     (UINT, 'NodeMask'),
 ])
 
-D3D12_DESCRIPTOR_RANGE_TYPE = Enum('D3D12_DESCRIPTOR_RANGE_TYPE', [
-    'D3D12_DESCRIPTOR_RANGE_TYPE_SRV',
-    'D3D12_DESCRIPTOR_RANGE_TYPE_UAV',
-    'D3D12_DESCRIPTOR_RANGE_TYPE_CBV',
-    'D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER',
-])
-
-D3D12_DESCRIPTOR_RANGE = Struct('D3D12_DESCRIPTOR_RANGE', [
-    (D3D12_DESCRIPTOR_RANGE_TYPE, 'RangeType'),
-    (UINT, 'NumDescriptors'),
-    (UINT, 'BaseShaderRegister'),
-    (UINT, 'RegisterSpace'),
-    (UINT, 'OffsetInDescriptorsFromTableStart'),
-])
-
-D3D12_ROOT_DESCRIPTOR_TABLE = Struct('D3D12_ROOT_DESCRIPTOR_TABLE', [
-    (UINT, 'NumDescriptorRanges'),
-    (Array(Const(D3D12_DESCRIPTOR_RANGE), '{self}.NumDescriptorRanges'), 'pDescriptorRanges'),
-])
-
-D3D12_ROOT_CONSTANTS = Struct('D3D12_ROOT_CONSTANTS', [
-    (UINT, 'ShaderRegister'),
-    (UINT, 'RegisterSpace'),
-    (UINT, 'Num32BitValues'),
-])
-
-D3D12_ROOT_DESCRIPTOR = Struct('D3D12_ROOT_DESCRIPTOR', [
-    (UINT, 'ShaderRegister'),
-    (UINT, 'RegisterSpace'),
-])
-
-D3D12_SHADER_VISIBILITY = Enum('D3D12_SHADER_VISIBILITY', [
-    'D3D12_SHADER_VISIBILITY_ALL',
-    'D3D12_SHADER_VISIBILITY_VERTEX',
-    'D3D12_SHADER_VISIBILITY_HULL',
-    'D3D12_SHADER_VISIBILITY_DOMAIN',
-    'D3D12_SHADER_VISIBILITY_GEOMETRY',
-    'D3D12_SHADER_VISIBILITY_PIXEL',
-])
-
-D3D12_ROOT_PARAMETER_TYPE = Enum('D3D12_ROOT_PARAMETER_TYPE', [
-    'D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE',
-    'D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS',
-    'D3D12_ROOT_PARAMETER_TYPE_CBV',
-    'D3D12_ROOT_PARAMETER_TYPE_SRV',
-    'D3D12_ROOT_PARAMETER_TYPE_UAV',
-])
-
-D3D12_ROOT_PARAMETER = Struct('D3D12_ROOT_PARAMETER', [
-    (D3D12_ROOT_PARAMETER_TYPE, 'ParameterType'),
-    (Union('{self}.ParameterType)', [
-        ('D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE', D3D12_ROOT_DESCRIPTOR_TABLE, 'DescriptorTable'),
-        ('D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS',  D3D12_ROOT_CONSTANTS, 'Constants'),
-        ('D3D12_ROOT_PARAMETER_TYPE_CBV',              D3D12_ROOT_DESCRIPTOR, 'Descriptor'),
-        ('D3D12_ROOT_PARAMETER_TYPE_SRV',              D3D12_ROOT_DESCRIPTOR, 'Descriptor'),
-        ('D3D12_ROOT_PARAMETER_TYPE_UAV',              D3D12_ROOT_DESCRIPTOR, 'Descriptor'),
-    ]), None),
-    (D3D12_SHADER_VISIBILITY, 'ShaderVisibility'),
-])
-
-D3D12_ROOT_SIGNATURE_FLAGS = Enum('D3D12_ROOT_SIGNATURE_FLAGS', [
-    'D3D12_ROOT_SIGNATURE_FLAG_NONE',
-    'D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT',
-    'D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS',
-    'D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS',
-    'D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS',
-    'D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS',
-    'D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS',
-    'D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT',
-])
-
-D3D12_STATIC_BORDER_COLOR = Enum('D3D12_STATIC_BORDER_COLOR', [
-    'D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK',
-    'D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK',
-    'D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE',
-])
-
-D3D12_STATIC_SAMPLER_DESC = Struct('D3D12_STATIC_SAMPLER_DESC', [
-    (D3D12_FILTER, 'Filter'),
-    (D3D12_TEXTURE_ADDRESS_MODE, 'AddressU'),
-    (D3D12_TEXTURE_ADDRESS_MODE, 'AddressV'),
-    (D3D12_TEXTURE_ADDRESS_MODE, 'AddressW'),
-    (FLOAT, 'MipLODBias'),
-    (UINT, 'MaxAnisotropy'),
-    (D3D12_COMPARISON_FUNC, 'ComparisonFunc'),
-    (D3D12_STATIC_BORDER_COLOR, 'BorderColor'),
-    (FLOAT, 'MinLOD'),
-    (FLOAT, 'MaxLOD'),
-    (UINT, 'ShaderRegister'),
-    (UINT, 'RegisterSpace'),
-    (D3D12_SHADER_VISIBILITY, 'ShaderVisibility'),
-])
-
-D3D12_ROOT_SIGNATURE_DESC = Struct('D3D12_ROOT_SIGNATURE_DESC', [
-    (UINT, 'NumParameters'),
-    (Array(Const(D3D12_ROOT_PARAMETER), '{self}.NumParameters'), 'pParameters'),
-    (UINT, 'NumStaticSamplers'),
-    (Array(Const(D3D12_STATIC_SAMPLER_DESC), '{self}.NumStaticSamplers'), 'pStaticSamplers'),
-    (D3D12_ROOT_SIGNATURE_FLAGS, 'Flags'),
-])
-
-D3D_ROOT_SIGNATURE_VERSION = Enum('D3D_ROOT_SIGNATURE_VERSION', [
-    'D3D_ROOT_SIGNATURE_VERSION_1',
-])
-
 D3D12_CPU_DESCRIPTOR_HANDLE = Struct('D3D12_CPU_DESCRIPTOR_HANDLE', [
     (SIZE_T, 'ptr'),
 ])
@@ -1517,10 +1411,6 @@ ID3D12DeviceChild.methods += [
 ID3D12RootSignature.methods += [
 ]
 
-ID3D12RootSignatureDeserializer.methods += [
-    StdMethod(Pointer(Const(D3D12_ROOT_SIGNATURE_DESC)), 'GetRootSignatureDesc', []),
-]
-
 ID3D12Pageable.methods += [
 ]
 
@@ -1534,7 +1424,7 @@ ID3D12Resource.methods += [
     StdMethod(D3D12_RESOURCE_DESC, 'GetDesc', []),
     StdMethod(D3D12_GPU_VIRTUAL_ADDRESS, 'GetGPUVirtualAddress', []),
     StdMethod(HRESULT, 'WriteToSubresource', [(UINT, 'DstSubresource'), (Pointer(Const(D3D12_BOX)), 'pDstBox'), (Blob(Const(Void), '_calcSubresourceSize12(_this, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)'), 'pSrcData'), (UINT, 'SrcRowPitch'), (UINT, 'SrcDepthPitch')]),
-    StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaqueBlob(Void, '0'), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')]),
+    StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaquePointer(Void), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')], sideeffects=False),
     StdMethod(HRESULT, 'GetHeapProperties', [Out(Pointer(D3D12_HEAP_PROPERTIES), 'pHeapProperties'), Out(Pointer(D3D12_HEAP_FLAGS), 'pHeapFlags')]),
 ]
 
@@ -1684,9 +1574,6 @@ d3d12.addInterfaces([
     ID3D12Device,
 ])
 d3d12.addFunctions([
-    #StdFunction(HRESULT, 'D3D12SerializeRootSignature', [(Pointer(Const(D3D12_ROOT_SIGNATURE_DESC)), 'pRootSignature'), (D3D_ROOT_SIGNATURE_VERSION, 'Version'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppBlob'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppErrorBlob')]),
-    #StdFunction(HRESULT, 'D3D12CreateRootSignatureDeserializer', [(LPCVOID, 'pSrcData'), (SIZE_T, 'SrcDataSizeInBytes'), (REFIID, 'pRootSignatureDeserializerInterface'), Out(Pointer(ObjPointer(Void)), 'ppRootSignatureDeserializer')]),
     StdFunction(HRESULT, 'D3D12CreateDevice', [(ObjPointer(IUnknown), 'pAdapter'), (D3D_FEATURE_LEVEL, 'MinimumFeatureLevel'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDevice')]),
-    #StdFunction(HRESULT, 'D3D12GetDebugInterface', [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvDebug')]),
 ])
 
