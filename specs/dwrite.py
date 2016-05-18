@@ -60,10 +60,6 @@ IDWriteGlyphRunAnalysis = Interface("IDWriteGlyphRunAnalysis", IUnknown)
 IDWriteFactory = Interface("IDWriteFactory", IUnknown)
 
 
-def EnumFlag(expr, values):
-    return Flags(Alias(expr, DWORD), values)
-
-
 DWRITE_FONT_FILE_TYPE = Enum("DWRITE_FONT_FILE_TYPE", [
     "DWRITE_FONT_FILE_TYPE_UNKNOWN",
     "DWRITE_FONT_FILE_TYPE_CFF",
@@ -85,7 +81,7 @@ DWRITE_FONT_FACE_TYPE = Enum("DWRITE_FONT_FACE_TYPE", [
     "DWRITE_FONT_FACE_TYPE_UNKNOWN",
 ])
 
-DWRITE_FONT_SIMULATIONS = EnumFlag("DWRITE_FONT_SIMULATIONS", [
+DWRITE_FONT_SIMULATIONS = EnumFlags("DWRITE_FONT_SIMULATIONS", [
     "DWRITE_FONT_SIMULATIONS_NONE",
     "DWRITE_FONT_SIMULATIONS_BOLD",
     "DWRITE_FONT_SIMULATIONS_OBLIQUE",
@@ -481,7 +477,7 @@ IDWriteTypography.methods += [
     StdMethod(HRESULT, "GetFontFeature", [(UINT32, "fontFeatureIndex"), Out(Pointer(DWRITE_FONT_FEATURE), "fontFeature")]),
 ]
 
-DWRITE_SCRIPT_SHAPES = EnumFlag("DWRITE_SCRIPT_SHAPES", [
+DWRITE_SCRIPT_SHAPES = EnumFlags("DWRITE_SCRIPT_SHAPES", [
     "DWRITE_SCRIPT_SHAPES_DEFAULT",
     "DWRITE_SCRIPT_SHAPES_NO_VISUAL",
 ])
