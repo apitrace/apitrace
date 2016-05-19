@@ -166,6 +166,16 @@ class D3DRetracer(Retracer):
         print r'        Software = NULL;'
         print r'    }'
 
+    def doInvokeInterfaceMethod(self, interface, method):
+        Retracer.doInvokeInterfaceMethod(self, interface, method)
+
+        # Keep retrying ID3D11VideoContext::DecoderBeginFrame when returns E_PENDING
+        if interface.name == 'ID3D11VideoContext' and method.name == 'DecoderBeginFrame':
+            print r'    while (_result == D3DERR_WASSTILLDRAWING || _result == E_PENDING) {'
+            print r'        Sleep(1);'
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print r'    }'
+
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('ID3D10Device', 'ID3D10Device1'):
@@ -359,6 +369,19 @@ class D3DRetracer(Retracer):
             print '        retrace::delRegionByPointer(_pbData);'
             print '        _pbData = 0;'
             print '    }'
+
+        if interface.name.startswith('ID3D11VideoContext'):
+            if method.name == 'GetDecoderBuffer':
+                print '    if (*ppBuffer && *pBufferSize) {'
+                print '        g_Maps[nullptr][SubresourceKey(_this, Type)] = *ppBuffer;'
+                print '    }'
+            if method.name == 'ReleaseDecoderBuffer':
+                print '    SubresourceKey _mappingKey(_this, Type);'
+                print '    void *_pBuffer = g_Maps[nullptr][_mappingKey];'
+                print '    if (_pBuffer) {'
+                print '        retrace::delRegionByPointer(_pBuffer);'
+                print '        g_Maps[nullptr][_mappingKey] = 0;'
+                print '    }'
 
         # Attach shader byte code for lookup
         if 'pShaderBytecode' in method.argNames():
