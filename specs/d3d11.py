@@ -2117,11 +2117,11 @@ ID3D11VideoProcessorOutputView.methods += [
 
 ID3D11VideoContext = Interface("ID3D11VideoContext", ID3D11DeviceChild)
 ID3D11VideoContext.methods += [
-    StdMethod(HRESULT, "GetDecoderBuffer", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (D3D11_VIDEO_DECODER_BUFFER_TYPE, "Type"), Out(Pointer(UINT), "pBufferSize"), Out(Pointer(OpaqueBlob(Void, "*pBufferSize")), "ppBuffer")]),
+    StdMethod(HRESULT, "GetDecoderBuffer", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (D3D11_VIDEO_DECODER_BUFFER_TYPE, "Type"), Out(Pointer(UINT), "pBufferSize"), Out(Pointer(LinearPointer(Void, "*pBufferSize")), "ppBuffer")]),
     StdMethod(HRESULT, "ReleaseDecoderBuffer", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (D3D11_VIDEO_DECODER_BUFFER_TYPE, "Type")]),
     StdMethod(HRESULT, "DecoderBeginFrame", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (ObjPointer(ID3D11VideoDecoderOutputView), "pView"), (UINT, "ContentKeySize"), (Blob(Const(Void), "ContentKeySize"), "pContentKey")]),
     StdMethod(HRESULT, "DecoderEndFrame", [(ObjPointer(ID3D11VideoDecoder), "pDecoder")]),
-    StdMethod(HRESULT, "SubmitDecoderBuffers", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (UINT, "NumBuffers"), (Pointer(Const(D3D11_VIDEO_DECODER_BUFFER_DESC)), "pBufferDesc")]),
+    StdMethod(HRESULT, "SubmitDecoderBuffers", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (UINT, "NumBuffers"), (Array(Const(D3D11_VIDEO_DECODER_BUFFER_DESC), "NumBuffers"), "pBufferDesc")]),
     StdMethod(HRESULT, "DecoderExtension", [(ObjPointer(ID3D11VideoDecoder), "pDecoder"), (Pointer(Const(D3D11_VIDEO_DECODER_EXTENSION)), "pExtensionData")]),
     StdMethod(Void, "VideoProcessorSetOutputTargetRect", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "Enable"), (Pointer(Const(RECT)), "pRect")]),
     StdMethod(Void, "VideoProcessorSetOutputBackgroundColor", [(ObjPointer(ID3D11VideoProcessor), "pVideoProcessor"), (BOOL, "YCbCr"), (Pointer(Const(D3D11_VIDEO_COLOR)), "pColor")]),

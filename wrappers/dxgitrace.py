@@ -106,6 +106,10 @@ class D3DCommonTracer(DllTracer):
                 ('std::map< std::pair<ID3D11Resource *, UINT>, _MAP_DESC >', 'm_MapDescs', None),
                 ('std::map< std::pair<ID3D11Resource *, UINT>, MemoryShadow >', 'm_MapShadows', None),
             ]
+        if interface.hasBase(d3d11.ID3D11VideoContext):
+            variables += [
+                ('std::map<UINT, std::pair<void *, UINT> >', 'm_MapDesc', None),
+            ]
 
         return variables
 
@@ -136,6 +140,14 @@ class D3DCommonTracer(DllTracer):
             print '        }'
             print '    }'
 
+        if interface.hasBase(d3d11.ID3D11VideoContext) and \
+           method.name == 'ReleaseDecoderBuffer':
+            print '    std::map<UINT, std::pair<void *, UINT> >::iterator it = m_MapDesc.find(Type);'
+            print '    if (it != m_MapDesc.end()) {'
+            self.emit_memcpy('it->second.first', 'it->second.second')
+            print '        m_MapDesc.erase(it);'
+            print '    }'
+
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name == 'Map':
@@ -152,6 +164,14 @@ class D3DCommonTracer(DllTracer):
             print '    } else {'
             print '        _MapDesc.pData = NULL;'
             print '        _MapDesc.Size = 0;'
+            print '    }'
+
+        if interface.hasBase(d3d11.ID3D11VideoContext) and \
+           method.name == 'GetDecoderBuffer':
+            print '    if (SUCCEEDED(_result)) {'
+            print '        m_MapDesc[Type] = std::make_pair(*ppBuffer, *pBufferSize);'
+            print '    } else {'
+            print '        m_MapDesc[Type] = std::make_pair(nullptr, 0);'
             print '    }'
 
     def invokeMethod(self, interface, base, method):
