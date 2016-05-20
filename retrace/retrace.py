@@ -121,7 +121,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    %s = static_cast<%s>((%s).toSInt());' % (lvalue, enum, rvalue)
 
     def visitBitmask(self, bitmask, lvalue, rvalue):
-        self.visit(bitmask.type, lvalue, rvalue)
+        print '    %s = static_cast<%s>((%s).toUInt());' % (lvalue, bitmask, rvalue)
 
     def visitArray(self, array, lvalue, rvalue):
         tmp = '_a_' + array.tag + '_' + str(self.seq)
