@@ -807,7 +807,7 @@ D3D12_RESOURCE_BARRIER_FLAGS = EnumFlags('D3D12_RESOURCE_BARRIER_FLAGS', [
 D3D12_RESOURCE_BARRIER = Struct('D3D12_RESOURCE_BARRIER', [
     (D3D12_RESOURCE_BARRIER_TYPE, 'Type'),
     (D3D12_RESOURCE_BARRIER_FLAGS, 'Flags'),
-    (Union('{self}.Type)', [
+    (Union('{self}.Type', [
         ('D3D12_RESOURCE_BARRIER_TYPE_TRANSITION', D3D12_RESOURCE_TRANSITION_BARRIER, 'Transition'),
         ('D3D12_RESOURCE_BARRIER_TYPE_ALIASING', D3D12_RESOURCE_ALIASING_BARRIER, 'Aliasing'),
         ('D3D12_RESOURCE_BARRIER_TYPE_UAV', D3D12_RESOURCE_UAV_BARRIER, 'UAV'),
@@ -835,7 +835,7 @@ D3D12_TEXTURE_COPY_TYPE = Enum('D3D12_TEXTURE_COPY_TYPE', [
 D3D12_TEXTURE_COPY_LOCATION = Struct('D3D12_TEXTURE_COPY_LOCATION', [
     (ObjPointer(ID3D12Resource), 'pResource'),
     (D3D12_TEXTURE_COPY_TYPE, 'Type'),
-    (Union('{self}.Type)', [
+    (Union('{self}.Type', [
         ('D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT', D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 'PlacedFootprint'),
         ('D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX', UINT, 'SubresourceIndex'),
     ]), None),
@@ -1570,6 +1570,7 @@ ID3D12Device.methods += [
 d3d12 = Module('d3d12')
 d3d12.addInterfaces([
     ID3D12Debug,
+    ID3D12GraphicsCommandList,
     ID3D12CommandQueue,
     ID3D12Device,
 ])
