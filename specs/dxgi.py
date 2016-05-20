@@ -913,3 +913,85 @@ IDXGISwapChainDWM.methods += [
 dxgi.addInterfaces([
     IDXGIFactoryDWM,
 ])
+
+
+
+#
+# DXGI 1.4
+#
+
+DXGI_COLOR_SPACE_TYPE = Enum('DXGI_COLOR_SPACE_TYPE', [
+    'DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709',
+    'DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709',
+    'DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709',
+    'DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020',
+    'DXGI_COLOR_SPACE_RESERVED',
+    'DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601',
+    'DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601',
+    'DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601',
+    'DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709',
+    'DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709',
+    'DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020',
+    'DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020',
+    'DXGI_COLOR_SPACE_CUSTOM',
+])
+
+
+DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG = Enum('DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG', [
+    'DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT',
+    'DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_OVERLAY_PRESENT',
+])
+
+DXGI_OVERLAY_COLOR_SPACE_SUPPORT_FLAG = Enum('DXGI_OVERLAY_COLOR_SPACE_SUPPORT_FLAG', [
+    'DXGI_OVERLAY_COLOR_SPACE_SUPPORT_FLAG_PRESENT',
+])
+
+DXGI_MEMORY_SEGMENT_GROUP = Enum('DXGI_MEMORY_SEGMENT_GROUP', [
+    'DXGI_MEMORY_SEGMENT_GROUP_LOCAL',
+    'DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL',
+])
+
+DXGI_QUERY_VIDEO_MEMORY_INFO = Struct('DXGI_QUERY_VIDEO_MEMORY_INFO', [
+    (UINT64, 'Budget'),
+    (UINT64, 'CurrentUsage'),
+    (UINT64, 'AvailableForReservation'),
+    (UINT64, 'CurrentReservation'),
+])
+
+IDXGISwapChain3 = Interface('IDXGISwapChain3', IDXGISwapChain2)
+IDXGIOutput4 = Interface('IDXGIOutput4', IDXGIOutput3)
+IDXGIFactory4 = Interface('IDXGIFactory4', IDXGIFactory3)
+IDXGIAdapter3 = Interface('IDXGIAdapter3', IDXGIAdapter2)
+
+IDXGISwapChain3.methods += [
+    StdMethod(UINT, 'GetCurrentBackBufferIndex', []),
+    StdMethod(HRESULT, 'CheckColorSpaceSupport', [(DXGI_COLOR_SPACE_TYPE, 'ColorSpace'), Out(Pointer(UINT), 'pColorSpaceSupport')], sideeffects=False),
+    StdMethod(HRESULT, 'SetColorSpace1', [(DXGI_COLOR_SPACE_TYPE, 'ColorSpace')]),
+    StdMethod(HRESULT, 'ResizeBuffers1', [(UINT, 'BufferCount'), (UINT, 'Width'), (UINT, 'Height'), (DXGI_FORMAT, 'Format'), (DXGI_SWAP_CHAIN_FLAG, 'SwapChainFlags'), (Pointer(Const(UINT)), 'pCreationNodeMask'), (Array(Const(ObjPointer(IUnknown)), 'BufferCount'), 'ppPresentQueue')]),
+]
+
+IDXGIOutput4.methods += [
+    StdMethod(HRESULT, 'CheckOverlayColorSpaceSupport', [(DXGI_FORMAT, 'Format'), (DXGI_COLOR_SPACE_TYPE, 'ColorSpace'), (ObjPointer(IUnknown), 'pConcernedDevice'), Out(Pointer(UINT), 'pFlags')], sideeffects=False),
+]
+
+IDXGIFactory4.methods += [
+    StdMethod(HRESULT, 'EnumAdapterByLuid', [(LUID, 'AdapterLuid'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvAdapter')]),
+    StdMethod(HRESULT, 'EnumWarpAdapter', [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvAdapter')]),
+]
+
+IDXGIAdapter3.methods += [
+    StdMethod(HRESULT, 'RegisterHardwareContentProtectionTeardownStatusEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(Void, 'UnregisterHardwareContentProtectionTeardownStatus', [(DWORD, 'dwCookie')], sideeffects=False),
+    StdMethod(HRESULT, 'QueryVideoMemoryInfo', [(UINT, 'NodeIndex'), (DXGI_MEMORY_SEGMENT_GROUP, 'MemorySegmentGroup'), Out(Pointer(DXGI_QUERY_VIDEO_MEMORY_INFO), 'pVideoMemoryInfo')], sideeffects=False),
+    StdMethod(HRESULT, 'SetVideoMemoryReservation', [(UINT, 'NodeIndex'), (DXGI_MEMORY_SEGMENT_GROUP, 'MemorySegmentGroup'), (UINT64, 'Reservation')]),
+    StdMethod(HRESULT, 'RegisterVideoMemoryBudgetChangeNotificationEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(Void, 'UnregisterVideoMemoryBudgetChangeNotification', [(DWORD, 'dwCookie')], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGISwapChain3,
+    IDXGIOutput4,
+    IDXGIFactory4,
+    IDXGIAdapter3,
+])
+
