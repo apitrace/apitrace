@@ -364,6 +364,12 @@ class WrapDecider(stdapi.Traverser):
         self.needsWrapping = True
 
 
+def typeNeedsWrapping(type):
+    visitor = WrapDecider()
+    visitor.visit(type)
+    return visitor.needsWrapping
+
+
 class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
     '''Type visitor which will generate the code to wrap an instance.
     
@@ -403,10 +409,24 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
 
     def visitInterfacePointer(self, interface, instance):
         print("    Wrap%s::_wrap(__FUNCTION__, &%s);" % (interface.name, instance))
-    
-    def visitPolymorphic(self, type, instance):
+
+    def visitPolymorphic(self, polymorphic, instance):
         # XXX: There might be polymorphic values that need wrapping in the future
-        raise NotImplementedError
+        if typeNeedsWrapping(polymorphic):
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print('    switch (%s) {' % switchExpr)
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print('    %s:' % case)
+                caseInstance = instance
+                if type.expr is not None:
+                    caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                self.visit(type, caseInstance)
+                print('        break;')
+            if polymorphic.defaultType is None:
+                print(r'    default:')
+                print(r'        break;')
+            print('    }')
 
 
 class ValueUnwrapper(ValueWrapper):
@@ -660,18 +680,13 @@ class Tracer:
     def wrapRet(self, function, instance):
         self.wrapValue(function.type, instance)
 
-    def needsWrapping(self, type):
-        visitor = WrapDecider()
-        visitor.visit(type)
-        return visitor.needsWrapping
-
     def wrapValue(self, type, instance):
-        if self.needsWrapping(type):
+        if typeNeedsWrapping(type):
             visitor = ValueWrapper()
             visitor.visit(type, instance)
 
     def unwrapValue(self, type, instance):
-        if self.needsWrapping(type):
+        if typeNeedsWrapping(type):
             visitor = ValueUnwrapper()
             visitor.visit(type, instance)
 
