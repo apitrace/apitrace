@@ -1478,7 +1478,7 @@ ID3D12GraphicsCommandList.methods += [
     StdMethod(Void, 'SetPipelineState', [(ObjPointer(ID3D12PipelineState), 'pPipelineState')]),
     StdMethod(Void, 'ResourceBarrier', [(UINT, 'NumBarriers'), (Array(Const(D3D12_RESOURCE_BARRIER), 'NumBarriers'), 'pBarriers')]),
     StdMethod(Void, 'ExecuteBundle', [(ObjPointer(ID3D12GraphicsCommandList), 'pCommandList')]),
-    StdMethod(Void, 'SetDescriptorHeaps', [(UINT, 'NumDescriptorHeaps'), Out(Array(ObjPointer(ID3D12DescriptorHeap), 'NumDescriptorHeaps'), 'ppDescriptorHeaps')]),
+    StdMethod(Void, 'SetDescriptorHeaps', [(UINT, 'NumDescriptorHeaps'), (Array(Const(ObjPointer(ID3D12DescriptorHeap)), 'NumDescriptorHeaps'), 'ppDescriptorHeaps')]),
     StdMethod(Void, 'SetComputeRootSignature', [(ObjPointer(ID3D12RootSignature), 'pRootSignature')]),
     StdMethod(Void, 'SetGraphicsRootSignature', [(ObjPointer(ID3D12RootSignature), 'pRootSignature')]),
     StdMethod(Void, 'SetComputeRootDescriptorTable', [(UINT, 'RootParameterIndex'), (D3D12_GPU_DESCRIPTOR_HANDLE, 'BaseDescriptor')]),
