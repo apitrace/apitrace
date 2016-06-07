@@ -266,6 +266,20 @@ class GlRetracer(Retracer):
             print r'            retrace::warning(call) << "failed to get mapped pointer\n";'
             print r'        }'
 
+        # Implicit destruction of buffer mappings
+        # TODO: handle BufferData variants
+        # TODO: don't rely on GL_ARB_direct_state_access
+        if function.name in ('glDeleteBuffers', 'glDeleteBuffersARB'):
+            print r'    if (currentContext->features().ARB_direct_state_access) {'
+            print r'        for (GLsizei i = 0; i < n; ++i) {'
+            print r'            GLvoid *ptr = nullptr;'
+            print r'            glGetNamedBufferPointerv(buffers[i], GL_BUFFER_MAP_POINTER, &ptr);'
+            print r'            if (ptr) {'
+            print r'                retrace::delRegionByPointer(ptr);'
+            print r'            }'
+            print r'        }'
+            print r'    }'
+
         if function.name.startswith('glCopyImageSubData'):
             print r'    if (srcTarget == GL_RENDERBUFFER || dstTarget == GL_RENDERBUFFER) {'
             print r'        retrace::warning(call) << " renderbuffer targets unsupported (https://github.com/apitrace/apitrace/issues/404)\n";'
