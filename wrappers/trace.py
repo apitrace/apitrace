@@ -801,13 +801,16 @@ class Tracer:
         print r'        Wrap%s *pWrapper = (Wrap%s *)it->second;' % (iface.name, iface.name)
         print r'        assert(pWrapper);'
         print r'        assert(pWrapper->m_dwMagic == 0xd8365d6c);'
-        print r'        assert(pWrapper->m_pInstance == pObj);'
-        print r'        if (pWrapper->m_pVtbl == getVtbl(pObj) &&'
+        print r'        if (pWrapper->m_pInstance == pObj &&'
+        print r'            pWrapper->m_pVtbl == getVtbl(pObj) &&'
         print r'            pWrapper->m_NumMethods >= %s) {' % len(baseMethods)
         if debug:
             print r'            os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", entryName, pObj, pWrapper, pWrapper->m_pVtbl);'
+        print r'            assert(hasChildInterface(IID_%s, pWrapper->m_pInstance));' % iface.name
         print r'            *ppObj = pWrapper;'
         print r'            return;'
+        print r'        } else {'
+        print r'            delete pWrapper;'
         print r'        }'
         print r'    }'
         for childIface in getInterfaceHierarchy(ifaces, iface):
@@ -903,7 +906,8 @@ class Tracer:
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print r'    if (!_result) {'
-            print r'        delete this;'
+            print r'        // NOTE: Must not delete the wrapper here.  See'
+            print r'        // https://github.com/apitrace/apitrace/issues/462'
             print r'    }'
         
         print '    trace::localWriter.endLeave();'
