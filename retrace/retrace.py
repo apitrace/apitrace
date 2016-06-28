@@ -545,7 +545,8 @@ class Retracer:
             print r'        if (_orig_result != 0) {'
             print r'            retrace::warning(call) << "unexpected object destruction\n";'
             print r'        }'
-            print r'        retrace::delObj(call.arg(0));'
+            print r'        // NOTE: Must not delete the object mapping here.  See'
+            print r'        // https://github.com/apitrace/apitrace/issues/462'
             print r'    }'
 
     def invokeInterfaceMethod(self, interface, method):
