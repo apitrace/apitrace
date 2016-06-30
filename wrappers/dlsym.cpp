@@ -26,6 +26,8 @@
 
 
 #include <assert.h>
+#include <stdlib.h>
+
 #include <memory>
 
 #include "os.hpp"
@@ -101,7 +103,7 @@ enum LibClass {
 inline LibClass
 classifyLibrary(const char *pathname)
 {
-    std::unique_ptr<char, decltype(std::free) *> dupname { strdup(pathname), std::free };
+    std::unique_ptr<char, decltype(free) *> dupname { strdup(pathname), free };
 
     char *filename = basename(dupname.get());
     assert(filename);
