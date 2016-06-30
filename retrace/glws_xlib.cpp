@@ -214,6 +214,8 @@ createWindow(XVisualInfo *visinfo,
         display, window, name, name,
         None, (char **)NULL, 0, &sizehints);
 
+    XSync(display, False);
+
     return window;
 }
 
