@@ -218,8 +218,8 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     config_attrib_list.add(WAFFLE_RED_SIZE, 8);
     config_attrib_list.add(WAFFLE_GREEN_SIZE, 8);
     config_attrib_list.add(WAFFLE_BLUE_SIZE, 8);
-    config_attrib_list.add(WAFFLE_DEPTH_SIZE, 8);
     config_attrib_list.add(WAFFLE_ALPHA_SIZE, 8);
+    config_attrib_list.add(WAFFLE_DEPTH_SIZE, 24);
     config_attrib_list.add(WAFFLE_STENCIL_SIZE, 8);
     config_attrib_list.add(WAFFLE_DOUBLE_BUFFERED, doubleBuffer);
     if (0) {

@@ -241,10 +241,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     Attributes<int> attribs;
     attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
     attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
-    attribs.add(GLX_RED_SIZE, 1);
-    attribs.add(GLX_GREEN_SIZE, 1);
-    attribs.add(GLX_BLUE_SIZE, 1);
-    attribs.add(GLX_ALPHA_SIZE, 1);
+    attribs.add(GLX_RED_SIZE, 8);
+    attribs.add(GLX_GREEN_SIZE, 8);
+    attribs.add(GLX_BLUE_SIZE, 8);
+    attribs.add(GLX_ALPHA_SIZE, 8);
     attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
     attribs.add(GLX_DEPTH_SIZE, 1);
     attribs.add(GLX_STENCIL_SIZE, 1);

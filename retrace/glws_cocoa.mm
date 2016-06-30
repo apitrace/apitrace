@@ -235,13 +235,13 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
     Attributes<NSOpenGLPixelFormatAttribute> attribs;
 
-    attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)8);
     attribs.add(NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24);
     if (doubleBuffer) {
         attribs.add(NSOpenGLPFADoubleBuffer);
     }
-    attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
-    attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)24);
+    attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)8);
 
     if (profile.api != glfeatures::API_GL) {
         return NULL;

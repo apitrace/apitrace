@@ -377,12 +377,12 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
     Attributes<EGLint> attribs;
     attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
-    attribs.add(EGL_RED_SIZE, 1);
-    attribs.add(EGL_GREEN_SIZE, 1);
-    attribs.add(EGL_BLUE_SIZE, 1);
-    attribs.add(EGL_ALPHA_SIZE, 1);
-    attribs.add(EGL_DEPTH_SIZE, 1);
-    attribs.add(EGL_STENCIL_SIZE, 1);
+    attribs.add(EGL_RED_SIZE, 8);
+    attribs.add(EGL_GREEN_SIZE, 8);
+    attribs.add(EGL_BLUE_SIZE, 8);
+    attribs.add(EGL_ALPHA_SIZE, 8);
+    attribs.add(EGL_DEPTH_SIZE, 24);
+    attribs.add(EGL_STENCIL_SIZE, 8);
     attribs.add(EGL_RENDERABLE_TYPE, api_bits);
     attribs.end(EGL_NONE);
 
