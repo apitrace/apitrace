@@ -323,5 +323,6 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglCreateImageKHR", &retrace::ignore},
     {"eglDestroyImageKHR", &retrace::ignore},
     {"glEGLImageTargetTexture2DOES", &retrace::ignore},
+    {"eglGetSyncValuesCHROMIUM", &retrace::ignore},
     {NULL, NULL},
 };
