@@ -146,12 +146,21 @@ public:
 
         EGLConfig config = static_cast<const EglVisual *>(visual)->config;
         surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
+        if (surface == EGL_NO_SURFACE) {
+            // XXX: But don't defer destruction if eglCreateWindowSurface fails, which is the case of SwiftShader
+            eglDestroySurface(eglDisplay, oldSurface);
+            oldSurface = EGL_NO_SURFACE;
+            surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
+        }
+        assert(surface != EGL_NO_SURFACE);
 
         if (rebindDrawSurface || rebindReadSurface) {
             eglMakeCurrent(eglDisplay, surface, surface, currentContext);
         }
 
-        eglDestroySurface(eglDisplay, oldSurface);
+        if (oldSurface != EGL_NO_SURFACE) {
+            eglDestroySurface(eglDisplay, oldSurface);
+        }
     }
 
     void
