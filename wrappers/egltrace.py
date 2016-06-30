@@ -113,7 +113,6 @@ if __name__ == '__main__':
     print '#define GL_GLEXT_PROTOTYPES'
     print '#define EGL_EGLEXT_PROTOTYPES'
     print
-    print '#include "dlopen.hpp"'
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print '#include "eglsize.hpp"'
@@ -128,70 +127,6 @@ if __name__ == '__main__':
     tracer.traceApi(api)
 
     print r'''
-
-
-
-/*
- * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
- * LD_PRELOAD does not intercept symbols obtained via dlopen/dlsym, therefore
- * we need to intercept the dlopen() call here, and redirect to our wrapper
- * shared object.
- */
-extern "C" PUBLIC
-void * dlopen(const char *filename, int flag)
-{
-    bool intercept = false;
-
-    if (filename) {
-        intercept =
-            strcmp(filename, "libEGL.so") == 0 ||
-            strcmp(filename, "libEGL.so.1") == 0 ||
-            strcmp(filename, "libGLESv1_CM.so") == 0 ||
-            strcmp(filename, "libGLESv1_CM.so.1") == 0 ||
-            strcmp(filename, "libGLESv2.so") == 0 ||
-            strcmp(filename, "libGLESv2.so.2") == 0 ||
-            strcmp(filename, "libGL.so") == 0 ||
-            strcmp(filename, "libGL.so.1") == 0;
-
-        if (intercept) {
-            os::log("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
-
-            /* The current dispatch implementation relies on core entry-points to be globally available, so force this.
-             *
-             * TODO: A better approach would be note down the entry points here and
-             * use them latter. Another alternative would be to reopen the library
-             * with RTLD_NOLOAD | RTLD_GLOBAL.
-             */
-            flag &= ~RTLD_LOCAL;
-            flag |= RTLD_GLOBAL;
-        }
-    }
-
-    void *handle = _dlopen(filename, flag);
-
-    if (intercept) {
-        // Get the file path for our shared object, and use it instead
-        static int dummy = 0xdeedbeef;
-        Dl_info info;
-        if (dladdr(&dummy, &info)) {
-            handle = _dlopen(info.dli_fname, flag);
-        } else {
-            os::log("apitrace: warning: dladdr() failed\n");
-        }
-
-        // SDL will skip dlopen'ing libEGL.so after it spots EGL symbols on our
-        // wrapper, so force loading it here.
-        // (https://github.com/apitrace/apitrace/issues/291#issuecomment-59734022)
-        if (strcmp(filename, "libEGL.so") != 0 &&
-            strcmp(filename, "libEGL.so.1") != 0) {
-            _dlopen("libEGL.so.1", RTLD_GLOBAL | RTLD_LAZY);
-        }
-    }
-
-    return handle;
-}
-
-
 #if defined(ANDROID)
 
 /*
@@ -251,6 +186,4 @@ void APIENTRY glWeightPointerOESBounds(GLint size, GLenum type, GLsizei stride, 
  */
 
 #endif /* ANDROID */
-
-
 '''

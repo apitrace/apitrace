@@ -418,6 +418,8 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         PREFIX ""
     )
 
+    target_compile_definitions (egltrace PRIVATE -DEGLTRACE=1)
+
     target_link_libraries (egltrace
         gltrace_common
         glproc_egl
