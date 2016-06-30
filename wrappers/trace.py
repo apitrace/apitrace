@@ -727,7 +727,7 @@ class Tracer:
         print "{"
         print "private:"
         print "    %s(%s * pInstance);" % (wrapperInterfaceName, interface.name)
-        print "    virtual ~%s();" % wrapperInterfaceName
+        print "    ~%s(); // Not implemented" % wrapperInterfaceName
         print "public:"
         print "    static %s* _create(const char *entryName, %s * pInstance);" % (wrapperInterfaceName, interface.name)
         print "    static void _wrap(const char *entryName, %s ** ppInstance);" % (interface.name,)
@@ -745,7 +745,7 @@ class Tracer:
 
         print r'private:'
         print r'    void _dummy(unsigned i) const {'
-        print r'        os::log("error: %%s: unexpected virtual method %%i of instance pWrapper=%%p pvObj=%%p pVtbl=%%p\n", "%s", i, this, m_pInstance, m_pVtbl);' % interface.name
+        print r'        os::log("error: %%s: unexpected virtual method %%i of instance pvObj=%%p pWrapper=%%p pVtbl=%%p\n", "%s", i, m_pInstance, this, m_pVtbl);' % interface.name
         print r'        warnVtbl(m_pVtbl);'
         print r'        warnVtbl(getVtbl(m_pInstance));'
         print r'        trace::localWriter.flush();'
@@ -790,14 +790,6 @@ class Tracer:
         print '}'
         print
 
-        # Destructor
-        print '%s::~%s() {' % (wrapperInterfaceName, wrapperInterfaceName)
-        if debug:
-            print r'        os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % iface.name
-        print r'        g_WrappedObjects.erase(m_pInstance);'
-        print '}'
-        print
-        
         baseMethods = list(iface.iterBaseMethods())
         for base, method in baseMethods:
             self.base = base
@@ -822,8 +814,8 @@ class Tracer:
         print r'        Wrap%s *pWrapper = (Wrap%s *)it->second;' % (iface.name, iface.name)
         print r'        assert(pWrapper);'
         print r'        assert(pWrapper->m_dwMagic == 0xd8365d6c);'
-        print r'        if (pWrapper->m_pInstance == pObj &&'
-        print r'            pWrapper->m_pVtbl == getVtbl(pObj) &&'
+        print r'        assert(pWrapper->m_pInstance == pObj);'
+        print r'        if (pWrapper->m_pVtbl == getVtbl(pObj) &&'
         print r'            pWrapper->m_NumMethods >= %s) {' % len(baseMethods)
         if debug:
             print r'            os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", entryName, pObj, pWrapper, pWrapper->m_pVtbl);'
@@ -831,7 +823,9 @@ class Tracer:
         print r'            *ppObj = pWrapper;'
         print r'            return;'
         print r'        } else {'
-        print r'            delete pWrapper;'
+        if debug:
+            print r'            os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", pWrapper->m_pInstance, pWrapper, pWrapper->m_pVtbl);' % iface.name
+        print r'            g_WrappedObjects.erase(pObj);'
         print r'        }'
         print r'    }'
         for childIface in getInterfaceHierarchy(ifaces, iface):
