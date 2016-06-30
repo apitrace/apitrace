@@ -143,7 +143,10 @@ EGLConfigAttribs = EGLIntArray([
 EGLWindowsSurfaceAttribs = EGLIntArray([
     ('EGL_RENDER_BUFFER', FakeEnum(Int, ['EGL_SINGLE_BUFFER', 'EGL_BACK_BUFFER'])),
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
-    ('EGL_VG_COLORSPACE', EGLVGColorspace)])
+    ('EGL_VG_COLORSPACE', EGLVGColorspace),
+    ('EGL_POST_SUB_BUFFER_SUPPORTED_NV', EGLBoolean),
+])
+
 
 EGLPixmapSurfaceAttribs = EGLIntArray([
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
