@@ -391,11 +391,23 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     EglVisual *visual = new EglVisual(profile);
     visual->config = config;
 
+    XVisualInfo* visinfo;
     XVisualInfo templ;
     int num_visuals = 0;
     templ.visualid = visual_id;
-    visual->visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
-    assert(visual->visinfo);
+    visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
+    if (!visinfo) {
+        // XXX: XGetVisualInfo fails with SwiftShader somehow
+        visinfo = new XVisualInfo;
+        int depth = DefaultDepth(display, screen);
+        if (!XMatchVisualInfo(display, screen, depth, TrueColor, visinfo)) {
+            delete visinfo;
+            assert(0);
+            return NULL;
+        }
+    }
+    assert(visinfo);
+    visual->visinfo = visinfo;
 
     return visual;
 }
