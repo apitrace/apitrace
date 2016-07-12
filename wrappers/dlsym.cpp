@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #include <memory>
 
