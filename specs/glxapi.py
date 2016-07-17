@@ -352,6 +352,12 @@ GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
     ])),
 ])
 
+GLXPixmapAttribs = AttribArray(Const(GLXEnum), [
+    ('GLX_TEXTURE_FORMAT_EXT', GLXEnum),
+    ('GLX_TEXTURE_TARGET_EXT', GLXEnum),
+    ('GLX_MIPMAP_TEXTURE_EXT', Bool),
+])
+
 GLXPbufferAttribs = AttribArray(Const(GLXEnum), [
     ('GLX_PBUFFER_WIDTH', Int),
     ('GLX_PBUFFER_HEIGHT', Int),
@@ -428,7 +434,7 @@ glxapi.addFunctions([
                                             (Window, "win"), (UnusedAttribs, "attribList")]),
     Function(Void, "glXDestroyWindow", [(Display, "dpy"), (GLXWindow, "window")]),
     Function(GLXPixmap, "glXCreatePixmap", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                            (Pixmap, "pixmap"), (UnusedAttribs, "attribList")]),
+                                            (Pixmap, "pixmap"), (GLXPixmapAttribs, "attribList")]),
     Function(Void, "glXDestroyPixmap", [(Display, "dpy"), (GLXPixmap, "pixmap")]),
     Function(GLXPbuffer, "glXCreatePbuffer", [(Display, "dpy"), (GLXFBConfig, "config"),
                                               (GLXPbufferAttribs, "attribList")]),
