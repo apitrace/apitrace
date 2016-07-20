@@ -828,46 +828,46 @@ getTextureTarget(Context &context, GLuint texture)
         return GL_NONE;
     }
 
+    /*
+     * GL_ARB_direct_state_access's glGetTextureParameteriv(GL_TEXTURE_TARGET)
+     * would be perfect, except the fact it's not supported for
+     * TEXTURE_BUFFERS...
+     */
+
     GLint result = GL_NONE;
-    if (context.ARB_direct_state_access) {
 
-        glGetTextureParameteriv(texture, GL_TEXTURE_TARGET, &result);
-        assert(result != GL_NONE);
+    flushErrors();
 
-    } else {
+    // Temporarily disable debug messages
+    GLDEBUGPROC prevDebugCallbackFunction = 0;
+    void *prevDebugCallbackUserParam = 0;
+    if (context.KHR_debug) {
+        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+        glDebugMessageCallback(NULL, NULL);
+    }
+
+    for (auto target : textureTargets) {
+        GLenum binding = getTextureBinding(target);
+
+        GLint bound_texture = 0;
+        glGetIntegerv(binding, &bound_texture);
+        glBindTexture(target, texture);
+
+        bool succeeded = glGetError() == GL_NO_ERROR;
+
+        glBindTexture(target, bound_texture);
+
+        if (succeeded) {
+            result = target;
+            break;
+        }
+
         flushErrors();
+    }
 
-        // Temporarily disable debug messages
-        GLDEBUGPROC prevDebugCallbackFunction = 0;
-        void *prevDebugCallbackUserParam = 0;
-        if (context.KHR_debug) {
-            glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
-            glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
-            glDebugMessageCallback(NULL, NULL);
-        }
-
-        for (auto target : textureTargets) {
-            GLenum binding = getTextureBinding(target);
-
-            GLint bound_texture = 0;
-            glGetIntegerv(binding, &bound_texture);
-            glBindTexture(target, texture);
-
-            bool succeeded = glGetError() == GL_NO_ERROR;
-
-            glBindTexture(target, bound_texture);
-
-            if (succeeded) {
-                result = target;
-                break;
-            }
-
-            flushErrors();
-        }
-
-        if (context.KHR_debug) {
-            glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
-        }
+    if (context.KHR_debug) {
+        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
     }
 
     return result;
