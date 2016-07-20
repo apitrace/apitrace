@@ -936,6 +936,10 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
 
         BufferMapping &mapping = mappings[buffer];
         attrib.map = (const GLbyte *)mapping.map(GL_ARRAY_BUFFER, buffer);
+        if (!attrib.map) {
+            std::cerr << "warning: could not map buffer for attribute " << &name[0] << ", skipping vertex attribute dump\n";
+            return;
+        }
 
         BufferBinding bb(GL_ARRAY_BUFFER, buffer);
         GLint bufferSize = 0;
