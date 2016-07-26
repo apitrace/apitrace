@@ -74,7 +74,7 @@ if (WIN32)
     #
     # See also:
     # - http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
-    if (DEFINED MSVC_VERSION AND NOT ${MSVC_VERSION} LESS 1700)
+    if (MSVC)
         set (USE_WINSDK_HEADERS TRUE)
     endif ()
 

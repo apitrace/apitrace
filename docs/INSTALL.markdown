@@ -136,7 +136,7 @@ Additional requirements:
 
 * CMake 3.4 or later
 
-* Microsoft Visual Studio 2013 or newer (instructions presume 2015)
+* Microsoft Visual Studio 2015 or newer (instructions presume 2015)
 
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.

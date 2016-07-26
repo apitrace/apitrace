@@ -495,21 +495,12 @@ protected:
     scale(Scale value, typename std::enable_if<normalized, T>::type* = 0)
     {
         static_assert( normalized, "should only be instantiated for normalized types" );
-#ifndef _MSC_VER
         static constexpr Type typeMax = std::numeric_limits<Type>::max();
         static_assert( static_cast<Type>(static_cast<Scale>(typeMax)) == typeMax,
                        "intermediate type cannot represent maximum value without loss of precission" );
         static constexpr Scale scaleFactor = Scale(1) / Scale(typeMax);
         static_assert( Scale(typeMax) * scaleFactor == Scale(1), "cannot represent unity" );
         static_assert( Scale(0) * scaleFactor == Scale(0), "cannot represent zero" );
-#else
-        // XXX: MSCV doesn't support constexpr yet
-        static const Type typeMax = std::numeric_limits<Type>::max();
-        assert( static_cast<Type>(static_cast<Scale>(typeMax)) == typeMax );
-        static const Scale scaleFactor = Scale(1) / Scale(typeMax);
-        assert( Scale(typeMax) * scaleFactor == Scale(1) );
-        assert( Scale(0) * scaleFactor == Scale(0) );
-#endif
         return value * scaleFactor;
     }
 

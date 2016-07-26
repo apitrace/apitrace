@@ -124,11 +124,9 @@ if (ENABLE_GUI)
 endif ()
 
 if (MSVC)
-    if (${MSVC_VERSION} LESS 1800)
-        message (FATAL_ERROR "Visual Studio 2013 or later required")
+    if (${MSVC_VERSION} LESS 1900)
+        message (FATAL_ERROR "Visual Studio 2015 or later required")
     endif ()
-
-    include (Windows10SDK)
 endif ()
 
 if (WIN32)
@@ -149,12 +147,8 @@ if (WIN32)
 
     if (WINDOWS_XP)
         set (DirectX_D3D11_3_INCLUDE_FOUND FALSE)
-    elseif (DEFINED MSVC_VERSION AND NOT DirectX_D3D11_3_INCLUDE_FOUND)
-        if (${MSVC_VERSION} LESS 1900)
-            message (FATAL_ERROR "Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk) must be installed for D3D11.3 support")
-        else ()
-            message (FATAL_ERROR "Windows 10 SDK must be selected (-DCMAKE_SYSTEM_VERSION=10.0) for D3D11.3 support")
-        endif ()
+    elseif (MSVC AND NOT DirectX_D3D11_3_INCLUDE_FOUND)
+        message (FATAL_ERROR "Windows 10 SDK must be selected (-DCMAKE_SYSTEM_VERSION=10.0) for D3D11.3 support")
     endif ()
 
     set (ENABLE_EGL false)
