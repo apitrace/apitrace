@@ -180,6 +180,7 @@ ConvertImage(D3DFORMAT SrcFormat,
         numChannels = 3;
         channelType = image::TYPE_UNORM8;
         break;
+    case D3DFMT_R32F:
     case D3DFMT_D16:
     case D3DFMT_D16_LOCKABLE:
     case D3DFMT_D24S8:
@@ -247,6 +248,7 @@ ConvertImage(D3DFORMAT SrcFormat,
             }
             break;
         case D3DFMT_D32F_LOCKABLE:
+        case D3DFMT_R32F:
             memcpy(dst, src, Width * sizeof(float));
             break;
         default:
