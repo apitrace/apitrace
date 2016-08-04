@@ -248,14 +248,11 @@ dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice)
 }
 
 
-void
-dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
+static void
+dumpRenderTargets(StateWriter &writer,
+                 IDirect3DDevice9 *pDevice)
 {
     HRESULT hr;
-
-    writer.beginMember("framebuffer");
-    writer.beginObject();
-
     D3DCAPS9 Caps;
     pDevice->GetDeviceCaps(&Caps);
 
@@ -282,20 +279,44 @@ dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
             delete image;
         }
     }
+}
+
+
+static void
+dumpDepthStencil(StateWriter &writer,
+                 IDirect3DDevice9 *pDevice,
+                 com_ptr<IDirect3DSurface9> &pDepthStencil)
+{
+    image::Image *image;
+    struct StateWriter::ImageDesc imageDesc;
+
+    if (!pDepthStencil)
+        return;
+
+    image = getSurfaceImage(pDevice, pDepthStencil, imageDesc);
+    if (image) {
+        writer.beginMember("DEPTH_STENCIL");
+        writer.writeImage(image, imageDesc);
+        writer.endMember(); // DEPTH_STENCIL
+        delete image;
+    }
+}
+
+
+void
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
+{
+    HRESULT hr;
+
+    writer.beginMember("framebuffer");
+    writer.beginObject();
+
+    dumpRenderTargets(writer, pDevice);
 
     com_ptr<IDirect3DSurface9> pDepthStencil;
     hr = pDevice->GetDepthStencilSurface(&pDepthStencil);
-    if (SUCCEEDED(hr) && pDepthStencil) {
-        image::Image *image;
-        struct StateWriter::ImageDesc imageDesc;
-        image = getSurfaceImage(pDevice, pDepthStencil, imageDesc);
-        if (image) {
-            writer.beginMember("DEPTH_STENCIL");
-            writer.writeImage(image, imageDesc);
-            writer.endMember(); // DEPTH_STENCIL
-            delete image;
-        }
-    }
+    if (SUCCEEDED(hr))
+        dumpDepthStencil(writer, pDevice, pDepthStencil);
 
     writer.endObject();
     writer.endMember(); // framebuffer
