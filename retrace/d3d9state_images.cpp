@@ -35,6 +35,8 @@
 #include "d3dstate.hpp"
 
 
+#include <vector>
+
 namespace d3dstate {
 
 
@@ -148,6 +150,198 @@ getRenderTargetImage(IDirect3DSwapChain9 *pSwapChain) {
 }
 
 
+static HRESULT
+getLockableRenderTargetForDepth(IDirect3DDevice9 *pDevice,
+                                int w,
+                                int h,
+                                com_ptr<IDirect3DSurface9> &pRenderTarget)
+{
+    HRESULT hr;
+
+    std::vector<D3DFORMAT> fmts ({D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_R16F, D3DFMT_X8R8G8B8});
+
+    pRenderTarget = NULL;
+    for (UINT i = 0; i < fmts.size(); i++) {
+        hr = pDevice->CreateRenderTarget(w, h, fmts[i], D3DMULTISAMPLE_NONE,
+                 0, TRUE, &pRenderTarget, NULL);
+        if (SUCCEEDED(hr))
+            break;
+    }
+    return hr;
+}
+
+
+static HRESULT
+blitTexturetoRendertarget(IDirect3DDevice9 *pDevice,
+                          IDirect3DBaseTexture9 *pSourceTex,
+                          IDirect3DSurface9 *pRenderTarget)
+{
+    com_ptr<IDirect3DPixelShader9> pPS;
+    HRESULT hr;
+
+    /* state */
+    com_ptr<IDirect3DSurface9> pOldRenderTarget;
+    com_ptr<IDirect3DSurface9> pOldDepthStencil;
+    D3DVIEWPORT9 oldViewport;
+    D3DMATRIX oldProj, oldView, oldWorld;
+    com_ptr<IDirect3DPixelShader9> pOldPixelShader;
+    com_ptr<IDirect3DVertexShader9> pOldVertexShader;
+    DWORD oldFVF;
+    com_ptr<IDirect3DBaseTexture9> pOldTexture;
+    com_ptr<IDirect3DStateBlock9> pState;
+
+    static const DWORD ps_code[] =
+    {
+        0xffff0200,                                                             /* ps_2_0                       */
+        0x0200001f, 0x90000000, 0xa00f0800,                                     /* dcl_2d s0                    */
+        0x0200001f, 0x80000000, 0xb00f0000,                                     /* dcl t0                       */
+        0x05000051, 0xa00f0000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, /* def c0, 0.0, 0.0, 0.0, 0.0   */
+        0x02000001, 0x800f0000, 0xa0e40000,                                     /* mov r0, c0                   */
+        0x03000042, 0x800f0000, 0xb0e40000, 0xa0e40800,                         /* texld r0, t0, s0             */
+        0x02000001, 0x800f0800, 0x80e40000,                                     /* mov oC0, r0                  */
+        0x0000ffff,                                                             /* end                          */
+    };
+
+    static const struct
+    {
+        float x, y, z;
+        float s, t, p, q;
+    }
+    quad[] =
+    {
+        { -1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f},
+        {  1.0f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.5f},
+        { -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f},
+        {  1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f},
+    };
+
+    hr = pDevice->CreatePixelShader(ps_code, &pPS);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    /* Store state */
+    pDevice->GetTransform(D3DTS_PROJECTION, &oldProj);
+    pDevice->GetTransform(D3DTS_VIEW, &oldView);
+    pDevice->GetTransform(D3DTS_WORLD, &oldWorld);
+    pDevice->GetPixelShader(&pOldPixelShader);
+    pDevice->GetVertexShader(&pOldVertexShader);
+    pDevice->GetFVF(&oldFVF);
+    pDevice->GetViewport(&oldViewport);
+    pDevice->GetTexture(0, &pOldTexture);
+    pDevice->GetRenderTarget(0, &pOldRenderTarget);
+    pDevice->GetDepthStencilSurface(&pOldDepthStencil);
+    /* Store samplerstates and texture and sampler states */
+    pDevice->CreateStateBlock(D3DSBT_ALL, &pState);
+
+    /* Set source */
+    pDevice->SetTexture(0, pSourceTex);
+
+    /* Set destination */
+    pDevice->SetRenderTarget(0, pRenderTarget);
+
+    pDevice->SetDepthStencilSurface(NULL);
+
+    pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
+    pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+    pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+    pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ZERO);
+    pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+    pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
+    pDevice->SetRenderState(D3DRS_ALPHAREF, 0);
+    pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
+    pDevice->SetRenderState(D3DRS_RANGEFOGENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
+    pDevice->SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_ZERO);
+    pDevice->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
+    pDevice->SetRenderState(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
+    pDevice->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
+    pDevice->SetRenderState(D3DRS_STENCILREF, 0);
+
+    D3DSURFACE_DESC desc;
+    pRenderTarget->GetDesc(&desc);
+
+    D3DVIEWPORT9 vp;
+    vp.X = 0;
+    vp.Y = 0;
+    vp.Height = desc.Height;
+    vp.Width = desc.Width;
+    vp.MaxZ = 1.0f;
+    vp.MinZ = 0.0f;
+    pDevice->SetViewport(&vp);
+
+    static const D3DMATRIX identity =
+    {{{
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    }}};
+
+    pDevice->SetTransform(D3DTS_PROJECTION, &identity);
+    pDevice->SetTransform(D3DTS_VIEW, &identity);
+    pDevice->SetTransform(D3DTS_WORLD, &identity);
+
+    pDevice->SetPixelShader(pPS);
+    pDevice->SetVertexShader(NULL);
+    pDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE4(0));
+
+    pDevice->SetSamplerState(0, D3DSAMP_MAXANISOTROPY, 0);
+    pDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+    pDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+    pDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+    pDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+    pDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+    pDevice->SetSamplerState(0, D3DSAMP_SRGBTEXTURE, 0);
+
+    pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    pDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    pDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT);
+    pDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    pDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    pDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+
+    /* Blit texture to rendertarget */
+    pDevice->BeginScene();
+    pDevice->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, quad, sizeof(*quad));
+    pDevice->EndScene();
+
+    /* Restore state */
+    pDevice->SetTransform(D3DTS_PROJECTION, &oldProj);
+    pDevice->SetTransform(D3DTS_VIEW, &oldView);
+    pDevice->SetTransform(D3DTS_WORLD, &oldWorld);
+
+    pDevice->SetPixelShader(pOldPixelShader);
+    pDevice->SetVertexShader(pOldVertexShader);
+
+    pDevice->SetFVF(oldFVF);
+    pDevice->SetViewport(&oldViewport);
+
+    pDevice->SetTexture(0, pOldTexture);
+    pDevice->SetRenderTarget(0, pOldRenderTarget);
+
+    pDevice->SetDepthStencilSurface(pOldDepthStencil);
+
+    pState->Apply();
+
+    return D3D_OK;
+}
+
+
+static bool
+isDepthSamplerFormat(D3DFORMAT fmt)
+{
+    return (fmt == D3DFMT_DF24 ||
+            fmt == D3DFMT_DF16 ||
+            fmt == D3DFMT_INTZ);
+}
+
+
 static image::Image *
 getTextureImage(IDirect3DDevice9 *pDevice,
                 IDirect3DBaseTexture9 *pTexture,
@@ -184,7 +378,31 @@ getTextureImage(IDirect3DDevice9 *pDevice,
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
-    if (Desc.Pool != D3DPOOL_DEFAULT ||
+    if (Type == D3DRTYPE_TEXTURE && isDepthSamplerFormat(Desc.Format)) {
+        /* Special case for depth sampling formats.
+         * Blit to temporary rendertarget and dump it.
+         * Finally replace the format string to avoid confusion.
+         */
+        com_ptr<IDirect3DSurface9> pTempSurf;
+
+        hr = getLockableRenderTargetForDepth(pDevice, Desc.Width, Desc.Height, pTempSurf);
+        if (FAILED(hr) || !pTempSurf) {
+            return NULL;
+        }
+
+        hr = blitTexturetoRendertarget(pDevice, pTexture, pTempSurf);
+        if (FAILED(hr)) {
+            return NULL;
+        }
+
+        image::Image *image;
+        image = getRenderTargetImage(pDevice, pTempSurf, imageDesc);
+
+        /* Replace rendertarget format with depth format */
+        imageDesc.format = formatToString(Desc.Format);
+
+        return image;
+    } else if (Desc.Pool != D3DPOOL_DEFAULT ||
         Desc.Usage & D3DUSAGE_DYNAMIC) {
         // Lockable texture
         return getSurfaceImage(pDevice, pSurface, imageDesc);
