@@ -33,7 +33,7 @@
 #include "com_ptr.hpp"
 #include "d3d9state.hpp"
 #include "d3dstate.hpp"
-
+#include "d3d9size.hpp"
 
 #include <vector>
 
@@ -503,7 +503,8 @@ dumpRenderTargets(StateWriter &writer,
 static void
 dumpDepthStencil(StateWriter &writer,
                  IDirect3DDevice9 *pDevice,
-                 com_ptr<IDirect3DSurface9> &pDepthStencil)
+                 com_ptr<IDirect3DSurface9> &pDepthStencil,
+                 D3DFORMAT format)
 {
     image::Image *image;
     struct StateWriter::ImageDesc imageDesc;
@@ -511,13 +512,103 @@ dumpDepthStencil(StateWriter &writer,
     if (!pDepthStencil)
         return;
 
-    image = getSurfaceImage(pDevice, pDepthStencil, imageDesc);
+    D3DSURFACE_DESC Desc;
+    pDepthStencil->GetDesc(&Desc);
+
+    if (Desc.Usage & D3DUSAGE_RENDERTARGET) {
+        /* RESZ hack: depth has been uploaded to rendertarget */
+        image = getRenderTargetImage(pDevice, pDepthStencil, imageDesc);
+        imageDesc.format = formatToString(format);
+    } else {
+        image = getSurfaceImage(pDevice, pDepthStencil, imageDesc);
+    }
+
     if (image) {
         writer.beginMember("DEPTH_STENCIL");
         writer.writeImage(image, imageDesc);
         writer.endMember(); // DEPTH_STENCIL
         delete image;
     }
+}
+
+
+static bool
+isLockableFormat(D3DFORMAT fmt)
+{
+    return (fmt == D3DFMT_D16_LOCKABLE ||
+            fmt == D3DFMT_D32F_LOCKABLE ||
+            fmt == D3DFMT_S8_LOCKABLE ||
+            fmt == D3DFMT_D32_LOCKABLE);
+}
+
+
+static bool
+isRESZSupported(IDirect3DDevice9 *pDevice)
+{
+    com_ptr<IDirect3D9> pD3D9;
+    HRESULT hr;
+
+    pDevice->GetDirect3D(&pD3D9);
+
+    hr = pD3D9->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8,
+            D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, D3DFMT_RESZ);
+
+    return SUCCEEDED(hr);
+}
+
+
+static HRESULT
+blitDepthRESZ(IDirect3DDevice9 *pDevice, com_ptr<IDirect3DTexture9> &pDestTex)
+{
+    D3DVECTOR vDummyPoint = {0.0f, 0.0f, 0.0f};
+    HRESULT hr;
+    DWORD oldZEnable, oldZWriteEnable, oldColorWriteEnable;
+    com_ptr<IDirect3DBaseTexture9> pOldTex;
+
+    /* Store current state */
+    pDevice->GetTexture(0, &pOldTex);
+    pDevice->GetRenderState(D3DRS_ZENABLE, &oldZEnable);
+    pDevice->GetRenderState(D3DRS_ZWRITEENABLE, &oldZWriteEnable);
+    pDevice->GetRenderState(D3DRS_COLORWRITEENABLE, &oldColorWriteEnable);
+
+    pDevice->SetTexture(0, pDestTex);
+
+    pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+    pDevice->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+
+    /* Dummy draw call */
+    hr = pDevice->DrawPrimitiveUP(D3DPT_POINTLIST, 1, &vDummyPoint, sizeof(vDummyPoint));
+
+    pDevice->SetRenderState(D3DRS_ZWRITEENABLE, oldZEnable);
+    pDevice->SetRenderState(D3DRS_ZENABLE, oldZWriteEnable);
+    pDevice->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
+
+    /* Trigger RESZ hack, upload depth to texture bound at sampler 0 */
+    pDevice->SetRenderState(D3DRS_POINTSIZE, RESZ_CODE);
+    pDevice->SetRenderState(D3DRS_POINTSIZE, 0);
+
+    /* Restore state */
+    pDevice->SetTexture(0, pOldTex);
+
+    return hr;
+}
+
+
+static HRESULT
+getTextureforDepthAsTexture(IDirect3DDevice9 *pDevice, int w, int h, com_ptr<IDirect3DTexture9> &pDestTex)
+{
+    HRESULT hr;
+
+    std::vector<D3DFORMAT> fmts ({D3DFMT_INTZ, D3DFMT_DF24, D3DFMT_DF16});
+
+    for (int i = 0; i < fmts.size(); i++) {
+        hr = pDevice->CreateTexture(w, h, 1, D3DUSAGE_DEPTHSTENCIL,
+                fmts[i], D3DPOOL_DEFAULT, &pDestTex, NULL);
+        if (SUCCEEDED(hr))
+            break;
+    }
+    return hr;
 }
 
 
@@ -533,8 +624,41 @@ dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
 
     com_ptr<IDirect3DSurface9> pDepthStencil;
     hr = pDevice->GetDepthStencilSurface(&pDepthStencil);
-    if (SUCCEEDED(hr))
-        dumpDepthStencil(writer, pDevice, pDepthStencil);
+    if (SUCCEEDED(hr)) {
+        D3DSURFACE_DESC Desc;
+        pDepthStencil->GetDesc(&Desc);
+
+        if (isLockableFormat(Desc.Format)) {
+            dumpDepthStencil(writer, pDevice, pDepthStencil, Desc.Format);
+        } else if(isRESZSupported(pDevice)) {
+            /* Use RESZ hack to copy depth to a readable format.
+             * This is working on AMD, Intel and WINE.
+             * 1. Copy to depth sampling format using RESZ hack.
+             * 2. Blit to temporary rendertarget and dump it.
+             */
+            com_ptr<IDirect3DTexture9> pTextureDepthSampler;
+
+            hr = getTextureforDepthAsTexture(pDevice, Desc.Width, Desc.Height, pTextureDepthSampler);
+            if (SUCCEEDED(hr)) {
+                hr = blitDepthRESZ(pDevice, pTextureDepthSampler);
+                if (SUCCEEDED(hr)) {
+                    com_ptr<IDirect3DSurface9> pTempSurf;
+
+                    hr = getLockableRenderTargetForDepth(pDevice, Desc.Width, Desc.Height, pTempSurf);
+
+                    if (SUCCEEDED(hr)) {
+                        hr = blitTexturetoRendertarget(pDevice, pTextureDepthSampler, pTempSurf);
+
+                        if (SUCCEEDED(hr)) {
+                            dumpDepthStencil(writer, pDevice, pTempSurf, Desc.Format);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Can't to anything about it
+        }
+    }
 
     writer.endObject();
     writer.endMember(); // framebuffer
