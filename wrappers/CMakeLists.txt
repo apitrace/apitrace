@@ -297,6 +297,7 @@ if (WIN32)
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
         gltrace_common
+        glproc
         glproc_gl
     )
     set_target_properties (wgltrace PROPERTIES
