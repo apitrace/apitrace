@@ -144,10 +144,12 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
         break;
 
     case D3DFMT_DXT1:
+    case D3DFMT_ATI1N:
         BlockHeight = BlockWidth = 4;
         BlockSize = 64;
         break;
 
+    case D3DFMT_ATI2N:
     case D3DFMT_DXT2:
     case D3DFMT_DXT3:
     case D3DFMT_DXT4:
@@ -159,16 +161,13 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
     case D3DFMT_NV12:
     case D3DFMT_YV12:
         // Planar YUV
-    case D3DFMT_ATI1N:
-    case D3DFMT_ATI2N:
-        /*
-         * Because these are unsupported formats, RowPitch is not set to the
-         * number of bytes between row of blocks, but instead in such way that
-         * Height * RowPitch will match the expected size.
-         */
-        BlockWidth = 0;
-        BlockSize = 0;
-        break;
+        /* Because these are unsupported formats, RowPitch is not set to the
+        * number of bytes between row of blocks, but instead in such way that
+        * Height * RowPitch will match the expected size.
+        */
+       BlockWidth = 0;
+       BlockSize = 0;
+       break;
 
     case D3DFMT_UNKNOWN:
     case D3DFMT_VERTEXDATA:
