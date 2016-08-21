@@ -561,6 +561,6 @@ system configuration:
 
 2. The target host must have a functional glretrace binary available
 
-3. The target host must have access to <trace-file> at the same path
-   in the filesystem as the <trace-file> path on the host system being
+3. The target host must have access to `trace-file` at the same path
+   in the filesystem as the `trace-file` path on the host system being
    passed to the qapitrace command line.
