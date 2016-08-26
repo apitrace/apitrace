@@ -38,6 +38,8 @@
 
 #include <assert.h>
 
+#include <algorithm>
+
 #include "os.hpp"
 
 
@@ -140,6 +142,22 @@ _getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPit
         }
 
         size = (Height + (Height + 1)/2) * RowPitch;
+    } else if (Format == MAKEFOURCC('A','T','I','1')) {
+        // 64 bits per 4x4 block, but limited to height*pitch
+
+        if (RowPitch == PACKED_PITCH) {
+            RowPitch = Width;
+        }
+
+        size = std::min(Height * RowPitch,  ((Height + 3)/4) * ((Width + 3)/4) * (64 / 8));
+    } else if (Format == MAKEFOURCC('A','T','I','2')) {
+        // 128 bits per 4x4 block, but limited to height*pitch
+
+        if (RowPitch == PACKED_PITCH) {
+            RowPitch = Width;
+        }
+
+        size = std::min(Height * RowPitch,  ((Height + 3)/4) * ((Width + 3)/4) * (128 / 8));
     } else {
         size_t BlockSize;
         UINT BlockWidth;
