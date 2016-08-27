@@ -85,6 +85,13 @@
 #define GL_TRANSPOSE_PROJECTIVE_3D_NV     0x9099
 
 
+// GL_KTX_buffer_region
+#define GL_KTX_FRONT_REGION   0
+#define GL_KTX_BACK_REGION    1
+#define GL_KTX_Z_REGION       2
+#define GL_KTX_STENCIL_REGION 3
+
+
 // GL_VMWX_map_buffer_debug
 #define GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX 0x80000000
 

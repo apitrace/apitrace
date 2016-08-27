@@ -170,6 +170,13 @@ GLenum_error = FakeEnum(GLenum, [
     "GL_TABLE_TOO_LARGE",                # 0x8031
 ])
 
+GLenum_region = FakeEnum(GLenum, [
+    "GL_KTX_FRONT_REGION",
+    "GL_KTX_BACK_REGION",
+    "GL_KTX_Z_REGION",
+    "GL_KTX_STENCIL_REGION",
+])
+
 GLbitfield = Alias("GLbitfield", UInt)
 
 GLbitfield_attrib = Flags(GLbitfield, [

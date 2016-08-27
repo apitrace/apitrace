@@ -2817,7 +2817,7 @@ glapi.addFunctions([
 
     # GL_KTX_buffer_region
     # XXX: http://www.west.net/~brittain/3dsmax2.htm does not mention EXT suffix
-    GlFunction(GLregion, "glNewBufferRegion", [(GLenum, "type")]),
+    GlFunction(GLregion, "glNewBufferRegion", [(GLenum_region, "type")]),
     GlFunction(Void, "glDeleteBufferRegion", [(GLregion, "region")]),
     GlFunction(Void, "glReadBufferRegion", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glDrawBufferRegion", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "xDest"), (GLint, "yDest")]),
