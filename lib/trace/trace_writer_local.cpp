@@ -227,14 +227,14 @@ void LocalWriter::flush(void) {
 
     mutex.lock();
     if (acquired) {
-        os::log("apitrace: ignoring exception while tracing\n");
+        os::log("apitrace: ignoring recurrent flush\n");
     } else {
         ++acquired;
         if (m_file) {
             if (os::getCurrentProcessId() != pid) {
-                os::log("apitrace: ignoring exception in child process\n");
+                os::log("apitrace: ignoring flush in child process\n");
             } else {
-                os::log("apitrace: flushing trace due to an exception\n");
+                os::log("apitrace: flushing trace\n");
                 m_file->flush();
             }
         }
