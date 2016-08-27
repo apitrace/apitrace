@@ -4,6 +4,7 @@
         _fini;
         gl[A-Z]*;
         dlopen;
+	_exit;
     local:
         *;
 };

@@ -285,7 +285,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-    _exit(1);
+    _Exit(1);
 }
 
 

@@ -228,3 +228,24 @@ void * dlopen(const char *filename, int flag)
 
     return handle;
 }
+
+
+#ifdef __linux__
+
+#include "trace_writer_local.hpp"
+
+/*
+ * Intercept _exit so we can flush our trace even when the app (eg. Wine)
+ * aborts.
+ *
+ * TODO: Currently we dispatch to _Exit, but for completness we should
+ * intercept _Exit too.
+ */
+void
+_exit(int status)
+{
+    trace::localWriter.flush();
+    _Exit(status);
+}
+
+#endif /* __linux__ */
