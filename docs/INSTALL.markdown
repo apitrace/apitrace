@@ -96,7 +96,7 @@ Build as:
         -H. -Bbuild \
         -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
         -DANDROID_NDK=/path/to/your/ndk \
-        -DANDROID_API_LEVEL=9 \
+        -DANDROID_API_LEVEL=21 \
         -DANDROID_STL=gnustl_shared \
         [-DANDROID_SDK=/path/to/your/sdk]
 
@@ -112,7 +112,7 @@ CMake as:
     cmake \
         -H. -Bbuild \
         -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
-        -DANDROID_API_LEVEL=9 \
+        -DANDROID_API_LEVEL=21 \
         -DANDROID_TOOLCHAIN_NAME=aarch64-linux-android-4.9 \
         -DANDROID_ABI=arm64-v8a
 
