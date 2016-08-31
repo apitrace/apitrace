@@ -83,6 +83,24 @@ class WglTracer(GlTracer):
             print '    }'
             print '    gltrace::releaseContext((uintptr_t)hglrc);'
 
+        # Emit a fake string marker describing the current GDI font
+        if function.name.startswith('wglUseFont'):
+            print r'    HFONT hFont = static_cast<HFONT>(GetCurrentObject(hdc, OBJ_FONT));'
+            print r'    if (hFont != nullptr) {'
+            print r'        LOGFONT lf;'
+            print r'        if (GetObject(hFont, sizeof lf, &lf) != 0) {'
+            print r'            std::ostringstream ss;'
+            print r'            ss << "lfFaceName = " << lf.lfFaceName'
+            print r'               << ", lfHeight = " << lf.lfHeight'
+            print r'               << ", lfWeight = " << lf.lfWeight;'
+            print r'            if (lf.lfItalic) ss << ", lfItalic = 1";'
+            print r'            if (lf.lfUnderline) ss << ", lfUnderline = 1";'
+            print r'            if (lf.lfStrikeOut) ss << ", lfStrikeOut = 1";'
+            print r'            _fakeStringMarker(ss.str());'
+            print r'        }'
+            print r'    }'
+            print
+
         # Emit fake glBitmap calls in the trace on wglUseFontBitmapsA.
         # This enables to capture the real bitmaps and replay them outside Windows.
         #
@@ -111,19 +129,7 @@ class WglTracer(GlTracer):
 
             print r'    if (_result) {'
 
-            print r'        HFONT hFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);'
-            print r'        assert (hFont != nullptr);'
-            print r'        LOGFONT lf;'
-            print r'        if (GetObject(hFont, sizeof lf, &lf) != 0) {'
-            print r'            std::ostringstream ss;'
-            print r'            ss << "lfFaceName = " << lf.lfFaceName'
-            print r'               << ", lfHeight = " << lf.lfHeight'
-            print r'               << ", lfWeight = " << lf.lfWeight;'
-            print r'            if (lf.lfItalic) ss << ", lfItalic = 1";'
-            print r'            if (lf.lfUnderline) ss << ", lfUnderline = 1";'
-            print r'            if (lf.lfStrikeOut) ss << ", lfStrikeOut = 1";'
-            print r'            _fakeStringMarker(ss.str());'
-            print r'        }'
+            print r'        assert(hFont != nullptr);'
             print
 
             print r'        BOOL bRet;'
