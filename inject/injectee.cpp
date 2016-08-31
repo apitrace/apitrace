@@ -311,7 +311,6 @@ getOptionalHeader(HMODULE hModule,
                     szModule, pNtHeaders->Signature);
         return NULL;
     }
-    assert(pNtHeaders->OptionalHeader.NumberOfRvaAndSizes > 0);
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     return pOptionalHeader;
 }
