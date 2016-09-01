@@ -40,3 +40,7 @@ struct Bitmap {
 };
 
 extern const Bitmap wglSystemFontBitmaps[256];
+
+
+void
+wglSystemFontOutlines(unsigned c, float extrusion);

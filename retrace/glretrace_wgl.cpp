@@ -405,6 +405,26 @@ static void retrace_wglUseFontBitmapsAW(trace::Call &call)
 }
 
 
+static void retrace_wglUseFontOutlinesAW(trace::Call &call)
+{
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        return;
+    }
+
+    uint32_t first = call.arg(1).toUInt();
+    uint32_t count = call.arg(2).toUInt();
+    uint32_t listBase = call.arg(3).toUInt();
+    float extrusion = call.arg(5).toFloat();
+
+    for (uint32_t i = 0; i < count; ++i) {
+        glNewList(listBase + i, GL_COMPILE);
+        wglSystemFontOutlines(first + i, extrusion);
+        glEndList();
+    }
+}
+
+
 
 const retrace::Entry glretrace::wgl_callbacks[] = {
     {"glAddSwapHintRectWIN", &retrace::ignore},
@@ -448,6 +468,8 @@ const retrace::Entry glretrace::wgl_callbacks[] = {
     {"wglSwapLayerBuffers", &retrace_wglSwapLayerBuffers},
     {"wglUseFontBitmapsA", &retrace_wglUseFontBitmapsAW},
     {"wglUseFontBitmapsW", &retrace_wglUseFontBitmapsAW},
+    {"wglUseFontOutlinesA", &retrace_wglUseFontOutlinesAW},
+    {"wglUseFontOutlinesW", &retrace_wglUseFontOutlinesAW},
     {NULL, NULL}
 };
 
