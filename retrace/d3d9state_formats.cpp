@@ -175,6 +175,11 @@ ConvertImage(D3DFORMAT SrcFormat,
     unsigned numChannels;
     image::ChannelType channelType;
     switch (SrcFormat) {
+    case D3DFMT_A32B32G32R32F:
+    case D3DFMT_A16B16G16R16F:
+        numChannels = 4;
+        channelType = image::TYPE_FLOAT;
+        break;
     case D3DFMT_X8R8G8B8:
     case D3DFMT_A8R8G8B8:
     case D3DFMT_R5G6B5:
@@ -237,6 +242,22 @@ ConvertImage(D3DFORMAT SrcFormat,
                 dst[3*x + 0] = src[4*x + 2];
                 dst[3*x + 1] = src[4*x + 1];
                 dst[3*x + 2] = src[4*x + 0];
+            }
+            break;
+        case D3DFMT_A32B32G32R32F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[4*x + 0] = ((const float *)src)[4*x + 0];
+                ((float *)dst)[4*x + 1] = ((const float *)src)[4*x + 1];
+                ((float *)dst)[4*x + 2] = ((const float *)src)[4*x + 2];
+                ((float *)dst)[4*x + 3] = ((const float *)src)[4*x + 3];
+            }
+            break;
+        case D3DFMT_A16B16G16R16F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[4*x + 0] = util_half_to_float(((const uint16_t *)src)[4*x + 0]);
+                ((float *)dst)[4*x + 1] = util_half_to_float(((const uint16_t *)src)[4*x + 1]);
+                ((float *)dst)[4*x + 2] = util_half_to_float(((const uint16_t *)src)[4*x + 2]);
+                ((float *)dst)[4*x + 3] = util_half_to_float(((const uint16_t *)src)[4*x + 3]);
             }
             break;
         case D3DFMT_G32R32F:
