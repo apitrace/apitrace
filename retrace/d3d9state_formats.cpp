@@ -186,6 +186,7 @@ ConvertImage(D3DFORMAT SrcFormat,
         channelType = image::TYPE_FLOAT;
         break;
     case D3DFMT_X8R8G8B8:
+    case D3DFMT_X8B8G8R8:
     case D3DFMT_R5G6B5:
         numChannels = 3;
         channelType = image::TYPE_UNORM8;
@@ -261,6 +262,13 @@ ConvertImage(D3DFORMAT SrcFormat,
                 dst[3*x + 0] = src[4*x + 2];
                 dst[3*x + 1] = src[4*x + 1];
                 dst[3*x + 2] = src[4*x + 0];
+            }
+            break;
+        case D3DFMT_X8B8G8R8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[3*x + 0] = src[4*x + 0];
+                dst[3*x + 1] = src[4*x + 1];
+                dst[3*x + 2] = src[4*x + 2];
             }
             break;
         case D3DFMT_A32B32G32R32F:
