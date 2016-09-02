@@ -175,13 +175,17 @@ ConvertImage(D3DFORMAT SrcFormat,
     unsigned numChannels;
     image::ChannelType channelType;
     switch (SrcFormat) {
+    case D3DFMT_A8R8G8B8:
+    case D3DFMT_A8B8G8R8:
+        numChannels = 4;
+        channelType = image::TYPE_UNORM8;
+        break;
     case D3DFMT_A32B32G32R32F:
     case D3DFMT_A16B16G16R16F:
         numChannels = 4;
         channelType = image::TYPE_FLOAT;
         break;
     case D3DFMT_X8R8G8B8:
-    case D3DFMT_A8R8G8B8:
     case D3DFMT_R5G6B5:
         numChannels = 3;
         channelType = image::TYPE_UNORM8;
@@ -228,6 +232,22 @@ ConvertImage(D3DFORMAT SrcFormat,
     src = (const unsigned char *)SrcData;
     for (unsigned y = 0; y < Height; ++y) {
         switch (SrcFormat) {
+        case D3DFMT_A8R8G8B8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[4*x + 0] = src[4*x + 2];
+                dst[4*x + 1] = src[4*x + 1];
+                dst[4*x + 2] = src[4*x + 0];
+                dst[4*x + 3] = src[4*x + 3];
+            }
+            break;
+        case D3DFMT_A8B8G8R8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[4*x + 0] = src[4*x + 0];
+                dst[4*x + 1] = src[4*x + 1];
+                dst[4*x + 2] = src[4*x + 2];
+                dst[4*x + 3] = src[4*x + 3];
+            }
+            break;
         case D3DFMT_R5G6B5:
             for (unsigned x = 0; x < Width; ++x) {
                 uint32_t pixel = ((const uint16_t *)src)[x];
@@ -237,7 +257,6 @@ ConvertImage(D3DFORMAT SrcFormat,
             }
             break;
         case D3DFMT_X8R8G8B8:
-        case D3DFMT_A8R8G8B8:
             for (unsigned x = 0; x < Width; ++x) {
                 dst[3*x + 0] = src[4*x + 2];
                 dst[3*x + 1] = src[4*x + 1];
