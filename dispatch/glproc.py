@@ -502,19 +502,23 @@ class GlDispatcher(Dispatcher):
             return '_getPrivateProcAddress'
 
     def failFunction(self, function):
+        # Fallback to EXT_debug_label on MacOSX, some enums need to be translated.
+        if function.name in ('glObjectLabel', 'glObjectLabelKHR'):
+            print r'#ifdef __APPLE__'
+            print r'    if (translateDebugLabelIdentifier(identifier)) {'
+            print r'        _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);'
+            print r'        return;'
+            print r'    }'
+            print r'#endif'
+        if function.name in ('glGetObjectLabel', 'glGetObjectLabelKHR'):
+            print r'#ifdef __APPLE__'
+            print r'    if (translateDebugLabelIdentifier(identifier)) {'
+            print r'        _glGetObjectLabelEXT(identifier, name, bufSize, length, label);'
+            print r'        return;'
+            print r'    }'
+            print r'#endif'
+
         # We fake these when they are not available
-        if sys.platform == 'darwin':
-            # Fallback to EXT_debug_label on MacOSX, some enums need to be translated.
-            if function.name in ('glObjectLabel', 'glObjectLabelKHR'):
-                print r'    if (translateDebugLabelIdentifier(identifier)) {'
-                print r'        _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);'
-                print r'        return;'
-                print r'    }'
-            if function.name in ('glGetObjectLabel', 'glGetObjectLabelKHR'):
-                print r'    if (translateDebugLabelIdentifier(identifier)) {'
-                print r'        _glGetObjectLabelEXT(identifier, name, bufSize, length, label);'
-                print r'        return;'
-                print r'    }'
         if function.name in (
             # GL_KHR_debug
             'glDebugMessageControl',
