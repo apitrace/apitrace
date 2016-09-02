@@ -980,3 +980,18 @@ int main(int argc, char **argv)
     return 0;
 }
 
+
+/*
+ * Direct NVIDIA Optimus driver to use the High Performance Graphics.
+ *
+ * If we invoked glGetString(GL_VENDOR) or glGetString(GL_RENDERER) this
+ * wouldn't be necessary, but glretrace skips such calls.
+ *
+ * See also:
+ * - http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
+ */
+#ifdef _WIN32
+extern "C" {
+     __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+#endif
