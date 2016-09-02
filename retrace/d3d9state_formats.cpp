@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include "image.hpp"
+#include "halffloat.hpp"
 
 #ifdef HAVE_DXGI
 #include "dxgistate.hpp"
@@ -181,6 +182,7 @@ ConvertImage(D3DFORMAT SrcFormat,
         channelType = image::TYPE_UNORM8;
         break;
     case D3DFMT_R32F:
+    case D3DFMT_R16F:
     case D3DFMT_D16:
     case D3DFMT_D16_LOCKABLE:
     case D3DFMT_D24S8:
@@ -250,6 +252,11 @@ ConvertImage(D3DFORMAT SrcFormat,
         case D3DFMT_D32F_LOCKABLE:
         case D3DFMT_R32F:
             memcpy(dst, src, Width * sizeof(float));
+            break;
+        case D3DFMT_R16F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[x] = util_half_to_float(((const uint16_t *)src)[x]);
+            }
             break;
         default:
             assert(0);
