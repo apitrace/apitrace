@@ -1,6 +1,9 @@
 remove_definitions (-DNOMINMAX)
 
-add_definitions (-DUNICODE -D_UNICODE)
+add_definitions (
+    -DUNICODE -D_UNICODE
+    -DMINGW_HAS_SECURE_API=1
+)
 
 if (NOT MSVC)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-comment")
