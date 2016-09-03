@@ -482,6 +482,7 @@ if (WIN32)
     add_subdirectory (thirdparty/dxerr)
     add_subdirectory (thirdparty/directxtex)
     add_subdirectory (thirdparty/devcon)
+    add_subdirectory (thirdparty/mhook)
 endif ()
 
 add_subdirectory (thirdparty/crc32c)
