@@ -24,6 +24,10 @@
 #include "mhook.h"
 #include "../disasm-lib/disasm.h"
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 //=========================================================================
 #ifndef cntof
 #define cntof(a) (sizeof(a)/sizeof(a[0]))

@@ -25,6 +25,9 @@ typedef unsigned long U32;
 typedef LONG64 S64;
 typedef ULONG64 U64;
 
+// Forward declarations
+struct _INSTRUCTION;
+
 #ifdef SPEEDY
 // On Visual Studio 6, making the internal functions inline makes compiling take forever
 #define INTERNAL static _inline 

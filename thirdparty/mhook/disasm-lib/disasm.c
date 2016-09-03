@@ -37,7 +37,7 @@ typedef struct _DISASM_ARG_INFO
 //////////////////////////////////////////////////////////////////////
 
 BOOL InitInstruction(INSTRUCTION *Instruction, DISASSEMBLER *Disassembler);
-struct _ARCHITECTURE_FORMAT *GetArchitectureFormat(ARCHITECTURE_TYPE Type);
+static struct _ARCHITECTURE_FORMAT *GetArchitectureFormat(ARCHITECTURE_TYPE Type);
 
 //////////////////////////////////////////////////////////////////////
 // Disassembler setup

@@ -73,7 +73,7 @@ ULONG WINAPI HookNtOpenProcess(OUT PHANDLE ProcessHandle,
 							   IN PVOID ObjectAttributes, 
 							   IN PCLIENT_ID ClientId)
 {
-	printf("***** Call to open process %d\n", ClientId->UniqueProcess);
+	printf("***** Call to open process %ld\n", (DWORD)ClientId->UniqueProcess);
 	return TrueNtOpenProcess(ProcessHandle, AccessMask, 
 		ObjectAttributes, ClientId);
 }
@@ -103,7 +103,12 @@ int WSAAPI Hookgetaddrinfo(const char* nodename, const char* servname, const str
 // is in place
 //
 LPVOID WINAPI HookHeapAlloc(HANDLE a_Handle, DWORD a_Bla, SIZE_T a_Bla2) {
-	printf("***** Call to HeapAlloc(0x%p, %u, 0x%p)\n", a_Handle, a_Bla, a_Bla2);
+	static int recurse = 0;
+	if (recurse == 0) {
+		++recurse;
+		printf("***** Call to HeapAlloc(0x%p, %lu, 0x%p)\n", a_Handle, a_Bla, (LPVOID)a_Bla2);
+		--recurse;
+	}
 	return TrueHeapAlloc(a_Handle, a_Bla, a_Bla2);
 }
 
@@ -119,12 +124,17 @@ ULONG WINAPI HookNtClose(HANDLE hHandle) {
 //=========================================================================
 // This is where the work gets done.
 //
+
+#ifndef _MSC_VER
+int main(int argc, char* argv[])
+#else
 int wmain(int argc, WCHAR* argv[])
+#endif
 {
 	HANDLE hProc = NULL;
 
 	// Set the hook
-	if (Mhook_SetHook((PVOID*)&TrueNtOpenProcess, HookNtOpenProcess)) {
+	if (Mhook_SetHook((PVOID*)&TrueNtOpenProcess, (PVOID)HookNtOpenProcess)) {
 		// Now call OpenProcess and observe NtOpenProcess being redirected
 		// under the hood.
 		hProc = OpenProcess(PROCESS_ALL_ACCESS, 
@@ -133,7 +143,7 @@ int wmain(int argc, WCHAR* argv[])
 			printf("Successfully opened self: %p\n", hProc);
 			CloseHandle(hProc);
 		} else {
-			printf("Could not open self: %d\n", GetLastError());
+			printf("Could not open self: %ld\n", GetLastError());
 		}
 		// Remove the hook
 		Mhook_Unhook((PVOID*)&TrueNtOpenProcess);
@@ -146,7 +156,7 @@ int wmain(int argc, WCHAR* argv[])
 		printf("Successfully opened self: %p\n", hProc);
 		CloseHandle(hProc);
 	} else {
-		printf("Could not open self: %d\n", GetLastError());
+		printf("Could not open self: %ld\n", GetLastError());
 	}
 
 	// Test another hook, this time in SelectObject
@@ -155,7 +165,7 @@ int wmain(int argc, WCHAR* argv[])
 	// extra work under the hood to make things work properly. This really
 	// is more of a test case rather than a demo.)
 	printf("Testing SelectObject.\n");
-	if (Mhook_SetHook((PVOID*)&TrueSelectObject, HookSelectobject)) {
+	if (Mhook_SetHook((PVOID*)&TrueSelectObject, (PVOID)HookSelectobject)) {
 		// error checking omitted for brevity. doesn't matter much 
 		// in this context anyway.
 		HDC hdc = GetDC(NULL);
@@ -171,12 +181,12 @@ int wmain(int argc, WCHAR* argv[])
 	}
 
 	printf("Testing getaddrinfo.\n");
-	if (Mhook_SetHook((PVOID*)&Truegetaddrinfo, Hookgetaddrinfo)) {
+	if (Mhook_SetHook((PVOID*)&Truegetaddrinfo, (PVOID)Hookgetaddrinfo)) {
 		// error checking omitted for brevity. doesn't matter much 
 		// in this context anyway.
 		WSADATA wd = {0};
 		WSAStartup(MAKEWORD(2, 2), &wd);
-		char* ip = "localhost";
+		const char* ip = "localhost";
 		struct addrinfo aiHints;
 		struct addrinfo *res = NULL;
 		memset(&aiHints, 0, sizeof(aiHints));
@@ -198,7 +208,7 @@ int wmain(int argc, WCHAR* argv[])
 	}
 
 	printf("Testing HeapAlloc.\n");
-	if (Mhook_SetHook((PVOID*)&TrueHeapAlloc, HookHeapAlloc))
+	if (Mhook_SetHook((PVOID*)&TrueHeapAlloc, (PVOID)HookHeapAlloc))
 	{
 		free(malloc(10));
 		// Remove the hook
@@ -206,7 +216,7 @@ int wmain(int argc, WCHAR* argv[])
 	}
 
 	printf("Testing NtClose.\n");
-	if (Mhook_SetHook((PVOID*)&TrueNtClose, HookNtClose))
+	if (Mhook_SetHook((PVOID*)&TrueNtClose, (PVOID)HookNtClose))
 	{
 		CloseHandle(NULL);
 		// Remove the hook

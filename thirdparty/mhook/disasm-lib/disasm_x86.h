@@ -94,33 +94,33 @@ extern "C" {
 
 
 // NOTE: OPTYPES >= 0x80 reserved for registers (OP_REG+XX)
-#define OPTYPE_REG_AL OP_REG+0x01
-#define OPTYPE_REG_CL OP_REG+0x02
-#define OPTYPE_REG_AH OP_REG+0x03
-#define OPTYPE_REG_AX OP_REG+0x04
-#define OPTYPE_REG_DX OP_REG+0x05
-#define OPTYPE_REG_ECX OP_REG+0x06
-#define OPTYPE_REG8 OP_REG+0x07
+#define OPTYPE_REG_AL (OP_REG+0x01)
+#define OPTYPE_REG_CL (OP_REG+0x02)
+#define OPTYPE_REG_AH (OP_REG+0x03)
+#define OPTYPE_REG_AX (OP_REG+0x04)
+#define OPTYPE_REG_DX (OP_REG+0x05)
+#define OPTYPE_REG_ECX (OP_REG+0x06)
+#define OPTYPE_REG8 (OP_REG+0x07)
 
 // If address size is 2, use BP
 // If address size is 4, use EBP
 // If address size is 8, use RBP
-#define OPTYPE_REG_xBP OP_REG+0x08
+#define OPTYPE_REG_xBP (OP_REG+0x08)
 
 // If address size is 2, use BP
 // If address size is 4, use EBP
 // If address size is 8, use RBP
-#define OPTYPE_REG_xSP OP_REG+0x09
+#define OPTYPE_REG_xSP (OP_REG+0x09)
 
 // If operand size is 2, take 8-bit register
 // If operand size is 4, take 16-bit register
 // If operand size is 8, take 32-bit register
-#define OPTYPE_REG_xAX_SMALL OP_REG+0x0a
+#define OPTYPE_REG_xAX_SMALL (OP_REG+0x0a)
 
 // If operand size is 2, take 16-bit register
 // If operand size is 4, take 32-bit register
 // If operand size is 8, take 64-bit register
-#define OPTYPE_REG_xAX_BIG OP_REG+0x0b
+#define OPTYPE_REG_xAX_BIG (OP_REG+0x0b)
 
 typedef enum _CPU_TYPE
 {

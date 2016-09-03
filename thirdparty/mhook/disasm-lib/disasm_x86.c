@@ -25,7 +25,9 @@
 #include "disasm_x86_tables.h"
 
 #ifdef _WIN64
+#ifdef _MSC_VER
 #pragma warning(disable:4311 4312)
+#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@
 	{ \
 		if (!Instruction->AnomalyOccurred) \
 		{ \
-			if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: unexpected segment 0x%02X\n", VIRTUAL_ADDRESS, X86Instruction->Selector); \
+			if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: unexpected segment 0x%02lX\n", VIRTUAL_ADDRESS, X86Instruction->Selector); \
 			Instruction->AnomalyOccurred = TRUE; \
 		} \
 	} \
@@ -1915,7 +1917,7 @@ HasSpecialExtension:
 				Instruction->AnomalyOccurred = TRUE;
 				break;
 			default:
-				if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: unexpected segment 0x%02X\n", VIRTUAL_ADDRESS, X86Instruction->Selector);
+				if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: unexpected segment 0x%02lX\n", VIRTUAL_ADDRESS, X86Instruction->Selector);
 				Instruction->AnomalyOccurred = TRUE;
 				break;
 		}
@@ -2461,7 +2463,7 @@ HasSpecialExtension:
 		if (!Instruction->AnomalyOccurred &&
 			((X86Instruction->OperandSize != 2 && (Instruction->StackChange & 3)) || (Instruction->StackChange & 1)))
 		{
-			if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: \"%s\" has invalid stack change 0x%02X\n", VIRTUAL_ADDRESS, X86Opcode->Mnemonic, Instruction->StackChange);
+			if (!SuppressErrors) printf("[0x%08I64X] ANOMALY: \"%s\" has invalid stack change 0x%02lX\n", VIRTUAL_ADDRESS, X86Opcode->Mnemonic, Instruction->StackChange);
 			Instruction->AnomalyOccurred = TRUE;
 		}
 	}
@@ -3737,7 +3739,7 @@ INTERNAL U8 *SetOperands(INSTRUCTION *Instruction, U8 *Address, U32 Flags)
 				}
 				else if (X86Instruction->OperandSize == 2)
 				{
-					if (!SuppressErrors) printf("[0x%08I64X] ERROR: AMODE_PR illegal in 16-bit mode (\"%s\")\n", VIRTUAL_ADDRESS, rex_modrm.rm, X86Instruction->Opcode.Mnemonic);
+					if (!SuppressErrors) printf("[0x%08I64X] ERROR: AMODE_PR illegal in 16-bit mode (\"%s\")\n", VIRTUAL_ADDRESS, X86Instruction->Opcode.Mnemonic);
 					goto abort;
 				}
 				if (!Decode) continue;
@@ -3764,7 +3766,7 @@ INTERNAL U8 *SetOperands(INSTRUCTION *Instruction, U8 *Address, U32 Flags)
 				}
 				else if (X86Instruction->OperandSize == 2)
 				{
-					if (!SuppressErrors) printf("[0x%08I64X] ERROR: AMODE_VR illegal in 16-bit mode (\"%s\")\n", VIRTUAL_ADDRESS, rex_modrm.rm, X86Instruction->Opcode.Mnemonic);
+					if (!SuppressErrors) printf("[0x%08I64X] ERROR: AMODE_VR illegal in 16-bit mode (\"%s\")\n", VIRTUAL_ADDRESS, X86Instruction->Opcode.Mnemonic);
 					goto abort;
 				}
 				if (!Decode) continue;
