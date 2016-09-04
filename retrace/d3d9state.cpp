@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <sstream>
 
 #include "state_writer.hpp"
 #include "com_ptr.hpp"
@@ -92,6 +93,55 @@ dumpShaders(StateWriter &writer, IDirect3DDevice9 *pDevice)
 
     writer.endObject();
     writer.endMember(); // shaders
+}
+
+static void
+dumpTextureStates(StateWriter &writer, IDirect3DDevice9 *pDevice)
+{
+#define _DUMP_TS_INT(x) { \
+    DWORD rsDword = 0; \
+    pDevice->GetTextureStageState(i, x, &rsDword); \
+    writer.writeIntMember(#x, rsDword); \
+}
+
+#define _DUMP_TS_FLOAT(x) { \
+    float rsFloat = 0.0f; \
+    pDevice->GetTextureStageState(i, x, (DWORD *)&rsFloat); \
+    writer.writeFloatMember(#x, rsFloat); \
+}
+
+    for (int i = 0; i < 8; i++)
+    {
+        std::ostringstream oss;
+        oss << "TextureStageState" << i;
+        writer.beginMember(oss.str());
+        writer.beginObject();
+
+        _DUMP_TS_INT(D3DTSS_COLOROP);
+        _DUMP_TS_INT(D3DTSS_COLORARG1);
+        _DUMP_TS_INT(D3DTSS_COLORARG2);
+        _DUMP_TS_INT(D3DTSS_ALPHAOP);
+        _DUMP_TS_INT(D3DTSS_ALPHAARG1);
+        _DUMP_TS_INT(D3DTSS_ALPHAARG2);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVMAT00);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVMAT01);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVMAT10);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVMAT11);
+        _DUMP_TS_INT(D3DTSS_TEXCOORDINDEX);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVLSCALE);
+        _DUMP_TS_FLOAT(D3DTSS_BUMPENVLOFFSET);
+        _DUMP_TS_INT(D3DTSS_TEXTURETRANSFORMFLAGS);
+        _DUMP_TS_INT(D3DTSS_COLORARG0);
+        _DUMP_TS_INT(D3DTSS_ALPHAARG0);
+        _DUMP_TS_INT(D3DTSS_RESULTARG);
+        _DUMP_TS_INT(D3DTSS_CONSTANT);
+
+        writer.endObject();
+        writer.endMember();
+    }
+
+#undef _DUMP_TS_INT
+#undef _DUMP_TS_FLOAT
 }
 
 static void
@@ -239,6 +289,8 @@ dumpRenderstate(StateWriter &writer, IDirect3DDevice9 *pDevice)
 #undef _DUMP_RS_FLOAT
 
     dumpViewport(writer, pDevice);
+
+    dumpTextureStates(writer, pDevice);
 
     writer.endObject();
     writer.endMember();
