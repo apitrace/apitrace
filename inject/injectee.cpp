@@ -954,9 +954,26 @@ MyFreeLibrary(HMODULE hModule)
     BOOL bRet = FreeLibrary(hModule);
     DWORD dwLastError = GetLastError();
 
+    std::set<HMODULE> hCurrentModules;
+    HANDLE hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (hModuleSnap != INVALID_HANDLE_VALUE) {
+        MODULEENTRY32 me32;
+        me32.dwSize = sizeof me32;
+        if (Module32First(hModuleSnap, &me32)) {
+            do  {
+                hCurrentModules.insert(me32.hModule);
+            } while (Module32Next(hModuleSnap, &me32));
+        }
+        CloseHandle(hModuleSnap);
+    }
+
+    // Clear the modules that have been freed
     EnterCriticalSection(&g_Mutex);
-    // TODO: Only clear the modules that have been freed
-    g_hHookedModules.clear();
+    std::set<HMODULE> hIntersectedModules;
+    std::set_intersection(g_hHookedModules.begin(), g_hHookedModules.end(),
+                          hCurrentModules.begin(), hCurrentModules.end(),
+                          std::inserter(hIntersectedModules, hIntersectedModules.begin()));
+    g_hHookedModules = std::move(hIntersectedModules);
     LeaveCriticalSection(&g_Mutex);
 
     SetLastError(dwLastError);
