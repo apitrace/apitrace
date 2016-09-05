@@ -46,6 +46,7 @@
 #include <set>
 #include <map>
 #include <functional>
+#include <iterator>
 
 #include <windows.h>
 #include <tlhelp32.h>
