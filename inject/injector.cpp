@@ -455,17 +455,18 @@ help(void)
 
 
 static const char *short_options =
-"hdD:p:t:v";
+"hdD:mp:t:v";
 
 static const struct
 option long_options[] = {
-    { "help", no_argument, NULL, 'h'},
-    { "debug", no_argument, NULL, 'd'},
-    { "dll", required_argument, NULL, 'D'},
-    { "pid", required_argument, NULL, 'p'},
-    { "tid", required_argument, NULL, 't'},
-    { "verbose", no_argument, 0, 'v'},
-    { NULL, 0, NULL, 0}
+    { "help", no_argument, NULL, 'h' },
+    { "debug", no_argument, NULL, 'd' },
+    { "dll", required_argument, NULL, 'D' },
+    { "mhook", no_argument, NULL, 'm' },
+    { "pid", required_argument, NULL, 'p' },
+    { "tid", required_argument, NULL, 't' },
+    { "verbose", no_argument, 0, 'v' },
+    { NULL, 0, NULL, 0 }
 };
 
 
@@ -478,7 +479,8 @@ main(int argc, char *argv[])
     DWORD dwThreadId = 0;
     char cVerbosity = 0;
 
-    const char *szDll = NULL;
+    const char *szDllName = "injectee_iat.dll";
+    const char *szDll = nullptr;
 
     int option_index = 0;
     while (true) {
@@ -495,6 +497,9 @@ main(int argc, char *argv[])
                 break;
             case 'D':
                 szDll = optarg;
+                break;
+            case 'm':
+                szDllName = "injectee_mhook.dll";
                 break;
             case 'p':
                 dwProcessId = strtoul(optarg, NULL, 0);
@@ -701,9 +706,6 @@ main(int argc, char *argv[])
         devconDisable(DEVCON_CLASS_DISPLAY);
         Sleep(1000);
     }
-
-    const char *szDllName;
-    szDllName = "injectee.dll";
 
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(NULL, szDllPath, sizeof szDllPath);
