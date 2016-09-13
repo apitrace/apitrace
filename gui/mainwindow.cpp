@@ -41,7 +41,6 @@
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QTextBrowser>
-#include <QToolTip>
 
 typedef QLatin1String _;
 
