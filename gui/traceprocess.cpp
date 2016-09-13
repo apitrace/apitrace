@@ -26,24 +26,26 @@ void TraceProcess::setApi(const QString &str)
     m_api = str;
 }
 
-void TraceProcess::setExecutablePath(const QString &str)
+void TraceProcess::setExecutablePathAndWorkingDir(const QString &execPath, const QString &workingDir)
 {
-    m_execPath = str;
+    m_execPath = execPath;
+    m_workingDir = workingDir;
 
     QFileInfo fi(m_execPath);
     QString baseName = fi.baseName();
 
     QString format = QString::fromLatin1("%1.trace");
 
-    m_tracePath = format
-                  .arg(baseName);
+    QDir traceFileDir(workingDir);
+    m_tracePath = traceFileDir.filePath(format
+                  .arg(baseName));
 
     int i = 1;
     while (QFile::exists(m_tracePath)) {
         format = QString::fromLatin1("%1.%2.trace");
-        m_tracePath = format
-                      .arg(baseName)
-                      .arg(i++);
+        m_tracePath = traceFileDir.filePath(
+                    format.arg(baseName)
+                    .arg(i++));
     }
 }
 
@@ -96,6 +98,7 @@ void TraceProcess::start()
     arguments << m_execPath;
     arguments << m_args;
 
+    m_process->setWorkingDirectory(m_workingDir);
     m_process->start(QLatin1String("apitrace"), arguments);
 }
 

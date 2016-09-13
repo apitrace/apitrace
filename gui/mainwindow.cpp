@@ -78,7 +78,9 @@ void MainWindow::createTrace()
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
         m_traceProcess->setApi(dialog.api());
-        m_traceProcess->setExecutablePath(dialog.applicationPath());
+        m_traceProcess->setExecutablePathAndWorkingDir(
+                    dialog.applicationPath(),
+                    dialog.workingDirPath());
         m_traceProcess->setArguments(dialog.arguments());
         m_traceProcess->start();
     }

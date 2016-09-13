@@ -13,8 +13,9 @@ public:
     bool canTrace() const;
 
     void setApi(const QString &str);
-    void setExecutablePath(const QString &str);
+    void setExecutablePathAndWorkingDir(const QString &execPath, const QString &workingDir);
     QString executablePath() const;
+    QString workingDirectory() const;
 
     void setArguments(const QStringList &args);
     QStringList arguments() const;
@@ -33,6 +34,7 @@ private slots:
 private:
     QString m_api;
     QString m_execPath;
+    QString m_workingDir;
     QStringList m_args;
     QString m_tracePath;
     QProcess *m_process;

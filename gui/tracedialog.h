@@ -13,11 +13,14 @@ public:
 
     QString api() const;
     QString applicationPath() const;
+    QString workingDirPath() const;
     QStringList arguments() const;
 
 private slots:
-    void browse();
+    void browseApplication();
+    void browseWorkingDir();
 
 private:
     bool isFileOk(const QString &fileName);
+    bool isDirOk(const QString &path);
 };
