@@ -27,14 +27,31 @@ TraceDialog::TraceDialog(QWidget *parent)
             this, SLOT(browseWorkingDir()));
 }
 
+void TraceDialog::setApi(const QString &api)
+{
+    int index = apiComboBox->findText(api);
+    if(index >= 0)
+        apiComboBox->setCurrentIndex(index);
+}
+
 QString TraceDialog::api() const
 {
     return apiComboBox->currentText().toLower();
 }
 
+void TraceDialog::setApplicationPath(const QString &path)
+{
+    applicationEdit->setText(path);
+}
+
 QString TraceDialog::applicationPath() const
 {
     return applicationEdit->text();
+}
+
+void TraceDialog::setWorkingDirPath(const QString &path)
+{
+    workingDirEdit->setText(path);
 }
 
 QString TraceDialog::workingDirPath() const
@@ -46,6 +63,12 @@ QString TraceDialog::workingDirPath() const
     }
 
     return workingDir;
+}
+
+void TraceDialog::setArguments(const QStringList &args)
+{
+    QString argsStr = args.join(";");
+    argumentsEdit->setText(argsStr);
 }
 
 QStringList TraceDialog::arguments() const

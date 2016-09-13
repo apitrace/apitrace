@@ -11,9 +11,16 @@ public:
 
     void accept() override;
 
+    void setApi(const QString &api);
     QString api() const;
+
+    void setApplicationPath(const QString &path);
     QString applicationPath() const;
+
+    void setWorkingDirPath(const QString &path);
     QString workingDirPath() const;
+
+    void setArguments(const QStringList &args);
     QStringList arguments() const;
 
 private slots:

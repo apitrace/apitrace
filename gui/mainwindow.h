@@ -38,6 +38,14 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
+    struct RecentLaunch
+    {
+        QString api;
+        QString execPath;
+        QString workingDir;
+        QStringList args;
+    };
+
     MainWindow();
     ~MainWindow();
 
@@ -49,7 +57,7 @@ public slots:
 private slots:
     void callItemSelected(const QModelIndex &index);
     void callItemActivated(const QModelIndex &index);
-    void createTrace();
+    void createTrace(const RecentLaunch* optionalLaunch = nullptr);
     void openTrace();
     void saveTrace();
     void replayStart();
@@ -127,6 +135,10 @@ private:
     void addSurface(const ApiSurface &surface, const QString &label, QTreeWidgetItem *parent);
     template <typename Surface>
     void addSurfaces(const QList<Surface> &images, const char *label);
+
+    void addRecentLaunch(const RecentLaunch& launch);
+    QList<RecentLaunch> readRecentLaunches() const;
+    void updateRecentLaunchesMenu();
 
 protected:
     virtual void closeEvent(QCloseEvent * event) override;

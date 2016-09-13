@@ -53,6 +53,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="actionNew"/>
+    <addaction name="actionRecentLaunches"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
@@ -783,6 +784,11 @@
    </property>
    <property name="toolTip">
     <string>trace opengl object leaks</string>
+   </property>
+  </action>
+  <action name="actionRecentLaunches">
+   <property name="text">
+    <string>Recent launches...</string>
    </property>
   </action>
   <zorder>stateDock</zorder>

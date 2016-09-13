@@ -38,6 +38,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QTextBrowser>
+#include <QSettings>
 
 
 MainWindow::MainWindow()
@@ -52,6 +53,7 @@ MainWindow::MainWindow()
     updateActionsState(false);
     initObjects();
     initConnections();
+    updateRecentLaunchesMenu();
 }
 
 MainWindow::~MainWindow()
@@ -63,7 +65,7 @@ MainWindow::~MainWindow()
     delete m_model;
 }
 
-void MainWindow::createTrace()
+void MainWindow::createTrace(const RecentLaunch* optionLaunch)
 {
     if (!m_traceProcess->canTrace()) {
         QMessageBox::warning(
@@ -74,14 +76,30 @@ void MainWindow::createTrace()
     }
 
     TraceDialog dialog;
+
+    if(optionLaunch) {
+        dialog.setApi(optionLaunch->api);
+        dialog.setApplicationPath(optionLaunch->execPath);
+        dialog.setWorkingDirPath(optionLaunch->workingDir);
+        dialog.setArguments(optionLaunch->args);
+    }
+
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
-        m_traceProcess->setApi(dialog.api());
+
+        RecentLaunch rl;
+        rl.api = dialog.api();
+        rl.execPath = dialog.applicationPath();
+        rl.workingDir = dialog.workingDirPath();
+        rl.args = dialog.arguments();
+        addRecentLaunch(rl);
+        updateRecentLaunchesMenu();
+
+        m_traceProcess->setApi(rl.api);
         m_traceProcess->setExecutablePathAndWorkingDir(
-                    dialog.applicationPath(),
-                    dialog.workingDirPath());
-        m_traceProcess->setArguments(dialog.arguments());
+                    rl.execPath, rl.workingDir);
+        m_traceProcess->setArguments(rl.args);
         m_traceProcess->start();
     }
 }
@@ -1753,9 +1771,88 @@ void MainWindow::slotJumpToResult(ApiTraceCall *call)
 
 void MainWindow::thumbnailCallback(void *object, int thumbnailIdx)
 {
-	//qDebug() << QLatin1String("debug: transfer from trace to retracer thumbnail index: ") << thumbnailIdx;
+    //qDebug() << QLatin1String("debug: transfer from trace to retracer thumbnail index: ") << thumbnailIdx;
     MainWindow *mySelf = (MainWindow *) object;
     mySelf->m_retracer->addThumbnailToCapture(thumbnailIdx);
+}
+
+void MainWindow::addRecentLaunch(const RecentLaunch& launch)
+{
+    QList<RecentLaunch> launches = readRecentLaunches();
+
+    for(int i = 0; i < launches.size(); ++i) {
+        const RecentLaunch& rl = launches[i];
+
+        if(rl.api == launch.api
+                && rl.execPath == launch.execPath
+                && rl.workingDir == launch.workingDir
+                && rl.args == launch.args) {
+            launches.removeAt(i);
+        } else {
+            ++i;
+        }
+    }
+
+    launches.push_front(launch);
+
+    const int maxHistorySize = 10;
+    if(launches.size() > maxHistorySize) {
+        launches.erase(launches.begin() + maxHistorySize, launches.end());
+    }
+
+    QSettings settings;
+    settings.beginWriteArray("launch-history", launches.size());
+    for(int i = 0; i < launches.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue("api", launches[i].api);
+        settings.setValue("exec", launches[i].execPath);
+        settings.setValue("working-dir", launches[i].workingDir);
+        settings.setValue("args", launches[i].args);
+    }
+    settings.endArray();
+}
+
+QList<MainWindow::RecentLaunch> MainWindow::readRecentLaunches() const
+{
+    QList<RecentLaunch> launches;
+    QSettings settings;
+
+    int historySize = settings.beginReadArray("launch-history");
+    for(int i = 0; i < historySize; ++i) {
+        settings.setArrayIndex(i);
+
+        RecentLaunch rl;
+        rl.execPath = settings.value("exec").toString();
+        rl.workingDir = settings.value("working-dir").toString();
+        rl.args = settings.value("args").toStringList();
+        launches.push_back(rl);
+    }
+    settings.endArray();
+
+    return launches;
+}
+
+void MainWindow::updateRecentLaunchesMenu()
+{
+    QList<RecentLaunch> launches = readRecentLaunches();
+
+    QMenu* rootMenu = m_ui.actionRecentLaunches->menu();
+    if(!rootMenu) {
+        rootMenu = new QMenu();
+        m_ui.actionRecentLaunches->setMenu(rootMenu);
+    }
+
+    rootMenu->clear();
+    for(int i = 0; i < launches.size(); ++i) {
+        const RecentLaunch& rl = launches[i];
+        QAction* action = rootMenu->addAction(rl.execPath);
+
+        connect(action, &QAction::triggered, [this, i](){
+            QList<RecentLaunch> launches = readRecentLaunches();
+            if(i < launches.size())
+                createTrace(&launches[i]);
+        });
+    }
 }
 
 #include "mainwindow.moc"
