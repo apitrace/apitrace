@@ -21,8 +21,10 @@ TraceDialog::TraceDialog(QWidget *parent)
     apiComboBox->addItem("EGL");
 #endif
 
-    connect(browseButton, SIGNAL(clicked()),
-            this, SLOT(browse()));
+	connect(browseButton, SIGNAL(clicked()),
+			this, SLOT(browseApplication()));
+	connect(browseWorkingDirButton, SIGNAL(clicked()),
+			this, SLOT(browseWorkingDir()));
 }
 
 QString TraceDialog::api() const
@@ -35,6 +37,17 @@ QString TraceDialog::applicationPath() const
     return applicationEdit->text();
 }
 
+QString TraceDialog::workingDirPath() const
+{
+	QString workingDir = workingDirEdit->text();
+
+	if(workingDir.isEmpty()) {
+		return QDir::currentPath();
+	}
+
+	return workingDir;
+}
+
 QStringList TraceDialog::arguments() const
 {
     QStringList args =
@@ -42,7 +55,7 @@ QStringList TraceDialog::arguments() const
     return args;
 }
 
-void TraceDialog::browse()
+void TraceDialog::browseApplication()
 {
     QString fileName =
         QFileDialog::getOpenFileName(
@@ -55,9 +68,23 @@ void TraceDialog::browse()
     }
 }
 
+void TraceDialog::browseWorkingDir()
+{
+	QString path =
+			QFileDialog::getExistingDirectory(
+				this,
+				tr("Choose working directory"),
+				workingDirPath());
+
+	if(!path.isEmpty() && isDirOk(path)) {
+		workingDirEdit->setText(path);
+	}
+}
+
 void TraceDialog::accept()
 {
-    if (isFileOk(applicationEdit->text())) {
+	if (isFileOk(applicationEdit->text())
+			&& isDirOk(workingDirPath())) {
         QDialog::accept();
     }
 }
@@ -80,6 +107,27 @@ bool TraceDialog::isFileOk(const QString &fileName)
     }
 
     return true;
+}
+
+bool TraceDialog::isDirOk(const QString &path)
+{
+	QFileInfo fi(path);
+
+	if(!fi.exists()) {
+		QMessageBox::warning(this, tr("Directory Does Not Exist"),
+							 tr("Directory '%1' doesn't exist.").
+							 arg(fi.fileName()));
+		return false;
+	}
+
+	if(!fi.isDir()) {
+		QMessageBox::warning(this, tr("Directory Does Not Exist"),
+							 tr("Path '%1' is not a directory").
+							 arg(fi.fileName()));
+		return false;
+	}
+
+	return true;
 }
 
 #include "tracedialog.moc"
