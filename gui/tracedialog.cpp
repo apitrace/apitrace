@@ -21,10 +21,17 @@ TraceDialog::TraceDialog(QWidget *parent)
     apiComboBox->addItem("EGL");
 #endif
 
-	connect(browseButton, SIGNAL(clicked()),
-			this, SLOT(browseApplication()));
-	connect(browseWorkingDirButton, SIGNAL(clicked()),
-			this, SLOT(browseWorkingDir()));
+    connect(browseButton, SIGNAL(clicked()),
+            this, SLOT(browseApplication()));
+    connect(browseWorkingDirButton, SIGNAL(clicked()),
+            this, SLOT(browseWorkingDir()));
+}
+
+void TraceDialog::setApi(const QString &api)
+{
+    int index = apiComboBox->findText(api);
+    if(index >= 0)
+        apiComboBox->setCurrentIndex(index);
 }
 
 QString TraceDialog::api() const
@@ -32,20 +39,36 @@ QString TraceDialog::api() const
     return apiComboBox->currentText().toLower();
 }
 
+void TraceDialog::setApplicationPath(const QString &path)
+{
+    applicationEdit->setText(path);
+}
+
 QString TraceDialog::applicationPath() const
 {
     return applicationEdit->text();
 }
 
+void TraceDialog::setWorkingDirPath(const QString &path)
+{
+    workingDirEdit->setText(path);
+}
+
 QString TraceDialog::workingDirPath() const
 {
-	QString workingDir = workingDirEdit->text();
+    QString workingDir = workingDirEdit->text();
 
-	if(workingDir.isEmpty()) {
-		return QDir::currentPath();
-	}
+    if(workingDir.isEmpty()) {
+        return QDir::currentPath();
+    }
 
-	return workingDir;
+    return workingDir;
+}
+
+void TraceDialog::setArguments(const QStringList &args)
+{
+    QString argsStr = args.join(";");
+    argumentsEdit->setText(argsStr);
 }
 
 QStringList TraceDialog::arguments() const
@@ -70,21 +93,21 @@ void TraceDialog::browseApplication()
 
 void TraceDialog::browseWorkingDir()
 {
-	QString path =
-			QFileDialog::getExistingDirectory(
-				this,
-				tr("Choose working directory"),
-				workingDirPath());
+    QString path =
+            QFileDialog::getExistingDirectory(
+                this,
+                tr("Choose working directory"),
+                workingDirPath());
 
-	if(!path.isEmpty() && isDirOk(path)) {
-		workingDirEdit->setText(path);
-	}
+    if(!path.isEmpty() && isDirOk(path)) {
+        workingDirEdit->setText(path);
+    }
 }
 
 void TraceDialog::accept()
 {
-	if (isFileOk(applicationEdit->text())
-			&& isDirOk(workingDirPath())) {
+    if (isFileOk(applicationEdit->text())
+            && isDirOk(workingDirPath())) {
         QDialog::accept();
     }
 }
@@ -111,23 +134,23 @@ bool TraceDialog::isFileOk(const QString &fileName)
 
 bool TraceDialog::isDirOk(const QString &path)
 {
-	QFileInfo fi(path);
+    QFileInfo fi(path);
 
-	if(!fi.exists()) {
-		QMessageBox::warning(this, tr("Directory Does Not Exist"),
-							 tr("Directory '%1' doesn't exist.").
-							 arg(fi.fileName()));
-		return false;
-	}
+    if(!fi.exists()) {
+        QMessageBox::warning(this, tr("Directory Does Not Exist"),
+                             tr("Directory '%1' doesn't exist.").
+                             arg(fi.fileName()));
+        return false;
+    }
 
-	if(!fi.isDir()) {
-		QMessageBox::warning(this, tr("Directory Does Not Exist"),
-							 tr("Path '%1' is not a directory").
-							 arg(fi.fileName()));
-		return false;
-	}
+    if(!fi.isDir()) {
+        QMessageBox::warning(this, tr("Directory Does Not Exist"),
+                             tr("Path '%1' is not a directory").
+                             arg(fi.fileName()));
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 #include "tracedialog.moc"

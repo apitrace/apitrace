@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>787</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -66,6 +66,7 @@
      <addaction name="actionRetraceOnAndroid"/>
     </widget>
     <addaction name="actionNew"/>
+    <addaction name="actionRecentLaunches"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
@@ -118,7 +119,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>77</width>
+     <width>88</width>
      <height>100</height>
     </size>
    </property>
@@ -828,6 +829,11 @@
    </property>
    <property name="toolTip">
     <string>trace opengl object leaks</string>
+   </property>
+  </action>
+  <action name="actionRecentLaunches">
+   <property name="text">
+    <string>Recent launches...</string>
    </property>
   </action>
   <zorder>stateDock</zorder>
