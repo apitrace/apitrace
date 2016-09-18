@@ -53,6 +53,11 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
+
     D3DLOCKED_RECT LockedRect;
     hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
     if (FAILED(hr)) {
@@ -82,6 +87,11 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
     D3DSURFACE_DESC Desc;
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
+
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
 
     com_ptr<IDirect3DSurface9> pStagingSurface;
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
