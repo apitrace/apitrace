@@ -77,6 +77,27 @@ typedef FARPROC (WINAPI * PFNGETPROCADDRESS)(HMODULE hModule, LPCSTR lpProcName)
 
 static PFNGETPROCADDRESS RealGetProcAddress = GetProcAddress;
 
+typedef BOOL
+(WINAPI *PFNCREATEPROCESSA) (LPCSTR, LPSTR,
+        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
+        LPCSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION);
+
+static PFNCREATEPROCESSA RealCreateProcessA = CreateProcessA;
+
+typedef BOOL
+(WINAPI *PFNCREATEPROCESSW) (LPCWSTR, LPWSTR,
+        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
+        LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
+
+static PFNCREATEPROCESSW RealCreateProcessW = CreateProcessW;
+
+typedef BOOL
+(WINAPI *PFNCREATEPROCESSASUSERW) (HANDLE, LPCWSTR, LPWSTR,
+        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
+        LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
+
+static PFNCREATEPROCESSASUSERW RealCreateProcessAsUserW = CreateProcessAsUserW;
+
 
 static void
 debugPrintf(const char *format, ...)
@@ -176,16 +197,16 @@ MyCreateProcessA(LPCSTR lpApplicationName,
     }
 
     BOOL bRet;
-    bRet = CreateProcessA(lpApplicationName,
-                          lpCommandLine,
-                          lpProcessAttributes,
-                          lpThreadAttributes,
-                          bInheritHandles,
-                          dwCreationFlags | CREATE_SUSPENDED,
-                          lpEnvironment,
-                          lpCurrentDirectory,
-                          lpStartupInfo,
-                          lpProcessInformation);
+    bRet = RealCreateProcessA(lpApplicationName,
+                              lpCommandLine,
+                              lpProcessAttributes,
+                              lpThreadAttributes,
+                              bInheritHandles,
+                              dwCreationFlags | CREATE_SUSPENDED,
+                              lpEnvironment,
+                              lpCurrentDirectory,
+                              lpStartupInfo,
+                              lpProcessInformation);
 
     MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
 
@@ -212,28 +233,21 @@ MyCreateProcessW(LPCWSTR lpApplicationName,
     }
 
     BOOL bRet;
-    bRet = CreateProcessW(lpApplicationName,
-                          lpCommandLine,
-                          lpProcessAttributes,
-                          lpThreadAttributes,
-                          bInheritHandles,
-                          dwCreationFlags | CREATE_SUSPENDED,
-                          lpEnvironment,
-                          lpCurrentDirectory,
-                          lpStartupInfo,
-                          lpProcessInformation);
+    bRet = RealCreateProcessW(lpApplicationName,
+                              lpCommandLine,
+                              lpProcessAttributes,
+                              lpThreadAttributes,
+                              bInheritHandles,
+                              dwCreationFlags | CREATE_SUSPENDED,
+                              lpEnvironment,
+                              lpCurrentDirectory,
+                              lpStartupInfo,
+                              lpProcessInformation);
 
     MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
 
     return bRet;
 }
-
-typedef BOOL
-(WINAPI *PFNCREATEPROCESSASUSERW) (HANDLE, LPCWSTR, LPWSTR,
-        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
-        LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
-
-static PFNCREATEPROCESSASUSERW pfnCreateProcessAsUserW;
 
 static BOOL WINAPI
 MyCreateProcessAsUserW(HANDLE hToken,
@@ -255,22 +269,18 @@ MyCreateProcessAsUserW(HANDLE hToken,
                     lpCommandLine);
     }
 
-    // Certain WINE versions (at least 1.6.2) don't export
-    // kernel32.dll!CreateProcessAsUserW
-    assert(pfnCreateProcessAsUserW);
-
     BOOL bRet;
-    bRet = pfnCreateProcessAsUserW(hToken,
-                                   lpApplicationName,
-                                   lpCommandLine,
-                                   lpProcessAttributes,
-                                   lpThreadAttributes,
-                                   bInheritHandles,
-                                   dwCreationFlags,
-                                   lpEnvironment,
-                                   lpCurrentDirectory,
-                                   lpStartupInfo,
-                                   lpProcessInformation);
+    bRet = RealCreateProcessAsUserW(hToken,
+                                    lpApplicationName,
+                                    lpCommandLine,
+                                    lpProcessAttributes,
+                                    lpThreadAttributes,
+                                    bInheritHandles,
+                                    dwCreationFlags,
+                                    lpEnvironment,
+                                    lpCurrentDirectory,
+                                    lpStartupInfo,
+                                    lpProcessInformation);
 
     MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
 
@@ -957,16 +967,38 @@ registerLibraryLoaderHooks(const char *szMatchModule)
 }
 
 static void
-registerProcessThreadsHooks(const char *szMatchModule)
+setHooks(void)
 {
-    Module & module = modulesMap[szMatchModule];
-    module.bInternal = true;
-    FunctionMap & functionMap = module.functionMap;
-    functionMap["CreateProcessA"]       = (LPVOID)MyCreateProcessA;
-    functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
-    // NOTE: CreateProcessAsUserA is implemented by advapi32.dll
-    functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
-    // TODO: CreateProcessWithTokenW
+    HMODULE hKernel32 = GetModuleHandleA("kernel32");
+    assert(hKernel32);
+
+    RealGetProcAddress = (PFNGETPROCADDRESS)RealGetProcAddress(hKernel32, "GetProcAddress");
+    assert(RealGetProcAddress);
+    assert(RealGetProcAddress != MyGetProcAddress);
+    if (!Mhook_SetHook((PVOID*)&RealGetProcAddress, (PVOID)MyGetProcAddress)) {
+        debugPrintf("inject: error: failed to hook GetProcAddress\n");
+    }
+
+    RealCreateProcessA = (PFNCREATEPROCESSA)RealGetProcAddress(hKernel32, "CreateProcessA");
+    assert(RealCreateProcessA);
+    assert(RealCreateProcessA != MyCreateProcessA);
+    if (!Mhook_SetHook((PVOID*)&RealCreateProcessA, (PVOID)MyCreateProcessA)) {
+        debugPrintf("inject: error: failed to hook CreateProcessA\n");
+    }
+
+    RealCreateProcessW = (PFNCREATEPROCESSW)RealGetProcAddress(hKernel32, "CreateProcessW");
+    assert(RealCreateProcessW);
+    assert(RealCreateProcessW != MyCreateProcessW);
+    if (!Mhook_SetHook((PVOID*)&RealCreateProcessW, (PVOID)MyCreateProcessW)) {
+        debugPrintf("inject: error: failed to hook CreateProcessW\n");
+    }
+
+    RealCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)RealGetProcAddress(hKernel32, "CreateProcessAsUserW");
+    assert(RealCreateProcessAsUserW);
+    assert(RealCreateProcessAsUserW != MyCreateProcessAsUserW);
+    if (!Mhook_SetHook((PVOID*)&RealCreateProcessAsUserW, (PVOID)MyCreateProcessAsUserW)) {
+        debugPrintf("inject: error: failed to hook CreateProcessAsUserW\n");
+    }
 }
 
 
@@ -1033,25 +1065,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             return FALSE;
         }
 
-        // Ensure we use kernel32.dll's CreateProcessAsUserW, and not advapi32.dll's.
-        {
-            HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
-            assert(hKernel32);
-            pfnCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)RealGetProcAddress(hKernel32, "CreateProcessAsUserW");
-        }
-
         patchAllModules(ACTION_HOOK);
 
-        {
-            HMODULE hKernel32 = GetModuleHandleA("kernel32");
-            assert(hKernel32);
-            RealGetProcAddress = (PFNGETPROCADDRESS)GetProcAddress(hKernel32, "GetProcAddress");
-            assert(RealGetProcAddress);
-            assert(RealGetProcAddress != MyGetProcAddress);
-            if (!Mhook_SetHook((PVOID*)&RealGetProcAddress, (PVOID)MyGetProcAddress)) {
-                debugPrintf("inject: error: failed to hook GetProcAddress\n");
-            }
-        }
+        setHooks();
 
         break;
 
