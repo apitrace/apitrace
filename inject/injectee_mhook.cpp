@@ -972,33 +972,20 @@ setHooks(void)
     HMODULE hKernel32 = GetModuleHandleA("kernel32");
     assert(hKernel32);
 
-    RealGetProcAddress = (PFNGETPROCADDRESS)RealGetProcAddress(hKernel32, "GetProcAddress");
-    assert(RealGetProcAddress);
-    assert(RealGetProcAddress != MyGetProcAddress);
-    if (!Mhook_SetHook((PVOID*)&RealGetProcAddress, (PVOID)MyGetProcAddress)) {
-        debugPrintf("inject: error: failed to hook GetProcAddress\n");
-    }
+#   define SET_HOOK(_name) \
+        Real##_name = reinterpret_cast<decltype(Real##_name)>(RealGetProcAddress(hKernel32, #_name)); \
+        assert(Real##_name); \
+        assert(Real##_name != My##_name); \
+        if (!Mhook_SetHook((PVOID*)&Real##_name, (PVOID)My##_name)) { \
+            debugPrintf("inject: error: failed to hook " #_name "\n"); \
+        }
 
-    RealCreateProcessA = (PFNCREATEPROCESSA)RealGetProcAddress(hKernel32, "CreateProcessA");
-    assert(RealCreateProcessA);
-    assert(RealCreateProcessA != MyCreateProcessA);
-    if (!Mhook_SetHook((PVOID*)&RealCreateProcessA, (PVOID)MyCreateProcessA)) {
-        debugPrintf("inject: error: failed to hook CreateProcessA\n");
-    }
+    SET_HOOK(GetProcAddress)
+    SET_HOOK(CreateProcessA)
+    SET_HOOK(CreateProcessW)
+    SET_HOOK(CreateProcessAsUserW)
 
-    RealCreateProcessW = (PFNCREATEPROCESSW)RealGetProcAddress(hKernel32, "CreateProcessW");
-    assert(RealCreateProcessW);
-    assert(RealCreateProcessW != MyCreateProcessW);
-    if (!Mhook_SetHook((PVOID*)&RealCreateProcessW, (PVOID)MyCreateProcessW)) {
-        debugPrintf("inject: error: failed to hook CreateProcessW\n");
-    }
-
-    RealCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)RealGetProcAddress(hKernel32, "CreateProcessAsUserW");
-    assert(RealCreateProcessAsUserW);
-    assert(RealCreateProcessAsUserW != MyCreateProcessAsUserW);
-    if (!Mhook_SetHook((PVOID*)&RealCreateProcessAsUserW, (PVOID)MyCreateProcessAsUserW)) {
-        debugPrintf("inject: error: failed to hook CreateProcessAsUserW\n");
-    }
+#   undef SET_HOOK
 }
 
 
