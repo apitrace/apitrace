@@ -5,10 +5,6 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
-if (NOT MSVC)
-    add_compiler_flags (-Wno-unused-function)
-endif ()
-
 add_library (injectee_iat MODULE
     injectee_iat.cpp
 )
