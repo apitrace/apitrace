@@ -73,6 +73,27 @@ static std::map<PVOID, PVOID>
 g_pRealFunctions;
 
 
+typedef HMODULE
+(WINAPI *PFNLOADLIBRARYA)(LPCSTR);
+
+typedef HMODULE
+(WINAPI *PFNLOADLIBRARYW)(LPCWSTR);
+
+typedef HMODULE
+(WINAPI *PFNLOADLIBRARYEXA)(LPCSTR, HANDLE, DWORD);
+
+typedef HMODULE
+(WINAPI *PFNLOADLIBRARYEXW)(LPCWSTR, HANDLE, DWORD);
+
+typedef BOOL
+(WINAPI *PFNFREELIBRARY)(HMODULE);
+
+static PFNLOADLIBRARYA RealLoadLibraryA = LoadLibraryA;
+static PFNLOADLIBRARYW RealLoadLibraryW = LoadLibraryW;
+static PFNLOADLIBRARYEXA RealLoadLibraryExA = LoadLibraryExA;
+static PFNLOADLIBRARYEXW RealLoadLibraryExW = LoadLibraryExW;
+static PFNFREELIBRARY RealFreeLibrary = FreeLibrary;
+
 typedef FARPROC (WINAPI * PFNGETPROCADDRESS)(HMODULE hModule, LPCSTR lpProcName);
 
 static PFNGETPROCADDRESS RealGetProcAddress = GetProcAddress;
@@ -127,22 +148,6 @@ _wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
     debugPrintf("Assertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
     TerminateProcess(GetCurrentProcess(), 1);
 }
-
-
-static HMODULE WINAPI
-MyLoadLibraryA(LPCSTR lpLibFileName);
-
-static HMODULE WINAPI
-MyLoadLibraryW(LPCWSTR lpLibFileName);
-
-static HMODULE WINAPI
-MyLoadLibraryExA(LPCSTR lpFileName, HANDLE hFile, DWORD dwFlags);
-
-static HMODULE WINAPI
-MyLoadLibraryExW(LPCWSTR lpFileName, HANDLE hFile, DWORD dwFlags);
-
-static FARPROC WINAPI
-MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
 
 static void
@@ -705,35 +710,12 @@ patchAllModules(Action action)
 static HMODULE WINAPI
 MyLoadLibraryA(LPCSTR lpLibFileName)
 {
-    HMODULE hModule = LoadLibraryA(lpLibFileName);
+    HMODULE hModule = RealLoadLibraryA(lpLibFileName);
     DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(\"%s\") = 0x%p\n",
                     __FUNCTION__ + 2, lpLibFileName, hModule);
-    }
-
-    if (VERBOSITY > 0) {
-        const char *szBaseName = getBaseName(lpLibFileName);
-        if (isMatchModuleName(szBaseName)) {
-            if (VERBOSITY < 2) {
-                debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpLibFileName);
-            }
-#ifdef __GNUC__
-            void *caller = __builtin_return_address (0);
-
-            HMODULE hModule = 0;
-            BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                                          GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                                          (LPCTSTR)caller,
-                                          &hModule);
-            assert(bRet);
-            char szCaller[MAX_PATH];
-            DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
-            assert(dwRet);
-            debugPrintf("inject: called from %s\n", szCaller);
-#endif
-        }
     }
 
     // Hook all new modules (and not just this one, to pick up any dependencies)
@@ -746,7 +728,7 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
 static HMODULE WINAPI
 MyLoadLibraryW(LPCWSTR lpLibFileName)
 {
-    HMODULE hModule = LoadLibraryW(lpLibFileName);
+    HMODULE hModule = RealLoadLibraryW(lpLibFileName);
     DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
@@ -806,7 +788,7 @@ adjustFlags(DWORD dwFlags)
 static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
+    HMODULE hModule = RealLoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
     DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
@@ -824,7 +806,7 @@ MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 static HMODULE WINAPI
 MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, adjustFlags(dwFlags));
+    HMODULE hModule = RealLoadLibraryExW(lpLibFileName, hFile, adjustFlags(dwFlags));
     DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
@@ -923,7 +905,7 @@ MyFreeLibrary(HMODULE hModule)
         debugPrintf("inject: intercepting %s(0x%p)\n", __FUNCTION__, hModule);
     }
 
-    BOOL bRet = FreeLibrary(hModule);
+    BOOL bRet = RealFreeLibrary(hModule);
     DWORD dwLastError = GetLastError();
 
     std::set<HMODULE> hCurrentModules;
@@ -954,19 +936,6 @@ MyFreeLibrary(HMODULE hModule)
 
 
 static void
-registerLibraryLoaderHooks(const char *szMatchModule)
-{
-    Module & module = modulesMap[szMatchModule];
-    module.bInternal = true;
-    FunctionMap & functionMap = module.functionMap;
-    functionMap["LoadLibraryA"]   = (LPVOID)MyLoadLibraryA;
-    functionMap["LoadLibraryW"]   = (LPVOID)MyLoadLibraryW;
-    functionMap["LoadLibraryExA"] = (LPVOID)MyLoadLibraryExA;
-    functionMap["LoadLibraryExW"] = (LPVOID)MyLoadLibraryExW;
-    functionMap["FreeLibrary"]    = (LPVOID)MyFreeLibrary;
-}
-
-static void
 setHooks(void)
 {
     HMODULE hKernel32 = GetModuleHandleA("kernel32");
@@ -980,6 +949,11 @@ setHooks(void)
             debugPrintf("inject: error: failed to hook " #_name "\n"); \
         }
 
+    SET_HOOK(LoadLibraryA)
+    SET_HOOK(LoadLibraryW)
+    SET_HOOK(LoadLibraryExA)
+    SET_HOOK(LoadLibraryExW)
+    SET_HOOK(FreeLibrary)
     SET_HOOK(GetProcAddress)
     SET_HOOK(CreateProcessA)
     SET_HOOK(CreateProcessW)
