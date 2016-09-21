@@ -156,8 +156,8 @@ dumpViewport(StateWriter &writer, IDirect3DDevice9 *pDevice)
     writer.writeIntMember("Y", vp.Y);
     writer.writeIntMember("Width", vp.Width);
     writer.writeIntMember("Height", vp.Height);
-    writer.writeIntMember("MinZ", vp.MinZ);
-    writer.writeIntMember("MaxZ", vp.MaxZ);
+    writer.writeFloatMember("MinZ", vp.MinZ);
+    writer.writeFloatMember("MaxZ", vp.MaxZ);
 
     writer.endObject();
     writer.endMember();
