@@ -44,7 +44,12 @@ typedef HRESULT (STDMETHODCALLTYPE IDirect3DDevice8::*GetShaderFunctionMethod)(D
 struct VertexShaderGetter
 {
     HRESULT GetShader(IDirect3DDevice8 *pDevice, DWORD *pHandle) {
-        return pDevice->GetVertexShader(pHandle);
+        HRESULT hr = pDevice->GetVertexShader(pHandle);
+        if (SUCCEEDED(hr) && (*pHandle & 1) == 0) {
+            // Handle is a FVF code.
+            *pHandle = 0;
+        }
+        return hr;
     }
     HRESULT GetShaderFunction(IDirect3DDevice8 *pDevice, DWORD Handle, void* pData, DWORD* pSizeOfData) {
         return pDevice->GetVertexShaderFunction(Handle, pData, pSizeOfData);
