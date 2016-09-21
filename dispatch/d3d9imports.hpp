@@ -88,14 +88,6 @@
 #define RESZ_CODE 0x7fa05000
 #endif
 
-#ifndef D3DFMT_ATI1
-#define D3DFMT_ATI1 ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
-#endif
-
-#ifndef D3DFMT_ATI2
-#define D3DFMT_ATI2 ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
-#endif
-
 #ifndef D3DUSAGE_TEXTAPI
 #define D3DUSAGE_TEXTAPI 0x10000000L
 #endif

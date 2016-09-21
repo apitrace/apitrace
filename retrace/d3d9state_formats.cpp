@@ -108,8 +108,8 @@ formatToString(D3DFORMAT fmt)
     case D3DFMT_A1: return "D3DFMT_A1";
     case D3DFMT_A2B10G10R10_XR_BIAS: return "D3DFMT_A2B10G10R10_XR_BIAS";
     case D3DFMT_BINARYBUFFER: return "D3DFMT_BINARYBUFFER";
-    case D3DFMT_ATI1: return "D3DFMT_ATI1";
-    case D3DFMT_ATI2: return "D3DFMT_ATI2";
+    case D3DFMT_ATI1N: return "D3DFMT_ATI1N";
+    case D3DFMT_ATI2N: return "D3DFMT_ATI2N";
     case D3DFMT_DF16: return "D3DFMT_DF16";
     case D3DFMT_DF24: return "D3DFMT_DF24";
     case D3DFMT_INTZ: return "D3DFMT_INTZ";
