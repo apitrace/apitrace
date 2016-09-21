@@ -1,0 +1,41 @@
+remove_definitions (-DNOMINMAX)
+
+add_definitions (
+    -DUNICODE -D_UNICODE
+    -DMINGW_HAS_SECURE_API=1
+)
+
+if (NOT MSVC)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-comment")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-enum-compare")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pointer-to-int-cast")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-switch")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-value")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
+endif ()
+
+
+add_convenience_library (mhook
+    disasm-lib/cpu.c
+    disasm-lib/disasm.c
+    disasm-lib/disasm_x86.c
+    disasm-lib/misc.c
+    mhook-lib/mhook.cpp
+)
+
+
+add_executable (mhook-test
+    mhook-test.cpp
+)
+target_link_libraries (mhook-test
+    mhook
+    ws2_32
+)
+add_test (NAME mhook-test COMMAND $<TARGET_FILE:mhook-test>)
+
+
+install (
+    FILES "COPYING"
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE-mhook.txt
+)

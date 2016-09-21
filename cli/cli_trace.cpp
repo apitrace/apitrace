@@ -97,7 +97,8 @@ traceProgram(trace::API api,
              char * const *argv,
              const char *output,
              int verbose,
-             bool debug)
+             bool debug,
+             bool mhook)
 {
     const char *wrapperFilename;
     std::vector<const char *> args;
@@ -158,6 +159,9 @@ traceProgram(trace::API api,
         args.push_back("inject");
         if (debug) {
             args.push_back("-d");
+        }
+        if (mhook) {
+            args.push_back("-m");
         }
         for (int i = 1; i < verbose; ++i) {
             args.push_back("-v");
@@ -341,20 +345,24 @@ usage(void)
 #ifdef TRACE_VARIABLE
         "    -d,  --debug        run inside debugger (gdb/lldb)\n"
 #endif
+#ifdef _WIN32
+        "    -m,  --mhook        use Mhook (instead of IAT patching)\n"
+#endif
     ;
 }
 
 const static char *
-shortOptions = "+hva:o:d";
+shortOptions = "+hva:o:dm";
 
 const static struct option
 longOptions[] = {
-    {"help", no_argument, 0, 'h'},
-    {"verbose", no_argument, 0, 'v'},
-    {"api", required_argument, 0, 'a'},
-    {"output", required_argument, 0, 'o'},
-    {"debug", no_argument, 0, 'd'},
-    {0, 0, 0, 0}
+    { "help", no_argument, 0, 'h' },
+    { "verbose", no_argument, 0, 'v' },
+    { "api", required_argument, 0, 'a' },
+    { "output", required_argument, 0, 'o' },
+    { "debug", no_argument, 0, 'd' },
+    { "mhook", no_argument, 0, 'm' },
+    { 0, 0, 0, 0 }
 };
 
 static int
@@ -364,6 +372,7 @@ command(int argc, char *argv[])
     trace::API api = trace::API_GL;
     const char *output = NULL;
     bool debug = false;
+    bool mhook = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -408,6 +417,9 @@ command(int argc, char *argv[])
         case 'd':
             debug = true;
             break;
+        case 'm':
+            mhook = true;
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -422,7 +434,7 @@ command(int argc, char *argv[])
     }
 
     assert(argv[argc] == 0);
-    return traceProgram(api, argv + optind, output, verbose, debug);
+    return traceProgram(api, argv + optind, output, verbose, debug, mhook);
 }
 
 const Command trace_command = {
