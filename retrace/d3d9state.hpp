@@ -36,10 +36,6 @@ namespace image {
     class Image;
 }
 
-std::ostream &
-operator << (std::ostream &os, D3DFORMAT Format);
-
-
 namespace d3dstate {
 
 
@@ -49,7 +45,8 @@ ConvertImage(D3DFORMAT SrcFormat,
              INT SrcPitch,
              UINT Width, UINT Height);
 
-
+const char *
+formatToString(D3DFORMAT fmt);
 
 } /* namespace d3dstate */
 

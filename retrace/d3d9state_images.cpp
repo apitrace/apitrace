@@ -40,7 +40,8 @@ namespace d3dstate {
 
 static image::Image *
 getSurfaceImage(IDirect3DDevice9 *pDevice,
-                IDirect3DSurface9 *pSurface) {
+                IDirect3DSurface9 *pSurface,
+                struct StateWriter::ImageDesc &imageDesc) {
     image::Image *image = NULL;
     HRESULT hr;
 
@@ -52,6 +53,11 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
+
     D3DLOCKED_RECT LockedRect;
     hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
     if (FAILED(hr)) {
@@ -62,13 +68,16 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
 
     pSurface->UnlockRect();
 
+    imageDesc.format = formatToString(Desc.Format);
+
     return image;
 }
 
 
 static image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice,
-                     IDirect3DSurface9 *pRenderTarget) {
+                     IDirect3DSurface9 *pRenderTarget,
+                     struct StateWriter::ImageDesc &imageDesc) {
     HRESULT hr;
 
     if (!pRenderTarget) {
@@ -78,6 +87,11 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
     D3DSURFACE_DESC Desc;
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
+
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
 
     com_ptr<IDirect3DSurface9> pStagingSurface;
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
@@ -91,13 +105,14 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
         return NULL;
     }
 
-    return getSurfaceImage(pDevice, pStagingSurface);
+    return getSurfaceImage(pDevice, pStagingSurface, imageDesc);
 }
 
 
 image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice) {
     HRESULT hr;
+    struct StateWriter::ImageDesc imageDesc;
 
     com_ptr<IDirect3DSurface9> pRenderTarget;
     hr = pDevice->GetRenderTarget(0, &pRenderTarget);
@@ -106,13 +121,14 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice) {
     }
     assert(pRenderTarget);
 
-    return getRenderTargetImage(pDevice, pRenderTarget);
+    return getRenderTargetImage(pDevice, pRenderTarget, imageDesc);
 }
 
 
 image::Image *
 getRenderTargetImage(IDirect3DSwapChain9 *pSwapChain) {
     HRESULT hr;
+    struct StateWriter::ImageDesc imageDesc;
 
     com_ptr<IDirect3DDevice9> pDevice;
     hr = pSwapChain->GetDevice(&pDevice);
@@ -128,7 +144,7 @@ getRenderTargetImage(IDirect3DSwapChain9 *pSwapChain) {
     }
     assert(pBackBuffer);
 
-    return getRenderTargetImage(pDevice, pBackBuffer);
+    return getRenderTargetImage(pDevice, pBackBuffer, imageDesc);
 }
 
 
@@ -136,7 +152,8 @@ static image::Image *
 getTextureImage(IDirect3DDevice9 *pDevice,
                 IDirect3DBaseTexture9 *pTexture,
                 D3DCUBEMAP_FACES FaceType,
-                UINT Level)
+                UINT Level,
+                struct StateWriter::ImageDesc &imageDesc)
 {
     HRESULT hr;
 
@@ -170,10 +187,10 @@ getTextureImage(IDirect3DDevice9 *pDevice,
     if (Desc.Pool != D3DPOOL_DEFAULT ||
         Desc.Usage & D3DUSAGE_DYNAMIC) {
         // Lockable texture
-        return getSurfaceImage(pDevice, pSurface);
+        return getSurfaceImage(pDevice, pSurface, imageDesc);
     } else if (Desc.Usage & D3DUSAGE_RENDERTARGET) {
         // Rendertarget texture
-        return getRenderTargetImage(pDevice, pSurface);
+        return getRenderTargetImage(pDevice, pSurface, imageDesc);
     } else {
         // D3D constraints are such there is not much else that can be done.
         return NULL;
@@ -208,7 +225,8 @@ dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice)
         for (DWORD Face = 0; Face < NumFaces; ++Face) {
             for (DWORD Level = 0; Level < NumLevels; ++Level) {
                 image::Image *image;
-                image = getTextureImage(pDevice, pTexture, static_cast<D3DCUBEMAP_FACES>(Face), Level);
+                struct StateWriter::ImageDesc imageDesc;
+                image = getTextureImage(pDevice, pTexture, static_cast<D3DCUBEMAP_FACES>(Face), Level, imageDesc);
                 if (image) {
                     char label[128];
                     if (Type == D3DRTYPE_CUBETEXTURE) {
@@ -217,7 +235,7 @@ dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice)
                         _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
                     }
                     writer.beginMember(label);
-                    writer.writeImage(image);
+                    writer.writeImage(image, imageDesc);
                     writer.endMember(); // PS_RESOURCE_*
                     delete image;
                 }
@@ -253,12 +271,13 @@ dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
         }
 
         image::Image *image;
-        image = getRenderTargetImage(pDevice, pRenderTarget);
+        struct StateWriter::ImageDesc imageDesc;
+        image = getRenderTargetImage(pDevice, pRenderTarget, imageDesc);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
             writer.beginMember(label);
-            writer.writeImage(image);
+            writer.writeImage(image, imageDesc);
             writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
@@ -268,11 +287,12 @@ dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
     hr = pDevice->GetDepthStencilSurface(&pDepthStencil);
     if (SUCCEEDED(hr) && pDepthStencil) {
         image::Image *image;
-        image = getSurfaceImage(pDevice, pDepthStencil);
+        struct StateWriter::ImageDesc imageDesc;
+        image = getSurfaceImage(pDevice, pDepthStencil, imageDesc);
         if (image) {
             writer.beginMember("DEPTH_STENCIL");
-            writer.writeImage(image);
-            writer.endMember(); // RENDER_TARGET_*
+            writer.writeImage(image, imageDesc);
+            writer.endMember(); // DEPTH_STENCIL
             delete image;
         }
     }

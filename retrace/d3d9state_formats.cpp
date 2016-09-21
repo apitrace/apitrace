@@ -28,31 +28,113 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <sstream>
 
 #include "image.hpp"
+#include "halffloat.hpp"
 
 #ifdef HAVE_DXGI
 #include "dxgistate.hpp"
 #endif
 
-
-std::ostream &
-operator << (std::ostream &os, D3DFORMAT Format) {
-    if (Format >= 0 && Format < 256) {
-        return os << (unsigned)Format;
-    } else {
-        char ch0 = Format;
-        char ch1 = Format >> 8;
-        char ch2 = Format >> 16;
-        char ch3 = Format >> 24;
-        return os << "'" << ch0 << ch1 << ch2 << ch3 << "'";
-    }
-    return os;
-}
-
-
 namespace d3dstate {
 
+const char *
+formatToString(D3DFORMAT fmt)
+{
+    switch ((UINT)fmt) {
+    case D3DFMT_UNKNOWN: return "D3DFMT_UNKNOWN";
+    case D3DFMT_R8G8B8: return "D3DFMT_R8G8B8";
+    case D3DFMT_A8R8G8B8: return "D3DFMT_A8R8G8B8";
+    case D3DFMT_X8R8G8B8: return "D3DFMT_X8R8G8B8";
+    case D3DFMT_R5G6B5: return "D3DFMT_R5G6B5";
+    case D3DFMT_X1R5G5B5: return "D3DFMT_X1R5G5B5";
+    case D3DFMT_A1R5G5B5: return "D3DFMT_A1R5G5B5";
+    case D3DFMT_A4R4G4B4: return "D3DFMT_A4R4G4B4";
+    case D3DFMT_R3G3B2: return "D3DFMT_R3G3B2";
+    case D3DFMT_A8: return "D3DFMT_A8";
+    case D3DFMT_A8R3G3B2: return "D3DFMT_A8R3G3B2";
+    case D3DFMT_X4R4G4B4: return "D3DFMT_X4R4G4B4";
+    case D3DFMT_A2B10G10R10: return "D3DFMT_A2B10G10R10";
+    case D3DFMT_A8B8G8R8: return "D3DFMT_A8B8G8R8";
+    case D3DFMT_X8B8G8R8: return "D3DFMT_X8B8G8R8";
+    case D3DFMT_G16R16: return "D3DFMT_G16R16";
+    case D3DFMT_A2R10G10B10: return "D3DFMT_A2R10G10B10";
+    case D3DFMT_A16B16G16R16: return "D3DFMT_A16B16G16R16";
+    case D3DFMT_A8P8: return "D3DFMT_A8P8";
+    case D3DFMT_P8: return "D3DFMT_P8";
+    case D3DFMT_L8: return "D3DFMT_L8";
+    case D3DFMT_A8L8: return "D3DFMT_A8L8";
+    case D3DFMT_A4L4: return "D3DFMT_A4L4";
+    case D3DFMT_V8U8: return "D3DFMT_V8U8";
+    case D3DFMT_L6V5U5: return "D3DFMT_L6V5U5";
+    case D3DFMT_X8L8V8U8: return "D3DFMT_X8L8V8U8";
+    case D3DFMT_Q8W8V8U8: return "D3DFMT_Q8W8V8U8";
+    case D3DFMT_V16U16: return "D3DFMT_V16U16";
+    case D3DFMT_A2W10V10U10: return "D3DFMT_A2W10V10U10";
+    case D3DFMT_UYVY: return "D3DFMT_UYVY";
+    case D3DFMT_R8G8_B8G8: return "D3DFMT_R8G8_B8G8";
+    case D3DFMT_YUY2: return "D3DFMT_YUY2";
+    case D3DFMT_G8R8_G8B8: return "D3DFMT_G8R8_G8B8";
+    case D3DFMT_DXT1: return "D3DFMT_DXT1";
+    case D3DFMT_DXT2: return "D3DFMT_DXT2";
+    case D3DFMT_DXT3: return "D3DFMT_DXT3";
+    case D3DFMT_DXT4: return "D3DFMT_DXT4";
+    case D3DFMT_DXT5: return "D3DFMT_DXT5";
+    case D3DFMT_D16_LOCKABLE: return "D3DFMT_D16_LOCKABLE";
+    case D3DFMT_D32: return "D3DFMT_D32";
+    case D3DFMT_D15S1: return "D3DFMT_D15S1";
+    case D3DFMT_D24S8: return "D3DFMT_D24S8";
+    case D3DFMT_D24X8: return "D3DFMT_D24X8";
+    case D3DFMT_D24X4S4: return "D3DFMT_D24X4S4";
+    case D3DFMT_D16: return "D3DFMT_D16";
+    case D3DFMT_D32F_LOCKABLE: return "D3DFMT_D32F_LOCKABLE";
+    case D3DFMT_D24FS8: return "D3DFMT_D24FS8";
+    case D3DFMT_D32_LOCKABLE: return "D3DFMT_D32_LOCKABLE";
+    case D3DFMT_S8_LOCKABLE: return "D3DFMT_S8_LOCKABLE";
+    case D3DFMT_L16: return "D3DFMT_L16";
+    case D3DFMT_VERTEXDATA: return "D3DFMT_VERTEXDATA";
+    case D3DFMT_INDEX16: return "D3DFMT_INDEX16";
+    case D3DFMT_INDEX32: return "D3DFMT_INDEX32";
+    case D3DFMT_Q16W16V16U16: return "D3DFMT_Q16W16V16U16";
+    case D3DFMT_MULTI2_ARGB8: return "D3DFMT_MULTI2_ARGB8";
+    case D3DFMT_R16F: return "D3DFMT_R16F";
+    case D3DFMT_G16R16F: return "D3DFMT_G16R16F";
+    case D3DFMT_A16B16G16R16F: return "D3DFMT_A16B16G16R16F";
+    case D3DFMT_R32F: return "D3DFMT_R32F";
+    case D3DFMT_G32R32F: return "D3DFMT_G32R32F";
+    case D3DFMT_A32B32G32R32F: return "D3DFMT_A32B32G32R32F";
+    case D3DFMT_CxV8U8: return "D3DFMT_CxV8U8";
+    case D3DFMT_A1: return "D3DFMT_A1";
+    case D3DFMT_A2B10G10R10_XR_BIAS: return "D3DFMT_A2B10G10R10_XR_BIAS";
+    case D3DFMT_BINARYBUFFER: return "D3DFMT_BINARYBUFFER";
+    case D3DFMT_ATI1: return "D3DFMT_ATI1";
+    case D3DFMT_ATI2: return "D3DFMT_ATI2";
+    case D3DFMT_DF16: return "D3DFMT_DF16";
+    case D3DFMT_DF24: return "D3DFMT_DF24";
+    case D3DFMT_INTZ: return "D3DFMT_INTZ";
+    case D3DFMT_RESZ: return "D3DFMT_RESZ";
+    case D3DFMT_NULL: return "D3DFMT_NULL";
+    case D3DFMT_AYUV: return "D3DFMT_AYUV";
+    case D3DFMT_RAWZ: return "D3DFMT_RAWZ";
+    default:
+        std::ostringstream oss;
+
+        if (fmt > 255) {
+            char ch0 = fmt;
+            char ch1 = fmt >> 8;
+            char ch2 = fmt >> 16;
+            char ch3 = fmt >> 24;
+            oss << "D3DFMT_" << ch0 << ch1 << ch2 << ch3;
+        } else {
+            oss << (unsigned)fmt;
+        }
+        return oss.str().c_str();
+        break;
+    }
+
+    return "Unknown";
+}
 
 #ifdef HAVE_DXGI
 
@@ -174,12 +256,29 @@ ConvertImage(D3DFORMAT SrcFormat,
     unsigned numChannels;
     image::ChannelType channelType;
     switch (SrcFormat) {
-    case D3DFMT_X8R8G8B8:
     case D3DFMT_A8R8G8B8:
+    case D3DFMT_A8B8G8R8:
+        numChannels = 4;
+        channelType = image::TYPE_UNORM8;
+        break;
+    case D3DFMT_A32B32G32R32F:
+    case D3DFMT_A16B16G16R16F:
+        numChannels = 4;
+        channelType = image::TYPE_FLOAT;
+        break;
+    case D3DFMT_X8R8G8B8:
+    case D3DFMT_X8B8G8R8:
     case D3DFMT_R5G6B5:
         numChannels = 3;
         channelType = image::TYPE_UNORM8;
         break;
+    case D3DFMT_G32R32F:
+    case D3DFMT_G16R16F:
+        numChannels = 2;
+        channelType = image::TYPE_FLOAT;
+        break;
+    case D3DFMT_R32F:
+    case D3DFMT_R16F:
     case D3DFMT_D16:
     case D3DFMT_D16_LOCKABLE:
     case D3DFMT_D24S8:
@@ -199,7 +298,7 @@ ConvertImage(D3DFORMAT SrcFormat,
         }
 #endif
 
-        std::cerr << "warning: unsupported D3DFORMAT " << SrcFormat << "\n";
+        std::cerr << "warning: unsupported D3DFORMAT " << formatToString(SrcFormat) << "\n";
         return NULL;
     }
 
@@ -215,6 +314,22 @@ ConvertImage(D3DFORMAT SrcFormat,
     src = (const unsigned char *)SrcData;
     for (unsigned y = 0; y < Height; ++y) {
         switch (SrcFormat) {
+        case D3DFMT_A8R8G8B8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[4*x + 0] = src[4*x + 2];
+                dst[4*x + 1] = src[4*x + 1];
+                dst[4*x + 2] = src[4*x + 0];
+                dst[4*x + 3] = src[4*x + 3];
+            }
+            break;
+        case D3DFMT_A8B8G8R8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[4*x + 0] = src[4*x + 0];
+                dst[4*x + 1] = src[4*x + 1];
+                dst[4*x + 2] = src[4*x + 2];
+                dst[4*x + 3] = src[4*x + 3];
+            }
+            break;
         case D3DFMT_R5G6B5:
             for (unsigned x = 0; x < Width; ++x) {
                 uint32_t pixel = ((const uint16_t *)src)[x];
@@ -224,11 +339,45 @@ ConvertImage(D3DFORMAT SrcFormat,
             }
             break;
         case D3DFMT_X8R8G8B8:
-        case D3DFMT_A8R8G8B8:
             for (unsigned x = 0; x < Width; ++x) {
                 dst[3*x + 0] = src[4*x + 2];
                 dst[3*x + 1] = src[4*x + 1];
                 dst[3*x + 2] = src[4*x + 0];
+            }
+            break;
+        case D3DFMT_X8B8G8R8:
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[3*x + 0] = src[4*x + 0];
+                dst[3*x + 1] = src[4*x + 1];
+                dst[3*x + 2] = src[4*x + 2];
+            }
+            break;
+        case D3DFMT_A32B32G32R32F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[4*x + 0] = ((const float *)src)[4*x + 0];
+                ((float *)dst)[4*x + 1] = ((const float *)src)[4*x + 1];
+                ((float *)dst)[4*x + 2] = ((const float *)src)[4*x + 2];
+                ((float *)dst)[4*x + 3] = ((const float *)src)[4*x + 3];
+            }
+            break;
+        case D3DFMT_A16B16G16R16F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[4*x + 0] = util_half_to_float(((const uint16_t *)src)[4*x + 0]);
+                ((float *)dst)[4*x + 1] = util_half_to_float(((const uint16_t *)src)[4*x + 1]);
+                ((float *)dst)[4*x + 2] = util_half_to_float(((const uint16_t *)src)[4*x + 2]);
+                ((float *)dst)[4*x + 3] = util_half_to_float(((const uint16_t *)src)[4*x + 3]);
+            }
+            break;
+        case D3DFMT_G32R32F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[2*x + 0] = ((const float *)src)[2*x + 0];
+                ((float *)dst)[2*x + 1] = ((const float *)src)[2*x + 1];
+            }
+            break;
+        case D3DFMT_G16R16F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[2*x + 0] = util_half_to_float(((const uint16_t *)src)[2*x + 0]);
+                ((float *)dst)[2*x + 1] = util_half_to_float(((const uint16_t *)src)[2*x + 1]);
             }
             break;
         case D3DFMT_D16:
@@ -247,7 +396,13 @@ ConvertImage(D3DFORMAT SrcFormat,
             }
             break;
         case D3DFMT_D32F_LOCKABLE:
+        case D3DFMT_R32F:
             memcpy(dst, src, Width * sizeof(float));
+            break;
+        case D3DFMT_R16F:
+            for (unsigned x = 0; x < Width; ++x) {
+                ((float *)dst)[x] = util_half_to_float(((const uint16_t *)src)[x]);
+            }
             break;
         default:
             assert(0);
