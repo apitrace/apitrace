@@ -2,9 +2,31 @@
 
 This document specifies the binary format of trace streams.
 
-Trace streams are not written verbatim to file, but compressed, nowadays with
-snappy (see `lib/trace/trace_file_snappy.cpp` for details).  Previously they used
-to be compressed with gzip.
+## Compression ##
+
+Trace streams are not written verbatim to file, but compressed.
+
+By default traces are compressed with [Snappy](https://github.com/google/snappy)
+(see below for details).  Previously they used to be compressed with gzip.  And
+recently it also possible to have them compressed with
+[Brotli](https://github.com/google/brotli), though this is mostly intended for
+space savings on large databases of trace files.
+
+`apitrace repack` utility can be used to recompress the stream without any loss.
+
+### Snappy ###
+
+The used Snappy format is different from the standard _Snappy framing format_,
+because it predates it.
+
+    file = header chunk*
+    
+    header = 'a' 't'
+    
+    chunk = compressed_length compressed_data
+    
+    compressed_length = uint32  // length of compressed data in little endian
+    compressed_data = byte*
 
 
 ## Versions ##
