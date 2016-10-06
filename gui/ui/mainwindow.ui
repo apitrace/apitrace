@@ -466,7 +466,11 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QSpinBox" name="startingOffsetSB"/>
+        <widget class="QSpinBox" name="startingOffsetSB">
+         <property name="maximum">
+          <number>1024</number>
+         </property>
+       </widget>
        </item>
       </layout>
      </item>
