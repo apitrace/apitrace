@@ -271,8 +271,9 @@ createContext(const Visual *visual, Context *shareContext,
 }
 
 bool
-makeCurrentInternal(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context)
 {
+    // NOTE: the 'readable' argument is ignored
     if (!drawable || !context) {
         return waffle_make_current(dpy, NULL, NULL);
     } else {

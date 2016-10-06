@@ -381,8 +381,9 @@ createContext(const Visual *visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrentInternal(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context)
 {
+    // NOTE: the 'readable' argument is ignored.
     initThread();
 
     if (!drawable || !context) {

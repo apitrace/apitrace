@@ -188,6 +188,7 @@ private:
     void initialize(void);
 
     friend bool makeCurrent(Drawable *, Context *);
+    friend bool makeCurrent(Drawable *, Drawable *, Context *);
 };
 
 
@@ -208,16 +209,22 @@ Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);
 
 bool
-makeCurrentInternal(Drawable *drawable, Context *context);
+makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context);
 
 inline bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrent(Drawable *drawable, Drawable *readable, Context *context)
 {
-    bool success = makeCurrentInternal(drawable, context);
+    bool success = makeCurrentInternal(drawable, readable, context);
     if (success && context && !context->initialized) {
         context->initialize();
     }
     return success;
+}
+
+inline bool
+makeCurrent(Drawable *drawable, Context *context)
+{
+    return makeCurrent(drawable, drawable, context);
 }
 
 bool

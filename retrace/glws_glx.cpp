@@ -359,12 +359,18 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrentInternal(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context)
 {
     Window draw = None;
     if (drawable) {
         GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
         draw = glxDrawable->drawable;
+    }
+
+    Window read = None;
+    if (readable) {
+        GlxDrawable *glxReadable = static_cast<GlxDrawable *>(readable);
+        read = glxReadable->drawable;
     }
 
     GLXContext ctx = nullptr;
@@ -373,7 +379,12 @@ makeCurrentInternal(Drawable *drawable, Context *context)
         ctx = glxContext->context;
     }
 
-    return glXMakeCurrent(display, draw, ctx);
+    // We assume all GLX implementations support GLX 1.3 and the
+    // glXMakeContextCurrent() function.  But only call it when needed.
+    if (read != draw)
+        return glXMakeContextCurrent(display, draw, read, ctx);
+    else
+        return glXMakeCurrent(display, draw, ctx);
 }
 
 Window

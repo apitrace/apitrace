@@ -83,6 +83,10 @@ static PFNWGLBINDTEXIMAGEARBPROC pfnWglBindTexImageARB;
 static PFNWGLRELEASETEXIMAGEARBPROC pfnWglReleaseTexImageARB;
 static PFNWGLSETPBUFFERATTRIBARBPROC pfnWglSetPbufferAttribARB;
 
+static bool has_WGL_ARB_make_current_read = false;
+static PFNWGLMAKECONTEXTCURRENTARBPROC pfnWglMakeContextCurrentARB;
+static PFNWGLGETCURRENTREADDCARBPROC pfnWglGetCurrentReadDCARB;
+
 
 class WglDrawable : public Drawable
 {
@@ -269,6 +273,14 @@ public:
                      pfnWglSetPbufferAttribARB, "wglSetPbufferAttribARB");
         }
 
+        if (checkExtension("WGL_ARB_make_current_read", extensionsString)) {
+            has_WGL_ARB_make_current_read = true;
+            WGL_PROC(PFNWGLMAKECONTEXTCURRENTARBPROC,
+                     pfnWglMakeContextCurrentARB, "wglMakeContextCurrentARB");
+            WGL_PROC(PFNWGLGETCURRENTREADDCARBPROC,
+                     pfnWglGetCurrentReadDCARB, "wglGetCurrentReadDCARB");
+        }
+
         if (!checkExtension("WGL_ARB_create_context", extensionsString)) {
             if (required) {
                 std::cerr << "error: WGL_ARB_create_context not supported\n";
@@ -448,17 +460,27 @@ createContext(const Visual *visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrentInternal(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context)
 {
     if (!drawable || !context) {
         return wglMakeCurrent(NULL, NULL);
     } else {
         WglDrawable *wglDrawable = static_cast<WglDrawable *>(drawable);
+        WglDrawable *wglReadable = static_cast<WglDrawable *>(readable);
         WglContext *wglContext = static_cast<WglContext *>(context);
 
         wglContext->create(wglDrawable);
+        wglContext->create(wglReadable);
 
-        return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
+        if (has_WGL_ARB_make_current_read &&
+            wglDrawable->hDC != wglReadable->hDC) {
+            return pfnWglMakeContextCurrentARB(wglDrawable->hDC,
+                                               wglReadable->hDC,
+                                               wglContext->hglrc);
+        }
+        else {
+            return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
+        }
     }
 }
 
