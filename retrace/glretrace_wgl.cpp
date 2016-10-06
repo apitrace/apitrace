@@ -112,6 +112,24 @@ static void retrace_wglMakeCurrent(trace::Call &call) {
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
+static void retrace_wglMakeContextCurrentARB(trace::Call &call) {
+    bool ret = call.ret->toBool();
+
+    glws::Drawable *new_drawable = NULL;
+    glws::Drawable *new_readable = NULL;
+    Context *new_context = NULL;
+    if (ret) {
+        unsigned long long hglrc = call.arg(2).toUIntPtr();
+        if (hglrc) {
+            new_drawable = getDrawable(call.arg(0).toUIntPtr());
+            new_readable = getDrawable(call.arg(1).toUIntPtr());
+            new_context = getContext(hglrc);
+        }
+    }
+
+    glretrace::makeCurrent(call, new_drawable, new_readable, new_context);
+}
+
 static void retrace_wglSwapBuffers(trace::Call &call) {
     bool ret = call.ret->toBool();
     if (!ret) {
@@ -456,6 +474,7 @@ const retrace::Entry glretrace::wgl_callbacks[] = {
     {"wglGetPixelFormatAttribivEXT", &retrace::ignore},
     {"wglGetProcAddress", &retrace::ignore},
     {"wglGetSwapIntervalEXT", &retrace::ignore},
+    {"wglMakeContextCurrentARB", &retrace_wglMakeContextCurrentARB},
     {"wglMakeCurrent", &retrace_wglMakeCurrent},
     {"wglQueryPbufferARB", &retrace::ignore},
     {"wglReleasePbufferDCARB", &retrace::ignore},

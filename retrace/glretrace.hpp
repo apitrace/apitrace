@@ -67,6 +67,7 @@ public:
 
     // Bound drawable
     glws::Drawable *drawable = nullptr;
+    glws::Drawable *readable = nullptr;
 
     // Active program (unswizzled) for profiling
     GLuint currentUserProgram = 0;
@@ -151,6 +152,10 @@ createContext(Context *shareContext = 0);
 
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
+
+bool
+makeCurrent(trace::Call &call, glws::Drawable *drawable,
+            glws::Drawable *readable, Context *context);
 
 
 void

@@ -197,9 +197,10 @@ static void retrace_glXMakeContextCurrent(trace::Call &call) {
     }
 
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *new_readable = getDrawable(call.arg(2).toUInt());
     Context *new_context = getContext(call.arg(3).toUIntPtr());
 
-    glretrace::makeCurrent(call, new_drawable, new_context);
+    glretrace::makeCurrent(call, new_drawable, new_readable, new_context);
 }
 
 const retrace::Entry glretrace::glx_callbacks[] = {

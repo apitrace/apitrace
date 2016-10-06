@@ -151,10 +151,21 @@ currentContextPtr;
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
+    return makeCurrent(call, drawable, drawable, context);
+}
+
+
+bool
+makeCurrent(trace::Call &call, glws::Drawable *drawable,
+            glws::Drawable *readable, Context *context)
+{
     Context *currentContext = currentContextPtr;
     glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
+    glws::Drawable *currentReadable = currentContext ? currentContext->readable : NULL;
 
-    if (drawable == currentDrawable && context == currentContext) {
+    if (drawable == currentDrawable &&
+        readable == currentReadable &&
+        context == currentContext) {
         return true;
     }
 
@@ -170,7 +181,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
     beforeContextSwitch();
 
-    bool success = glws::makeCurrent(drawable, context ? context->wsContext : NULL);
+    bool success = glws::makeCurrent(drawable, readable, context ? context->wsContext : NULL);
 
     if (!success) {
         std::cerr << "error: failed to make current OpenGL context and drawable\n";
@@ -189,7 +200,8 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
     if (drawable && context) {
         context->drawable = drawable;
-        
+        context->readable = readable;
+
         if (!context->used) {
             initContext();
             context->used = true;
