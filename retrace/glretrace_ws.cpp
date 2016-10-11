@@ -215,7 +215,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable,
 
 
 /**
- * Grow the current drawble.
+ * Grow the current drawable.
  *
  * We need to infer the drawable size from GL calls because the drawable sizes
  * are specified by OS specific calls which we do not trace.
