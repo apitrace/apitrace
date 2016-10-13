@@ -14,6 +14,15 @@ About **apitrace**
 See the [apitrace homepage](http://apitrace.github.io/) for more details.
 
 
+Status
+======
+
+TL;DR: Apitrace is still being maintained, but the maintainer has very little
+time to work on it, so patches/issues/requests are addressed if/as time permits.
+
+Long version [here](https://jrfonseca.blogspot.co.uk/2016/10/apitrace-maintenance.html)
+
+
 Obtaining **apitrace**
 ======================
 
