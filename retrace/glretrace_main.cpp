@@ -571,6 +571,14 @@ frame_complete(trace::Call &call) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 
+    /* Display the frame number in the window title, except in benchmark mode
+     * as compositor/window manager activity may affect the profile. */
+    if (retrace::debug > 0 && !retrace::profiling) {
+        std::ostringstream str;
+        str << "glretrace [frame: " << retrace::frameNo << "]";
+        currentDrawable->setName(str.str().c_str());
+    }
+
     if (curMetricBackend) {
         curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
     }

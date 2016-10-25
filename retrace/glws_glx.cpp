@@ -141,6 +141,14 @@ public:
         Drawable::show();
     }
 
+    void setName(const char *name) override {
+        if (!window) {
+            return;
+        }
+
+        setWindowName(window, name);
+    }
+
     void copySubBuffer(int x, int y, int width, int height) override {
         glXCopySubBufferMESA(display, drawable, x, y, width, height);
 
