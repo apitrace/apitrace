@@ -248,4 +248,11 @@ showWindow(Window window)
 }
 
 
+void
+setWindowName(Window window, const char *name)
+{
+    XStoreName(display, window, const_cast<char *>(name));
+}
+
+
 } /* namespace glws */

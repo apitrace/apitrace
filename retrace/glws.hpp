@@ -148,6 +148,8 @@ public:
         visible = true;
     }
 
+    virtual void setName(const char *name) {}
+
     virtual void copySubBuffer(int x, int y, int width, int height);
 
     virtual void swapBuffers(void) = 0;
