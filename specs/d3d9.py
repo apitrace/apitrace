@@ -449,3 +449,18 @@ d3dperf.addFunctions([
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], sideeffects=False),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0', sideeffects=False),
 ])
+
+IDirect3DShaderValidator9 = Interface("IDirect3DShaderValidator9", IUnknown)
+PDIRECT3DSHADERVALIDATOR9 = ObjPointer(IDirect3DShaderValidator9)
+
+# undocumented interface
+IDirect3DShaderValidator9.methods += [
+    StdMethod(HRESULT, "Begin", [(OpaquePointer(Void), "arg1"), (OpaquePointer(Void), "arg2"), (ULONG, "arg3")]),
+    StdMethod(HRESULT, "Instruction", [(OpaquePointer(Void), "arg1"), (UINT, "arg2"), (ULONG, "arg3"), (UINT, "arg4")]),
+    StdMethod(HRESULT, "End", []),
+]
+
+d3d9shadervalidator = Module("d3d9")
+d3d9shadervalidator.addFunctions([
+    StdFunction(PDIRECT3DSHADERVALIDATOR9, "Direct3DShaderValidatorCreate9", [], fail='NULL'),
+])
