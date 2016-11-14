@@ -1122,7 +1122,7 @@ parameters = [
     ("",	X,	1,	"GL_PROGRAM"),	# 0x82E2
     ("",	X,	1,	"GL_QUERY"),	# 0x82E3
     ("",	X,	1,	"GL_PROGRAM_PIPELINE"),	# 0x82E4
-    ("",	X,	1,	"GL_MAX_VERTEX_ATTRIB_STRIDE"),	# 0x82E5
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_ATTRIB_STRIDE"),	# 0x82E5
     ("",	X,	1,	"GL_SAMPLER"),	# 0x82E6
     ("",	X,	1,	"GL_DISPLAY_LIST"),	# 0x82E7
     ("glGet",	I,	1,	"GL_MAX_LABEL_LENGTH"),	# 0x82E8
