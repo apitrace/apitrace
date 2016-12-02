@@ -241,6 +241,8 @@ def main():
                 failures += 1
                 bgcolor = '#ff2020'
         else:
+            comparer = None
+            match = None
             result = 'MISSING'
             failures += 1
             bgcolor = '#ff2020'
@@ -250,11 +252,12 @@ def main():
         html.write('      <tr>\n')
         html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
         if not match or options.show_all:
-            if options.overwrite \
-               or not os.path.exists(delta_image) \
-               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
-                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-                comparer.write_diff(delta_image, fuzz=options.fuzz)
+            if comparer is not None \
+               and (options.overwrite \
+                    or not os.path.exists(delta_image) \
+                     or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                         and os.path.getmtime(delta_image) < os.path.getmtime(src_image))):
+                    comparer.write_diff(delta_image, fuzz=options.fuzz)
             surface(html, ref_image)
             surface(html, src_image)
             surface(html, delta_image)
