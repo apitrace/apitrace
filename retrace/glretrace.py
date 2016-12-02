@@ -209,7 +209,7 @@ class GlRetracer(Retracer):
         # Infer the drawable size from GL calls
         if function.name == "glViewport":
             print '    glretrace::updateDrawable(x + width, y + height);'
-        if function.name == "glViewportArray":
+        if function.name == "glViewportArrayv":
             # We are concerned about drawables so only care for the first viewport
             print '    if (first == 0 && count > 0) {'
             print '        GLfloat x = v[0], y = v[1], w = v[2], h = v[3];'
