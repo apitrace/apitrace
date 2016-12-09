@@ -2882,6 +2882,12 @@ parameters = [
     #("",	X,	1,	"GL_COVERAGE_ALL_FRAGMENTS_NV"),	# 0x8ED5
     #("",	X,	1,	"GL_COVERAGE_EDGE_FRAGMENTS_NV"),	# 0x8ED6
     #("",	X,	1,	"GL_COVERAGE_AUTOMATIC_NV"),	# 0x8ED7
+    ("",	X,	1,	"GL_INCLUSIVE_EXT"),	# 0x8F10
+    ("",	X,	1,	"GL_EXCLUSIVE_EXT"),	# 0x8F11
+    ("",	I,	4,	"GL_WINDOW_RECTANGLE_EXT"),	# 0x8F12
+    ("glGet",	E,	1,	"GL_WINDOW_RECTANGLE_MODE_EXT"),	# 0x8F13
+    ("glGet",	I,	1,	"GL_MAX_WINDOW_RECTANGLES_EXT"),	# 0x8F14
+    ("glGet",	I,	1,	"GL_NUM_WINDOW_RECTANGLES_EXT"),	# 0x8F15
     ("_glGetBufferParameter",	I64,	1,	"GL_BUFFER_GPU_ADDRESS_NV"),	# 0x8F1D
     ("",	X,	1,	"GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV"),	# 0x8F1E
     ("",	X,	1,	"GL_ELEMENT_ARRAY_UNIFIED_NV"),	# 0x8F1F
