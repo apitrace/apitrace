@@ -339,12 +339,22 @@ if (ENABLE_FRAME_POINTER)
     endif ()
 endif ()
 
-# Enable Data Execution Prevention and Address Space Layout Randomization
 if (WIN32)
+    # Enable Data Execution Prevention and Address Space Layout Randomization
     if (MSVC)
         add_linker_flags (/NXCOMPAT /DYNAMICBASE)
     else ()
         add_linker_flags (-Wl,--nxcompat -Wl,--dynamicbase)
+    endif ()
+
+    # Use more than 2GB virtual memory address space for 32-bits processes
+    # where available (3GB on 32-bits Windows with 4GT, 4GB on 64-bits Windows)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+        if (MSVC)
+            add_linker_flags (/LARGEADDRESSAWARE)
+        else ()
+            add_linker_flags (-Wl,--large-address-aware)
+        endif ()
     endif ()
 endif ()
 
