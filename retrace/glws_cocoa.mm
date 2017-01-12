@@ -114,9 +114,9 @@ public:
 
         window = [[NSWindow alloc]
                          initWithContentRect:winRect
-                                   styleMask:NSTitledWindowMask |
-                                             NSClosableWindowMask |
-                                             NSMiniaturizableWindowMask
+                                   styleMask:NSWindowStyleMaskTitled |
+                                             NSWindowStyleMaskClosable |
+                                             NSWindowStyleMaskMiniaturizable
                                      backing:NSBackingStoreRetained
                                        defer:NO];
         assert(window != nil);
@@ -342,7 +342,7 @@ processEvents(void) {
 
     NSEvent* event;
     do {
-        event = [NSApp nextEventMatchingMask:NSAnyEventMask
+        event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                    untilDate:[NSDate distantPast]
                                       inMode:NSDefaultRunLoopMode
                                      dequeue:YES];
