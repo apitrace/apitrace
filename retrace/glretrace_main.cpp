@@ -430,6 +430,11 @@ initContext() {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     assert(currentContext);
 
+#if defined(__APPLE__)
+    std::cerr << "GL_RENDERER: " << (const char *)glGetString(GL_RENDERER) << std::endl;
+    std::cerr << "GL_VENDOR: " << (const char *)glGetString(GL_VENDOR) << std::endl;
+#endif
+
     /* Ensure we have adequate extension support */
     glfeatures::Profile currentProfile = currentContext->actualProfile();
     supportsTimestamp   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 3, 3) ||

@@ -131,6 +131,12 @@ if (WIN32 OR APPLE OR X11_FOUND)
                 "-framework ApplicationServices" # CGS*
                 #"-framework OpenGL" # CGL*
             )
+
+            # Bundle Info.plist
+            set_target_properties (glretrace PROPERTIES
+                LINK_FLAGS "-sectcreate __TEXT __info_plist ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+                LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+            )
         else ()
             target_link_libraries (glretrace ${X11_X11_LIB})
         endif ()

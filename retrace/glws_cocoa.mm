@@ -277,6 +277,11 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         attribs.add(NSOpenGLPFANoRecovery);
     }
 
+    // Tell this context is offline renderer aware
+    // https://developer.apple.com/library/content/technotes/tn2229/_index.html
+    // TODO: override NSOpenGLView::update to receive notifications
+    attribs.add(NSOpenGLPFAAllowOfflineRenderers);
+
     attribs.end();
 
     NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
