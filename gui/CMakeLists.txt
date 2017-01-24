@@ -9,11 +9,6 @@ endif ()
 
 add_definitions (-DQT_FORCE_ASSERTS)
 
-if (APPLE)
-    # Recent builds of Qt no longer support i386 architecture
-    set (CMAKE_OSX_ARCHITECTURES "x86_64")
-endif()
-
 add_library (qubjson STATIC
     qubjson.cpp
 )

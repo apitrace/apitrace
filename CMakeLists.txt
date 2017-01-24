@@ -9,6 +9,11 @@ if (CMAKE_GENERATOR STREQUAL "Xcode")
     message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
 endif ()
 
+if (APPLE)
+    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X version to target for deployment" FORCE)
+    set (CMAKE_OSX_ARCHITECTURES "" CACHE STRING "Build architectures for OSX" FORCE)
+endif ()
+
 # http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
 if (POLICY CMP0042)
     cmake_policy (SET CMP0042 NEW)
@@ -20,11 +25,6 @@ project (apitrace)
 
 ##############################################################################
 # Options
-
-# On Mac OS X build fat binaries with i386 and x86_64 architectures by default.
-if (APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
-    set (CMAKE_OSX_ARCHITECTURES "i386;x86_64" CACHE STRING "Build architectures for OSX" FORCE)
-endif ()
 
 # We use a cached string variable instead of the standard (boolean) OPTION
 # command so that we can default to auto-detecting optional depencies, while
