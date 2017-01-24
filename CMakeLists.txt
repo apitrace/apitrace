@@ -75,11 +75,12 @@ endif ()
 ##############################################################################
 # Find dependencies
 
+include (CheckCXXSourceCompiles)
+
 # Check for compiler TLS support.  We don't use compiler TLS support on Windows
 # because, even if the compiler supports it, Windows XP does not support TLS on
 # DLLs.
 if (NOT WIN32)
-    include (CheckCXXSourceCompiles)
     check_cxx_source_compiles ("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
     if (NOT HAVE_COMPILER_TLS)
         message (FATAL_ERROR "C++ compiler does not support __thread keyword.")
@@ -313,14 +314,11 @@ else ()
     add_compiler_flags (-fmessage-length=0)
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_BUILD_TYPE MATCHES Rel)
-    message (WARNING
-        "\n"
-        "  WARNING: NON-DEBUG BUILDS ON CLANG CAN TAKE UP TO 45MIN!\n"
-        "  See https://github.com/apitrace/apitrace/issues/346\n"
-        ""
-    )
-    execute_process (COMMAND ${CMAKE_COMMAND} -E sleep 5)
+if (APPLE)
+    check_cxx_source_compiles ("#include <AvailabilityMacros.h>\n#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200\nint main() { return 0; }\n#endif" HAVE_MACOSX_10_12_SDK)
+    if (NOT HAVE_MACOSX_10_12_SDK)
+        message (FATAL_ERROR "macOS 10.12 SDK or newer (i.e. Xcode 8.0 or newer) required")
+    endif ()
 endif ()
 
 if (MINGW)
