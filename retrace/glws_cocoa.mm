@@ -41,6 +41,7 @@
 #include "glproc.hpp"
 
 #include <stdlib.h>
+#include <string.h>
 #include <iostream>
 
 #include <dlfcn.h>
@@ -196,6 +197,10 @@ initThread(void) {
     }
 }
 
+
+static GLint gRendererID = 0;
+
+
 void
 init(void) {
     // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
@@ -217,8 +222,65 @@ init(void) {
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     [NSApp finishLaunching];
-
     [NSApp activateIgnoringOtherApps:YES];
+
+    // Allow to pick a specific renderer via a command line option
+    const char *vendor = getenv("VENDOR");
+    if (vendor != nullptr) {
+        CGLRendererInfoObj renderer_info = NULL;
+        GLint num_renderers = 0;
+        if (CGLQueryRendererInfo(~GLuint(0),
+                    &renderer_info,
+                    &num_renderers) == kCGLNoError) {
+            for (GLint i = 0; i < num_renderers; ++i) {
+                GLint rendererID = 0;
+                if (CGLDescribeRenderer(renderer_info,
+                            i,
+                            kCGLRPRendererID,
+                            &rendererID) != kCGLNoError) {
+                    continue;
+                }
+
+                GLint vendorID = rendererID & kCGLRendererIDMatchingMask & ~0xfff;
+
+                const char *name;
+                switch (vendorID) {
+                case 0x00020000:
+                    name = "Software";
+                    break;
+                case 0x00021000:
+                    name = "AMD";
+                    break;
+                case 0x00022000:
+                    name = "NVIDIA";
+                    break;
+                case 0x00024000:
+                    name = "Intel";
+                    break;
+                default:
+                    name = "Unknown";
+                    break;
+                }
+
+                if (gRendererID == 0 &&
+                    strcasecmp(vendor, name) == 0) {
+                    gRendererID = rendererID;
+                }
+
+                GLint accelerated = 0;
+                if (CGLDescribeRenderer(renderer_info,
+                            i,
+                            kCGLRPAccelerated,
+                            &accelerated) == kCGLNoError) {
+                }
+
+                std::cerr << "info: found " << name
+                          << " renderer (0x" << std::hex << rendererID << std::dec << ") "
+                          << (accelerated ? "accelerated" : "unacellerated")
+                          << std::endl;
+            }
+        }
+    }
 }
 
 
@@ -264,10 +326,8 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         return NULL;
     }
     
-    // Use Apple software rendering for debugging purposes.
-    // TODO: Allow to control this via command line options.
-    if (0) {
-        attribs.add(NSOpenGLPFARendererID, 0x00020200); // kCGLRendererGenericID
+    if (gRendererID) {
+        attribs.add(NSOpenGLPFARendererID, gRendererID); // kCGLRendererGenericID
     }
 
     // Force hardware acceleration
