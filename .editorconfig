@@ -2,7 +2,7 @@
 
 root = true
 
-[*.{c,h,cpp,hpp,cc,hh,inl,rc}]
+[*.{c,h,cpp,hpp,cc,hh,inl,m,mm,rc}]
 indent_style = space
 indent_size = 4
 
