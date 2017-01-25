@@ -111,13 +111,34 @@ dumpProgram(StateWriter &writer, Context &context, GLint program)
 
     // Dump NVIDIA GPU programs via GL_ARB_get_program_binary
     if (context.ARB_get_program_binary) {
+        // Undocumented format.
+        const GLint GL_PROGRAM_BINARY_NVX = 0x8e21;
+
+        bool hasNvidiaFormat = false;
+        GLint numBinaryFormats = 0;
+        glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &numBinaryFormats);
+        if (numBinaryFormats) {
+            std::vector<GLint> binaryFormats(numBinaryFormats);
+            glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, &binaryFormats[0]);
+            if (std::find(binaryFormats.begin(), binaryFormats.end(),
+                          GL_PROGRAM_BINARY_NVX) != binaryFormats.end()) {
+                hasNvidiaFormat = true;
+            }
+        }
+
+        // Avoid calling glGetProgramiv(GL_PROGRAM_BINARY_LENGTH) as it might
+        // trigger unnecessary side effects, per
+        // https://github.com/apitrace/apitrace/issues/365#issuecomment-275029429
         GLint binaryLength = 0;
-        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
+        if (hasNvidiaFormat) {
+            glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
+        }
+
         if (binaryLength > 0) {
             std::vector<char> binary(binaryLength);
             GLenum format = GL_NONE;
             glGetProgramBinary(program, binaryLength, NULL, &format, &binary[0]);
-            if (format == 0x8e21) {
+            if (format == GL_PROGRAM_BINARY_NVX) {
                 if (0) {
                     FILE *fp = fopen("program.bin", "wb");
                     if (fp) {
