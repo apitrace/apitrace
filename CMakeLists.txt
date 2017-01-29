@@ -10,7 +10,6 @@ if (CMAKE_GENERATOR STREQUAL "Xcode")
 endif ()
 
 if (APPLE)
-    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X version to target for deployment" FORCE)
     set (CMAKE_OSX_ARCHITECTURES "" CACHE STRING "Build architectures for OSX" FORCE)
 endif ()
 
