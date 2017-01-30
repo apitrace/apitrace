@@ -959,9 +959,25 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 }
 
 
+int
+getDrawBufferImageCount()
+{
+    Context context;
+    GLint count;
+
+    if (context.framebuffer_object) {
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &count);
+        flushErrors();
+    } else {
+        return 0;
+    }
+
+    return count;
+}
+
 
 image::Image *
-getDrawBufferImage()
+getDrawBufferImage(int n)
 {
     Context context;
 
@@ -979,23 +995,42 @@ getDrawBufferImage()
         glGetIntegerv(framebuffer_binding, &draw_framebuffer);
     }
 
+    GLenum format = GL_RGB;
+    GLenum type = GL_UNSIGNED_BYTE;
+    if (context.ES) {
+        format = GL_RGBA;
+        if ((n < 0) && !context.NV_read_depth_stencil) {
+            return NULL;
+        }
+    }
+
+    if (n == -2) {
+        /* read stencil */
+        format = GL_STENCIL_INDEX;
+        n = 0;
+    } else if (n == -1) {
+        /* read depth */
+        format = GL_DEPTH_COMPONENT;
+        n = 0;
+    }
+
     GLint draw_buffer = GL_NONE;
     ImageDesc desc;
     if (draw_framebuffer) {
         if (context.ARB_draw_buffers) {
-            glGetIntegerv(GL_DRAW_BUFFER0, &draw_buffer);
+            glGetIntegerv(GL_DRAW_BUFFER0 + n, &draw_buffer);
             if (draw_buffer == GL_NONE) {
                 return NULL;
             }
         } else {
             // GL_COLOR_ATTACHMENT0 is implied
-            draw_buffer = GL_COLOR_ATTACHMENT0;
+            draw_buffer = GL_COLOR_ATTACHMENT0 + n;
         }
 
         if (!getFramebufferAttachmentDesc(context, framebuffer_target, draw_buffer, desc)) {
             return NULL;
         }
-    } else {
+    } else if (n == 0) {
         if (context.ES) {
             // XXX: Draw buffer is always FRONT for single buffer context, BACK
             // for double buffered contexts. There is no way to know which (as
@@ -1014,12 +1049,8 @@ getDrawBufferImage()
         }
 
         desc.depth = 1;
-    }
-
-    GLenum format = GL_RGB;
-    GLenum type = GL_UNSIGNED_BYTE;
-    if (context.ES) {
-        format = GL_RGBA;
+    } else {
+        return NULL;
     }
 
     GLint channels = _gl_format_channels(format);

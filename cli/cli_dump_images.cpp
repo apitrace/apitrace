@@ -52,6 +52,7 @@ usage(void)
         "                            which dumps an image for each frame)\n"
         "         --call-nos[=BOOL] use call numbers in image filenames,\n"
         "                           otherwise use sequental numbers (default=yes)\n"
+        "    -m, --mrt              dump all MRTs and depth/stencil\n"
         "    -o, --output=PREFIX    prefix to use in naming output files\n"
         "                           (default is trace filename without extension)\n"
         "\n";
@@ -63,13 +64,14 @@ enum {
 };
 
 const static char *
-shortOptions = "ho:";
+shortOptions = "hmo:";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"calls", required_argument, 0, CALLS_OPT},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT},
+    {"mrt", no_argument, 0, 'm'},
     {"output", required_argument, 0, 'o'},
     {0, 0, 0, 0}
 };
@@ -82,6 +84,7 @@ command(int argc, char *argv[])
     const char *traceName = NULL;
     const char *output = NULL;
     std::string call_nos;
+    bool mrt = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -95,6 +98,9 @@ command(int argc, char *argv[])
         case CALL_NOS_OPT:
             call_nos = "--call-nos=";
             call_nos.append(optarg);
+            break;
+        case 'm':
+            mrt = true;
             break;
         case 'o':
             output = optarg;
@@ -140,6 +146,8 @@ command(int argc, char *argv[])
     if (!call_nos.empty()) {
         opts.push_back(call_nos.c_str());
     }
+    if (mrt)
+        opts.push_back("-m");
 
     return executeRetrace(opts, traceName);
 }

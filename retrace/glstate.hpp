@@ -64,8 +64,11 @@ dumpCurrentContext(StateWriter &writer);
 bool
 getDrawableBounds(GLint *width, GLint *height);
 
+int
+getDrawBufferImageCount(void);
+
 image::Image *
-getDrawBufferImage(void);
+getDrawBufferImage(int n);
 
 
 } /* namespace glstate */

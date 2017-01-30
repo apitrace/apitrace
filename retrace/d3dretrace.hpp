@@ -50,9 +50,14 @@ public:
         pLastDevice(NULL)
     {}
 
+    int
+    getSnapshotCount(void) override {
+        return 1;
+    }
+
     image::Image *
-    getSnapshot(void) {
-        if (!pLastDevice) {
+    getSnapshot(int n) {
+        if ((n != 0) || !pLastDevice) {
             return NULL;
         }
         return d3dstate::getRenderTargetImage(pLastDevice);

@@ -119,6 +119,11 @@ extern unsigned debug;
 extern bool markers;
 
 /**
+ * Snapshot all render targets plus depth/stencil.
+ */
+extern bool snapshotMRT;
+
+/**
  * Whether to force windowed. Recommeded, as there is no guarantee that the
  * original display mode is available.
  */
@@ -223,8 +228,11 @@ public:
 class Dumper
 {
 public:
+    virtual int
+    getSnapshotCount(void) = 0;
+
     virtual image::Image *
-    getSnapshot(void) = 0;
+    getSnapshot(int n) = 0;
 
     virtual bool
     canDump(void) = 0;

@@ -76,6 +76,7 @@ trace::Profiler profiler;
 int verbosity = 0;
 unsigned debug = 1;
 bool markers = false;
+bool snapshotMRT = false;
 bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
@@ -126,8 +127,13 @@ frameComplete(trace::Call &call) {
 class DefaultDumper: public Dumper
 {
 public:
+    int
+    getSnapshotCount(void) override {
+        return 0;
+    }
+
     image::Image *
-    getSnapshot(void) override {
+    getSnapshot(int n) override {
         return NULL;
     }
 
@@ -159,15 +165,16 @@ static Snapshotter *snapshotter;
  * Take snapshots.
  */
 static void
-takeSnapshot(unsigned call_no) {
-    static unsigned snapshot_no = 0;
+takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
 
     assert(dumpingSnapshots);
     assert(snapshotPrefix);
 
-    std::unique_ptr<image::Image> src(dumper->getSnapshot());
+    std::unique_ptr<image::Image> src(dumper->getSnapshot(mrt));
     if (!src) {
-        std::cerr << call_no << ": warning: failed to get snapshot\n";
+        /* TODO for mrt>0 we probably don't want to treat this as an error: */
+        if (mrt == 0)
+            std::cerr << call_no << ": warning: failed to get snapshot\n";
         return;
     }
 
@@ -193,9 +200,21 @@ takeSnapshot(unsigned call_no) {
                 break;
             }
         } else {
-            os::String filename = os::String::format("%s%010u.png",
-                                                     snapshotPrefix,
-                                                     useCallNos ? call_no : snapshot_no);
+            os::String filename;
+            unsigned no = useCallNos ? call_no : snapshot_no;
+
+            if (!retrace::snapshotMRT) {
+                assert(mrt == 0);
+                filename = os::String::format("%s%010u.png", snapshotPrefix, no);
+            } else if (mrt == -2) {
+                /* stencil */
+                filename = os::String::format("%s%010u-s.png", snapshotPrefix, no);
+            } else if (mrt == -1) {
+                /* depth */
+                filename = os::String::format("%s%010u-z.png", snapshotPrefix, no);
+            } else {
+                filename = os::String::format("%s%010u-mrt%u.png", snapshotPrefix, no, mrt);
+            }
 
             // Here we release our ownership on the Image, it is now the
             // responsibility of the snapshotter to delete it.
@@ -203,11 +222,24 @@ takeSnapshot(unsigned call_no) {
         }
     }
 
-    snapshot_no++;
-
     return;
 }
 
+static void
+takeSnapshot(unsigned call_no) {
+    static unsigned snapshot_no = 0;
+    int cnt = dumper->getSnapshotCount();
+
+    if (retrace::snapshotMRT) {
+        for (int mrt = -2; mrt < cnt; mrt++) {
+            takeSnapshot(call_no, mrt, snapshot_no);
+        }
+    } else {
+        takeSnapshot(call_no, 0, snapshot_no);
+    }
+
+    snapshot_no++;
+}
 
 /**
  * Retrace one call.
@@ -620,6 +652,7 @@ usage(const char *argv0) {
         "      --fullscreen        allow fullscreen\n"
         "      --headless          don't show windows\n"
         "      --sb                use a single buffer visual\n"
+        "  -m, --mrt               dump all MRTs and depth/stencil\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
@@ -660,7 +693,7 @@ enum {
 };
 
 const static char *
-shortOptions = "bdD:hs:S:vwt";
+shortOptions = "bdD:hms:S:vwt";
 
 const static struct option
 longOptions[] = {
@@ -677,6 +710,7 @@ longOptions[] = {
     {"fullscreen", no_argument, 0, FULLSCREEN_OPT},
     {"headless", no_argument, 0, HEADLESS_OPT},
     {"help", no_argument, 0, 'h'},
+    {"mrt", no_argument, 0, 'm'},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
     {"ppd", no_argument, 0, PPD_OPT},
@@ -781,6 +815,9 @@ int main(int argc, char **argv)
             break;
         case HEADLESS_OPT:
             ws::headless = true;
+            break;
+        case 'm':
+            retrace::snapshotMRT = true;
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;

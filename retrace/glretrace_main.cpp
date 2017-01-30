@@ -797,12 +797,20 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 
 class GLDumper : public retrace::Dumper {
 public:
+    int
+    getSnapshotCount(void) override {
+        if (!glretrace::getCurrentContext()) {
+            return 0;
+        }
+        return glstate::getDrawBufferImageCount();
+    }
+
     image::Image *
-    getSnapshot(void) override {
+    getSnapshot(int n) override {
         if (!glretrace::getCurrentContext()) {
             return NULL;
         }
-        return glstate::getDrawBufferImage();
+        return glstate::getDrawBufferImage(n);
     }
 
     bool
