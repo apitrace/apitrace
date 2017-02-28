@@ -211,9 +211,9 @@ if (MSVC)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
     # Disable C++ exceptions
-    add_definitions (-D_HAS_EXCEPTIONS=0)
-    string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
+    #add_definitions (-D_HAS_EXCEPTIONS=0)
+    #string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
 
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
@@ -285,7 +285,7 @@ else ()
     endif ()
 
     # Disable C++ exceptions
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
     # Enable Address Sanitizer
     if (ENABLE_ASAN)
