@@ -32,6 +32,8 @@ class TrimProcess;
 class ProfileDialog;
 class VertexDataInterpreter;
 
+static const QString sDefaultHighlightColor("lightsteelblue");
+
 namespace trace { struct Profile; }
 
 class MainWindow : public QMainWindow
@@ -116,6 +118,7 @@ private:
     void trimEvent();
     void updateSurfacesView(const ApiTraceState &state);
     void fillStateForFrame();
+    bool setHighlightColor(QWidget*, QColor hicolor=Qt::gray);
 
     /* there's a difference between selected frame/call and
      * current call/frame. the former implies actual selection

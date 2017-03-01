@@ -986,6 +986,17 @@ void MainWindow::fillStateForFrame()
     }
 }
 
+bool MainWindow::setHighlightColor(QWidget *widget, QColor hiliteColor)
+{
+    bool bIsValid = hiliteColor.isValid();
+    if (bIsValid) {
+        QPalette palette = widget->palette();
+        palette.setColor(QPalette::Highlight, hiliteColor);
+        widget->setPalette(palette);
+    }
+    return bIsValid;
+}
+
 void MainWindow::showSettings()
 {
     SettingsDialog dialog;
@@ -1110,6 +1121,7 @@ void MainWindow::initObjects()
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
     m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
+    setHighlightColor(m_ui.callView, QColor(sDefaultHighlightColor));
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 100);
