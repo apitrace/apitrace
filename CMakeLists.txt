@@ -84,7 +84,7 @@ if (NOT WIN32)
     endif ()
 endif ()
 
-set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include (ConvenienceLibrary)
 include (InstallPDB)
 
