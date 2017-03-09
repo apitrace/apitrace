@@ -405,6 +405,10 @@ bool
 processEvents(void) {
     initThread();
 
+    if (![NSThread isMainThread]) {
+        return true;
+    }
+
     NSEvent* event;
     do {
         event = [NSApp nextEventMatchingMask:NSEventMaskAny
