@@ -47,7 +47,8 @@ namespace d3dretrace {
 
 
 static HRESULT __stdcall
-GetInterface(IUnknown *pUnknown, void **ppvObj) {
+GetInterface(IUnknown *pUnknown, void **ppvObj)
+{
     if (!ppvObj) {
         return E_POINTER;
     }
@@ -63,7 +64,8 @@ protected:
     IDXGISwapChain *m_pSwapChain;
     IDXGIOutput *m_pOutput;
 
-    virtual ~CDXGISwapChainDWM() {
+    virtual ~CDXGISwapChainDWM()
+    {
         m_pSwapChain->SetFullscreenState(FALSE, NULL);
         m_pOutput->Release();
     }
@@ -84,7 +86,7 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    QueryInterface(REFIID riid, void **ppvObj)
+    QueryInterface(REFIID riid, void **ppvObj) override
     {
         if (riid == IID_IDXGISwapChainDWM ||
             riid == IID_IDXGISwapChainDWM1) {
@@ -94,12 +96,14 @@ public:
     }
 
     ULONG STDMETHODCALLTYPE
-    AddRef(void) {
+    AddRef(void) override
+    {
         return m_pSwapChain->AddRef();
     }
 
     ULONG STDMETHODCALLTYPE
-    Release(void) {
+    Release(void) override
+    {
         ULONG cRef = m_pSwapChain->Release();
         if (cRef == 0) {
             delete this;
@@ -112,22 +116,26 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    SetPrivateData(REFGUID Name, UINT DataSize, const void *pData) {
+    SetPrivateData(REFGUID Name, UINT DataSize, const void *pData) override
+    {
         return m_pSwapChain->SetPrivateData(Name, DataSize, pData);
     }
 
     HRESULT STDMETHODCALLTYPE
-    SetPrivateDataInterface(REFGUID Name, const IUnknown *pUnknown) {
+    SetPrivateDataInterface(REFGUID Name, const IUnknown *pUnknown) override
+    {
         return m_pSwapChain->SetPrivateDataInterface(Name, pUnknown);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetPrivateData(REFGUID Name, UINT *pDataSize, void *pData) {
+    GetPrivateData(REFGUID Name, UINT *pDataSize, void *pData) override
+    {
         return m_pSwapChain->GetPrivateData(Name, pDataSize, pData);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetParent(REFIID riid, void **ppParent) {
+    GetParent(REFIID riid, void **ppParent) override
+    {
         return m_pSwapChain->GetParent(riid, ppParent);
     }
 
@@ -136,7 +144,8 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    GetDevice(REFIID riid, void **ppDevice) {
+    GetDevice(REFIID riid, void **ppDevice) override
+    {
         return m_pSwapChain->GetDevice(riid, ppDevice);
     }
 
@@ -145,12 +154,14 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    Present(UINT SyncInterval, UINT Flags) {
+    Present(UINT SyncInterval, UINT Flags) override
+    {
         return m_pSwapChain->Present(SyncInterval, Flags);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetBuffer(UINT Buffer, REFIID riid, void **ppSurface) {
+    GetBuffer(UINT Buffer, REFIID riid, void **ppSurface) override
+    {
         /* XXX: IDXGISwapChain buffers with indexes greater than zero can only
          * be read from, per
          * http://msdn.microsoft.com/en-gb/library/windows/desktop/bb174570.aspx,
@@ -160,32 +171,38 @@ public:
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc) {
+    GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc) override
+    {
         return m_pSwapChain->GetDesc(pDesc);
     }
 
     HRESULT STDMETHODCALLTYPE
-    ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags) {
+    ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags) override
+    {
         return m_pSwapChain->ResizeBuffers(BufferCount, Width, Height, NewFormat, SwapChainFlags);
     }
 
     HRESULT STDMETHODCALLTYPE
-    ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters) {
+    ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters) override
+    {
         return m_pSwapChain->ResizeTarget(pNewTargetParameters);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetContainingOutput(IDXGIOutput **ppOutput) {
+    GetContainingOutput(IDXGIOutput **ppOutput) override
+    {
         return GetInterface(m_pOutput, (void **) ppOutput);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats) {
+    GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats) override
+    {
         return m_pSwapChain->GetFrameStatistics(pStats);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetLastPresentCount(UINT *pLastPresentCount) {
+    GetLastPresentCount(UINT *pLastPresentCount) override
+    {
         return m_pSwapChain->GetLastPresentCount(pLastPresentCount);
     }
 
@@ -194,57 +211,68 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    Present1(UINT SyncInterval, UINT Flags, UINT NumRects, const RECT *pRects, UINT NumScrollRects, const DXGI_SCROLL_RECT *pScrollRects) {
+    Present1(UINT SyncInterval, UINT Flags, UINT NumRects, const RECT *pRects, UINT NumScrollRects, const DXGI_SCROLL_RECT *pScrollRects) override
+    {
         return m_pSwapChain->Present(SyncInterval, Flags);
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetLogicalSurfaceHandle(UINT64 *pHandle) {
+    GetLogicalSurfaceHandle(UINT64 *pHandle) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    CheckDirectFlipSupport(UINT CheckDirectFlipFlags, IDXGIResource *pResource, BOOL *pSupported) {
+    CheckDirectFlipSupport(UINT CheckDirectFlipFlags, IDXGIResource *pResource, BOOL *pSupported) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    Present2(UINT SyncInterval, UINT Flags, UINT NumRects, const RECT *pRects, UINT NumScrollRects, const DXGI_SCROLL_RECT *pScrollRects, IDXGIResource *pResource) {
+    Present2(UINT SyncInterval, UINT Flags, UINT NumRects, const RECT *pRects, UINT NumScrollRects, const DXGI_SCROLL_RECT *pScrollRects, IDXGIResource *pResource) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetCompositionSurface(HANDLE *pHandle) {
+    GetCompositionSurface(HANDLE *pHandle) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetFrameStatisticsDWM(DXGI_FRAME_STATISTICS_DWM *pStats) {
+    GetFrameStatisticsDWM(DXGI_FRAME_STATISTICS_DWM *pStats) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetMultiplaneOverlayCaps(DXGI_MULTIPLANE_OVERLAY_CAPS *pCaps) {
+    GetMultiplaneOverlayCaps(DXGI_MULTIPLANE_OVERLAY_CAPS *pCaps) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    CheckMultiplaneOverlaySupport(UINT Arg1, const DXGI_CHECK_MULTIPLANEOVERLAYSUPPORT_PLANE_INFO *pInfo, BOOL *pSupported) {
+    CheckMultiplaneOverlaySupport(UINT Arg1, const DXGI_CHECK_MULTIPLANEOVERLAYSUPPORT_PLANE_INFO *pInfo, BOOL *pSupported) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    PresentMultiplaneOverlay(UINT Arg1, UINT Arg2, UINT Arg3, const DXGI_PRESENT_MULTIPLANE_OVERLAY *pArg4) {
+    PresentMultiplaneOverlay(UINT Arg1, UINT Arg2, UINT Arg3, const DXGI_PRESENT_MULTIPLANE_OVERLAY *pArg4) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    CheckPresentDurationSupport(UINT Arg1, UINT *pArg2, UINT *pArg3) {
+    CheckPresentDurationSupport(UINT Arg1, UINT *pArg2, UINT *pArg3) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    SetPrivateFrameDuration(UINT Duration) {
+    SetPrivateFrameDuration(UINT Duration) override
+    {
         return E_NOTIMPL;
     }
 };
@@ -255,7 +283,8 @@ class CDXGIOutputDWM : public IDXGIOutputDWM
 private:
     IDXGIOutput *m_pOutput;
 
-    ~CDXGIOutputDWM() {
+    virtual ~CDXGIOutputDWM()
+    {
     }
 
 public:
@@ -277,12 +306,14 @@ public:
     }
 
     ULONG STDMETHODCALLTYPE
-    AddRef(void) {
+    AddRef(void) override
+    {
         return m_pOutput->AddRef();
     }
 
     ULONG STDMETHODCALLTYPE
-    Release(void) {
+    Release(void) override
+    {
         ULONG cRef = m_pOutput->Release();
         if (cRef == 0) {
             delete this;
@@ -295,26 +326,31 @@ public:
      */
 
     BOOL STDMETHODCALLTYPE
-    HasDDAClient(void) {
+    HasDDAClient(void) override
+    {
         return FALSE;
     }
 
     void STDMETHODCALLTYPE
-    GetDesc(DXGI_OUTPUT_DWM_DESC *pDesc) {
+    GetDesc(DXGI_OUTPUT_DWM_DESC *pDesc) override
+    {
     }
 
     HRESULT STDMETHODCALLTYPE
-    FindClosestMatchingModeFromDesktop(const DXGI_MODE_DESC1 *pModeToMatch, DXGI_MODE_DESC1 *pClosestMatch, IUnknown *pConcernedDevice) {
+    FindClosestMatchingModeFromDesktop(const DXGI_MODE_DESC1 *pModeToMatch, DXGI_MODE_DESC1 *pClosestMatch, IUnknown *pConcernedDevice) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    WaitForVBlankOrObjects(UINT NumHandles, const HANDLE *pHandles) {
+    WaitForVBlankOrObjects(UINT NumHandles, const HANDLE *pHandles) override
+    {
         return m_pOutput->WaitForVBlank();
     }
 
     HRESULT STDMETHODCALLTYPE
-    GetFrameStatisticsDWM(DXGI_FRAME_STATISTICS_DWM *pStats) {
+    GetFrameStatisticsDWM(DXGI_FRAME_STATISTICS_DWM *pStats) override
+    {
         return E_NOTIMPL;
     }
 
@@ -327,7 +363,8 @@ class CDXGIDeviceDWM : public IDXGIDeviceDWM
 private:
     IDXGIDevice *m_pDevice;
 
-    ~CDXGIDeviceDWM() {
+    virtual ~CDXGIDeviceDWM()
+    {
     }
 
 public:
@@ -349,12 +386,14 @@ public:
     }
 
     ULONG STDMETHODCALLTYPE
-    AddRef(void) {
+    AddRef(void) override
+    {
         return m_pDevice->AddRef();
     }
 
     ULONG STDMETHODCALLTYPE
-    Release(void) {
+    Release(void) override
+    {
         ULONG cRef = m_pDevice->Release();
         if (cRef == 0) {
             delete this;
@@ -367,27 +406,32 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    OpenFenceByHandle(HANDLE hFence, DXGI_INTERNAL_TRACKED_FENCE **ppFence) {
+    OpenFenceByHandle(HANDLE hFence, DXGI_INTERNAL_TRACKED_FENCE **ppFence) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    ReleaseResources(UINT NumResources, IDXGIResource * const *pResources) {
+    ReleaseResources(UINT NumResources, IDXGIResource * const *pResources) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    CloseFence(DXGI_INTERNAL_TRACKED_FENCE *pFence) {
+    CloseFence(DXGI_INTERNAL_TRACKED_FENCE *pFence) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    PinResources(UINT NumResources, IDXGIResource * const *pResources) {
+    PinResources(UINT NumResources, IDXGIResource * const *pResources) override
+    {
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE
-    UnpinResources(UINT NumResources, IDXGIResource * const *pResources) {
+    UnpinResources(UINT NumResources, IDXGIResource * const *pResources) override
+    {
         return E_NOTIMPL;
     }
 };
@@ -400,7 +444,8 @@ class CDXGIFactoryDWM :
 private:
     IDXGIFactory *m_pFactory;
 
-    virtual ~CDXGIFactoryDWM() {
+    virtual ~CDXGIFactoryDWM()
+    {
     }
 
 public:
@@ -425,12 +470,14 @@ public:
     }
 
     ULONG STDMETHODCALLTYPE
-    AddRef(void) {
+    AddRef(void) override
+    {
         return m_pFactory->AddRef();
     }
 
     ULONG STDMETHODCALLTYPE
-    Release(void) {
+    Release(void) override
+    {
         ULONG cRef = m_pFactory->Release();
         if (cRef == 0) {
             delete this;
@@ -464,12 +511,14 @@ public:
      */
 
     HRESULT STDMETHODCALLTYPE
-    CreateSwapChainDWM(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain) {
+    CreateSwapChainDWM(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain) override
+    {
         return CreateSwapChain(pDevice, pDesc, pOutput, ppSwapChain);
     }
 
     HRESULT STDMETHODCALLTYPE
-    CreateSwapChainDDA(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC1 *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM1 **ppSwapChain) {
+    CreateSwapChainDDA(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC1 *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM1 **ppSwapChain) override
+    {
         return E_NOTIMPL;
     }
 };
@@ -487,7 +536,8 @@ private:
     IID m_iid;
     IUnknown *m_pUnknown;
 
-    ~CDummy() {
+    virtual ~CDummy()
+    {
     }
 
 public:
@@ -510,12 +560,14 @@ public:
     }
 
     ULONG STDMETHODCALLTYPE
-    AddRef(void) {
+    AddRef(void) override
+    {
         return m_pUnknown->AddRef();
     }
 
     ULONG STDMETHODCALLTYPE
-    Release(void) {
+    Release(void) override
+    {
         ULONG cRef = m_pUnknown->Release();
         if (cRef == 0) {
             delete this;
