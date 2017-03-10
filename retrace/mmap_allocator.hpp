@@ -56,7 +56,6 @@ private:
     const size_t chunkSize;
     std::list<void*> mmaps;
     void* vptr;
-    std::string fileName;
 
     MmapedFileBuffer(MmapedFileBuffer const&) = delete;
 
@@ -80,7 +79,7 @@ public:
     {
         char templ[] = ".pbtmpXXXXXX";
         fd = mkstemp(templ);
-        fileName = templ;
+        unlink(templ);
         newMmap();
     }
 
@@ -89,7 +88,6 @@ public:
         for (auto &m : mmaps) {
             munmap(m, chunkSize);
         }
-        unlink(fileName.c_str());
     }
 
     void* allocate(size_t size) {
