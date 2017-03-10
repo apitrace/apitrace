@@ -57,6 +57,7 @@
 #endif
 
 #include "os_version.hpp"
+#include "os_string.hpp"
 #include "uac.hpp"
 #include "devcon.hpp"
 #include "inject.h"
@@ -553,7 +554,7 @@ main(int argc, char *argv[])
     fprintf(stderr, "IsUserInAdminGroup = %i\n", IsUserInAdminGroup());
     fprintf(stderr, "IsRunAsAdmin = %i\n", IsRunAsAdmin());
     fprintf(stderr, "IsProcessElevated = %i\n", IsProcessElevated());
-    if (0) {
+    if (!IsProcessElevated()) {
         // Elevate the process.
         char szPath[MAX_PATH];
         GetModuleFileNameA(NULL, szPath, sizeof szPath);
@@ -597,7 +598,29 @@ main(int argc, char *argv[])
 
         return 0;
     } else {
+        fprintf(stderr, "info: press any key to exit\n");
         atexit((void (*)(void)) getchar);
+
+        os::String injecteeDll = os::getProcessName();
+        injecteeDll.trimFilename();
+        injecteeDll.join(szDllName);
+
+        char szSystemDir[MAX_PATH];
+        GetSystemDirectory(szSystemDir, _countof(szSystemDir));
+
+        os::String dest = szSystemDir;
+        dest.join(szDllName);
+        if (!CopyFileA(injecteeDll.str(), dest.str(), FALSE)) {
+            fprintf(stderr, "error: failed to copy %s to %s\n", injecteeDll.str(), dest.str());
+            exit(1);
+        }
+
+        dest = szSystemDir;
+        dest.join("dxgitrace.dll");
+        if (!CopyFileA(szDll, dest.str(), FALSE)) {
+            fprintf(stderr, "error: failed to copy %s to %s\n", szDll, dest.str());
+            exit(1);
+        }
     }
 
     HANDLE hSemaphore = NULL;

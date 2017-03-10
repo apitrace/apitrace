@@ -42,6 +42,7 @@ target_link_libraries (injector
     ${GETOPT_LIBRARIES}
     devcon
     psapi
+    os
 )
 install (TARGETS injector RUNTIME DESTINATION bin)
 install_pdb (injector DESTINATION bin)
