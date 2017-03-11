@@ -29,6 +29,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <queue>
 
 #include "glproc.hpp"
 #include "metric_backend.hpp"

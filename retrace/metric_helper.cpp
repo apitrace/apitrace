@@ -45,7 +45,11 @@ bool profilingBoundaries[QUERY_BOUNDARY_LIST_END] = {false};
 unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END] = {0};
 std::vector<MetricBackend*> metricBackends; // to be populated in initContext()
 MetricBackend* curMetricBackend = nullptr; // backend active in the current pass
-MetricWriter profiler(metricBackends, MmapAllocator<char>());
+
+MetricWriter& profiler() {
+    static MetricWriter writer(metricBackends, MmapAllocator<char>());
+    return writer;
+}
 
 MetricBackend* getBackend(std::string backendName) {
     // allocator for metric storage
@@ -212,6 +216,8 @@ void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule) {
         metrics = end + 1;
     }
     parseBackendBlock(pollingRule, metrics, std::strlen(metrics), backendsHash);
+
+    profiler(); // initialize MetricWriter
 }
 
 } /* namespace glretrace */

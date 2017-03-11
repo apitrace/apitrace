@@ -29,10 +29,12 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <queue>
 
 #include "glproc.hpp"
 #include "metric_backend.hpp"
 #include "glretrace.hpp"
+#include "mmap_allocator.hpp"
 
 #define INTEL_NAME_LENGTH 256 // metric name with max 256 chars
 #define INTEL_DESC_LENGTH 1024 // description max 1024 chars
