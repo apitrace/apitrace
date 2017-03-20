@@ -154,8 +154,7 @@ LocalWriter::open(void) {
 
 static uintptr_t next_thread_num = 1;
 
-static OS_THREAD_SPECIFIC(uintptr_t)
-thread_num;
+static OS_THREAD_LOCAL uintptr_t thread_num;
 
 void LocalWriter::checkProcessId(void) {
     if (m_file &&

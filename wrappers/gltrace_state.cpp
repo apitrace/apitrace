@@ -54,7 +54,7 @@ public:
     }
 };
 
-static OS_THREAD_SPECIFIC_PTR(ThreadState) thread_state;
+static OS_THREAD_LOCAL ThreadState *thread_state;
 
 static ThreadState *get_ts(void)
 {

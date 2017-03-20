@@ -266,7 +266,7 @@ if __name__ == '__main__':
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
-    print 'static OS_THREAD_SPECIFIC(uintptr_t) _reentrant;'
+    print 'static OS_THREAD_LOCAL uintptr_t _reentrant;'
     print
     print '// Helper class to track reentries in function scope.'
     print 'struct ReentryScope {'

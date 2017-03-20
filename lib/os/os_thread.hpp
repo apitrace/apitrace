@@ -330,82 +330,6 @@ namespace os {
 
 
     /**
-     * Implement TLS through OS threading API.
-     *
-     * This will only work when T is a pointer, intptr_t, or uintptr_t.
-     */
-    template <typename T>
-    class thread_specific
-    {
-    private:
-        static_assert(sizeof(T) == sizeof(void *), "Size mismatch");
-
-#ifdef _WIN32
-        DWORD dwTlsIndex;
-#else
-        pthread_key_t key;
-#endif
-
-    public:
-        thread_specific(void) {
-#ifdef _WIN32
-            dwTlsIndex = TlsAlloc();
-#else
-            pthread_key_create(&key, NULL);
-#endif
-        }
-
-        ~thread_specific() {
-#ifdef _WIN32
-            TlsFree(dwTlsIndex);
-#else
-            pthread_key_delete(key);
-#endif
-        }
-
-        inline T
-        get(void) const {
-            void *ptr;
-#ifdef _WIN32
-            ptr = TlsGetValue(dwTlsIndex);
-#else
-            ptr = pthread_getspecific(key);
-#endif
-            return reinterpret_cast<T>(ptr);
-        }
-
-        inline
-        operator T (void) const
-        {
-            return get();
-        }
-
-        inline T
-        operator -> (void) const
-        {
-            return get();
-        }
-
-        inline T
-        operator = (T new_value)
-        {
-            set(new_value);
-            return new_value;
-        }
-
-        inline void
-        set(T new_value) {
-            void *new_ptr = reinterpret_cast<void *>(new_value);
-#ifdef _WIN32
-            TlsSetValue(dwTlsIndex, new_ptr);
-#else
-            pthread_setspecific(key, new_ptr);
-#endif
-        }
-    };
-
-
-    /**
      * Same interface as std::thread
      */
     class thread {
@@ -527,13 +451,5 @@ namespace os {
 #elif defined(_MSC_VER)
 #  define OS_THREAD_LOCAL __declspec(thread)
 #else
-#  error
+#  error Unsupported C++ compiler
 #endif
-
-#if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0600
-#  define OS_THREAD_SPECIFIC(_type) os::thread_specific< _type >
-#else
-#  define OS_THREAD_SPECIFIC(_type) OS_THREAD_LOCAL _type
-#endif
-
-#define OS_THREAD_SPECIFIC_PTR(_type) OS_THREAD_SPECIFIC(_type *)
