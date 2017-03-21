@@ -71,7 +71,7 @@ class D3DRetracer(Retracer):
             # way to cope with it (other than retry).
             mapFlagsArg = method.getArgByName('dwFlags')
             if mapFlagsArg is not None:
-                print r'    dwFlags &= DDLOCK_DONOTWAIT;'
+                print r'    dwFlags &= ~DDLOCK_DONOTWAIT;'
                 print r'    dwFlags |= DDLOCK_WAIT;'
 
         Retracer.invokeInterfaceMethod(self, interface, method)
