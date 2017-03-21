@@ -191,8 +191,10 @@ findScript(const char *scriptFilename, bool verbose)
     if (tryPath(scriptPath, verbose)) {
         return scriptPath;
     }
+    std::cerr << "error: cannot find " << scriptPath << " script\n";
+#else
+    std::cerr << "error: cannot find " << scriptFilename << " script\n";
 #endif
 
-    std::cerr << "error: cannot find " << scriptFilename << " script\n";
     exit(1);
 }
