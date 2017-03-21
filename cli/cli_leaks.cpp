@@ -65,7 +65,7 @@ command(int argc, char *argv[])
     os::String apitracePath = os::getProcessName();
 
     std::vector<const char *> args;
-    args.push_back("python");
+    args.push_back(APITRACE_PYTHON_EXECUTABLE);
     args.push_back(command.str());
     args.push_back("--apitrace");
     args.push_back(apitracePath.str());
