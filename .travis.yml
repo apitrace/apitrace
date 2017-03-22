@@ -41,6 +41,14 @@ matrix:
     - MINGW_ROOT=/opt/mingw32
     - MINGW_PREFIX=i686-w64-mingw32
     - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
+  - os: linux
+    dist: trusty
+    services:
+    - docker
+    env:
+    - LABEL="centos6"
+    - DOCKER_IMAGE=jrfonseca/centos6
+    - CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC_LIBGCC=ON -DENABLE_STATIC_LIBSTDCXX=ON -DENABLE_STATIC_EXE=ON -DENABLE_GUI=OFF"
   - os: osx
     osx_image: xcode8.2
     env:
@@ -50,7 +58,8 @@ matrix:
 before_install:
 - |
     if [ "$APT_PACKAGES" ]
-      then for APT_REPO in $APT_REPOS
+    then
+      for APT_REPO in $APT_REPOS
       do
         sudo add-apt-repository -y $APT_REPO
       done
@@ -65,8 +74,6 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install qt5; export CMAKE_PREFIX_PATH=$(brew --prefix qt5); fi
 - if [ "$MINGW_ROOT" ]; then export PATH=$MINGW_ROOT/bin:$PATH; fi
 - cmake --version
-
-script:
 - |
     if [ "$MINGW_PREFIX" ]
     then
@@ -80,9 +87,15 @@ script:
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> Toolchain.cmake
       wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
     fi
-- cmake -H. -Bbuild $CMAKE_OPTIONS
-- cmake --build build --use-stderr -- -k
-- cmake --build build --use-stderr --target check -- -k
-- cmake --build build --use-stderr --target package -- -k
+- |
+    if [ "$DOCKER_IMAGE" ]
+    then
+       docker pull "$DOCKER_IMAGE"
+       export DOCKER_RUN="docker run -v $PWD:$PWD -u $UID $DOCKER_IMAGE"
+    fi
 
-# vim: set sw=2 et :
+script:
+- $DOCKER_RUN cmake -H$PWD -B$PWD/build $CMAKE_OPTIONS
+- $DOCKER_RUN cmake --build $PWD/build --use-stderr -- -k
+- $DOCKER_RUN cmake --build $PWD/build --use-stderr --target check -- -k
+- $DOCKER_RUN cmake --build $PWD/build --use-stderr --target package -- -k
