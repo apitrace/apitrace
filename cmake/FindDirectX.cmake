@@ -11,18 +11,13 @@
 #
 #  DDRAW
 #  D3D
-#  D3DX
 #  D3D8
-#  D3DX8
 #  D3D9
-#  D3DX9
 #  D3D10
 #  D3D10_1
-#  D3DX10
 #  D3D11
 #  D3D11_1
 #  D3D11_2
-#  D3DX11
 #  D2D1
 #
 
@@ -150,24 +145,13 @@ if (WIN32)
     find_winsdk_header  (D3D     d3d.h)
     find_combined       (D3D     D3D DDRAW)
 
-    find_dxsdk_header   (D3DX    d3dx.h)
-    find_combined       (D3DX    D3DX D3DX)
-
     find_dxsdk_header   (D3D8    d3d8.h)
     find_dxsdk_library  (D3D8    d3d8)
     find_combined       (D3D8    D3D8 D3D8)
 
-    find_dxsdk_header   (D3DX8   d3dx8.h)
-    find_dxsdk_library  (D3DX8   d3dx8)
-    find_combined       (D3DX8   D3DX8 D3DX8)
-
     find_winsdk_header  (D3D9    d3d9.h)
     find_winsdk_library (D3D9    d3d9)
     find_combined       (D3D9    D3D9 D3D9)
-
-    find_dxsdk_header   (D3DX9   d3dx9.h)
-    find_dxsdk_library  (D3DX9   d3dx9)
-    find_combined       (D3DX9   D3DX9 D3DX9)
 
     find_winsdk_header  (DXGI    dxgi.h)
     find_winsdk_header  (DXGI1_2 dxgi1_2.h)
@@ -183,10 +167,6 @@ if (WIN32)
     find_winsdk_library (D3D10_1 d3d10_1)
     find_combined       (D3D10_1 D3D10_1 D3D10_1)
 
-    find_dxsdk_header   (D3DX10  d3dx10.h)
-    find_dxsdk_library  (D3DX10  d3dx10)
-    find_combined       (D3DX10  D3DX10 D3DX10)
-
     find_winsdk_header  (D3D11   d3d11.h)
     find_winsdk_library (D3D11   d3d11)
     find_combined       (D3D11   D3D11 D3D11)
@@ -196,10 +176,6 @@ if (WIN32)
     find_combined       (D3D11_2 D3D11_2 D3D11)
     find_winsdk_header  (D3D11_3 d3d11_3.h)
     find_combined       (D3D11_3 D3D11_3 D3D11)
-
-    find_dxsdk_header   (D3DX11  d3dx11.h)
-    find_dxsdk_library  (D3DX11  d3dx11)
-    find_combined       (D3DX11  D3DX11 D3DX11)
 
     find_winsdk_header  (D2D1    d2d1.h)
     find_winsdk_library (D2D1    d2d1)
