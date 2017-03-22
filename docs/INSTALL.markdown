@@ -141,11 +141,6 @@ Additional requirements:
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.
 
-* Microsoft DirectX SDK is now part of Microsoft Visual Studio (from version
-  2012), but D3D8 headers are not included, so if you want D3D8 support you'll
-  need to donwload and install the
-  [August 2007 release of DirectX SDK](https://www.microsoft.com/en-gb/download/details.aspx?id=13287)
-
 ### CMake GUI ###
 
 To build with Visual Studio first open a Command Prompt window (*not* Visual
