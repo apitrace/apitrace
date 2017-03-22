@@ -427,6 +427,7 @@ def main():
     print r'#include "d3d11size.hpp"'
     print r'#include "dcompimports.hpp"'
     print r'#include "d3dstate.hpp"'
+    print r'#include "d3d9imports.hpp" // D3DERR_WASSTILLDRAWING'
     print
     print '''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;'''
     print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
