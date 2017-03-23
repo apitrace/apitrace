@@ -53,7 +53,7 @@ protected:
     virtual bool rawSkip(size_t length) override;
     virtual int  rawPercentRead(void) override;
 private:
-    BrotliState state;
+    BrotliState *state;
     std::ifstream m_stream;
     static const size_t kFileBufferSize = 65536;
     uint8_t input[kFileBufferSize];
@@ -63,7 +63,7 @@ private:
 
 BrotliFile::BrotliFile(void)
 {
-    BrotliStateInit(&state);
+    state = BrotliCreateState(nullptr, nullptr, nullptr);
     available_in = 0;
     next_in = input;
 }
@@ -71,7 +71,7 @@ BrotliFile::BrotliFile(void)
 BrotliFile::~BrotliFile()
 {
     close();
-    BrotliStateCleanup(&state);
+    BrotliDestroyState(state);
 }
 
 bool BrotliFile::rawOpen(const char *filename)
@@ -94,7 +94,7 @@ size_t BrotliFile::rawRead(void *buffer, size_t length)
         BrotliResult result;
         result = BrotliDecompressStream(&available_in, &next_in,
                                         &available_out, &next_out, &total_out,
-                                        &state);
+                                        state);
         if (result == BROTLI_RESULT_NEEDS_MORE_INPUT) {
             if (m_stream.fail()) {
                 break;

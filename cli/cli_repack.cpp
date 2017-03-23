@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <string.h>
 #include <getopt.h>
 
@@ -32,7 +33,7 @@
 
 #include "cli.hpp"
 
-#include <brotli/enc/encode.h>
+#include <brotli/enc/compressor.h>
 #include <zlib.h>  // for crc32
 
 #include "trace_file.hpp"

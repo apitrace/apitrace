@@ -30,7 +30,7 @@ target_link_libraries (common
     guids
     highlight
     os
-    brotli_dec_bundled
+    brotli_dec brotli_common
 )
 
 add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)

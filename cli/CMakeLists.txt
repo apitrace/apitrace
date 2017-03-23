@@ -41,7 +41,7 @@ add_executable (apitrace
 
 target_link_libraries (apitrace
     common
-    brotli_enc_bundled
+    brotli_dec brotli_enc brotli_common
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}

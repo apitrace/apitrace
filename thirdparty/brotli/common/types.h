@@ -6,8 +6,8 @@
 
 /* Common types */
 
-#ifndef BROTLI_DEC_TYPES_H_
-#define BROTLI_DEC_TYPES_H_
+#ifndef BROTLI_COMMON_TYPES_H_
+#define BROTLI_COMMON_TYPES_H_
 
 #include <stddef.h>  /* for size_t */
 
@@ -24,6 +24,26 @@ typedef __int64 int64_t;
 #include <stdint.h>
 #endif  /* defined(_MSC_VER) && (_MSC_VER < 1600) */
 
+#if (!defined(_MSC_VER) || (_MSC_VER >= 1800)) && \
+  (defined(__cplusplus) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L))
+#include <stdbool.h>
+#define BROTLI_BOOL bool
+#define BROTLI_TRUE true
+#define BROTLI_FALSE false
+#define TO_BROTLI_BOOL(X) (!!(X))
+#else
+typedef enum {
+  BROTLI_FALSE = 0,
+  BROTLI_TRUE = !BROTLI_FALSE
+} BROTLI_BOOL;
+#define TO_BROTLI_BOOL(X) (!!(X) ? BROTLI_TRUE : BROTLI_FALSE)
+#endif
+
+#define MAKE_UINT64_T(high, low) ((((uint64_t)(high)) << 32) | low)
+
+#define BROTLI_UINT32_MAX (~((uint32_t)0))
+#define BROTLI_SIZE_MAX (~((size_t)0))
+
 /* Allocating function pointer. Function MUST return 0 in the case of failure.
    Otherwise it MUST return a valid pointer to a memory region of at least
    size length. Neither items nor size are allowed to be 0.
@@ -35,4 +55,4 @@ typedef void* (*brotli_alloc_func)(void* opaque, size_t size);
    address is 0. */
 typedef void (*brotli_free_func)(void* opaque, void* address);
 
-#endif  /* BROTLI_DEC_TYPES_H_ */
+#endif  /* BROTLI_COMMON_TYPES_H_ */
