@@ -11,13 +11,16 @@ init:
 
 shallow_clone: true
 
+# https://www.appveyor.com/docs/build-environment/#build-worker-images
+image: Visual Studio 2015
+
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
   - CMAKE_GENERATOR: "Visual Studio 14 2015"
-    QT5: C:\Qt\5.6\msvc2015
+    QT5: C:\Qt\5.8\msvc2015
   - CMAKE_GENERATOR: "Visual Studio 14 2015 Win64"
-    QT5: C:\Qt\5.6\msvc2015_64
+    QT5: C:\Qt\5.8\msvc2015_64
 
 matrix:
   fast_finish: true
