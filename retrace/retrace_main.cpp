@@ -290,7 +290,8 @@ retraceCall(trace::Call *call) {
         }
     }
 
-    if (call->no >= dumpStateCallNo &&
+    // dumpStateCallNo is 0 when fetching default state
+    if ((call->no == dumpStateCallNo || dumpStateCallNo == 0) &&
         dumper->canDump()) {
         StateWriter *writer = stateWriterFactory(std::cout);
         dumper->dumpState(*writer);
