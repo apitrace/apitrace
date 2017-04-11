@@ -384,12 +384,6 @@ If you need precise control over which calls to trim you can specify the
 individual call numbers in a plain text file, as described in the 'Call sets'
 section above.
 
-There is also experimental support for automatically trimming the calls
-necessary for a given frame or call:
-
-    apitrace trim-auto --calls=12345 -o trimed.trace application.trace
-    apitrace trim-auto --frames=12345 -o trimed.trace application.trace
-
 
 ## Profiling a trace ##
 

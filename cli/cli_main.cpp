@@ -78,7 +78,6 @@ static const Command * commands[] = {
     &retrace_command,
     &trace_command,
     &trim_command,
-    &trim_auto_command,
     &help_command
 };
 
@@ -155,7 +154,7 @@ do_help_command(int argc, char *argv[])
         }
     }
 
-    std::cerr << "Error: Unknown command: " << command_name
+    std::cerr << "error: Unknown command: " << command_name
               << " (see \"apitrace help\").\n";
 
     return 1;
@@ -179,7 +178,7 @@ main(int argc, char **argv)
         if (strcmp(arg, "--help") == 0) {
             return do_help_command(0, NULL);
         } else {
-            std::cerr << "Error: unknown option " << arg << "\n";
+            std::cerr << "error: unknown option " << arg << "\n";
             usage();
             return 1;
         }
@@ -198,18 +197,25 @@ main(int argc, char **argv)
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = commands[i];
 
-        if (strcmp(command_name, command->name) == 0)
+        if (strcmp(command_name, command->name) == 0) {
             return (command->function) (argc, argv);
+        }
     }
 
     for (i = 0; i < ARRAY_SIZE(aliases); i++) {
         alias = &aliases[i];
 
-        if (strcmp(command_name, alias->name) == 0)
+        if (strcmp(command_name, alias->name) == 0) {
             return (alias->command->function) (argc, argv);
+        }
     }
 
-    std::cerr << "Error: unknown command " << command_name
+    if (strcmp(command_name, "trim-auto") == 0) {
+        std::cerr << "error: trim-auto command is no longer supported -- https://goo.gl/Kl6nTU\n";
+        return 1;
+    }
+
+    std::cerr << "error: unknown command " << command_name
               << " (see \"apitrace help\").\n";
 
    return 1;
