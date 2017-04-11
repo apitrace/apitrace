@@ -41,6 +41,16 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
+if (ANDROID)
+    message (WARNING
+        "\n"
+        "  WARNING: ANDROID SUPPORT IS UNVERIFIED AND MIGHT BE REMOVED IN THE NEAR FUTURE\n"
+        "  See https://goo.gl/yQEXFd\n"
+        ""
+    )
+    execute_process (COMMAND "${CMAKE_COMMAND}" -E sleep 1)
+endif ()
+
 # Proprietary Linux games often ship their own libraries (zlib, libstdc++,
 # etc.) in order to ship a single set of binaries across multiple
 # distributions.  Given that apitrace wrapper modules will be loaded into those
