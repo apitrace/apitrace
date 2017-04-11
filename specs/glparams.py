@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2011 Jose Fonseca
+# Copyright 2011-2017 VMware, Inc
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -3450,33 +3450,33 @@ parameters = [
     ("",	X,	1,	"GL_FRAGMENT_SUBROUTINE_UNIFORM"),	# 0x92F2
     ("",	X,	1,	"GL_COMPUTE_SUBROUTINE_UNIFORM"),	# 0x92F3
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_VARYING"),	# 0x92F4
-    ("",	X,	1,	"GL_ACTIVE_RESOURCES"),	# 0x92F5
-    ("",	X,	1,	"GL_MAX_NAME_LENGTH"),	# 0x92F6
-    ("",	X,	1,	"GL_MAX_NUM_ACTIVE_VARIABLES"),	# 0x92F7
-    ("",	X,	1,	"GL_MAX_NUM_COMPATIBLE_SUBROUTINES"),	# 0x92F8
-    ("",	X,	1,	"GL_NAME_LENGTH"),	# 0x92F9
-    ("",	X,	1,	"GL_TYPE"),	# 0x92FA
-    ("",	X,	1,	"GL_ARRAY_SIZE"),	# 0x92FB
-    ("",	X,	1,	"GL_OFFSET"),	# 0x92FC
-    ("",	X,	1,	"GL_BLOCK_INDEX"),	# 0x92FD
-    ("",	X,	1,	"GL_ARRAY_STRIDE"),	# 0x92FE
-    ("",	X,	1,	"GL_MATRIX_STRIDE"),	# 0x92FF
-    ("",	X,	1,	"GL_IS_ROW_MAJOR"),	# 0x9300
-    ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_INDEX"),	# 0x9301
-    ("",	X,	1,	"GL_BUFFER_BINDING"),	# 0x9302
-    ("",	X,	1,	"GL_BUFFER_DATA_SIZE"),	# 0x9303
-    ("",	X,	1,	"GL_NUM_ACTIVE_VARIABLES"),	# 0x9304
-    ("",	X,	1,	"GL_ACTIVE_VARIABLES"),	# 0x9305
-    ("",	X,	1,	"GL_REFERENCED_BY_VERTEX_SHADER"),	# 0x9306
-    ("",	X,	1,	"GL_REFERENCED_BY_TESS_CONTROL_SHADER"),	# 0x9307
-    ("",	X,	1,	"GL_REFERENCED_BY_TESS_EVALUATION_SHADER"),	# 0x9308
-    ("",	X,	1,	"GL_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x9309
-    ("",	X,	1,	"GL_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x930A
-    ("",	X,	1,	"GL_REFERENCED_BY_COMPUTE_SHADER"),	# 0x930B
-    ("",	X,	1,	"GL_TOP_LEVEL_ARRAY_SIZE"),	# 0x930C
-    ("",	X,	1,	"GL_TOP_LEVEL_ARRAY_STRIDE"),	# 0x930D
-    ("",	X,	1,	"GL_LOCATION"),	# 0x930E
-    ("",	X,	1,	"GL_LOCATION_INDEX"),	# 0x930F
+    ("",	I,	1,	"GL_ACTIVE_RESOURCES"),	# 0x92F5
+    ("",	I,	1,	"GL_MAX_NAME_LENGTH"),	# 0x92F6
+    ("",	I,	1,	"GL_MAX_NUM_ACTIVE_VARIABLES"),	# 0x92F7
+    ("",	I,	1,	"GL_MAX_NUM_COMPATIBLE_SUBROUTINES"),	# 0x92F8
+    ("",	I,	1,	"GL_NAME_LENGTH"),	# 0x92F9
+    ("",	E,	1,	"GL_TYPE"),	# 0x92FA
+    ("",	I,	1,	"GL_ARRAY_SIZE"),	# 0x92FB
+    ("",	I,	1,	"GL_OFFSET"),	# 0x92FC
+    ("",	I,	1,	"GL_BLOCK_INDEX"),	# 0x92FD
+    ("",	I,	1,	"GL_ARRAY_STRIDE"),	# 0x92FE
+    ("",	I,	1,	"GL_MATRIX_STRIDE"),	# 0x92FF
+    ("",	I,	1,	"GL_IS_ROW_MAJOR"),	# 0x9300
+    ("",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_INDEX"),	# 0x9301
+    ("",	I,	1,	"GL_BUFFER_BINDING"),	# 0x9302
+    ("",	I,	1,	"GL_BUFFER_DATA_SIZE"),	# 0x9303
+    ("",	I,	1,	"GL_NUM_ACTIVE_VARIABLES"),	# 0x9304
+    ("",	I,	1,	"GL_ACTIVE_VARIABLES"),	# 0x9305
+    ("",	I,	1,	"GL_REFERENCED_BY_VERTEX_SHADER"),	# 0x9306
+    ("",	I,	1,	"GL_REFERENCED_BY_TESS_CONTROL_SHADER"),	# 0x9307
+    ("",	I,	1,	"GL_REFERENCED_BY_TESS_EVALUATION_SHADER"),	# 0x9308
+    ("",	I,	1,	"GL_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x9309
+    ("",	I,	1,	"GL_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x930A
+    ("",	I,	1,	"GL_REFERENCED_BY_COMPUTE_SHADER"),	# 0x930B
+    ("",	I,	1,	"GL_TOP_LEVEL_ARRAY_SIZE"),	# 0x930C
+    ("",	I,	1,	"GL_TOP_LEVEL_ARRAY_STRIDE"),	# 0x930D
+    ("",	I,	1,	"GL_LOCATION"),	# 0x930E
+    ("",	I,	1,	"GL_LOCATION_INDEX"),	# 0x930F
     ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_WIDTH"),	# 0x9310
     ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_HEIGHT"),	# 0x9311
     ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_LAYERS"),	# 0x9312
