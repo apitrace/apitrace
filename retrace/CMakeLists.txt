@@ -174,6 +174,28 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
+find_package(PkgConfig)
+pkg_search_module(GBM gbm)
+
+if (ENABLE_EGL AND GBM_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
+    add_executable (eglretrace_gbm
+        glws_egl_drm.cpp
+    )
+
+    add_dependencies (eglretrace_gbm glproc)
+
+    target_link_libraries (eglretrace_gbm
+        retrace_common
+        glretrace_common
+        glhelpers
+        glproc_egl
+        ${GBM_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${CMAKE_DL_LIBS}
+    )
+    install (TARGETS eglretrace_gbm RUNTIME DESTINATION bin)
+endif ()
+
 if (ENABLE_EGL)
     if (ENABLE_WAFFLE)
         add_executable (eglretrace
