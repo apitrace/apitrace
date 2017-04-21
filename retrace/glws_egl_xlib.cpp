@@ -171,11 +171,6 @@ public:
 
         eglWaitClient();
 
-        // We need to ensure that pending events are processed here, and XSync
-        // with discard = True guarantees that, but it appears the limited
-        // event processing we do so far is sufficient
-        //XSync(display, True);
-
         Drawable::resize(w, h);
 
         resizeWindow(window, w, h);

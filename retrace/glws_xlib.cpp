@@ -152,7 +152,7 @@ processEvents(void)
 }
 
 
-static void
+static XEvent
 waitForEvent(Window window, int type)
 {
     XEvent event;
@@ -160,6 +160,7 @@ waitForEvent(Window window, int type)
         XWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event);
         processEvent(event);
     } while (event.type != type);
+    return event;
 }
 
 
@@ -223,6 +224,15 @@ createWindow(XVisualInfo *visinfo,
 void
 resizeWindow(Window window, int w, int h)
 {
+    // We need to ensure that pending events are processed here, and XSync
+    // with discard = True guarantees that, but it appears the limited
+    // event processing we do so far is sufficient
+    if (0) {
+        XSync(display, True);
+    } else {
+        processEvents();
+    }
+
     // Tell the window manager to respect the requested size
     XSizeHints size_hints;
     size_hints.max_width  = size_hints.min_width  = w;
@@ -232,7 +242,15 @@ resizeWindow(Window window, int w, int h)
 
     XResizeWindow(display, window, w, h);
 
-    waitForEvent(window, ConfigureNotify);
+    XEvent event = waitForEvent(window, ConfigureNotify);
+    assert(event.type == ConfigureNotify);
+    assert(event.xany.window == window);
+    if (event.xconfigure.width != w ||
+        event.xconfigure.height != h) {
+        std::cerr
+            << "warning: xlib: expected " << w << "x" << h << " configure event, "
+            << "got " << event.xconfigure.width << "x" << event.xconfigure.height << "\n";
+    }
 }
 
 
