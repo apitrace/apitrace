@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.  */
 
 #include <stddef.h>
 #include <stdio.h>
+#include "config.h"
 
 /* We want to get a definition for uintptr_t, but we still care about
    systems that don't have <stdint.h>.  */
