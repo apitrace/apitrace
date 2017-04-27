@@ -25,3 +25,6 @@
 
 /* Define to 1 if dwarf.h is in the libdwarf folder */
 #cmakedefine HAVE_LIBDWARF_DWARF_H 1
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H @HAVE_STDINT_H@
