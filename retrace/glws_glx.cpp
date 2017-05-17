@@ -42,6 +42,8 @@ static bool has_GLX_ARB_create_context = false;
 static bool has_GLX_ARB_create_context_profile = false;
 static bool has_GLX_EXT_create_context_es_profile = false;
 static bool has_GLX_EXT_create_context_es2_profile = false;
+static bool has_GLX_EXT_swap_control = false;
+static bool has_GLX_MESA_swap_control = false;
 
 
 class GlxVisual : public Visual
@@ -82,6 +84,9 @@ public:
         else {
             window = createWindow(visinfo, name, width, height);
             drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
+            if (has_GLX_EXT_swap_control) {
+                glXSwapIntervalEXT(display, drawable, 0);
+            }
         }
 
         glXWaitX();
@@ -140,6 +145,11 @@ public:
 
     void swapBuffers(void) override {
         assert(!pbuffer);
+        if (window &&
+            !has_GLX_EXT_swap_control &&
+            has_GLX_MESA_swap_control) {
+            glXSwapIntervalMESA(0);
+        }
         glXSwapBuffers(display, drawable);
         if (window) {
             processKeys(window);
@@ -217,6 +227,8 @@ init(void) {
     CHECK_EXTENSION(GLX_ARB_create_context_profile);
     CHECK_EXTENSION(GLX_EXT_create_context_es_profile);
     CHECK_EXTENSION(GLX_EXT_create_context_es2_profile);
+    CHECK_EXTENSION(GLX_EXT_swap_control);
+    CHECK_EXTENSION(GLX_MESA_swap_control);
 
 #undef CHECK_EXTENSION
 }
