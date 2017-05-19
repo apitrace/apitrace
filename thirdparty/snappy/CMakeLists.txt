@@ -20,6 +20,6 @@ add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
 
 install (
     FILES COPYING
-    DESTINATION ${DOC_INSTALL_DIR}
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
     RENAME LICENSE-snappy.txt
 )

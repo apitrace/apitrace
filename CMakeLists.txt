@@ -423,6 +423,7 @@ set (DOC_INSTALL_DIR "${DOC_DEFAULT_INSTALL_DIR}" CACHE STRING "Documentation in
 
 set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
+set (CMAKE_INSTALL_DOCDIR "${DOC_INSTALL_DIR}" CACHE PATH "Install documentation")
 
 
 ##############################################################################
@@ -568,11 +569,11 @@ install (
         docs/BUGS.markdown
         docs/NEWS.markdown
         docs/USAGE.markdown
-    DESTINATION ${DOC_INSTALL_DIR}
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )
 install (
     FILES LICENSE
-    DESTINATION ${DOC_INSTALL_DIR}
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
     RENAME LICENSE.txt
 )
 
