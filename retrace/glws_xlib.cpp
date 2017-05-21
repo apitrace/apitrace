@@ -153,13 +153,13 @@ processEvents(void)
 
 
 static XEvent
-waitForEvent(Window window, int type)
+waitForEvent(Window window, int type, long request = 0)
 {
     XEvent event;
     do {
         XWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event);
         processEvent(event);
-    } while (event.type != type);
+    } while (event.type != type || event.xany.serial < request);
     return event;
 }
 
@@ -243,15 +243,20 @@ resizeWindow(Window window, int w, int h)
     XSetWMNormalHints(display, window, sizeHints);
     XFree(sizeHints);
 
-    // We'll make several attempts to resize the window in case it fails
-    // for some reason.
+    // We need to try multiple times because we can't distinguish the configure
+    // event due to our resize, from the configure event from other actions
+    // (e.g, user moving our window around.)  It's not safe to wait
+    // indefinitely for the event with the desired size neither, because it's
+    // possible the window manager does not allow a window that size.
     XEvent event;
     for (unsigned attempt = 0; attempt < 4; ++attempt) {
+        long request = NextRequest(display);
         XResizeWindow(display, window, w, h);
 
-        event = waitForEvent(window, ConfigureNotify);
+        event = waitForEvent(window, ConfigureNotify, request);
         assert(event.type == ConfigureNotify);
         assert(event.xany.window == window);
+        assert(event.xany.serial >= request);
         if (event.xconfigure.width == w &&
             event.xconfigure.height == h) {
             return;
@@ -270,8 +275,9 @@ showWindow(Window window)
     // FIXME: This works for DRI drivers, but not NVIDIA proprietary drivers,
     // for which the only solution seems to be to use Pbuffers.
     if (true || !ws::headless) {
+        long request = NextRequest(display);
         XMapWindow(display, window);
-        waitForEvent(window, MapNotify);
+        waitForEvent(window, MapNotify, request);
     }
 }
 
