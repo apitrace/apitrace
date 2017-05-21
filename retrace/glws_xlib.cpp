@@ -203,17 +203,19 @@ createWindow(XVisualInfo *visinfo,
         mask,
         &attr);
 
-    XSizeHints sizehints;
-    sizehints.x = x;
-    sizehints.y = y;
-    sizehints.width  = width;
-    sizehints.height = height;
-    sizehints.flags = USSize | USPosition;
-    XSetNormalHints(display, window, &sizehints);
+    XSizeHints *sizeHints = XAllocSizeHints();
+    sizeHints->x = x;
+    sizeHints->y = y;
+    sizeHints->width  = width;
+    sizeHints->height = height;
+    sizeHints->flags = USSize | USPosition;
+    XSetWMNormalHints(display, window, sizeHints);
 
     XSetStandardProperties(
         display, window, name, name,
-        None, (char **)NULL, 0, &sizehints);
+        None, (char **)NULL, 0, sizeHints);
+
+    XFree(sizeHints);
 
     XSync(display, False);
 
@@ -234,11 +236,12 @@ resizeWindow(Window window, int w, int h)
     }
 
     // Tell the window manager to respect the requested size
-    XSizeHints size_hints;
-    size_hints.max_width  = size_hints.min_width  = w;
-    size_hints.max_height = size_hints.min_height = h;
-    size_hints.flags = PMinSize | PMaxSize;
-    XSetWMNormalHints(display, window, &size_hints);
+    XSizeHints *sizeHints = XAllocSizeHints();
+    sizeHints->max_width  = sizeHints->min_width  = w;
+    sizeHints->max_height = sizeHints->min_height = h;
+    sizeHints->flags = PMinSize | PMaxSize;
+    XSetWMNormalHints(display, window, sizeHints);
+    XFree(sizeHints);
 
     XResizeWindow(display, window, w, h);
 
