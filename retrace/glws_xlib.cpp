@@ -243,17 +243,24 @@ resizeWindow(Window window, int w, int h)
     XSetWMNormalHints(display, window, sizeHints);
     XFree(sizeHints);
 
-    XResizeWindow(display, window, w, h);
+    // We'll make several attempts to resize the window in case it fails
+    // for some reason.
+    XEvent event;
+    for (unsigned attempt = 0; attempt < 4; ++attempt) {
+        XResizeWindow(display, window, w, h);
 
-    XEvent event = waitForEvent(window, ConfigureNotify);
-    assert(event.type == ConfigureNotify);
-    assert(event.xany.window == window);
-    if (event.xconfigure.width != w ||
-        event.xconfigure.height != h) {
-        std::cerr
-            << "warning: xlib: expected " << w << "x" << h << " configure event, "
-            << "got " << event.xconfigure.width << "x" << event.xconfigure.height << "\n";
+        event = waitForEvent(window, ConfigureNotify);
+        assert(event.type == ConfigureNotify);
+        assert(event.xany.window == window);
+        if (event.xconfigure.width == w &&
+            event.xconfigure.height == h) {
+            return;
+        }
     }
+
+    std::cerr
+        << "warning: xlib: expected " << w << "x" << h << " configure event, "
+        << "got " << event.xconfigure.width << "x" << event.xconfigure.height << "\n";
 }
 
 
