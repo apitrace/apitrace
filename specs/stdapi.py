@@ -752,7 +752,7 @@ class Rebuilder(Visitor):
         if pointer_type is pointer.type:
             return pointer
         else:
-            return LinearPointer(pointer_type)
+            return LinearPointer(pointer_type, self.size)
 
     def visitReference(self, reference):
         reference_type = self.visit(reference.type)
