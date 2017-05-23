@@ -142,7 +142,10 @@ def surface(html, image):
                 return
 
             im.thumbnail((thumbSize, thumbSize))
-            im.save(thumb)
+            try:
+                im.save(thumb)
+            except IOError:
+                thumb = image
     else:
         thumb = image
     html.write('        <td><a href="%s"><img src="%s"/></a></td>\n' % (image, thumb))
