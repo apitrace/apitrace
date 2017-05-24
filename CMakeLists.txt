@@ -576,7 +576,7 @@ install (
     RENAME LICENSE.txt
 )
 
-set (CPACK_PACKAGE_VERSION_MAJOR "7")
+set (CPACK_PACKAGE_VERSION_MAJOR "8")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 

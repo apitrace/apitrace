@@ -2,6 +2,13 @@ This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
 
 
+# Version 8 #
+
+* Removed Windows XP support
+
+* Removed `apitrace trim-auto`
+
+
 # Version 7 #
 
 * Native Android retrace with remote GUI
