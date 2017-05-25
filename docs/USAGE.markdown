@@ -137,12 +137,6 @@ If you are an application developer, you can avoid this either by linking with
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
-### Android ###
-
-To trace standalone native OpenGL ES applications, use
-`LD_PRELOAD=/path/to/egltrace.so /path/to/application` as described in the
-previous section.  To trace Java applications, refer to Android.markdown.
-
 ### Mac OS X ###
 
 Run the application you want to trace as

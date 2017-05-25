@@ -4,6 +4,8 @@ and their authors see the git history.
 
 # Version 8 #
 
+* Remove Android support
+
 * Removed Windows XP support
 
 * Removed `apitrace trim-auto`

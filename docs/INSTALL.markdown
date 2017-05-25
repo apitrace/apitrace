@@ -82,41 +82,9 @@ Build as:
 
 # Android #
 
-Additional requirements:
-
-* [Android CMake](https://github.com/taka-no-me/android-cmake)
-* [Android NDK](http://developer.android.com/sdk/ndk/index.html)
-* [Android SDK](http://developer.android.com/sdk/index.html#Other). **Make sure you have Android 4.4.2 (API 19) platform SDK installed and Android build tools "21.1.2". API 19 is needed only to build the APK, but it will still run on lower API versions (with works starting with API 12).**
-
-Build as:
-
-    wget -N https://raw.githubusercontent.com/taka-no-me/android-cmake/master/android.toolchain.cmake
-    
-    cmake \
-        -H. -Bbuild \
-        -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
-        -DANDROID_NDK=/path/to/your/ndk \
-        -DANDROID_API_LEVEL=21 \
-        -DANDROID_STL=gnustl_shared \
-        [-DANDROID_SDK=/path/to/your/sdk]
-
-    make -C build
-    [make -C build retraceAPK] will build Android retrace APK.
-    [make -C build installRetraceAPK] will build & install Android retrace APK on the connected device.
-
-You can also choose a particular ABI by passing `ANDROID_ABI` variable to
-cmake, e.g., `-DANDROID_ABI=x86`.  Currently, when targeting AArch64 you [must
-build with GCC](https://github.com/apitrace/apitrace/issues/312), by invoking
-CMake as:
-
-    cmake \
-        -H. -Bbuild \
-        -DCMAKE_TOOLCHAIN_FILE=$PWD/android.toolchain.cmake \
-        -DANDROID_API_LEVEL=21 \
-        -DANDROID_TOOLCHAIN_NAME=aarch64-linux-android-4.9 \
-        -DANDROID_ABI=arm64-v8a
-
-** You'll need Android SDK only to build the retrace APK. **
+Android is no longer supported.  See https://goo.gl/yQEXFd for the reason why.
+If you need Android support, your best bet is to try an old release (search for
+android branch upstream.)
 
 
 # Windows #
