@@ -34,12 +34,10 @@
 
 namespace d3dretrace {
 
-
 extern const retrace::Entry ddraw_callbacks[];
 extern const retrace::Entry d3d8_callbacks[];
 extern const retrace::Entry d3d9_callbacks[];
 extern const retrace::Entry dxgi_callbacks[];
-
 
 template< class Device >
 class D3DDumper : public retrace::Dumper {
@@ -100,7 +98,10 @@ resizeWindow(HWND hWnd, int width, int height);
 bool
 processEvents(void);
 
-
+void frame_complete(trace::Call &call);
+void beginProfile(trace::Call &call, bool isDraw);
+void endProfile(trace::Call &call, bool isDraw);
+void setProfileDevice(IDirect3DDevice9 *new_dev);
 } /* namespace d3dretrace */
 
 

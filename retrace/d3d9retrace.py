@@ -85,9 +85,15 @@ class D3DRetracer(Retracer):
             if method.name == 'Release':
                 print r'    if (call.ret->toUInt() == 0) {'
                 print r'        d3d9Dumper.unbindDevice(_this);'
+                print r'        if (retrace::profiling) {'
+                print r'            d3dretrace::setProfileDevice(NULL);'
+                print r'        }'
                 print r'    }'
             else:
                 print r'    d3d9Dumper.bindDevice(_this);'
+                print r'    if (retrace::profiling) {'
+                print r'        d3dretrace::setProfileDevice(_this);'
+                print r'    }'
         if interface.name in ('IDirect3DDevice8', 'IDirect3DDevice8Ex'):
             if method.name == 'Release':
                 print r'    if (call.ret->toUInt() == 0) {'
@@ -181,7 +187,7 @@ class D3DRetracer(Retracer):
         if method.name in ('Present', 'PresentEx'):
             if interface.name.startswith('IDirect3DSwapChain9'):
                 print r'    d3d9scDumper.bindDevice(_this);'
-            print r'    retrace::frameComplete(call);'
+            print r'    d3dretrace::frame_complete(call);'
             print r'    hDestWindowOverride = NULL;'
 
         # Ensure textures can be locked when dumping
@@ -226,7 +232,27 @@ class D3DRetracer(Retracer):
                 if flag.endswith('_DONOTWAIT'):
                     print r'    Flags &= ~%s;' % flag
 
+        if method.name.startswith("Unlock") or method.name.startswith("Lock"):
+            print r'    if (retrace::profiling) {'
+            print r'        d3dretrace::beginProfile(call, false);'
+            print r'    }'
+
+        if method.name.startswith("Draw"):
+            print r'    if (retrace::profiling) {'
+            print r'        d3dretrace::beginProfile(call, true);'
+            print r'    }'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
+
+        if method.name.startswith("Draw"):
+            print r'    if (retrace::profiling) {'
+            print r'        d3dretrace::endProfile(call, true);'
+            print r'    }'
+
+        if method.name.startswith("Unlock") or method.name.startswith("Lock"):
+            print r'    if (retrace::profiling) {'
+            print r'        d3dretrace::endProfile(call, false);'
+            print r'    }'
 
         if method.name in self.createDeviceMethodNames:
             print r'    if (FAILED(_result)) {'
