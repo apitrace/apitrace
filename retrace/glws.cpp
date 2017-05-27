@@ -31,6 +31,7 @@
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "retrace.hpp"
 
 
 namespace glws {
@@ -90,7 +91,7 @@ Context::initialize(void)
      * Also, see if OpenGL ES can be handled through ARB_ES*_compatibility.
      */
     glfeatures::Profile expectedProfile = profile;
-    if (!actualProfile.matches(expectedProfile)) {
+    if (retrace::contextCheck && !actualProfile.matches(expectedProfile)) {
         if (expectedProfile.api == glfeatures::API_GLES &&
             actualProfile.api == glfeatures::API_GL &&
             ((expectedProfile.major == 2 && actualExtensions.has("GL_ARB_ES2_compatibility")) ||

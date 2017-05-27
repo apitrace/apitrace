@@ -107,6 +107,7 @@ bool profilingMemoryUsage = false;
 bool useCallNos = true;
 bool singleThread = false;
 bool ignoreRetvals = false;
+bool contextCheck = true;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
@@ -670,6 +671,7 @@ usage(const char *argv0) {
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n"
         "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
+        "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
     ;
 }
 
@@ -694,6 +696,7 @@ enum {
     LOOP_OPT,
     SINGLETHREAD_OPT,
     IGNORE_RETVALS_OPT,
+    NO_CONTEXT_CHECK,
     SNAPSHOT_ALPHA_OPT,
     SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
@@ -741,6 +744,7 @@ longOptions[] = {
     {"loop", optional_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
+    {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {0, 0, 0, 0}
 };
 
@@ -892,6 +896,9 @@ int main(int argc, char **argv)
             break;
         case IGNORE_RETVALS_OPT:
             retrace::ignoreRetvals = true;
+            break;
+        case NO_CONTEXT_CHECK:
+            retrace::contextCheck = false;
             break;
         case 's':
             dumpingSnapshots = true;

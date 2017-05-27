@@ -143,6 +143,8 @@ extern bool forceWindowed;
  */
 extern bool ignoreRetvals;
 
+extern bool contextCheck;
+
 /**
  * Add profiling data to the dump when retracing.
  */
