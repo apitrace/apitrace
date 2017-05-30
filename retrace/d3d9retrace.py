@@ -228,11 +228,6 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
-        if method.name in self.createDeviceMethodNames:
-            print r'    if (FAILED(_result)) {'
-            print r'        exit(1);'
-            print r'    }'
-
         # process events after presents
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
@@ -282,6 +277,19 @@ class D3DRetracer(Retracer):
                 print '        retrace::delRegionByPointer(_pBuffer);'
                 print '        _maps[_mappingKey] = 0;'
                 print '    }'
+
+    def handleFailure(self, interface, methodOrFunction):
+        if methodOrFunction.name in self.createDeviceMethodNames:
+            print r'        exit(EXIT_FAILURE);'
+            return
+
+        # https://msdn.microsoft.com/en-us/library/windows/desktop/bb324479.aspx
+        if methodOrFunction.name in ('Present', 'PresentEx'):
+            print r'        if (_result == D3DERR_DEVICELOST) {'
+            print r'            exit(EXIT_FAILURE);'
+            print r'        }'
+
+        Retracer.handleFailure(self, interface, methodOrFunction)
 
 
 def main():

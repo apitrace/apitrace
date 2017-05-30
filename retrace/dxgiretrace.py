@@ -103,24 +103,18 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeFunction(self, function)
 
-    def checkResult(self, interface, methodOrFunction):
+    def handleFailure(self, interface, methodOrFunction):
         # Catch when device is removed, and report the reason.
-        if str(methodOrFunction.type) == 'HRESULT':
-            if interface is not None:
-                getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
-                if getDeviceRemovedReasonMethod is not None:
-                    print r'    if (FAILED(_result)) {'
-                    print r'        retrace::failed(call, _result);'
-                    print r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {'
-                    print r'            HRESULT _reason = _this->GetDeviceRemovedReason();'
-                    print r'            retrace::failed(call, _reason);'
-                    print r'            exit(1);'
-                    print r'        }'
-                    print r'        return;'
-                    print r'    }'
-                    return
+        if interface is not None:
+            getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
+            if getDeviceRemovedReasonMethod is not None:
+                print r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {'
+                print r'            HRESULT _reason = _this->GetDeviceRemovedReason();'
+                print r'            retrace::failed(call, _reason);'
+                print r'            exit(EXIT_FAILURE);'
+                print r'        }'
 
-        Retracer.checkResult(self, interface, methodOrFunction)
+        Retracer.handleFailure(self, interface, methodOrFunction)
 
     def forceDriver(self, enum):
         # This can only work when pAdapter is NULL. For non-NULL pAdapter we

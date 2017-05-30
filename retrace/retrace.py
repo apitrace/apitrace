@@ -560,10 +560,13 @@ class Retracer:
         if str(methodOrFunction.type) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
             print r'        retrace::failed(call, _result);'
-            print r'        return;'
+            self.handleFailure(interface, methodOrFunction)
             print r'    }'
         else:
             print r'    (void)_result;'
+
+    def handleFailure(self, interface, methodOrFunction):
+        print r'        return;'
 
     def checkPitchMismatch(self, method):
         # Warn for mismatches in 2D/3D mappings.
