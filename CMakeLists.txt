@@ -41,6 +41,8 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
+option (ENABLE_TESTS "Enable additional tests" OFF)
+
 if (ANDROID)
     message (FATAL_ERROR "Android is no longer supported (https://goo.gl/yQEXFd)")
 endif ()
@@ -549,7 +551,21 @@ endif ()
 # GUI
 
 if (ENABLE_GUI AND Qt5Widgets_FOUND AND Qt5Network_FOUND)
-  add_subdirectory(gui)
+  add_subdirectory (gui)
+endif ()
+
+
+##############################################################################
+# Additional tests
+
+if (ENABLE_TESTS)
+    if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+        message (EMIT_ERROR
+                 "tests/CMakeLists.txt is missing, please do\n"
+                 "  git clone https://github.com/apitrace/apitrace-tests tests")
+    else ()
+        add_subdirectory (tests)
+    endif ()
 endif ()
 
 
