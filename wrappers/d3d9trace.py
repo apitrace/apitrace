@@ -78,7 +78,11 @@ class D3D9Tracer(DllTracer):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             if interface.base.name == 'IDirect3DBaseTexture9':
                 assert method.getArgByName('Level') is not None
-                print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(Level);'
+                if method.getArgByName('FaceType'):
+                    print r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;'
+                else:
+                    print r'   UINT _Key = Level;'
+                print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(_Key);'
                 print '    if (it != _MappedData.end()) {'
                 self.emit_memcpy('(LPBYTE)it->second.second', 'it->second.first')
                 print '        _MappedData.erase(it);'
@@ -101,13 +105,17 @@ class D3D9Tracer(DllTracer):
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             if interface.base.name == 'IDirect3DBaseTexture9':
                 assert method.getArgByName('Level') is not None
+                if method.getArgByName('FaceType'):
+                    print r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;'
+                else:
+                    print r'   UINT _Key = Level;'
                 print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
                 print '        size_t mappedSize;'
                 print '        VOID * pbData;'
                 print '        _getMapInfo(_this, %s, pbData, mappedSize);' % ', '.join(method.argNames()[:-1])
-                print '        _MappedData[Level] = std::make_pair(mappedSize, pbData);'
+                print '        _MappedData[_Key] = std::make_pair(mappedSize, pbData);'
                 print '    } else {'
-                print '        _MappedData.erase(Level);'
+                print '        _MappedData.erase(_Key);'
                 print '    }'
             else:
                 # FIXME: handle recursive locks
