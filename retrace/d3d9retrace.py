@@ -233,13 +233,17 @@ class D3DRetracer(Retracer):
             print r'    d3dretrace::processEvents();'
 
         def mapping_subkey():
-            if 'Level' in method.argNames():
+            # A single texture object might have multiple mappings.  This key
+            # allows to tell them apart.
+            if 'FaceType' in method.argNames():
+                return ('static_cast<UINT>(FaceType) + Level*6',)
+            elif 'Level' in method.argNames():
                 return ('Level',)
             else:
                 return ('0',)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
-            print '    VOID *_pbData = NULL;'
+            print '    VOID *_pbData = nullptr;'
             print '    size_t _MappedSize = 0;'
             if method.name == 'Lock':
                 # Ignore D3DLOCK_READONLY for buffers.
@@ -257,12 +261,12 @@ class D3DRetracer(Retracer):
             print '    }'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    VOID *_pbData = 0;'
+            print '    VOID *_pbData = nullptr;'
             print '    MappingKey _mappingKey(_this, %s);' % mapping_subkey()
             print '    _pbData = _maps[_mappingKey];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
-            print '        _maps[_mappingKey] = 0;'
+            print '        _maps[_mappingKey] = nullptr;'
             print '    }'
 
         if interface.name == 'IDirectXVideoDecoder':
@@ -275,7 +279,7 @@ class D3DRetracer(Retracer):
                 print '    void *_pBuffer = _maps[_mappingKey];'
                 print '    if (_pBuffer) {'
                 print '        retrace::delRegionByPointer(_pBuffer);'
-                print '        _maps[_mappingKey] = 0;'
+                print '        _maps[_mappingKey] = nullptr;'
                 print '    }'
 
     def handleFailure(self, interface, methodOrFunction):
