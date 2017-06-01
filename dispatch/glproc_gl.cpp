@@ -200,7 +200,7 @@ void * _libgl_sym(const char *symbol)
          * exposes symbols to it.
          */
 
-        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY | RTLD_DEEPBIND);
         if (!_libGlHandle) {
             os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
