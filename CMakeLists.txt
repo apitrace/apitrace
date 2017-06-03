@@ -44,7 +44,7 @@ option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option (ENABLE_TESTS "Enable additional tests" OFF)
 
 if (ANDROID)
-    message (FATAL_ERROR "Android is no longer supported (https://goo.gl/yQEXFd)")
+    message (FATAL_ERROR "Android is no longer supported (https://git.io/vH2gW)")
 endif ()
 
 # Proprietary Linux games often ship their own libraries (zlib, libstdc++,

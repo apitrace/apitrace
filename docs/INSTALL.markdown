@@ -82,9 +82,7 @@ Build as:
 
 # Android #
 
-Android is no longer supported.  See https://goo.gl/yQEXFd for the reason why.
-If you need Android support, your best bet is to try an old release (search for
-android branch upstream.)
+Android is no longer supported.  See https://git.io/vH2gW for more information.
 
 
 # Windows #
