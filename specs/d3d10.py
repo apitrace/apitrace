@@ -837,7 +837,7 @@ ID3D10SamplerState.methods += [
 ID3D10Asynchronous.methods += [
     StdMethod(Void, "Begin", []),
     StdMethod(Void, "End", []),
-    StdMethod(HRESULT, "GetData", [Out(D3D10_QUERY_DATA, "pData"), (UINT, "DataSize"), (D3D10_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
+    StdMethod(HRESULT, "GetData", [Out(D3D10_QUERY_DATA, "pData"), (UINT, "DataSize"), (D3D10_ASYNC_GETDATA_FLAG, "GetDataFlags")]),
     StdMethod(UINT, "GetDataSize", [], sideeffects=False),
 ]
 

@@ -320,6 +320,15 @@ class D3DRetracer(Retracer):
             print r'        return;'
             print r'    }'
 
+        if method.name == 'GetData':
+            print r'    pData = _allocator.alloc(DataSize);'
+            print r'    do {'
+            self.doInvokeInterfaceMethod(interface, method)
+            print r'        GetDataFlags = 0; // Prevent infinite loop'
+            print r'    } while (_result == S_FALSE);'
+            self.checkResult(interface, method)
+            print r'    return;'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name in ('AcquireSync', 'ReleaseSync'):

@@ -1278,7 +1278,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "Begin", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
     StdMethod(Void, "End", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
-    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(D3D11_QUERY_DATA, "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
+    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(D3D11_QUERY_DATA, "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")]),
     StdMethod(Void, "SetPredication", [(ObjPointer(ID3D11Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
