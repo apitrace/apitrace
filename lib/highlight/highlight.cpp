@@ -30,6 +30,8 @@
 
 #ifdef _WIN32
 
+#define DEFINE_CONSOLEV2_PROPERTIES
+
 #include <windows.h>
 #include <io.h> // _isatty
 #include <stdio.h> // _fileno
@@ -60,6 +62,10 @@
 
 #ifndef COMMON_LVB_UNDERSCORE
 #define COMMON_LVB_UNDERSCORE      0x8000
+#endif
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
 
 #else /* !_WIN32 */
@@ -97,6 +103,8 @@ public:
 static const PlainHighlighter plainHighlighter;
 
 
+#define CSI "\33["
+
 class AnsiAttribute : public Attribute {
 protected:
     const char *escape;
@@ -107,18 +115,27 @@ public:
     {}
 
     void apply(std::ostream& os) const override {
-        os << "\33[" << escape;
+        os << escape;
     }
 };
 
-static const AnsiAttribute ansiNormal("0m");
-static const AnsiAttribute ansiBold("1m");
-static const AnsiAttribute ansiItalic("3m");
-static const AnsiAttribute ansiStrike("9m");
-static const AnsiAttribute ansiRed("31m");
-static const AnsiAttribute ansiGreen("32m");
-static const AnsiAttribute ansiBlue("34m");
-static const AnsiAttribute ansiGray("37m");
+static const AnsiAttribute ansiNormal(CSI "0m");
+static const AnsiAttribute ansiBold  (CSI "1m");
+static const AnsiAttribute ansiItalic(CSI "3m");
+static const AnsiAttribute ansiStrike(CSI "9m");
+#ifdef _WIN32
+// Brighter colors on Windows to contrast with the background, and match the
+// colors from SetConsoleTextAttribute
+static const AnsiAttribute ansiRed   (CSI "91m");
+static const AnsiAttribute ansiGreen (CSI "92m");
+static const AnsiAttribute ansiBlue  (CSI "94m");
+static const AnsiAttribute ansiGray  (CSI "37m");
+#else
+static const AnsiAttribute ansiRed   (CSI "31m");
+static const AnsiAttribute ansiGreen (CSI "32m");
+static const AnsiAttribute ansiBlue  (CSI "34m");
+static const AnsiAttribute ansiGray  (CSI "37m");
+#endif
 
 
 /**
@@ -230,16 +247,13 @@ haveAnsi(void)
     static bool result = false;
 
     if (!checked) {
-        // https://conemu.github.io/en/ConEmuEnvironment.html
-        // XXX: Didn't quite work for me
-        if (0) {
-            const char *conEmuANSI = getenv("ConEmuANSI");
-            if (conEmuANSI &&
-                strcmp(conEmuANSI, "ON") == 0) {
-                result = true;
-                checked = true;
-                return result;
-            }
+        checked = true;
+
+        // http://wiki.winehq.org/DeveloperFaq#detect-wine
+        HMODULE hNtDll = GetModuleHandleA("ntdll");
+        if (hNtDll &&
+            GetProcAddress(hNtDll, "wine_get_version") != nullptr) {
+            return result = true;
         }
 
         // Cygwin shell
@@ -247,19 +261,30 @@ haveAnsi(void)
             const char *term = getenv("TERM");
             if (term &&
                 strcmp(term, "xterm") == 0) {
-                result = true;
-                checked = true;
-                return result;
+                return result = true;
             }
         }
 
-        // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        HMODULE hNtDll = GetModuleHandleA("ntdll");
-        if (hNtDll) {
-            result = GetProcAddress(hNtDll, "wine_get_version") != NULL;
+        // Set output mode to handle virtual terminal sequences
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/mt638032.aspx
+        // TODO: Use CONOUT$
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682075.aspx
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hOut == INVALID_HANDLE_VALUE) {
+            return false;
         }
 
-        checked = true;
+        DWORD dwMode = 0;
+        if (!GetConsoleMode(hOut, &dwMode)) {
+            return false;
+        }
+
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (SetConsoleMode(hOut, dwMode)) {
+            return result = true;
+        } else {
+            return false;
+        }
     }
 
     return result;
