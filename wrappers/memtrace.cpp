@@ -60,7 +60,6 @@
 #endif
 
 
-#define BLOCK_ALIGN 64
 #define BLOCK_SIZE 512
 
 
@@ -121,7 +120,7 @@ mm_crc32_u32(uint32_t crc, uint32_t current)
 uint32_t
 hashBlock(const void *p)
 {
-    assert(lAlignPtr(p, BLOCK_ALIGN) == p);
+    assert((intptr_t)p % BLOCK_SIZE == 0);
 
     uint32_t crc;
 
@@ -187,33 +186,29 @@ void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
 {
     assert(_ptr);
 
-    const uint8_t *ptr = static_cast<const uint8_t *>(_ptr);
-    const uint8_t *basePtr = lAlignPtr(ptr, BLOCK_ALIGN);
-
     if (_size != size) {
-        static_assert(BLOCK_SIZE % BLOCK_ALIGN == 0, "inconsistent block align/size");
-        nBlocks = (ptr + _size - basePtr + BLOCK_SIZE - 1)/BLOCK_SIZE;
+        nBlocks = ((intptr_t)_ptr + _size + BLOCK_SIZE - 1)/BLOCK_SIZE - (intptr_t)_ptr/BLOCK_SIZE;
 
         hashPtr = (uint32_t *)realloc(hashPtr, nBlocks * sizeof *hashPtr);
         size = _size;
     }
 
-    realPtr = ptr;
+    realPtr = (const uint8_t *)_ptr;
 
     if (_discard) {
         zero(_ptr, size);
     }
 
-    const uint8_t *blockPtr = basePtr;
+    const uint8_t *p = lAlignPtr((const uint8_t *)_ptr, BLOCK_SIZE);
     if (_discard) {
-        hashPtr[0] = hashBlock(blockPtr);
+        hashPtr[0] = hashBlock(p);
         for (size_t i = 1; i < nBlocks; ++i) {
             hashPtr[i] = hashPtr[0];
         }
     } else {
         for (size_t i = 0; i < nBlocks; ++i) {
-            hashPtr[i] = hashBlock(blockPtr);
-            blockPtr += BLOCK_SIZE;
+            hashPtr[i] = hashBlock(p);
+            p += BLOCK_SIZE;
         }
     }
 }
@@ -224,14 +219,14 @@ void MemoryShadow::update(Callback callback) const
     const uint8_t *realStart   = realPtr   + size;
     const uint8_t *realStop    = realPtr;
 
-    const uint8_t *blockPtr = lAlignPtr(realPtr, BLOCK_ALIGN);
+    const uint8_t *p = lAlignPtr(realPtr, BLOCK_SIZE);
     for (size_t i = 0; i < nBlocks; ++i) {
-        uint32_t crc = hashBlock(blockPtr);
+        uint32_t crc = hashBlock(p);
         if (crc != hashPtr[i]) {
-            realStart = std::min(realStart, blockPtr);
-            realStop  = std::max(realStop,  blockPtr + BLOCK_SIZE);
+            realStart = std::min(realStart, p);
+            realStop  = std::max(realStop,  p + BLOCK_SIZE);
         }
-        blockPtr += BLOCK_SIZE;
+        p += BLOCK_SIZE;
     }
 
     realStart = std::max(realStart, realPtr);
