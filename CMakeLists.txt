@@ -195,8 +195,6 @@ if (WIN32)
             endif ()
         endif ()
     endif ()
-
-    set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
     add_definitions (-DGL_SILENCE_DEPRECATION)

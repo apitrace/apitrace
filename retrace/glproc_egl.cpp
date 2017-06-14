@@ -28,9 +28,7 @@
 
 #include <string.h>
 
-#if !defined(_WIN32)
-#include <dlfcn.h>
-#endif
+#include "os_dl.hpp"
 
 
 /*
@@ -45,11 +43,7 @@ void *_libGlHandle = NULL;
 
 
 
-#if defined(_WIN32)
-
-#error Unsupported
-
-#elif defined(__APPLE__)
+if defined(__APPLE__)
 
 #error Unsupported
 
@@ -68,6 +62,7 @@ _getPublicProcAddress(const char *procName)
 {
     void *proc;
 
+#ifndef _WIN32
     /*
      * We rely on dlsym(RTLD_NEXT, ...) whenever we can, because certain gl*
      * symbols are exported by multiple APIs/SOs, and it's not trivial to
@@ -77,6 +72,7 @@ _getPublicProcAddress(const char *procName)
     if (proc) {
         return proc;
     }
+#endif
 
     /*
      * dlsym(RTLD_NEXT, ...) will fail when the SO containing the symbol was
@@ -88,14 +84,14 @@ _getPublicProcAddress(const char *procName)
      */
 
     if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
-        static void *libEGL = NULL;
+        static os::Library libEGL = nullptr;
         if (!libEGL) {
-            libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
+            libEGL = os::openLibrary("libEGL" OS_LIBRARY_EXTENSION);
             if (!libEGL) {
-                return NULL;
+                return nullptr;
             }
         }
-        return dlsym(libEGL, procName);
+        return os::getLibrarySymbol(libEGL, procName);
     }
 
     /*
@@ -131,23 +127,23 @@ _getPublicProcAddress(const char *procName)
     if (procName[0] == 'g' && procName[1] == 'l') {
         /* TODO: Use GLESv1/GLESv2 on a per-context basis. */
 
-        static void *libGLESv2 = NULL;
+        static os::Library libGLESv2 = nullptr;
         if (!libGLESv2) {
-            libGLESv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv2 = os::openLibrary("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv2) {
-            proc = dlsym(libGLESv2, procName);
+            proc = os::getLibrarySymbol(libGLESv2, procName);
         }
         if (proc) {
             return proc;
         }
 
-        static void *libGLESv1 = NULL;
+        static os::Library libGLESv1 = nullptr;
         if (!libGLESv1) {
-            libGLESv1 = dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv1 = os::openLibrary("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv1) {
-            proc = dlsym(libGLESv1, procName);
+            proc = os::getLibrarySymbol(libGLESv1, procName);
         }
         if (proc) {
             return proc;

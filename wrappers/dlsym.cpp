@@ -34,6 +34,9 @@
 #include "os.hpp"
 
 
+
+#ifndef _WIN32
+
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
 
 
@@ -228,6 +231,8 @@ void * dlopen(const char *filename, int flag)
 
     return handle;
 }
+
+#endif /* !_WIN32*/
 
 
 #ifdef __linux__
