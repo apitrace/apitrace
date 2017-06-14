@@ -26,6 +26,7 @@
 
 #include "glproc.hpp"
 
+#include <string.h>
 
 #include "os_dl.hpp"
 
