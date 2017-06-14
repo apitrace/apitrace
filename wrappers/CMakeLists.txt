@@ -452,6 +452,7 @@ if (ENABLE_EGL AND NOT APPLE)
     )
 
     add_library (egltrace MODULE
+        egltrace.def
         egltrace.cpp
         dlsym.cpp
         glproc_egl.cpp
