@@ -60,7 +60,7 @@ namespace os {
 #if defined(_WIN32)
         return LoadLibraryA(filename);
 #else
-        return dlopen(filename, RTLD_LOCAL | RTLD_LAZY);
+        return dlopen(filename, RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
 #endif
     }
 

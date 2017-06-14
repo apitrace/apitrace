@@ -384,7 +384,7 @@ elseif (X11_FOUND)
 endif ()
 
 
-if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
+if (ENABLE_EGL AND NOT APPLE)
     # libEGL.so/libGL.so
     add_custom_command (
         OUTPUT egltrace.cpp
@@ -402,7 +402,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
             ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    add_library (egltrace SHARED
+    add_library (egltrace MODULE
         egltrace.cpp
         dlsym.cpp
     )
@@ -418,6 +418,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (egltrace
         gltrace_common
+        glproc
         glproc_egl
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}

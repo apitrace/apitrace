@@ -143,8 +143,6 @@ if (WIN32)
     if (MSVC AND NOT DirectX_D3D11_3_INCLUDE_FOUND)
         message (FATAL_ERROR "Windows 10 SDK must be selected (-DCMAKE_SYSTEM_VERSION=10.0) for D3D11.3 support")
     endif ()
-
-    set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
 else ()
