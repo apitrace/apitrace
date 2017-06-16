@@ -37,8 +37,11 @@ namespace retrace {
 
 struct Region
 {
-    void *buffer;
-    unsigned long long size;
+    void *buffer = nullptr;
+    unsigned long long size = 0;
+    unsigned dimensions = 0;
+    int tracePitch = 0;
+    int realPitch = 0;
 };
 
 typedef std::map<unsigned long long, Region> RegionMap;
@@ -114,7 +117,7 @@ addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned 
 
     if (!address) {
         // Ignore NULL pointer
-        assert(!buffer);
+        assert(buffer == nullptr);
         return;
     }
 
@@ -168,6 +171,19 @@ lookupRegion(unsigned long long address) {
 }
 
 void
+setRegionPitch(unsigned long long address, unsigned dimensions, int tracePitch, int realPitch) {
+    RegionMap::iterator it = lookupRegion(address);
+    if (it != regionMap.end()) {
+        Region &region = it->second;
+        region.dimensions = dimensions;
+        region.tracePitch = tracePitch;
+        region.realPitch = realPitch;
+    } else {
+        assert(0);
+    }
+}
+
+void
 delRegion(unsigned long long address) {
     RegionMap::iterator it = lookupRegion(address);
     if (it != regionMap.end()) {
@@ -190,14 +206,18 @@ delRegionByPointer(void *ptr) {
 }
 
 static void
-lookupAddress(unsigned long long address, void * & ptr, size_t & len) {
-    RegionMap::iterator it = lookupRegion(address);
+lookupAddress(unsigned long long address, Range &range) {
+    RegionMap::const_iterator it = lookupRegion(address);
     if (it != regionMap.end()) {
+        const Region & region = it->second;
         unsigned long long offset = address - it->first;
-        assert(offset < it->second.size);
+        assert(offset < region.size);
 
-        ptr = (char *)it->second.buffer + offset;
-        len = it->second.size - offset;
+        range.ptr = (char *)region.buffer + offset;
+        range.len = region.size - offset;
+        range.dims = region.dimensions;
+        range.tracePitch = region.tracePitch;
+        range.realPitch = region.realPitch;
 
         if (retrace::verbosity >= 2) {
             std::cout
@@ -205,7 +225,7 @@ lookupAddress(unsigned long long address, void * & ptr, size_t & len) {
                 << std::hex
                 << "0x" << address
                 << " <- "
-                << "0x" << (uintptr_t)ptr
+                << "0x" << (uintptr_t)range.ptr
                 << std::dec
                 << "\n";
         }
@@ -218,8 +238,8 @@ lookupAddress(unsigned long long address, void * & ptr, size_t & len) {
         std::cerr << "warning: passing high address 0x" << std::hex << address << std::dec << " as uintptr_t\n";
     }
 
-    ptr = (void *)(uintptr_t)address;
-    len = 0;
+    range.ptr = (void *)(uintptr_t)address;
+    range.len = 0;
 }
 
 
@@ -228,53 +248,54 @@ class Translator : protected trace::Visitor
 protected:
     const bool bind;
 
-    void *ptr;
-    size_t len;
+    Range &range;
 
 protected:
     void visit(trace::Null *) override {
-        ptr = NULL;
-        len = 0;
+        range.ptr = nullptr;
+        range.len = 0;
+        range.dims = 0;
     }
 
     void visit(trace::Blob *blob) override {
-        ptr = blob->toPointer(bind);
-        len = blob->size;
+        range.ptr = blob->toPointer(bind);
+        range.len = blob->size;
+        range.dims = 0;
     }
 
     void visit(trace::Pointer *p) override {
-        lookupAddress(p->value, ptr, len);
+        lookupAddress(p->value, range);
     }
 
 public:
-    Translator(bool _bind) :
+    Translator(bool _bind, Range &_range) :
         bind(_bind),
-        ptr(NULL),
-        len(0)
-    {}
+        range(_range)
+    {
+        range.ptr = nullptr;
+        range.len = 0;
+        range.dims = 0;
+    }
 
     void
-    operator() (trace::Value *node, void * & _ptr, size_t & _len) {
+    apply(trace::Value *node) {
         _visit(node);
-        _ptr = ptr;
-        _len = len;
     }
 };
 
 
 void
-toRange(trace::Value &value, void * & ptr, size_t & len) {
-    Translator(false) (&value, ptr, len);
+toRange(trace::Value &value, Range &range)
+{
+    Translator(false, range).apply(&value);
 }
 
 void *
-toPointer(trace::Value &value, bool bind) {
-    void * ptr;
-    size_t len;
-    Translator translator(bind);
-    translator(&value, ptr, len);
-    (void)len;
-    return ptr;
+toPointer(trace::Value &value, bool bind)
+{
+    Range range;
+    Translator(bind, range).apply(&value);
+    return range.ptr;
 }
 
 
@@ -323,7 +344,7 @@ toObjPointer(trace::Call &call, trace::Value &value) {
             warning(call) << "unknown object 0x" << std::hex << address << std::dec << "\n";
         }
     } else {
-        obj = NULL;
+        obj = nullptr;
     }
 
     if (retrace::verbosity >= 2) {

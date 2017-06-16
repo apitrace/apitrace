@@ -52,33 +52,68 @@ static void retrace_malloc(trace::Call &call) {
 }
 
 
-static void retrace_memcpy(trace::Call &call) {
-    void * destPtr;
-    size_t destLen;
-    retrace::toRange(call.arg(0), destPtr, destLen);
+static void
+retrace_memcpy(trace::Call &call)
+{
+    retrace::Range destRange;
+    retrace::toRange(call.arg(0), destRange);
 
-    void * srcPtr;
-    size_t srcLen;
-    retrace::toRange(call.arg(1), srcPtr, srcLen);
+    retrace::Range srcRange;
+    retrace::toRange(call.arg(1), srcRange);
 
     size_t n = call.arg(2).toUInt();
 
-    if (!destPtr || !srcPtr || !n) {
+    if (!destRange.ptr || !srcRange.ptr || !n) {
         return;
     }
 
-    if (n > destLen) {
-        retrace::warning(call) << "dest buffer overflow of " << n - destLen << " bytes\n";
+    // We don't support sources with swizzled pitches
+    assert(srcRange.dims == 0);
+
+    assert(destRange.dims <= 2);
+    if (destRange.dims == 2 &&
+        destRange.tracePitch != destRange.realPitch) {
+        int srcPitch = destRange.tracePitch;
+        int destPitch = destRange.realPitch;
+
+        if (0) {
+            retrace::warning(call) << "swizzling pitch from " << srcPitch << " to " << destPitch << "\n";
+        }
+
+        int destOffset = 0;
+        int srcOffset = 0;
+        int width = std::min(destPitch, srcPitch);
+        while (destOffset + width <= destRange.len &&
+               srcOffset + width <= srcRange.len) {
+            memcpy((char *)destRange.ptr + destOffset,
+                   (char *)srcRange.ptr + srcOffset, width);
+            destOffset += destPitch;
+            srcOffset += srcPitch;
+        }
+
+        if (destOffset < destRange.len &&
+            srcOffset < srcRange.len) {
+            width = std::min(destRange.len - destOffset, srcRange.len - srcOffset);
+            memcpy((char *)destRange.ptr + destOffset,
+                   (char *)srcRange.ptr + srcOffset, width);
+        }
+
+        return;
     }
 
-    if (n > srcLen) {
-        retrace::warning(call) << "src buffer overflow of " << n - srcLen << " bytes\n";
+
+    if (n > destRange.len) {
+        retrace::warning(call) << "dest buffer overflow of " << n - destRange.len << " bytes\n";
     }
 
-    n = std::min(n, destLen);
-    n = std::min(n, srcLen);
+    if (n > srcRange.len) {
+        retrace::warning(call) << "src buffer overflow of " << n - srcRange.len << " bytes\n";
+    }
 
-    memcpy(destPtr, srcPtr, n);
+    n = std::min(n, destRange.len);
+    n = std::min(n, srcRange.len);
+
+    memcpy(destRange.ptr, srcRange.ptr, n);
 }
 
 

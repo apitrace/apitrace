@@ -335,6 +335,10 @@ class Struct(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitStruct(self, *args, **kwargs)
 
+    def getMemberByName(self, name):
+        memberNames = [memberName for memberType, memberName in self.members]
+        return memberNames.index(name)
+
 
 def Union(kindExpr, kindTypes, contextLess=True):
     switchTypes = []

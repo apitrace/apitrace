@@ -110,10 +110,22 @@ void
 addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned long long size);
 
 void
-delRegionByPointer(void *ptr);
+setRegionPitch(unsigned long long address, unsigned dimensions, int tracePitch, int realPitch);
 
 void
-toRange(trace::Value &value, void * & ptr, size_t & len);
+delRegionByPointer(void *ptr);
+
+struct Range
+{
+    void * ptr;
+    size_t len;
+    unsigned dims;
+    int tracePitch;
+    int realPitch;
+};
+
+void
+toRange(trace::Value &value, Range & range);
 
 void *
 toPointer(trace::Value &value, bool bind = false);
