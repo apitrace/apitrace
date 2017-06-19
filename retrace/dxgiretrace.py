@@ -361,7 +361,6 @@ class D3DRetracer(Retracer):
                 print '        _normalizeMap(pResource, pMappedResource);'
             else:
                 print '        _pbData = _MapDesc.pData;'
-                self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
             print '    }'
@@ -397,23 +396,43 @@ class D3DRetracer(Retracer):
         Retracer.retraceInterfaceMethodBody(self, interface, method)
 
         # Add pitch swizzling information to the region
-        if interface.name.startswith('ID3D11DeviceContext') and method.name == 'Map':
-            outArg = method.getArgByName('pMappedResource')
-            print r'    if (_pbData && pMappedResource->RowPitch != 0) {'
+        if method.name == 'Map' and interface.name not in ('ID3D10Buffer', 'ID3D10Texture1D'):
+            if interface.name.startswith('ID3D11DeviceContext'):
+                outArg = method.getArgByName('pMappedResource')
+                memberNames = ('pData', 'RowPitch', 'DepthPitch')
+            elif interface.name.startswith('ID3D10'):
+                outArg = method.args[-1]
+                memberNames = ('pData', 'RowPitch', 'DepthPitch')
+            elif interface.name == 'IDXGISurface':
+                outArg = method.getArgByName('pLockedRect')
+                memberNames = ('pBits', 'Pitch', None)
+            else:
+                raise NotImplementedError
+            struct = outArg.type.type
+            dataMemberName, rowPitchMemberName, depthPitchMemberName = memberNames
+            dataMemberIndex = struct.getMemberByName(dataMemberName)
+            rowPitchMemberIndex = struct.getMemberByName(rowPitchMemberName)
+            print r'    if (_pbData && %s->%s != 0) {' % (outArg.name, rowPitchMemberName)
             print r'        const trace::Array *_%s = call.arg(%u).toArray();' % (outArg.name, outArg.index)
             print r'        if (%s) {' % outArg.name
             print r'            const trace::Struct *_struct = _%s->values[0]->toStruct();' % (outArg.name)
             print r'            if (_struct) {'
-            struct = outArg.type.type
-            print r'                unsigned long long traceAddress = _struct->members[%u]->toUIntPtr();' % struct.getMemberByName('pData')
-            print r'                int traceRowPitch = _struct->members[%u]->toSInt();' % struct.getMemberByName('RowPitch')
-            print r'                int realRowPitch = pMappedResource->RowPitch;'
+            print r'                unsigned long long traceAddress = _struct->members[%u]->toUIntPtr();' % dataMemberIndex
+            print r'                int traceRowPitch = _struct->members[%u]->toSInt();' % rowPitchMemberIndex
+            print r'                int realRowPitch = %s->%s;' % (outArg.name, rowPitchMemberName)
             print r'                if (realRowPitch && traceRowPitch != realRowPitch) {'
             print r'                    retrace::setRegionPitch(traceAddress, 2, traceRowPitch, realRowPitch);'
-            print r'                    if (pMappedResource->DepthPitch) {'
-            print r'                        retrace::checkMismatch(call, "DepthPitch", _struct->members[%u], pMappedResource->DepthPitch);' % (struct.getMemberByName('DepthPitch'))
-            print r'                    }'
             print r'                }'
+            try:
+                depthPitchMemberIndex = struct.getMemberByName(depthPitchMemberName)
+            except ValueError:
+                assert len(struct.members) < 3
+                pass
+            else:
+                assert depthPitchMemberName == 'DepthPitch'
+                print r'                if (%s->DepthPitch) {' % outArg.name
+                print r'                    retrace::checkMismatch(call, "DepthPitch", _struct->members[%u], %s->DepthPitch);' % (struct.getMemberByName('DepthPitch'), outArg.name)
+                print r'                }'
             print r'            }'
             print r'        }'
             print r'    }'
