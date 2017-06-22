@@ -175,21 +175,22 @@ Call *Parser::parse_call(Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::EVENT_ENTER:
-#if TRACE_VERBOSE
-            std::cerr << "\tENTER\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tENTER\n";
+            }
             parse_enter(mode);
             break;
         case trace::EVENT_LEAVE:
-#if TRACE_VERBOSE
-            std::cerr << "\tLEAVE\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tLEAVE\n";
+            }
             call = parse_leave(mode);
             if (call) {
                 adjust_call_flags(call);
                 return call;
             }
             break;
+
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -482,26 +483,26 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::CALL_END:
-#if TRACE_VERBOSE
-            std::cerr << "\tCALL_END\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_END\n";
+            }
             return true;
         case trace::CALL_ARG:
-#if TRACE_VERBOSE
-            std::cerr << "\tCALL_ARG\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_ARG\n";
+            }
             parse_arg(call, mode);
             break;
         case trace::CALL_RET:
-#if TRACE_VERBOSE
-            std::cerr << "\tCALL_RET\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_RET\n";
+            }
             call->ret = parse_value(mode);
             break;
         case trace::CALL_BACKTRACE:
-#if TRACE_VERBOSE
-            std::cerr << "\tCALL_BACKTRACE\n";
-#endif
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_BACKTRACE\n";
+            }
             parse_call_backtrace(call, mode);
             break;
         default:
@@ -679,13 +680,13 @@ Value *Parser::parse_value(void) {
         value = NULL;
         break;
     }
-#if TRACE_VERBOSE
-    if (value) {
-        std::cerr << "\tVALUE ";
-        trace::dump(value, std::cerr);
-        std::cerr << "\n";
+    if (TRACE_VERBOSE) {
+        if (value) {
+            std::cerr << "\tVALUE ";
+            trace::dump(value, std::cerr);
+            std::cerr << "\n";
+        }
     }
-#endif
     return value;
 }
 
@@ -927,9 +928,9 @@ Value *Parser::parse_wstring() {
         value[i] = read_uint();
     }
     value[len] = 0;
-#if TRACE_VERBOSE
-    std::cerr << "\tWSTRING \"" << value << "\"\n";
-#endif
+    if (TRACE_VERBOSE) {
+        std::cerr << "\tWSTRING \"" << value << "\"\n";
+    }
     return new WString(value);
 }
 
@@ -949,9 +950,9 @@ const char * Parser::read_string(void) {
         file->read(value, len);
     }
     value[len] = 0;
-#if TRACE_VERBOSE
-    std::cerr << "\tSTRING \"" << value << "\"\n";
-#endif
+    if (TRACE_VERBOSE) {
+        std::cerr << "\tSTRING \"" << value << "\"\n";
+    }
     return value;
 }
 
@@ -1001,9 +1002,9 @@ unsigned long long Parser::read_uint(void) {
         value |= (unsigned long long)(c & 0x7f) << shift;
         shift += 7;
     } while(c & 0x80);
-#if TRACE_VERBOSE
-    std::cerr << "\tUINT " << value << "\n";
-#endif
+    if (TRACE_VERBOSE) {
+        std::cerr << "\tUINT " << value << "\n";
+    }
     return value;
 }
 
@@ -1021,12 +1022,12 @@ void Parser::skip_uint(void) {
 
 inline int Parser::read_byte(void) {
     int c = file->getc();
-#if TRACE_VERBOSE
-    if (c < 0)
-        std::cerr << "\tEOF" << "\n";
-    else
-        std::cerr << "\tBYTE 0x" << std::hex << c << std::dec << "\n";
-#endif
+    if (TRACE_VERBOSE) {
+        if (c < 0)
+            std::cerr << "\tEOF" << "\n";
+        else
+            std::cerr << "\tBYTE 0x" << std::hex << c << std::dec << "\n";
+    }
     return c;
 }
 
