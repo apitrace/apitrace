@@ -73,9 +73,12 @@ Strings are length-prefixed.  The trailing zero is implied, not appearing neithe
 The trace consists of a small header with version information, followed by an
 arbitrary number of events.
 
-    trace = version_no event*
+    trace = version_no semantic_version_no event*  // version_no >= 6
+          | version_no event*                      // version_no < 6
 
     version_no = uint
+    semantic_version_no = uint
+
 
 ### Calls ###
 

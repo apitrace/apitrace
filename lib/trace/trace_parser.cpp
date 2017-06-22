@@ -41,12 +41,6 @@ namespace trace {
 
 
 Parser::Parser() {
-    file = NULL;
-    next_call_no = 0;
-    version = 0;
-    api = API_UNKNOWN;
-
-    glGetErrorSig = NULL;
 }
 
 
@@ -69,6 +63,13 @@ bool Parser::open(const char *filename) {
         file = NULL;
         return false;
     }
+
+    semanticVersion = version;
+    if (version >= 6) {
+        semanticVersion = read_uint();
+        assert(semanticVersion <= version);
+    }
+
     api = API_UNKNOWN;
 
     return true;

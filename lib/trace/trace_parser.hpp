@@ -62,7 +62,7 @@ public:
 class Parser: public AbstractParser
 {
 protected:
-    File *file;
+    File *file = nullptr;
 
     enum Mode {
         FULL = 0,
@@ -105,13 +105,17 @@ protected:
     BitmaskMap bitmasks;
     StackFrameMap frames;
 
-    FunctionSig *glGetErrorSig;
 
-    unsigned next_call_no;
+    FunctionSig *glGetErrorSig = nullptr;
 
-    unsigned long long version;
+    int next_event_type = -1;
+    unsigned next_call_no = 0;
+
+    unsigned long long version = 0;
+    unsigned long long semanticVersion = 0;
+
 public:
-    API api;
+    API api = API_UNKNOWN;
 
     Parser();
 
@@ -135,7 +139,7 @@ public:
     void setBookmark(const ParseBookmark &bookmark) override;
 
     unsigned long long getVersion(void) const override {
-        return version;
+        return semanticVersion;
     }
 
     int percentRead()
