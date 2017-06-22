@@ -46,6 +46,7 @@ be retraced.
 | 3 | enums signatures with the whole set of name/value pairs |
 | 4 | call enter events include thread no |
 | 5 | support for call backtraces |
+| 6 | unicode strings |
 
 Writing/editing old traces is not supported however.  An older version of
 apitrace should be used in such circumstances.

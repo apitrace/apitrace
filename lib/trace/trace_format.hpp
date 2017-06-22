@@ -34,7 +34,7 @@
 namespace trace {
 
 
-#define TRACE_VERSION 5
+#define TRACE_VERSION 6
 
 
 enum Event {
