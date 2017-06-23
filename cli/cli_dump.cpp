@@ -236,6 +236,11 @@ command(int argc, char *argv[])
             return 1;
         }
 
+        const trace::Properties &properties = p.getProperties();
+        for (auto & kv : properties) {
+            std::cout << "// " << kv.first << " = " << kv.second << std::endl;
+        }
+
         trace::Call *call;
         while ((call = p.parse_call())) {
             if (calls.contains(*call)) {

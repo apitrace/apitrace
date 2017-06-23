@@ -45,6 +45,9 @@ struct ParseBookmark
 };
 
 
+typedef std::map<std::string, std::string> Properties;
+
+
 // Parser interface
 class AbstractParser
 {
@@ -56,6 +59,9 @@ public:
     virtual bool open(const char *filename) = 0;
     virtual void close(void) = 0;
     virtual unsigned long long getVersion(void) const = 0;
+    virtual const Properties & getProperties(void) const = 0;
+
+    const std::string & getProperty(const char *name) const;
 };
 
 
@@ -69,6 +75,8 @@ protected:
         SCAN,
         SKIP
     };
+
+    Properties properties;
 
     typedef std::list<Call *> CallList;
     CallList calls;
@@ -142,6 +150,10 @@ public:
         return semanticVersion;
     }
 
+    const Properties & getProperties(void) const override {
+        return properties;
+    }
+
     int percentRead()
     {
         return file->percentRead();
@@ -165,6 +177,8 @@ public:
     lookupCallFlags(const char *name);
 
 protected:
+    void parseProperties(void);
+
     Call *parse_Call(Mode mode);
 
     void parse_enter(Mode mode);
@@ -230,7 +244,7 @@ protected:
     Value *parse_wstring();
     void scan_wstring();
 
-    const char * read_string(void);
+    char * read_string(void);
     void skip_string(void);
 
     signed long long read_sint(void);

@@ -146,6 +146,11 @@ LocalWriter::open(void) {
 
     pid = os::getCurrentProcessId();
 
+    Writer::beginProperties();
+    os::String processName = os::getProcessName();
+    Writer::writeProperty("process.name", processName);
+    Writer::endProperties();
+
 #if 0
     // For debugging the exception handler
     *((int *)0) = 0;

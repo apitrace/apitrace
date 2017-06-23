@@ -171,6 +171,22 @@ void Writer::writeStackFrame(const RawStackFrame *frame) {
     }
 }
 
+void
+Writer::writeProperty(const char *name, const char *value)
+{
+    assert(name);
+    assert(strlen(name));
+    assert(value);
+    _writeString(name);
+    _writeString(value);
+}
+
+void
+Writer::endProperties(void)
+{
+    _writeUInt(0);  // zero-length string
+}
+
 unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
     _writeByte(trace::EVENT_ENTER);
     _writeUInt(thread_id);

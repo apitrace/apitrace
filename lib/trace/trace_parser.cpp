@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <memory>
+
 #include "trace_file.hpp"
 #include "trace_dump.hpp"
 #include "trace_parser.hpp"
@@ -72,6 +74,10 @@ bool Parser::open(const char *filename) {
 
     api = API_UNKNOWN;
 
+    if (version >= 6) {
+        parseProperties();
+    }
+
     return true;
 }
 
@@ -99,6 +105,8 @@ void Parser::close(void) {
         delete file;
         file = NULL;
     }
+
+    properties.clear();
 
     deleteAll(calls);
 
@@ -169,6 +177,20 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
     deleteAll(calls);
 }
 
+void Parser::parseProperties(void)
+{
+    if (TRACE_VERBOSE) {
+        std::cerr << "\tPROPERTIES\n";
+    }
+    while (true) {
+        std::unique_ptr<char []> name(read_string());
+        if (name[0] == '\0') {
+            break;
+        }
+        std::unique_ptr<char []> value(read_string());
+        properties[name.get()] = value.get();
+    }
+}
 
 Call *Parser::parse_call(Mode mode) {
     do {
@@ -191,7 +213,6 @@ Call *Parser::parse_call(Mode mode) {
                 return call;
             }
             break;
-
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -944,7 +965,7 @@ void Parser::scan_wstring() {
 }
 
 
-const char * Parser::read_string(void) {
+char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {

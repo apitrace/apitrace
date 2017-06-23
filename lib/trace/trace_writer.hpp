@@ -57,6 +57,10 @@ namespace trace {
         bool open(const char *filename);
         void close(void);
 
+        inline void beginProperties(void) {}
+        void writeProperty(const char *name, const char *value);
+        void endProperties(void);
+
         unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 

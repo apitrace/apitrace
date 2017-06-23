@@ -20,11 +20,11 @@ The used Snappy format is different from the standard _Snappy framing format_,
 because it predates it.
 
     file = header chunk*
-    
+
     header = 'a' 't'
-    
+
     chunk = compressed_length compressed_data
-    
+
     compressed_length = uint32  // length of compressed data in little endian
     compressed_data = byte*
 
@@ -46,7 +46,7 @@ be retraced.
 | 3 | enums signatures with the whole set of name/value pairs |
 | 4 | call enter events include thread no |
 | 5 | support for call backtraces |
-| 6 | unicode strings |
+| 6 | unicode strings; semantic version; properties |
 
 Writing/editing old traces is not supported however.  An older version of
 apitrace should be used in such circumstances.
@@ -73,11 +73,25 @@ Strings are length-prefixed.  The trailing zero is implied, not appearing neithe
 The trace consists of a small header with version information, followed by an
 arbitrary number of events.
 
-    trace = version_no semantic_version_no event*  // version_no >= 6
-          | version_no event*                      // version_no < 6
+    trace = header event*
+
+    header = version_no semantic_version_no properties  // version_no >= 6
+           | version_no                                 // version_no < 6
 
     version_no = uint
     semantic_version_no = uint
+
+
+### Properties ###
+
+Properties are used to describe characteristics of the process, OS, hardware, etc.
+
+    properties = property+
+
+    property = property_name property_value
+             | empty_string                  // terminator
+    property_name = string
+    property_value = string
 
 
 ### Calls ###
