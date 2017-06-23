@@ -50,7 +50,7 @@ matrix:
     - DOCKER_IMAGE=jrfonseca/centos6
     - CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC_LIBGCC=ON -DENABLE_STATIC_LIBSTDCXX=ON -DENABLE_STATIC_EXE=ON -DENABLE_GUI=OFF"
   - os: osx
-    osx_image: xcode8.2
+    osx_image: xcode8.3
     env:
     - LABEL="mac64"
     - CMAKE_OPTIONS="-DENABLE_GUI=1"
