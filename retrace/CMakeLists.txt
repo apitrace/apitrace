@@ -40,11 +40,13 @@ if (WIN32)
 endif ()
 
 add_library (retrace_common STATIC
+    json.cpp
+    process_name.hpp
+    process_name.cpp
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
-    json.cpp
     state_writer.cpp
     state_writer_json.cpp
     state_writer_ubjson.cpp

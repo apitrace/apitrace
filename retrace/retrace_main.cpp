@@ -47,6 +47,7 @@
 #include "retrace.hpp"
 #include "state_writer.hpp"
 #include "ws.hpp"
+#include "process_name.hpp"
 
 
 static bool waitOnFinish = false;
@@ -990,6 +991,13 @@ int main(int argc, char **argv)
 
             if (!parser->open(argv[i])) {
                 return 1;
+            }
+
+            auto &properties = parser->getProperties();
+            auto processNameIt = properties.find("process.name");
+            if (processNameIt != properties.end()) {
+                // TODO: Try to compensate for different OS
+                setProcessName(processNameIt->second.c_str());
             }
 
             retrace::mainLoop();
