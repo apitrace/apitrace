@@ -527,6 +527,17 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
             }
             parse_call_backtrace(call, mode);
             break;
+        case trace::CALL_FLAGS:
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_FLAGS\n";
+            }
+            {
+                uint flags = read_uint();
+                if (flags & FLAG_FAKE) {
+                    call->flags |= CALL_FLAG_FAKE;
+                }
+            }
+            break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
                       << c << "\n";

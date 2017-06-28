@@ -46,7 +46,7 @@ be retraced.
 | 3 | enums signatures with the whole set of name/value pairs |
 | 4 | call enter events include thread no |
 | 5 | support for call backtraces |
-| 6 | unicode strings; semantic version; properties |
+| 6 | unicode strings; semantic version; properties; fake flag |
 
 Writing/editing old traces is not supported however.  An older version of
 apitrace should be used in such circumstances.
@@ -111,6 +111,7 @@ and the call number is implied for the enter event.
                 | 0x02 value            // return value
                 | 0x03 thread_no        // thread number (version_no < 4)
                 | 0x04 count frame*     // stack backtrace
+                | 0x05 uint             // flag
 
     arg_name = string
     function_name = string

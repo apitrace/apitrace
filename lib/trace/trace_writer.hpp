@@ -77,6 +77,8 @@ namespace trace {
         void writeStackFrame(const RawStackFrame *frame);
         inline void endBacktrace(void) {}
 
+        void writeFlags(unsigned flags);
+
         void beginArray(size_t length);
         inline void endArray(void) {}
 

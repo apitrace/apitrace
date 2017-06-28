@@ -172,6 +172,14 @@ void Writer::writeStackFrame(const RawStackFrame *frame) {
 }
 
 void
+Writer::writeFlags(unsigned flags) {
+    if (flags) {
+        _writeByte(trace::CALL_FLAGS);
+        _writeUInt(flags);
+    }
+}
+
+void
 Writer::writeProperty(const char *name, const char *value)
 {
     assert(name);

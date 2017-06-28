@@ -48,6 +48,7 @@ enum CallDetail {
     CALL_RET,
     CALL_THREAD,
     CALL_BACKTRACE,
+    CALL_FLAGS,
 };
 
 enum Type {
@@ -76,6 +77,10 @@ enum BacktraceDetail {
     BACKTRACE_FILENAME,
     BACKTRACE_LINENUMBER,
     BACKTRACE_OFFSET,
+};
+
+enum {
+    FLAG_FAKE = (1 << 0),
 };
 
 
