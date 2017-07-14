@@ -39,6 +39,7 @@
 #include "glsize.hpp"
 #include "glstate.hpp"
 #include "glstate_internal.hpp"
+#include "halffloat.hpp"
 
 
 namespace glstate {
@@ -303,6 +304,7 @@ dumpAttrib(StateWriter &writer,
             union {
                 const GLbyte *rawvalue;
                 const GLfloat *fvalue;
+                const GLhalf *hvalue;
                 const GLdouble *dvalue;
                 const GLint *ivalue;
                 const GLuint *uivalue;
@@ -313,6 +315,9 @@ dumpAttrib(StateWriter &writer,
             u.rawvalue = data + row*desc.rowStride + col*desc.colStride;
 
             switch (desc.elemType) {
+            case GL_HALF_FLOAT:
+                writer.writeFloat(util_half_to_float(*u.hvalue));
+                break;
             case GL_FLOAT:
                 writer.writeFloat(*u.fvalue);
                 break;

@@ -86,6 +86,9 @@ _gl_uniform_size(GLenum type, GLenum &elemType, GLint &numCols, GLint &numRows) 
     numRows = 1;
 
     switch (type) {
+    case GL_HALF_FLOAT:
+        elemType = GL_HALF_FLOAT;
+        break;
     case GL_FLOAT:
         elemType = GL_FLOAT;
         break;
