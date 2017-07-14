@@ -883,8 +883,7 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
         glGetActiveAttrib(program, index, max_name_length, &length, &shaderSize, &shaderType, &name[0]);
 
         if (isBuiltinName(&name[0])) {
-            // TODO: Handle built-ins too
-            std::cerr << "warning: dumping of built-in vertex attribute (" << &name[0] << ") not yet supported\n";
+            // Ignore built-in attributes
             continue;
         }
 
