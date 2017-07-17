@@ -473,6 +473,12 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
                        const std::string & label,
                        const char *userLabel)
 {
+    if (target == GL_TEXTURE_2D_MULTISAMPLE ||
+        target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY) {
+        std::cerr << "warning: dumping of MSAA textures (" << enumToString(target) << ") is unsupported\n";
+        return;
+    }
+
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
