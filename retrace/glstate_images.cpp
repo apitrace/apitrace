@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include "image.hpp"
 #include "state_writer.hpp"
@@ -1231,7 +1232,7 @@ downsampledFramebuffer(Context &context,
         // color buffer
         GLint maxColorAtt = 0;
         glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAtt);
-        GLenum drawbufs[maxColorAtt];
+        std::vector<GLenum> drawbufs(maxColorAtt);
         for (int iColorAtt = 0; iColorAtt < maxColorAtt; ++iColorAtt) {
             GLenum colorAtt = GL_COLOR_ATTACHMENT0 + iColorAtt;
             drawbufs[iColorAtt] = colorAtt;
@@ -1260,7 +1261,7 @@ downsampledFramebuffer(Context &context,
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glDrawBuffers(maxColorAtt, drawbufs);
+        glDrawBuffers(maxColorAtt, &drawbufs[0]);
     }
 
     if (stencilDesc == depthDesc &&
