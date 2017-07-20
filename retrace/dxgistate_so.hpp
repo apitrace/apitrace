@@ -99,6 +99,7 @@ void dumpStateObject(StateWriter &, const D3D11_COUNTER_DESC &);
 void dumpStateObject(StateWriter &, const D3D11_DEPTH_STENCIL_DESC &);
 void dumpStateObject(StateWriter &, const D3D11_DEPTH_STENCILOP_DESC &);
 void dumpStateObject(StateWriter &, const D3D11_DEPTH_STENCIL_VIEW_DESC &);
+void dumpStateObject(StateWriter &, const D3D11_DEVICE_CONTEXT_TYPE &);
 void dumpStateObject(StateWriter &, const D3D11_INPUT_ELEMENT_DESC &);
 void dumpStateObject(StateWriter &, const D3D11_PACKED_MIP_DESC &);
 void dumpStateObject(StateWriter &, const D3D11_PRIMITIVE_TOPOLOGY &);

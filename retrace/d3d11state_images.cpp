@@ -222,6 +222,8 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
         return NULL;
     }
 
+    assert(pDeviceContext->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED);
+
     com_ptr<ID3D11Device> pDevice;
     pDeviceContext->GetDevice(&pDevice);
 
@@ -524,22 +526,26 @@ dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDevice)
     writer.beginMember("textures");
     writer.beginObject();
 
-    ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
+    if (pDevice->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED) {
 
-    pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(writer, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
-    pDevice->HSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(writer, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    pDevice->DSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(writer, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        pDevice->HSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(writer, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        pDevice->DSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+        pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    }
 
     writer.endObject();
     writer.endMember(); // textures
@@ -548,13 +554,17 @@ dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDevice)
 
 image::Image *
 getRenderTargetImage(ID3D11DeviceContext *pDevice,
-                     DXGI_FORMAT *dxgiFormat) {
-    com_ptr<ID3D11RenderTargetView> pRenderTargetView;
-    pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
+                     DXGI_FORMAT *dxgiFormat)
+{
+    image::Image *image = nullptr;
 
-    image::Image *image = NULL;
-    if (pRenderTargetView) {
-        image = getRenderTargetViewImage(pDevice, pRenderTargetView, dxgiFormat);
+    if (pDevice->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED) {
+        com_ptr<ID3D11RenderTargetView> pRenderTargetView;
+        pDevice->OMGetRenderTargets(1, &pRenderTargetView, nullptr);
+
+        if (pRenderTargetView) {
+            image = getRenderTargetViewImage(pDevice, pRenderTargetView, dxgiFormat);
+        }
     }
 
     return image;
@@ -567,51 +577,55 @@ dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
     writer.beginMember("framebuffer");
     writer.beginObject();
 
-    ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
-    ID3D11DepthStencilView *pDepthStencilView;
-    pDevice->OMGetRenderTargets(ARRAYSIZE(pRenderTargetViews), pRenderTargetViews,
-                                &pDepthStencilView);
+    if (pDevice->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED) {
 
-    for (UINT i = 0; i < ARRAYSIZE(pRenderTargetViews); ++i) {
-        if (!pRenderTargetViews[i]) {
-            continue;
+        ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
+        ID3D11DepthStencilView *pDepthStencilView;
+        pDevice->OMGetRenderTargets(ARRAYSIZE(pRenderTargetViews), pRenderTargetViews,
+                                    &pDepthStencilView);
+
+        for (UINT i = 0; i < ARRAYSIZE(pRenderTargetViews); ++i) {
+            if (!pRenderTargetViews[i]) {
+                continue;
+            }
+
+            image::Image *image;
+            DXGI_FORMAT dxgiFormat;
+            image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
+                                             &dxgiFormat);
+            if (image) {
+                char label[64];
+                _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+                StateWriter::ImageDesc imgDesc;
+                imgDesc.depth = 1;
+                imgDesc.format = getDXGIFormatName(dxgiFormat);
+                writer.beginMember(label);
+                writer.writeImage(image, imgDesc);
+                writer.endMember(); // RENDER_TARGET_*
+                delete image;
+            }
+
+            pRenderTargetViews[i]->Release();
         }
 
-        image::Image *image;
-        DXGI_FORMAT dxgiFormat;
-        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
-                                         &dxgiFormat);
-        if (image) {
-            char label[64];
-            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
-            StateWriter::ImageDesc imgDesc;
-            imgDesc.depth = 1;
-            imgDesc.format = getDXGIFormatName(dxgiFormat);
-            writer.beginMember(label);
-            writer.writeImage(image, imgDesc);
-            writer.endMember(); // RENDER_TARGET_*
-            delete image;
+        if (pDepthStencilView) {
+            image::Image *image;
+            DXGI_FORMAT dxgiFormat;
+            image = getDepthStencilViewImage(pDevice, pDepthStencilView,
+                                             &dxgiFormat);
+            if (image) {
+                StateWriter::ImageDesc imgDesc;
+                imgDesc.depth = 1;
+                imgDesc.format = getDXGIFormatName(dxgiFormat);
+                writer.beginMember("DEPTH_STENCIL");
+                writer.writeImage(image, imgDesc);
+                writer.endMember();
+                delete image;
+            }
+
+            pDepthStencilView->Release();
         }
 
-        pRenderTargetViews[i]->Release();
-    }
-
-    if (pDepthStencilView) {
-        image::Image *image;
-        DXGI_FORMAT dxgiFormat;
-        image = getDepthStencilViewImage(pDevice, pDepthStencilView,
-                                         &dxgiFormat);
-        if (image) {
-            StateWriter::ImageDesc imgDesc;
-            imgDesc.depth = 1;
-            imgDesc.format = getDXGIFormatName(dxgiFormat);
-            writer.beginMember("DEPTH_STENCIL");
-            writer.writeImage(image, imgDesc);
-            writer.endMember();
-            delete image;
-        }
-
-        pDepthStencilView->Release();
     }
 
     writer.endObject();

@@ -139,6 +139,11 @@ dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     writer.beginMember("parameters");
     writer.beginObject();
 
+    D3D11_DEVICE_CONTEXT_TYPE Type = pDeviceContext->GetType();
+    writer.beginMember("Type");
+    dumpStateObject(writer, Type);
+    writer.endMember(); // Type
+
     dumpRasterizerState(writer, pDeviceContext);
     dumpBlendState(writer, pDeviceContext);
     dumpDepthStencilState(writer, pDeviceContext);
@@ -185,6 +190,7 @@ dumpShaders(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     if (pPixelShader) {
         dumpShader<ID3D11DeviceChild>(writer, "PS", pPixelShader);
     }
+
 
     writer.endObject();
     writer.endMember(); // shaders

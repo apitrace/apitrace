@@ -185,9 +185,7 @@ class D3DRetracer(Retracer):
                 print r'        d3d11Dumper.unbindDevice(_this);'
                 print r'    }'
             else:
-                print r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_IMMEDIATE) {'
-                print r'        d3d11Dumper.bindDevice(_this);'
-                print r'    }'
+                print r'    d3d11Dumper.bindDevice(_this);'
 
         # intercept private interfaces
         if method.name == 'QueryInterface':
