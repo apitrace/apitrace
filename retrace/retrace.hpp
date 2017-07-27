@@ -123,6 +123,12 @@ extern bool markers;
  */
 extern bool snapshotMRT;
 
+
+/**
+ * Whether to include alpha in snapshots.
+ */
+extern bool snapshotAlpha;
+
 /**
  * Whether to force windowed. Recommeded, as there is no guarantee that the
  * original display mode is available.

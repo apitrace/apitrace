@@ -36,18 +36,11 @@ namespace image {
     class Image;
 }
 
-namespace retrace {
-    extern int verbosity;
-}
-
 
 static void
-actuallyWritePNG(const os::String& filename, image::Image *image) {
-    // Alpha channel often has bogus data, so strip it when writing
-    // PNG images to disk to simplify visualization.
-    bool strip_alpha = true;
-
-    if (image->writePNG(filename, strip_alpha) &&
+actuallyWritePNG(const os::String& filename, image::Image *image)
+{
+    if (image->writePNG(filename, !retrace::snapshotAlpha) &&
         retrace::verbosity >= 0) {
         std::cout << "Wrote " << filename << "\n";
     }

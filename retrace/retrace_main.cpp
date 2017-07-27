@@ -77,6 +77,7 @@ int verbosity = 0;
 unsigned debug = 1;
 bool markers = false;
 bool snapshotMRT = false;
+bool snapshotAlpha = false;
 bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
@@ -654,6 +655,7 @@ usage(const char *argv0) {
         "      --sb                use a single buffer visual\n"
         "  -m, --mrt               dump all MRTs and depth/stencil\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
+        "      --snapshot-alpha    Include alpha channel in snapshots.\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
@@ -684,9 +686,10 @@ enum {
     PLMETRICS_OPT,
     GENPASS_OPT,
     SB_OPT,
-    SNAPSHOT_FORMAT_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
+    SNAPSHOT_ALPHA_OPT,
+    SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
     DUMP_FORMAT_OPT,
     MARKERS_OPT
@@ -721,10 +724,11 @@ longOptions[] = {
     {"list-metrics", no_argument, 0, PLMETRICS_OPT},
     {"gen-passes", no_argument, 0, GENPASS_OPT},
     {"sb", no_argument, 0, SB_OPT},
-    {"snapshot-prefix", required_argument, 0, 's'},
-    {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot", required_argument, 0, 'S'},
+    {"snapshot-alpha", no_argument, 0, SNAPSHOT_ALPHA_OPT},
+    {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
+    {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
@@ -852,6 +856,9 @@ int main(int argc, char **argv)
                     }
                 }
             }
+            break;
+        case SNAPSHOT_ALPHA_OPT:
+            retrace::snapshotAlpha = true;
             break;
         case SNAPSHOT_FORMAT_OPT:
             if (strcmp(optarg, "RGB") == 0)
