@@ -988,6 +988,15 @@ getDrawBufferImage(int n)
 {
     Context context;
 
+    GLenum format = GL_RGB;
+    GLenum type = GL_UNSIGNED_BYTE;
+    if (context.ES) {
+        format = GL_RGBA;
+        if (n < 0 && !context.NV_read_depth_stencil) {
+            return nullptr;
+        }
+    }
+
     GLenum framebuffer_binding;
     GLenum framebuffer_target;
     if (context.read_framebuffer_object) {
@@ -1002,13 +1011,12 @@ getDrawBufferImage(int n)
         glGetIntegerv(framebuffer_binding, &draw_framebuffer);
     }
 
-    GLenum format = GL_RGB;
-    GLenum type = GL_UNSIGNED_BYTE;
-    if (context.ES) {
+    /*
+     * TODO: Use alpha for non-FBOs once we are able to match the traced
+     * visuals.
+     */
+    if (draw_framebuffer) {
         format = GL_RGBA;
-        if ((n < 0) && !context.NV_read_depth_stencil) {
-            return NULL;
-        }
     }
 
     if (n == -2) {
