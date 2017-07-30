@@ -58,7 +58,7 @@ target_link_libraries (retrace_common
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
 )
-if (NOT ANDROID AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
@@ -171,74 +171,28 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
-    install (TARGETS eglretrace RUNTIME DESTINATION bin) 
+    install (TARGETS eglretrace RUNTIME DESTINATION bin)
 endif ()
 
-if (ENABLE_EGL)
-    if (ENABLE_WAFFLE)
-        add_executable (eglretrace
-            glws_waffle.cpp
-        )
+if (ENABLE_EGL AND ENABLE_WAFFLE)
+    add_executable (eglretrace
+        glws_waffle.cpp
+    )
 
-        add_dependencies (eglretrace glproc)
-        include_directories (${Waffle_INCLUDE_DIRS})
+    add_dependencies (eglretrace glproc)
+    include_directories (${Waffle_INCLUDE_DIRS})
 
-        target_link_libraries (eglretrace
-            retrace_common
-            glretrace_common
-            glhelpers
-            glproc_egl
-            ${Waffle_LIBRARIES}
-            ${X11_X11_LIB}
-            ${CMAKE_THREAD_LIBS_INIT}
-            ${CMAKE_DL_LIBS}
-        )
-        install (TARGETS eglretrace RUNTIME DESTINATION bin)
-    elseif (ANDROID AND (DEFINED ANDROID_SDK))
-        add_library(retrace SHARED glws_egl_android.cpp)
-
-        target_link_libraries (retrace
-            retrace_common
-            glretrace_common
-            glhelpers
-            glproc_egl
-            android
-        )
-        set (ANDROID_BUILD_DIR "${CMAKE_BINARY_DIR}/android-build")
-
-        configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/android/local.properties.in" "${CMAKE_BINARY_DIR}/local.properties")
-
-        add_custom_target (copyAndroidStuff
-                COMMAND ${CMAKE_COMMAND} -E remove_directory "${ANDROID_BUILD_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/android" "${ANDROID_BUILD_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${ANDROID_BUILD_DIR}/libs/${ANDROID_NDK_ABI_NAME}"
-
-                # FIXME According to android.toolchain.cmake decumentation the
-                # android libs should be putted to
-                # ${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME} but
-                # android.toolchain.cmake sees LIBRARY_OUTPUT_PATH_ROOT as
-                # CMAKE_SOURCE_DIR and this CMakeLists.txt file sees it as
-                # ANDROID_BUILD_DIR ;-( so, I must use
-                # ${CMAKE_SOURCE_DIR}/libs/${ANDROID_NDK_ABI_NAME} insted of
-                # ${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME} ...
-
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/libs/${ANDROID_NDK_ABI_NAME}/libgnustl_shared.so" "${ANDROID_BUILD_DIR}/libs/${ANDROID_NDK_ABI_NAME}/"
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/libs/${ANDROID_NDK_ABI_NAME}/libretrace.so" "${ANDROID_BUILD_DIR}/libs/${ANDROID_NDK_ABI_NAME}/"
-                DEPENDS retrace
-        )
-
-        add_custom_target (retraceAPK
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/local.properties" "${ANDROID_BUILD_DIR}/local.properties"
-                COMMAND "${CMAKE_SOURCE_DIR}/thirdparty/gradlew/gradlew" "assembleDebug"
-                DEPENDS copyAndroidStuff
-                DEPENDS "${CMAKE_BINARY_DIR}/local.properties"
-                WORKING_DIRECTORY "${ANDROID_BUILD_DIR}")
-
-        add_custom_target (installRetraceAPK
-                COMMAND "${CMAKE_SOURCE_DIR}/thirdparty/gradlew/gradlew" "installDebug"
-                DEPENDS retraceAPK
-                WORKING_DIRECTORY "${ANDROID_BUILD_DIR}")
-    endif ()
+    target_link_libraries (eglretrace
+        retrace_common
+        glretrace_common
+        glhelpers
+        glproc_egl
+        ${Waffle_LIBRARIES}
+        ${X11_X11_LIB}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${CMAKE_DL_LIBS}
+    )
+    install (TARGETS eglretrace RUNTIME DESTINATION bin)
 endif ()
 
 if (WIN32)

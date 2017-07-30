@@ -3,4 +3,3 @@ d3dretrace_dxgi.cpp
 dxgistate_so.cpp
 glretrace_gl.cpp
 glstate_params.cpp
-!android/java/apitrace
