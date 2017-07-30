@@ -24,10 +24,12 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <stdio.h>
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include "state_writer.hpp"
 #include "com_ptr.hpp"
@@ -52,21 +54,17 @@ dumpShader(StateWriter &writer, const char *name, T *pShader) {
 
     hr = pShader->GetFunction(NULL, &SizeOfData);
     if (SUCCEEDED(hr)) {
-        void *pData;
-        pData = malloc(SizeOfData);
-        if (pData) {
-            hr = pShader->GetFunction(pData, &SizeOfData);
+        assert(SizeOfData % sizeof(DWORD) == 0);
+        std::unique_ptr<DWORD []> pData(new DWORD[SizeOfData / sizeof(DWORD)]);
+        hr = pShader->GetFunction(pData.get(), &SizeOfData);
+        if (SUCCEEDED(hr)) {
+            com_ptr<IDisassemblyBuffer> pDisassembly;
+            hr = DisassembleShader(pData.get(), &pDisassembly);
             if (SUCCEEDED(hr)) {
-                com_ptr<IDisassemblyBuffer> pDisassembly;
-                hr = DisassembleShader((const DWORD *)pData, &pDisassembly);
-                if (SUCCEEDED(hr)) {
-                    writer.beginMember(name);
-                    writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-                    writer.endMember();
-                }
-
+                writer.beginMember(name);
+                writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+                writer.endMember();
             }
-            free(pData);
         }
     }
 }

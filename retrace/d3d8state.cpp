@@ -24,10 +24,12 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <stdio.h>
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include "state_writer.hpp"
 #include "com_ptr.hpp"
@@ -83,20 +85,17 @@ dumpShader(StateWriter &writer, IDirect3DDevice8 *pDevice, const char *name) {
 
     hr = getter.GetShaderFunction(pDevice, dwShader, NULL, &SizeOfData);
     if (SUCCEEDED(hr)) {
-        void *pData;
-        pData = malloc(SizeOfData);
-        if (pData) {
-            hr = getter.GetShaderFunction(pDevice, dwShader, pData, &SizeOfData);
+        assert(SizeOfData % sizeof(DWORD) == 0);
+        std::unique_ptr<DWORD []> pData(new DWORD[SizeOfData / sizeof(DWORD)]);
+        hr = getter.GetShaderFunction(pDevice, dwShader, pData.get(), &SizeOfData);
+        if (SUCCEEDED(hr)) {
+            com_ptr<IDisassemblyBuffer> pDisassembly;
+            hr = DisassembleShader(pData.get(), &pDisassembly);
             if (SUCCEEDED(hr)) {
-                com_ptr<IDisassemblyBuffer> pDisassembly;
-                hr = DisassembleShader((const DWORD *)pData, &pDisassembly);
-                if (SUCCEEDED(hr)) {
-                    writer.beginMember(name);
-                    writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-                    writer.endMember();
-                }
+                writer.beginMember(name);
+                writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+                writer.endMember();
             }
-            free(pData);
         }
     }
 }
