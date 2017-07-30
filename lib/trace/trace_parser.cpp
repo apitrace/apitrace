@@ -532,7 +532,7 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
                 std::cerr << "\tCALL_FLAGS\n";
             }
             {
-                uint flags = read_uint();
+                unsigned flags = read_uint();
                 if (flags & FLAG_FAKE) {
                     call->flags |= CALL_FLAG_FAKE;
                 }
