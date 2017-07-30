@@ -184,17 +184,20 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         #OpaqueValueDeserializer().visit(handle.type, lvalue, rvalue);
         self.visit(handle.type, lvalue, rvalue);
         new_lvalue = lookupHandle(handle, lvalue)
+        shaderObject = new_lvalue.startswith('_program_map') or new_lvalue.startswith('_shader_map')
+        if shaderObject:
+            print 'if (glretrace::supportsARBShaderObjects) {'
+            print '    if (retrace::verbosity >= 2) {'
+            print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(_handleARB_map[%s]) << "\\n";' % (handle.name, lvalue, lvalue)
+            print '    }'
+            print '    %s = _handleARB_map[%s];' % (lvalue, lvalue)
+            print '} else {'
         print '    if (retrace::verbosity >= 2) {'
         print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
         print '    }'
-        if (new_lvalue.startswith('_program_map') or new_lvalue.startswith('_shader_map')):
-            print 'if (glretrace::supportsARBShaderObjects) {'
-            print '    %s = _handleARB_map[%s];' % (lvalue, lvalue)
-            print '} else {'
-            print '    %s = %s;' % (lvalue, new_lvalue)
+        print '    %s = %s;' % (lvalue, new_lvalue)
+        if shaderObject:
             print '}'
-        else:
-            print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visitBlob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, blob, rvalue)
