@@ -145,12 +145,12 @@ class GlxTracer(GlTracer):
                     // problems.
                     GLint alignment = 4;
                     GLint row_stride = _align(width * 4, alignment);
-                    GLvoid * pixels = malloc(height * row_stride);
+                    std::unique_ptr<GLbyte[]> data(new GLbyte[height * row_stride]);
+                    GLvoid *pixels = data.get();
                     _glGetTexImage(target, level, format, type, pixels);
             '''
             self.emitFakeTexture2D()
             print r'''
-                    free(pixels);
                 }
             '''
 
@@ -159,6 +159,8 @@ if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
     print '#include <string.h>'
+    print
+    print '#include <memory>'
     print
     print '#include "trace_writer_local.hpp"'
     print
