@@ -52,10 +52,6 @@ private slots:
     void createTrace();
     void openTrace();
     void saveTrace();
-    void pullTrace();
-    void pushTrace();
-    void linkTrace();
-    void retraceOnAndroid(bool android);
     void replayStart();
     void replayProfile();
     void replayStop();
@@ -103,16 +99,14 @@ private slots:
     void slotFoundFrameStart(ApiTraceFrame *frame);
     void slotFoundFrameEnd(ApiTraceFrame *frame);
     void slotJumpToResult(ApiTraceCall *call);
-    void replayTrace(bool dumpState, bool dumpThumbnails);
     void updateSurfacesView();
 
 private:
     void initObjects();
     void initConnections();
-    void initRetraceConnections();
-
     void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
     void trimEvent();
     void updateSurfacesView(const ApiTraceState &state);
     void fillStateForFrame();
@@ -128,8 +122,6 @@ private:
 
     static void thumbnailCallback(void *object, int thumbnailIdx);
 
-    void linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile);
-    QString linkedAndroidTrace(const QString &localFile);
     void addSurface(const ApiTexture &image, QTreeWidgetItem *parent);
     void addSurface(const ApiFramebuffer &image, QTreeWidgetItem *parent);
     void addSurface(const ApiSurface &surface, const QString &label, QTreeWidgetItem *parent);
@@ -174,5 +166,4 @@ private:
     ApiTraceEvent *m_nonDefaultsLookupEvent;
 
     ProfileDialog* m_profileDialog;
-    QString m_androidFilePath;
 };

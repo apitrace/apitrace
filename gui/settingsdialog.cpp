@@ -1,8 +1,6 @@
 #include "settingsdialog.h"
 
-#include <QFileDialog>
 #include <QMessageBox>
-#include <QSettings>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent),
@@ -28,26 +26,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             SLOT(changeRegexp(const QString&)));
     connect(showFilterEdit, SIGNAL(textEdited(const QString &)),
             SLOT(regexpChanged(const QString&)));
-
-    connect(adbPathEdit, SIGNAL(textEdited(const QString &)),
-            SLOT(adbPathChanged(const QString&)));
-
-
-    {
-        QSettings s;
-        s.beginGroup(QLatin1String("android"));
-        adbPathEdit->setText(s.value(QLatin1String("adbPath"), adbPathEdit->text()).toString());
-        stdoutPort->setValue(s.value(QLatin1String("stdoutPort"), stdoutPort->value()).toInt());
-        stderrPort->setValue(s.value(QLatin1String("stderrPort"), stderrPort->value()).toInt());
-        s.endGroup();
-    }
-
-    connect(chooseAdbPath, SIGNAL(clicked()),
-            SLOT(chooseAdbPathPushed()));
-    connect(stdoutPort, SIGNAL(valueChanged(int)),
-            SLOT(stdoutPortChanged(int)));
-    connect(stderrPort, SIGNAL(valueChanged(int)),
-            SLOT(stderrPortChanged(int)));
 
     showFilterCB->setCurrentIndex(0);
     showFilterEdit->setText(m_showFilters.constBegin().value().pattern());
@@ -159,44 +137,6 @@ void SettingsDialog::regexpChanged(const QString &pattern)
         showFilterCB->setCurrentIndex(customIndex);
         showFilterCB->blockSignals(false);
     }
-}
-
-void SettingsDialog::adbPathChanged(const QString &adbPath)
-{
-    QSettings s;
-    s.beginGroup(QLatin1String("android"));
-    s.setValue(QLatin1String("adbPath"), adbPath);
-    s.endGroup();
-}
-
-void SettingsDialog::chooseAdbPathPushed()
-{
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Choose adb path"), adbPathEdit->text(), QLatin1String("ADB (adb"
-#ifdef Q_OS_WIN
-                                                    ".exe"
-#endif
-                                                    ")"));
-    if (!fileName.isEmpty()) {
-        adbPathEdit->setText(fileName);
-        adbPathChanged(fileName);
-    }
-}
-
-void SettingsDialog::stdoutPortChanged(int port)
-{
-    QSettings s;
-    s.beginGroup(QLatin1String("android"));
-    s.setValue(QLatin1String("stdoutPort"), port);
-    s.endGroup();
-}
-
-void SettingsDialog::stderrPortChanged(int port)
-{
-    QSettings s;
-    s.beginGroup(QLatin1String("android"));
-    s.setValue(QLatin1String("stderrPort"), port);
-    s.endGroup();
 }
 
 void SettingsDialog::setFilterModel(ApiTraceFilter *filter)

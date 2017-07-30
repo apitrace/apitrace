@@ -1,25 +1,23 @@
-<RCC>
-    <qresource prefix="/">
-        <file>resources/application-exit.png</file>
-        <file>resources/dialog-close.png</file>
-        <file>resources/dialog-information.png</file>
-        <file>resources/document-edit.png</file>
-        <file>resources/document-new.png</file>
-        <file>resources/document-open.png</file>
-        <file>resources/edit-find.png</file>
-        <file>resources/edit-undo.png</file>
-        <file>resources/emblem-locked.png</file>
-        <file>resources/go-bottom.png</file>
-        <file>resources/go-down-search.png</file>
-        <file>resources/go-jump.png</file>
-        <file>resources/go-top.png</file>
-        <file>resources/go-up-search.png</file>
-        <file>resources/media-playback-start.png</file>
-        <file>resources/media-playback-stop.png</file>
-        <file>resources/media-record.png</file>
-        <file>resources/script-error.png</file>
-        <file>resources/glreference.tsv</file>
-        <file>resources/android.png</file>
-        <file>resources/android-setup.png</file>
-    </qresource>
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>resources/application-exit.png</file>
+    <file>resources/dialog-close.png</file>
+    <file>resources/dialog-information.png</file>
+    <file>resources/document-edit.png</file>
+    <file>resources/document-new.png</file>
+    <file>resources/document-open.png</file>
+    <file>resources/edit-find.png</file>
+    <file>resources/edit-undo.png</file>
+    <file>resources/emblem-locked.png</file>
+    <file>resources/go-bottom.png</file>
+    <file>resources/go-down-search.png</file>
+    <file>resources/go-jump.png</file>
+    <file>resources/go-top.png</file>
+    <file>resources/go-up-search.png</file>
+    <file>resources/media-playback-start.png</file>
+    <file>resources/media-playback-stop.png</file>
+    <file>resources/media-record.png</file>
+    <file>resources/script-error.png</file>
+    <file>resources/glreference.tsv</file>
+</qresource>
 </RCC>

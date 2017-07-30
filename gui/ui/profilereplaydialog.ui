@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>353</width>
-    <height>202</height>
+    <height>165</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -53,16 +53,6 @@
        <widget class="QCheckBox" name="pixelsDrawnCB">
         <property name="text">
          <string>Pixels drawn per call</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="memoryUsageCB">
-        <property name="text">
-         <string>Memory usage</string>
         </property>
         <property name="checked">
          <bool>true</bool>
