@@ -2917,11 +2917,11 @@ parameters = [
     ("glGet",	I,	1,	"GL_COPY_WRITE_BUFFER"),	# 0x8F37
     ("glGet",	I,	1,	"GL_MAX_IMAGE_UNITS"),	# 0x8F38
     ("glGet",	I,	1,	"GL_MAX_COMBINED_IMAGE_UNITS_AND_FRAGMENT_OUTPUTS"),	# 0x8F39
-    ("",	X,	1,	"GL_IMAGE_BINDING_NAME"),	# 0x8F3A
-    ("",	X,	1,	"GL_IMAGE_BINDING_LEVEL"),	# 0x8F3B
-    ("",	X,	1,	"GL_IMAGE_BINDING_LAYERED"),	# 0x8F3C
-    ("",	X,	1,	"GL_IMAGE_BINDING_LAYER"),	# 0x8F3D
-    ("",	X,	1,	"GL_IMAGE_BINDING_ACCESS"),	# 0x8F3E
+    ("",	I,	1,	"GL_IMAGE_BINDING_NAME"),	# 0x8F3A
+    ("",	I,	1,	"GL_IMAGE_BINDING_LEVEL"),	# 0x8F3B
+    ("",	B,	1,	"GL_IMAGE_BINDING_LAYERED"),	# 0x8F3C
+    ("",	I,	1,	"GL_IMAGE_BINDING_LAYER"),	# 0x8F3D
+    ("",	E,	1,	"GL_IMAGE_BINDING_ACCESS"),	# 0x8F3E
     ("",	X,	1,	"GL_DRAW_INDIRECT_BUFFER"),	# 0x8F3F
     ("",	X,	1,	"GL_DRAW_INDIRECT_UNIFIED_NV"),	# 0x8F40
     ("",	X,	1,	"GL_DRAW_INDIRECT_ADDRESS_NV"),	# 0x8F41
@@ -3100,7 +3100,7 @@ parameters = [
     ("",	X,	1,	"GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE"),	# 0x906B
     ("",	X,	1,	"GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY"),	# 0x906C
     ("glGet",	I,	1,	"GL_MAX_IMAGE_SAMPLES"),	# 0x906D
-    ("",	X,	1,	"GL_IMAGE_BINDING_FORMAT"),	# 0x906E
+    ("",	E,	1,	"GL_IMAGE_BINDING_FORMAT"),	# 0x906E
     ("",	X,	1,	"GL_RGB10_A2UI"),	# 0x906F
     ("",	X,	1,	"GL_PATH_FORMAT_SVG_NV"),	# 0x9070
     ("",	X,	1,	"GL_PATH_FORMAT_PS_NV"),	# 0x9071
