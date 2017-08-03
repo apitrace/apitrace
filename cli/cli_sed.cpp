@@ -54,9 +54,14 @@ usage(void)
         "                             separator.\n"
         "                             XXX: Only works for enums and strings.\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
+        "    --property=NAME=VALUE    Set a property\n"
     ;
 }
 
+
+enum {
+    PROPERTY_OPT = CHAR_MAX + 1,
+};
 
 const static char *
 shortOptions = "ho:e:";
@@ -65,6 +70,7 @@ const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"output", required_argument, 0, 'o'},
+    {"property", required_argument, 0, PROPERTY_OPT},
     {0, 0, 0, 0}
 };
 
@@ -179,7 +185,10 @@ typedef std::list<Replacer> Replacements;
 
 
 static int
-sed_trace(Replacements &replacements, const char *inFileName, std::string &outFileName)
+sed_trace(Replacements &replacements,
+          const trace::Properties &extraProperties,
+          const char *inFileName,
+          std::string &outFileName)
 {
     trace::Parser p;
 
@@ -196,8 +205,13 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
         outFileName = std::string(base.str()) + std::string("-sed.trace");
     }
 
+    trace::Properties properties(p.getProperties());
+    for (auto & kv : extraProperties) {
+        properties[kv.first] = kv.second;
+    }
+
     trace::Writer writer;
-    if (!writer.open(outFileName.c_str(), p.getVersion(), p.getProperties())) {
+    if (!writer.open(outFileName.c_str(), p.getVersion(), properties)) {
         std::cerr << "error: failed to create " << outFileName << "\n";
         return 1;
     }
@@ -301,6 +315,7 @@ static int
 command(int argc, char *argv[])
 {
     Replacements replacements;
+    trace::Properties extraProperties;
     std::string outFileName;
 
     int opt;
@@ -316,7 +331,19 @@ command(int argc, char *argv[])
             if (!parseSubstOpt(replacements, optarg)) {
                 std::cerr << "error: invalid replacement pattern `" << optarg << "`\n";
             }
-            break;
+            return 1;
+        case PROPERTY_OPT:
+            {
+               const char *sep = strchr(optarg, '=');
+               if (sep == nullptr) {
+                   std::cerr << "error: bad property `" << optarg << "`\n";
+                   return 1;
+               }
+               std::string name(static_cast<const char *>(optarg), sep);
+               std::string value(sep + 1);
+               extraProperties[name] = value;
+               break;
+            }
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -340,7 +367,7 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    return sed_trace(replacements, argv[optind], outFileName);
+    return sed_trace(replacements, extraProperties, argv[optind], outFileName);
 }
 
 
