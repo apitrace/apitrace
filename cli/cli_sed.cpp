@@ -330,8 +330,9 @@ command(int argc, char *argv[])
         case 'e':
             if (!parseSubstOpt(replacements, optarg)) {
                 std::cerr << "error: invalid replacement pattern `" << optarg << "`\n";
+                return 1;
             }
-            return 1;
+            break;
         case PROPERTY_OPT:
             {
                const char *sep = strchr(optarg, '=');
