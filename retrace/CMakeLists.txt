@@ -10,6 +10,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
     ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
+    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
 add_definitions (-DRETRACE)
@@ -64,7 +65,7 @@ if (NOT ANDROID AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr winmm)
+    target_link_libraries (retrace_common dxerr mhook winmm)
 endif ()
 
 

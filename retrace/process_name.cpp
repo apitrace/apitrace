@@ -73,6 +73,91 @@ setProcessName(const char *processName)
 }
 
 
+#elif defined(_WIN32)
+
+#include <windows.h>
+#include "mhook.h"
+
+#ifdef _MSC_VER
+#define ReturnAddress() _ReturnAddress()
+#else
+#define ReturnAddress() __builtin_return_address(0)
+#endif
+
+typedef DWORD (WINAPI *PFNGETMODULEFILENAMEA)(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
+static PFNGETMODULEFILENAMEA pfnGetModuleFileNameA = &GetModuleFileNameA;
+
+static inline HMODULE
+GetModuleFromAddress(PVOID pAddress)
+{
+    HMODULE hModule = nullptr;
+    BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                  GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                  (LPCTSTR)pAddress,
+                                  &hModule);
+    return bRet ? hModule : nullptr;
+}
+
+static std::string g_processName;
+
+
+static DWORD WINAPI
+MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
+{
+    if (hModule == nullptr) {
+#ifndef NDEBUG
+        void *pCallerAddr = ReturnAddress();
+        HMODULE hCallerModule = GetModuleFromAddress(pCallerAddr);
+        char szCaller[MAX_PATH];
+        DWORD dwRet = pfnGetModuleFileNameA(hCallerModule, szCaller, sizeof szCaller);
+        assert(dwRet > 0);
+
+        std::cerr << "GetModuleFileNameA(" << hModule << ") from " << szCaller << "\n";
+#endif
+
+        assert(!g_processName.empty());
+        assert(nSize != 0);
+
+        size_t len = g_processName.length();
+        if (len < nSize) {
+            memcpy(lpFilename, g_processName.data(), len);
+            lpFilename[len] = 0;
+            SetLastError(ERROR_SUCCESS);
+            return len;
+        } else {
+            memcpy(lpFilename, g_processName.data(), nSize - 1);
+            lpFilename[nSize - 1] = 0;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return nSize;
+        }
+    }
+
+    return pfnGetModuleFileNameA(hModule, lpFilename, nSize);
+}
+
+
+void
+setProcessName(const char *processName)
+{
+    g_processName = processName;
+
+    static BOOL bHooked = FALSE;
+    if (!bHooked) {
+        bHooked = TRUE;
+
+        LPVOID lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetModuleFileNameA");
+        if (lpOrigAddress) {
+            LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameA;
+            LPVOID lpRealAddress = lpOrigAddress;
+            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+                std::cerr << "error: failed to GetModuleFileNameA\n";
+            }
+            pfnGetModuleFileNameA = (PFNGETMODULEFILENAMEA)lpRealAddress;
+        }
+    }
+}
+
+
 #else
 
 void
