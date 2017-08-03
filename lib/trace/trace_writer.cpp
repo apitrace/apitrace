@@ -58,7 +58,8 @@ Writer::close(void) {
 }
 
 bool
-Writer::open(const char *filename) {
+Writer::open(const char *filename, unsigned semanticVersion)
+{
     close();
 
     m_file = createSnappyStream(filename);
@@ -74,7 +75,9 @@ Writer::open(const char *filename) {
     frames.clear();
 
     _writeUInt(TRACE_VERSION);
-    _writeUInt(TRACE_VERSION); // semantic version
+
+    assert(semanticVersion <= TRACE_VERSION);
+    _writeUInt(semanticVersion);
 
     return true;
 }

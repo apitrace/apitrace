@@ -139,7 +139,7 @@ LocalWriter::open(void) {
 
     os::log("apitrace: tracing to %s\n", lpFileName);
 
-    if (!Writer::open(lpFileName)) {
+    if (!Writer::open(lpFileName, TRACE_VERSION)) {
         os::log("apitrace: error: failed to open %s\n", lpFileName);
         os::abort();
     }

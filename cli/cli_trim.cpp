@@ -113,7 +113,7 @@ trim_trace(const char *filename, struct trim_options *options)
     }
 
     trace::Writer writer;
-    if (!writer.open(options->output.c_str())) {
+    if (!writer.open(options->output.c_str(), p.getVersion())) {
         std::cerr << "error: failed to create " << options->output << "\n";
         return 1;
     }

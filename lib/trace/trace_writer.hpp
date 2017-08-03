@@ -54,7 +54,7 @@ namespace trace {
         Writer();
         ~Writer();
 
-        bool open(const char *filename);
+        bool open(const char *filename, unsigned semanticVersion);
         void close(void);
 
         inline void beginProperties(void) {}

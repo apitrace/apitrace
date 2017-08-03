@@ -356,11 +356,11 @@ void SaverThread::run()
         callIndexMap.insert(call->index(), call);
     }
 
-    trace::Writer writer;
-    writer.open(m_writeFileName.toLocal8Bit());
-
     trace::Parser parser;
     parser.open(m_readFileName.toLocal8Bit());
+
+    trace::Writer writer;
+    writer.open(m_writeFileName.toLocal8Bit(), parser.getVersion());
 
     trace::Call *call;
     while ((call = parser.parse_call())) {
