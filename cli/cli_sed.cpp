@@ -197,7 +197,7 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
     }
 
     trace::Writer writer;
-    if (!writer.open(outFileName.c_str(), p.getVersion())) {
+    if (!writer.open(outFileName.c_str(), p.getVersion(), p.getProperties())) {
         std::cerr << "error: failed to create " << outFileName << "\n";
         return 1;
     }

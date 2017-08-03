@@ -54,12 +54,10 @@ namespace trace {
         Writer();
         ~Writer();
 
-        bool open(const char *filename, unsigned semanticVersion);
+        bool open(const char *filename,
+                  unsigned semanticVersion,
+                  const Properties &properties);
         void close(void);
-
-        inline void beginProperties(void) {}
-        void writeProperty(const char *name, const char *value);
-        void endProperties(void);
 
         unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
@@ -107,6 +105,11 @@ namespace trace {
         void writePointer(unsigned long long addr);
 
         void writeCall(Call *call);
+
+    private:
+        inline void beginProperties(void) {}
+        void writeProperty(const char *name, const char *value);
+        void endProperties(void);
 
     protected:
         void inline _write(const void *sBuffer, size_t dwBytesToWrite);

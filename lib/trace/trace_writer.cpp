@@ -58,7 +58,9 @@ Writer::close(void) {
 }
 
 bool
-Writer::open(const char *filename, unsigned semanticVersion)
+Writer::open(const char *filename,
+             unsigned semanticVersion,
+             const Properties &properties)
 {
     close();
 
@@ -78,6 +80,12 @@ Writer::open(const char *filename, unsigned semanticVersion)
 
     assert(semanticVersion <= TRACE_VERSION);
     _writeUInt(semanticVersion);
+
+    beginProperties();
+    for (auto & kv : properties) {
+        writeProperty(kv.first.c_str(), kv.second.c_str());
+    }
+    endProperties();
 
     return true;
 }

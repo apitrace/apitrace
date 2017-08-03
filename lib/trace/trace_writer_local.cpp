@@ -139,17 +139,16 @@ LocalWriter::open(void) {
 
     os::log("apitrace: tracing to %s\n", lpFileName);
 
-    if (!Writer::open(lpFileName, TRACE_VERSION)) {
+    Properties properties;
+    os::String processName = os::getProcessName();
+    properties["process.name"] = processName;
+
+    if (!Writer::open(lpFileName, TRACE_VERSION, properties)) {
         os::log("apitrace: error: failed to open %s\n", lpFileName);
         os::abort();
     }
 
     pid = os::getCurrentProcessId();
-
-    Writer::beginProperties();
-    os::String processName = os::getProcessName();
-    Writer::writeProperty("process.name", processName);
-    Writer::endProperties();
 
 #if 0
     // For debugging the exception handler

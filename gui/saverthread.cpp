@@ -360,7 +360,7 @@ void SaverThread::run()
     parser.open(m_readFileName.toLocal8Bit());
 
     trace::Writer writer;
-    writer.open(m_writeFileName.toLocal8Bit(), parser.getVersion());
+    writer.open(m_writeFileName.toLocal8Bit(), parser.getVersion(), parser.getProperties());
 
     trace::Call *call;
     while ((call = parser.parse_call())) {

@@ -589,5 +589,8 @@ public:
 };
 
 
+typedef std::map<std::string, std::string> Properties;
+
+
 } /* namespace trace */
 

@@ -45,9 +45,6 @@ struct ParseBookmark
 };
 
 
-typedef std::map<std::string, std::string> Properties;
-
-
 // Parser interface
 class AbstractParser
 {
