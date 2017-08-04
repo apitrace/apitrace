@@ -122,12 +122,6 @@ setProcessName(const char *processName)
 #include <windows.h>
 #include "mhook.h"
 
-#ifdef _MSC_VER
-#define ReturnAddress() _ReturnAddress()
-#else
-#define ReturnAddress() __builtin_return_address(0)
-#endif
-
 typedef DWORD (WINAPI *PFNGETMODULEFILENAMEA)(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
 static PFNGETMODULEFILENAMEA pfnGetModuleFileNameA = &GetModuleFileNameA;
 

@@ -56,6 +56,8 @@
 #include "inject.h"
 #include "mhook.h"
 
+#include "os_symbols.hpp"
+
 
 static int VERBOSITY = 0;
 #define NOOP 0
@@ -617,12 +619,6 @@ GetModuleFromAddress(PVOID pAddress)
     return bRet ? hModule : nullptr;
 }
 
-
-#ifdef _MSC_VER
-#define ReturnAddress() _ReturnAddress()
-#else
-#define ReturnAddress() __builtin_return_address(0)
-#endif
 
 static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
