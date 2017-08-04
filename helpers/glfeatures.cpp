@@ -349,6 +349,9 @@ Features::load(const Profile & profile, const Extensions & ext)
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
 
     if (profile.desktop()) {
+        ARB_color_buffer_float = profile.versionGreaterOrEqual(3, 0) ||
+                                 ext.has("GL_ARB_color_buffer_float");
+
         // GL_EXT_texture3D uses different entrypoints
         texture_3d = profile.versionGreaterOrEqual(1, 2);
 

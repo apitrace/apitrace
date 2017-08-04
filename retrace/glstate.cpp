@@ -46,6 +46,7 @@ PixelPackState::PixelPackState(const Context &context)
     desktop = !context.ES;
     texture_3d = context.texture_3d;
     pixel_buffer_object = context.pixel_buffer_object;
+    color_buffer_float = context.ARB_color_buffer_float;
 
     // Start with default state
     pack_alignment = 4;
@@ -57,6 +58,7 @@ PixelPackState::PixelPackState(const Context &context)
     pack_skip_rows = 0;
     pack_swap_bytes = GL_FALSE;
     pixel_pack_buffer_binding = 0;
+    clamp_read_color = GL_FIXED_ONLY;
 
     // Get current state
     glGetIntegerv(GL_PACK_ALIGNMENT, &pack_alignment);
@@ -73,6 +75,9 @@ PixelPackState::PixelPackState(const Context &context)
     }
     if (pixel_buffer_object) {
         glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pixel_pack_buffer_binding);
+    }
+    if (color_buffer_float) {
+        glGetIntegerv(GL_CLAMP_READ_COLOR, &clamp_read_color);
     }
 
     // Reset state for compact images
@@ -91,6 +96,9 @@ PixelPackState::PixelPackState(const Context &context)
     if (pixel_buffer_object) {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     }
+    if (color_buffer_float) {
+        glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
+    }
 }
 
 PixelPackState::~PixelPackState() {
@@ -108,6 +116,9 @@ PixelPackState::~PixelPackState() {
     }
     if (pixel_buffer_object) {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_pack_buffer_binding);
+    }
+    if (color_buffer_float) {
+        glClampColor(GL_CLAMP_READ_COLOR, clamp_read_color);
     }
 }
 

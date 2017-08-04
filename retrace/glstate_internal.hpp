@@ -60,6 +60,7 @@ private:
     bool desktop;
     bool texture_3d;
     bool pixel_buffer_object;
+    bool color_buffer_float;
 
     // Pack state
     GLint pack_alignment;
@@ -71,6 +72,8 @@ private:
     GLint pack_skip_rows;
     GLint pack_swap_bytes;
     GLint pixel_pack_buffer_binding;
+
+    GLint clamp_read_color;
 };
 
 
