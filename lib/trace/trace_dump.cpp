@@ -254,7 +254,8 @@ void Dumper::visit(Backtrace & backtrace) {
     }
 }
 
-void Dumper::visit(Call *call) {
+void Dumper::visit(Call *call)
+{
     CallFlags callFlags = call->flags;
 
     if (!(dumpFlags & DUMP_FLAG_NO_CALL_NO)) {
@@ -266,7 +267,7 @@ void Dumper::visit(Call *call) {
 
     if (callFlags & CALL_FLAG_NON_REPRODUCIBLE) {
         os << strike;
-    } else if (callFlags & (CALL_FLAG_FAKE | CALL_FLAG_NO_SIDE_EFFECTS)) {
+    } else if (callFlags & CALL_FLAG_NO_SIDE_EFFECTS) {
         os << normal;
     } else {
         os << bold;
@@ -294,8 +295,15 @@ void Dumper::visit(Call *call) {
         _visit(call->ret);
     }
 
-    if (callFlags & CALL_FLAG_INCOMPLETE) {
-        os << " // " << red << "incomplete" << normal;
+    if (callFlags & (CALL_FLAG_FAKE |
+                     CALL_FLAG_INCOMPLETE)) {
+        os << " //";
+        if (callFlags & CALL_FLAG_FAKE) {
+            os << " " << "fake";
+        }
+        if (callFlags & CALL_FLAG_INCOMPLETE) {
+            os << " " << red << "incomplete" << normal;
+        }
     }
 
     if (!(dumpFlags & DUMP_FLAG_NO_MULTILINE)) {

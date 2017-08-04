@@ -139,7 +139,11 @@ LocalWriter::open(void) {
 
     os::log("apitrace: tracing to %s\n", lpFileName);
 
-    if (!Writer::open(lpFileName)) {
+    Properties properties;
+    os::String processName = os::getProcessName();
+    properties["process.name"] = processName;
+
+    if (!Writer::open(lpFileName, TRACE_VERSION, properties)) {
         os::log("apitrace: error: failed to open %s\n", lpFileName);
         os::abort();
     }
@@ -188,7 +192,9 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     assert(this_thread_num);
     unsigned thread_id = this_thread_num - 1;
     unsigned call_no = Writer::beginEnter(sig, thread_id);
-    if (!fake && os::backtrace_is_needed(sig->name)) {
+    if (fake) {
+        writeFlags(FLAG_FAKE);
+    } else if (os::backtrace_is_needed(sig->name)) {
         std::vector<RawStackFrame> backtrace = os::get_backtrace();
         beginBacktrace(backtrace.size());
         for (auto & frame : backtrace) {

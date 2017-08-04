@@ -10,6 +10,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
     ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
+    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
 add_definitions (-DRETRACE)
@@ -40,11 +41,13 @@ if (WIN32)
 endif ()
 
 add_library (retrace_common STATIC
+    json.cpp
+    process_name.hpp
+    process_name.cpp
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
-    json.cpp
     state_writer.cpp
     state_writer_json.cpp
     state_writer_ubjson.cpp
@@ -62,7 +65,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr winmm)
+    target_link_libraries (retrace_common dxerr mhook winmm)
 endif ()
 
 

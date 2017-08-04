@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2017 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,66 +23,31 @@
  *
  **************************************************************************/
 
-/*
- * Trace binary format definitions.
- *
- * See FORMAT.markdown for details.
- */
-
 #pragma once
 
-namespace trace {
+
+#ifdef _MSC_VER
+#define ReturnAddress() _ReturnAddress()
+#else
+#define ReturnAddress() __builtin_return_address(0)
+#endif
 
 
-#define TRACE_VERSION 6
+#include <string>
 
+#ifndef _WIN32
 
-enum Event {
-    EVENT_ENTER = 0,
-    EVENT_LEAVE,
-};
+#include <dlfcn.h>
 
-enum CallDetail {
-    CALL_END = 0,
-    CALL_ARG,
-    CALL_RET,
-    CALL_THREAD,
-    CALL_BACKTRACE,
-    CALL_FLAGS,
-};
+inline std::string
+getModuleFromAddress(const void *address)
+{
+    Dl_info info;
+    if (dladdr(address, &info)) {
+        return info.dli_fname;
+    }
+    return "";
+}
 
-enum Type {
-    TYPE_NULL = 0,
-    TYPE_FALSE,
-    TYPE_TRUE,
-    TYPE_SINT,
-    TYPE_UINT,
-    TYPE_FLOAT,
-    TYPE_DOUBLE,
-    TYPE_STRING,
-    TYPE_BLOB,
-    TYPE_ENUM,
-    TYPE_BITMASK,
-    TYPE_ARRAY,
-    TYPE_STRUCT,
-    TYPE_OPAQUE,
-    TYPE_REPR,
-    TYPE_WSTRING,
-};
-
-enum BacktraceDetail {
-    BACKTRACE_END = 0,
-    BACKTRACE_MODULE,
-    BACKTRACE_FUNCTION,
-    BACKTRACE_FILENAME,
-    BACKTRACE_LINENUMBER,
-    BACKTRACE_OFFSET,
-};
-
-enum {
-    FLAG_FAKE = (1 << 0),
-};
-
-
-} /* namespace trace */
+#endif
 

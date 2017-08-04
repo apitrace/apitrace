@@ -13,6 +13,7 @@ add_convenience_library (common
     trace_file_zlib.cpp
     trace_file_brotli.cpp
     trace_file_snappy.cpp
+    trace_format.hpp
     trace_model.cpp
     trace_parser.cpp
     trace_parser_flags.cpp

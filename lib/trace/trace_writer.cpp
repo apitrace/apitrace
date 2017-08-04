@@ -58,7 +58,10 @@ Writer::close(void) {
 }
 
 bool
-Writer::open(const char *filename) {
+Writer::open(const char *filename,
+             unsigned semanticVersion,
+             const Properties &properties)
+{
     close();
 
     m_file = createSnappyStream(filename);
@@ -74,6 +77,15 @@ Writer::open(const char *filename) {
     frames.clear();
 
     _writeUInt(TRACE_VERSION);
+
+    assert(semanticVersion <= TRACE_VERSION);
+    _writeUInt(semanticVersion);
+
+    beginProperties();
+    for (auto & kv : properties) {
+        writeProperty(kv.first.c_str(), kv.second.c_str());
+    }
+    endProperties();
 
     return true;
 }
@@ -168,6 +180,30 @@ void Writer::writeStackFrame(const RawStackFrame *frame) {
         _writeByte(trace::BACKTRACE_END);
         frames[frame->id] = true;
     }
+}
+
+void
+Writer::writeFlags(unsigned flags) {
+    if (flags) {
+        _writeByte(trace::CALL_FLAGS);
+        _writeUInt(flags);
+    }
+}
+
+void
+Writer::writeProperty(const char *name, const char *value)
+{
+    assert(name);
+    assert(strlen(name));
+    assert(value);
+    _writeString(name);
+    _writeString(value);
+}
+
+void
+Writer::endProperties(void)
+{
+    _writeUInt(0);  // zero-length string
 }
 
 unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
@@ -283,23 +319,11 @@ void Writer::writeWString(const wchar_t *str, size_t len) {
         Writer::writeNull();
         return;
     }
-    /* XXX: Encode wide-strings as ASCII for now, to avoid introducing a trace format version bump. */
-#if 0
     _writeByte(trace::TYPE_WSTRING);
-    size_t len = wcslen(str);
     _writeUInt(len);
     for (size_t i = 0; i < len; ++i) {
         _writeUInt(str[i]);
     }
-#else
-    _writeByte(trace::TYPE_STRING);
-    _writeUInt(len);
-    for (size_t i = 0; i < len; ++i) {
-        wchar_t wc = str[i];
-        char c = wc >= 0 && wc < 0x80 ? (char)wc : '?';
-        _writeByte(c);
-    }
-#endif
 }
 
 void Writer::writeWString(const wchar_t *str) {

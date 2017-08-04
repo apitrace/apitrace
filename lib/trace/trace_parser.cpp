@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <memory>
+
 #include "trace_file.hpp"
 #include "trace_dump.hpp"
 #include "trace_parser.hpp"
@@ -41,12 +43,6 @@ namespace trace {
 
 
 Parser::Parser() {
-    file = NULL;
-    next_call_no = 0;
-    version = 0;
-    api = API_UNKNOWN;
-
-    glGetErrorSig = NULL;
 }
 
 
@@ -69,7 +65,18 @@ bool Parser::open(const char *filename) {
         file = NULL;
         return false;
     }
+
+    semanticVersion = version;
+    if (version >= 6) {
+        semanticVersion = read_uint();
+        assert(semanticVersion <= version);
+    }
+
     api = API_UNKNOWN;
+
+    if (version >= 6) {
+        parseProperties();
+    }
 
     return true;
 }
@@ -98,6 +105,8 @@ void Parser::close(void) {
         delete file;
         file = NULL;
     }
+
+    properties.clear();
 
     deleteAll(calls);
 
@@ -168,6 +177,20 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
     deleteAll(calls);
 }
 
+void Parser::parseProperties(void)
+{
+    if (TRACE_VERBOSE) {
+        std::cerr << "\tPROPERTIES\n";
+    }
+    while (true) {
+        std::unique_ptr<char []> name(read_string());
+        if (name[0] == '\0') {
+            break;
+        }
+        std::unique_ptr<char []> value(read_string());
+        properties[name.get()] = value.get();
+    }
+}
 
 Call *Parser::parse_call(Mode mode) {
     do {
@@ -190,7 +213,6 @@ Call *Parser::parse_call(Mode mode) {
                 return call;
             }
             break;
-
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -504,6 +526,17 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
                 std::cerr << "\tCALL_BACKTRACE\n";
             }
             parse_call_backtrace(call, mode);
+            break;
+        case trace::CALL_FLAGS:
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_FLAGS\n";
+            }
+            {
+                unsigned flags = read_uint();
+                if (flags & FLAG_FAKE) {
+                    call->flags |= CALL_FLAG_FAKE;
+                }
+            }
             break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
@@ -943,7 +976,7 @@ void Parser::scan_wstring() {
 }
 
 
-const char * Parser::read_string(void) {
+char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {

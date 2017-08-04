@@ -54,7 +54,9 @@ namespace trace {
         Writer();
         ~Writer();
 
-        bool open(const char *filename);
+        bool open(const char *filename,
+                  unsigned semanticVersion,
+                  const Properties &properties);
         void close(void);
 
         unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
@@ -72,6 +74,8 @@ namespace trace {
         void beginBacktrace(unsigned num_frames);
         void writeStackFrame(const RawStackFrame *frame);
         inline void endBacktrace(void) {}
+
+        void writeFlags(unsigned flags);
 
         void beginArray(size_t length);
         inline void endArray(void) {}
@@ -101,6 +105,11 @@ namespace trace {
         void writePointer(unsigned long long addr);
 
         void writeCall(Call *call);
+
+    private:
+        inline void beginProperties(void) {}
+        void writeProperty(const char *name, const char *value);
+        void endProperties(void);
 
     protected:
         void inline _write(const void *sBuffer, size_t dwBytesToWrite);

@@ -50,6 +50,7 @@ public:
     bool open(const char *filename) override;
     void close(void) override { parser->close(); }
     unsigned long long getVersion(void) const override { return parser->getVersion(); }
+    const Properties & getProperties(void) const override { return parser->getProperties(); }
 private:
     int loopCount;
     AbstractParser *parser;
