@@ -33,18 +33,62 @@
 
 #include <iostream>
 
+#include "os.hpp"
+#include "os_symbols.hpp"
 
 #if defined(__GLIBC__)
 
 #include <dlfcn.h>
 #include <string.h>
+#include <unistd.h>
 
 
-// TODO: Intercept readlink("/proc/self/exe")
+static std::string g_processName;
+
+extern "C"  {
+
+
+PUBLIC ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
+{
+    unsigned long pid = 0;
+    if (strcmp(pathname, "/proc/self/exe") == 0 ||
+        (sscanf(pathname, "/proc/%lu/exe", &pid) == 1 &&
+         pid == getpid())) {
+#ifndef _NDEBUG
+        std::cerr << "readlink(" << pathname << ") from " << getModuleFromAddress(ReturnAddress()) << "\n";
+#endif
+        if (!g_processName.empty()) {
+            size_t len = g_processName.length();
+            if (len < bufsiz) {
+                memcpy(buf, g_processName.data(), len);
+                buf[len] = 0;
+                return len;
+            } else {
+                memcpy(buf, g_processName.data(), bufsiz);
+                return bufsiz;
+            }
+        } else {
+            // FIXME: We need to defer retrace::setUp() until after the first trace is loaded.
+            std::cerr << "warning: process name not yet set\n";
+            return -1;
+        }
+    }
+
+    typedef ssize_t (*p_readlink)(const char *pathname, char *buf, size_t bufsiz);
+    p_readlink p = (p_readlink)dlsym(RTLD_NEXT, "readlink");
+    assert(p != nullptr);
+    return p(pathname, buf, bufsiz);
+}
+
+
+} /* extern C */
+
 
 void
 setProcessName(const char *processName)
 {
+    g_processName = processName;
+
     char **p__progname_full = (char **)dlsym(RTLD_DEFAULT, "__progname_full");
     if (p__progname_full == nullptr) {
         std::cerr << "error: failed to get address of __progname_full symbol" << std::endl;
