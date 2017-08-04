@@ -30,6 +30,7 @@
 #include <limits.h> // for CHAR_MAX
 #include <memory> // for unique_ptr
 #include <iostream>
+#include <regex>
 #include <getopt.h>
 #ifndef _WIN32
 #include <unistd.h> // for isatty()
@@ -741,6 +742,60 @@ static void exceptionCallback(void)
 }
 
 
+static bool
+endsWith(const std::string &s1, const char *s2)
+{
+    size_t len = strlen(s2);
+    return s1.length() >= len &&
+           s1.compare(s1.length() - len, len, s2) == 0;
+}
+
+
+// Try to compensate for different OS
+static void
+adjustProcessName(const std::string &name)
+{
+    std::string adjustedName(name);
+
+    if (adjustedName.length() > 2 && adjustedName[1] == ':') {
+#ifndef _WIN32
+        adjustedName.erase(0, 2);
+#endif
+    } else {
+#ifdef _WIN32
+        adjustedName.insert(0, "C:");
+#endif
+    }
+
+    for (char &c: adjustedName) {
+#ifdef _WIN32
+        if (c == '/')  c = '\\';
+#else
+        if (c == '\\') c = '/';
+#endif
+    }
+
+#ifndef _WIN32
+    static const std::regex programFiles("/Program Files( \\(x86\\))?/", std::regex_constants::icase);
+    adjustedName = std::regex_replace(adjustedName, programFiles, "/opt/");
+#endif
+
+    if (endsWith(adjustedName, ".exe")) {
+#ifndef _WIN32
+        adjustedName.resize(adjustedName.length() - strlen(".exe"));
+#endif
+    }  else {
+#ifdef _WIN32
+        adjustedName.append(".exe");
+#endif
+    }
+
+    std::cerr << adjustedName << "\n";
+
+    setProcessName(adjustedName.c_str());
+}
+
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -975,7 +1030,10 @@ int main(int argc, char **argv)
 
     retrace::setUp();
     if (retrace::profiling && !retrace::profilingWithBackends) {
-        retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn, retrace::profilingMemoryUsage);
+        retrace::profiler.setup(retrace::profilingCpuTimes,
+                                retrace::profilingGpuTimes,
+                                retrace::profilingPixelsDrawn,
+                                retrace::profilingMemoryUsage);
     }
 
     os::setExceptionCallback(exceptionCallback);
@@ -996,8 +1054,7 @@ int main(int argc, char **argv)
             auto &properties = parser->getProperties();
             auto processNameIt = properties.find("process.name");
             if (processNameIt != properties.end()) {
-                // TODO: Try to compensate for different OS
-                setProcessName(processNameIt->second.c_str());
+                adjustProcessName(processNameIt->second);
             }
 
             retrace::mainLoop();
