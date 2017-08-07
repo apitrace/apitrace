@@ -238,7 +238,9 @@ command(int argc, char *argv[])
 
         const trace::Properties &properties = p.getProperties();
         for (auto & kv : properties) {
-            std::cout << "// " << kv.first << " = " << kv.second << std::endl;
+            std::cout << "// " << kv.first << " = ";
+            dumper->visitString(kv.second.c_str());
+            std::cout << std::endl;
         }
 
         trace::Call *call;
