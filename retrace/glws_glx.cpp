@@ -44,6 +44,7 @@ static bool has_GLX_EXT_create_context_es_profile = false;
 static bool has_GLX_EXT_create_context_es2_profile = false;
 static bool has_GLX_EXT_swap_control = false;
 static bool has_GLX_MESA_swap_control = false;
+static bool has_GLX_OML_swap_method = false;
 
 
 class GlxVisual : public Visual
@@ -229,6 +230,7 @@ init(void) {
     CHECK_EXTENSION(GLX_EXT_create_context_es2_profile);
     CHECK_EXTENSION(GLX_EXT_swap_control);
     CHECK_EXTENSION(GLX_MESA_swap_control);
+    CHECK_EXTENSION(GLX_OML_swap_method);
 
 #undef CHECK_EXTENSION
 }
@@ -245,7 +247,7 @@ Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     GlxVisual *visual = new GlxVisual(profile);
 
-    Attributes<int> attribs;
+    Attributes<int> attribs, attribs_copy_swap;
     attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
     attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
     attribs.add(GLX_RED_SIZE, 8);
@@ -259,13 +261,33 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         attribs.add(GLX_SAMPLE_BUFFERS, 1);
         attribs.add(GLX_SAMPLES_ARB, samples);
     }
+    if (has_GLX_OML_swap_method) {
+        attribs_copy_swap = attribs;
+        attribs_copy_swap.add(GLX_SWAP_METHOD_OML, GLX_SWAP_COPY_OML);
+        attribs_copy_swap.end();
+    }
     attribs.end();
 
     int num_configs = 0;
     GLXFBConfig * fbconfigs;
-    fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
+    fbconfigs = glXChooseFBConfig(display, screen,
+                                  has_GLX_OML_swap_method ?
+                                  attribs_copy_swap : attribs,
+                                  &num_configs);
     if (!num_configs || !fbconfigs) {
-        return NULL;
+        if (has_GLX_OML_swap_method)  {
+            if (fbconfigs) {
+                XFree(fbconfigs);
+            }
+            fbconfigs = glXChooseFBConfig(display, screen, attribs,
+                                          &num_configs);
+        }
+        if (!num_configs || !fbconfigs) {
+            if (fbconfigs) {
+                XFree(fbconfigs);
+            }
+            return NULL;
+        }
     }
     visual->fbconfig = fbconfigs[0];
     assert(visual->fbconfig);
