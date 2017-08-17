@@ -356,6 +356,8 @@ dumpShaderResourceViewImage(StateWriter &writer,
                             const char *shader,
                             UINT stage)
 {
+    HRESULT hr;
+
     if (!pShaderResourceView) {
         return;
     }
@@ -364,46 +366,58 @@ dumpShaderResourceViewImage(StateWriter &writer,
     pShaderResourceView->GetResource(&pResource);
     assert(pResource);
 
-    D3D10_SHADER_RESOURCE_VIEW_DESC Desc;
-    pShaderResourceView->GetDesc(&Desc);
+    D3D10_SHADER_RESOURCE_VIEW_DESC1 Desc;
+    com_ptr<ID3D10ShaderResourceView1> pShaderResourceView1;
+    hr = pShaderResourceView->QueryInterface(IID_ID3D10ShaderResourceView1, (void **)&pShaderResourceView1);
+    if (SUCCEEDED(hr)) {
+        pShaderResourceView1->GetDesc1(&Desc);
+
+    } else {
+        pShaderResourceView->GetDesc(reinterpret_cast<D3D10_SHADER_RESOURCE_VIEW_DESC *>(&Desc));
+    }
 
     UINT MipSlice = 0;
     UINT FirstArraySlice = 0;
     UINT ArraySize = 1;
 
     switch (Desc.ViewDimension) {
-    case D3D10_SRV_DIMENSION_BUFFER:
+    case D3D10_1_SRV_DIMENSION_BUFFER:
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE1D:
+    case D3D10_1_SRV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MostDetailedMip;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE1DARRAY:
+    case D3D10_1_SRV_DIMENSION_TEXTURE1DARRAY:
         MipSlice = Desc.Texture1DArray.MostDetailedMip;
         FirstArraySlice = Desc.Texture1DArray.FirstArraySlice;
         ArraySize = Desc.Texture1DArray.ArraySize;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE2D:
+    case D3D10_1_SRV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MostDetailedMip;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE2DARRAY:
+    case D3D10_1_SRV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MostDetailedMip;
         FirstArraySlice = Desc.Texture2DArray.FirstArraySlice;
         ArraySize = Desc.Texture2DArray.ArraySize;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE2DMS:
+    case D3D10_1_SRV_DIMENSION_TEXTURE2DMS:
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE2DMSARRAY:
+    case D3D10_1_SRV_DIMENSION_TEXTURE2DMSARRAY:
         FirstArraySlice = Desc.Texture2DMSArray.FirstArraySlice;
         ArraySize = Desc.Texture2DMSArray.ArraySize;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURE3D:
+    case D3D10_1_SRV_DIMENSION_TEXTURE3D:
         MipSlice = Desc.Texture3D.MostDetailedMip;
         break;
-    case D3D10_SRV_DIMENSION_TEXTURECUBE:
+    case D3D10_1_SRV_DIMENSION_TEXTURECUBE:
         MipSlice = Desc.TextureCube.MostDetailedMip;
         ArraySize = 6;
         break;
-    case D3D10_SRV_DIMENSION_UNKNOWN:
+    case D3D10_1_SRV_DIMENSION_TEXTURECUBEARRAY:
+        FirstArraySlice = Desc.TextureCubeArray.First2DArrayFace;
+        MipSlice = Desc.TextureCubeArray.MostDetailedMip;
+        ArraySize = Desc.TextureCubeArray.NumCubes*6;
+        break;
+    case D3D10_1_SRV_DIMENSION_UNKNOWN:
     default:
         assert(0);
         return;
