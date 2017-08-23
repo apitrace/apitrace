@@ -72,15 +72,10 @@ class D3DRetracer(Retracer):
 
             if function.name.startswith('D3D10CreateDevice'):
                 # Toggle debugging
-                print r'    Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
                 print r'    if (retrace::debug) {'
-                print r'        HMODULE hD3d10SdkLayers = LoadLibraryA("d3d10sdklayers");'
-                print r'        if (hD3d10SdkLayers) {'
-                print r'            FreeLibrary(hD3d10SdkLayers);'
-                print r'            Flags |= D3D10_CREATE_DEVICE_DEBUG;'
-                print r'        } else {'
-                print r'            retrace::warning(call) << "Direct3D 10.x SDK Debug Layer (d3d10sdklayers.dll) not available, continuing without debug output\n";'
-                print r'        }'
+                print r'        Flags |= D3D10_CREATE_DEVICE_DEBUG;'
+                print r'    } else {'
+                print r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
                 print r'    }'
 
                 # Force driver
@@ -88,20 +83,35 @@ class D3DRetracer(Retracer):
 
             if function.name.startswith('D3D11CreateDevice'):
                 # Toggle debugging
-                print r'    Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    if (retrace::debug) {'
-                print r'        HRESULT hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_NULL, 0, D3D11_CREATE_DEVICE_DEBUG, NULL, 0, D3D11_SDK_VERSION, NULL, NULL, NULL);'
-                print r'        if (SUCCEEDED(hr)) {'
-                print r'            Flags |= D3D11_CREATE_DEVICE_DEBUG;'
-                print r'        } else {'
-                print r'            retrace::warning(call) << "Direct3D 11.x SDK Debug Layer (d3d11*sdklayers.dll) not available, continuing without debug output\n";'
-                print r'        }'
+                print r'        Flags |= D3D11_CREATE_DEVICE_DEBUG;'
+                print r'    } else {'
+                print r'        Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    }'
 
                 # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE')
 
         Retracer.invokeFunction(self, function)
+
+    def doInvokeFunction(self, function):
+        Retracer.doInvokeFunction(self, function)
+
+        # Handle missing debug layer.  While it's possible to detect whether
+        # the debug layers are present, by creating a null device, and checking
+        # the result.  It's simpler to retry.
+        if function.name.startswith('D3D10CreateDevice'):
+            print r'        if (_result == E_FAIL && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {'
+            print r'            retrace::warning(call) << "Direct3D 10.x SDK Debug Layer (d3d10sdklayers.dll) not available, continuing without debug output\n";'
+            print r'            Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
+            Retracer.doInvokeFunction(self, function)
+            print r'        }'
+        if function.name.startswith('D3D11CreateDevice'):
+            print r'        if (_result == E_FAIL && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {'
+            print r'            retrace::warning(call) << "Direct3D 11.x SDK Debug Layer (d3d11*sdklayers.dll) not available, continuing without debug output\n";'
+            print r'            Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
+            Retracer.doInvokeFunction(self, function)
+            print r'        }'
 
     def handleFailure(self, interface, methodOrFunction):
         # Catch when device is removed, and report the reason.

@@ -503,10 +503,17 @@ class Retracer:
             print '    %s _result;' % (function.type)
 
     def invokeFunction(self, function):
+        # Same as invokeFunction, but without error checking
+        #
+        # XXX: Find a better name
+        self.doInvokeFunction(function)
+        if function.type is not stdapi.Void:
+            self.checkResult(None, function)
+
+    def doInvokeFunction(self, function):
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
-            self.checkResult(None, function)
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
