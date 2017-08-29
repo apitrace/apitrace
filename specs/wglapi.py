@@ -225,6 +225,8 @@ WGLPixelFormatAttribsList = [
     ('WGL_BIND_TO_VIDEO_RGB_NV', BOOL),
     ('WGL_BIND_TO_VIDEO_RGBA_NV', BOOL),
     ('WGL_BIND_TO_VIDEO_RGB_AND_DEPTH_NV', BOOL),
+    # WGL_ARB_framebuffer_sRGB
+    ('WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB', BOOL),
 ]
 
 WGLPixelFormatAttribs = AttribArray(Const(WGLenum), WGLPixelFormatAttribsList)

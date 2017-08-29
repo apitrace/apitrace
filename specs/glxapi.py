@@ -308,6 +308,8 @@ GLXVisualAttribs = AttribArray(GLXEnum, GLXCommonAttribs + [
     ('GLX_RGBA', None),
     ('GLX_DOUBLEBUFFER', None),
     ('GLX_STEREO', None),
+    # GLX_ARB_framebuffer_sRGB
+    ('GLX_FRAMEBUFFER_SRGB_CAPABLE_ARB', None),
 ])
 
 GLXFBConfigCommonAttribs = GLXCommonAttribs + [
@@ -316,17 +318,16 @@ GLXFBConfigCommonAttribs = GLXCommonAttribs + [
     ('GLX_RENDER_TYPE', Flags(Int, ["GLX_RGBA_BIT", "GLX_COLOR_INDEX_BIT"])),
     ('GLX_DRAWABLE_TYPE', Flags(Int, ["GLX_WINDOW_BIT", "GLX_PIXMAP_BIT", "GLX_PBUFFER_BIT"])),
     ('GLX_X_RENDERABLE', Bool),
-]
-
-GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
     ('GLX_FBCONFIG_ID', GLXFBConfigID),
     ('GLX_MAX_PBUFFER_WIDTH', Int),
     ('GLX_MAX_PBUFFER_HEIGHT', Int),
     ('GLX_MAX_PBUFFER_PIXELS', Int),
     ('GLX_VISUAL_ID', VisualID),
+    # GLX_ARB_framebuffer_sRGB
+    ('GLX_FRAMEBUFFER_SRGB_CAPABLE_ARB', Bool),
 ]
 
-GLXFBConfigAttribs = AttribArray(Const(GLXEnum), GLXFBConfigGLXAttribs)
+GLXFBConfigAttribs = AttribArray(Const(GLXEnum), GLXFBConfigCommonAttribs)
 GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs)
 
 GLXContextProfileMask = Flags(Int, [
