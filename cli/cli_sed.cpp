@@ -83,14 +83,27 @@ using namespace trace;
 class Replacer : public Visitor
 {
 protected:
-    std::string searchName;
-    std::string replaceName;
+    std::string searchString;
+    std::string replaceString;
+
+    bool isPointer = false;
+    unsigned long long searchPointer = 0;
+    unsigned long long replacePointer = 0;
 
 public:
-    Replacer(const std::string & _searchName, const std::string & _replaceName) :
-        searchName(_searchName),
-        replaceName(_replaceName)
+    Replacer(const std::string & _searchString, const std::string & _replaceString) :
+        searchString(_searchString),
+        replaceString(_replaceString)
     {
+        if (searchString.length() > 2 &&
+            searchString[0] == '0' &&
+            searchString[1] == 'x') {
+            isPointer = true;
+            searchPointer = std::stoull(searchString, 0, 16);
+            assert(searchPointer);
+            replacePointer = std::stoull(replaceString, 0, 16);
+            assert(replacePointer);
+        }
     }
 
     ~Replacer() {
@@ -115,11 +128,11 @@ public:
     }
 
     void visit(String *node) override {
-        if (!searchName.compare(node->value)) {
-            size_t len = replaceName.length() + 1;
+        if (!searchString.compare(node->value)) {
+            size_t len = replaceString.length() + 1;
             delete [] node->value;
             char *str = new char [len];
-            memcpy(str, replaceName.c_str(), len);
+            memcpy(str, replaceString.c_str(), len);
             node->value = str;
         }
     }
@@ -130,10 +143,10 @@ public:
     void visit(Enum *node) override {
         const EnumValue *it = node->lookup();
         if (it) {
-            if (searchName.compare(it->name) == 0) {
+            if (searchString.compare(it->name) == 0) {
                 const EnumSig *sig = node->sig;
                 for (unsigned i = 0; i < sig->num_values; ++i) {
-                    if (replaceName.compare(sig->values[i].name) == 0) {
+                    if (replaceString.compare(sig->values[i].name) == 0) {
                         node->value = sig->values[i].value;
                         break;
                     }
@@ -161,6 +174,10 @@ public:
     }
 
     void visit(Pointer *p) override {
+        if (isPointer &&
+            p->value == searchPointer) {
+            p->value = replacePointer;
+        }
     }
 
     void visit(Repr *r) override {
