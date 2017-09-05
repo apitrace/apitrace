@@ -33,7 +33,6 @@
 #include "glws.hpp"
 #include "glws_xlib.hpp"
 
-
 namespace glws {
 
 
@@ -246,8 +245,8 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     GlxVisual *visual = new GlxVisual(profile);
+    Attributes<int> attribs;
 
-    Attributes<int> attribs, attribs_copy_swap;
     attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
     attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
     attribs.add(GLX_RED_SIZE, 8);
@@ -261,37 +260,47 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         attribs.add(GLX_SAMPLE_BUFFERS, 1);
         attribs.add(GLX_SAMPLES_ARB, samples);
     }
-    if (has_GLX_OML_swap_method) {
-        attribs_copy_swap = attribs;
-        attribs_copy_swap.add(GLX_SWAP_METHOD_OML, GLX_SWAP_COPY_OML);
-        attribs_copy_swap.end();
-    }
     attribs.end();
 
     int num_configs = 0;
     GLXFBConfig * fbconfigs;
     fbconfigs = glXChooseFBConfig(display, screen,
-                                  has_GLX_OML_swap_method ?
-                                  attribs_copy_swap : attribs,
+                                  attribs,
                                   &num_configs);
     if (!num_configs || !fbconfigs) {
-        if (has_GLX_OML_swap_method)  {
-            if (fbconfigs) {
-                XFree(fbconfigs);
-            }
-            fbconfigs = glXChooseFBConfig(display, screen, attribs,
-                                          &num_configs);
+        if (fbconfigs) {
+            XFree(fbconfigs);
         }
-        if (!num_configs || !fbconfigs) {
-            if (fbconfigs) {
-                XFree(fbconfigs);
+        return NULL;
+    }
+
+    visual->fbconfig = fbconfigs[0];
+    visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
+
+    if (has_GLX_OML_swap_method) {
+        XVisualInfo *visinfo;
+        int ret;
+
+        for (int i = 0; i < num_configs; ++i) {
+            if (glXGetFBConfigAttrib(display, fbconfigs[i], GLX_SWAP_METHOD_OML,
+                                     &ret) ||
+                ret != GLX_SWAP_COPY_OML) {
+                continue;
             }
-            return NULL;
+
+            visinfo = glXGetVisualFromFBConfig(display, fbconfigs[i]);
+
+            /* We don't want the X 32-bit composite visual. */
+            if (visinfo->depth != 32) {
+                visual->fbconfig = fbconfigs[i];
+                visual->visinfo = visinfo;
+                break;
+            }
+            XFree(visinfo);
         }
     }
-    visual->fbconfig = fbconfigs[0];
+
     assert(visual->fbconfig);
-    visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
     assert(visual->visinfo);
 
     return visual;
