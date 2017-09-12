@@ -2,11 +2,10 @@
 
 root = true
 
-[*.{c,h,cpp,hpp,cc,hh,inl,m,mm,rc}]
-indent_style = space
-indent_size = 4
+[*]
+tab_width = 8
 
-[*.py]
+[*.{c,h,cpp,hpp,cc,hh,inl,m,mm,rc}]
 indent_style = space
 indent_size = 4
 
@@ -18,6 +17,14 @@ indent_size = 4
 indent_style = space
 trim_trailing_whitespace = false
 
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.sh]
+indent_style = space
+indent_size = 4
+
 [*.yml]
 indent_style = space
 indent_size = 2
@@ -25,4 +32,3 @@ indent_size = 2
 [{Makefile,*.mk,*.def}]
 indent_style = tab
 indent_size = 8
-tab_width = 8
