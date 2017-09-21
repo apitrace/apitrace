@@ -27,6 +27,7 @@
 
 
 #ifdef _MSC_VER
+#include <intrin.h>
 #define ReturnAddress() _ReturnAddress()
 #else
 #define ReturnAddress() __builtin_return_address(0)
