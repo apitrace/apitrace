@@ -2803,5 +2803,247 @@
 #endif
 
 
+/*
+ * Direct3D error codes.
+ *
+ * These were defined in d3dx10.h/d3dx11.h on DirectX SDK, and moved to
+ * winerror.h on Windows 8 SDK.
+ *
+ * See also:
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/ff476174.aspx
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb205278.aspx
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb172554.aspx
+ */
+
+#ifndef DXGI_STATUS_OCCLUDED
+#define DXGI_STATUS_OCCLUDED                                     0x087A0001L
+#endif
+#ifndef DXGI_STATUS_CLIPPED
+#define DXGI_STATUS_CLIPPED                                      0x087A0002L
+#endif
+#ifndef DXGI_STATUS_NO_REDIRECTION
+#define DXGI_STATUS_NO_REDIRECTION                               0x087A0004L
+#endif
+#ifndef DXGI_STATUS_NO_DESKTOP_ACCESS
+#define DXGI_STATUS_NO_DESKTOP_ACCESS                            0x087A0005L
+#endif
+#ifndef DXGI_STATUS_GRAPHICS_VIDPN_SOURCE_IN_USE
+#define DXGI_STATUS_GRAPHICS_VIDPN_SOURCE_IN_USE                 0x087A0006L
+#endif
+#ifndef DXGI_STATUS_MODE_CHANGED
+#define DXGI_STATUS_MODE_CHANGED                                 0x087A0007L
+#endif
+#ifndef DXGI_STATUS_MODE_CHANGE_IN_PROGRESS
+#define DXGI_STATUS_MODE_CHANGE_IN_PROGRESS                      0x087A0008L
+#endif
+#ifndef DXGI_ERROR_INVALID_CALL
+#define DXGI_ERROR_INVALID_CALL                                  0x887A0001L
+#endif
+#ifndef DXGI_ERROR_NOT_FOUND
+#define DXGI_ERROR_NOT_FOUND                                     0x887A0002L
+#endif
+#ifndef DXGI_ERROR_MORE_DATA
+#define DXGI_ERROR_MORE_DATA                                     0x887A0003L
+#endif
+#ifndef DXGI_ERROR_UNSUPPORTED
+#define DXGI_ERROR_UNSUPPORTED                                   0x887A0004L
+#endif
+#ifndef DXGI_ERROR_DEVICE_REMOVED
+#define DXGI_ERROR_DEVICE_REMOVED                                0x887A0005L
+#endif
+#ifndef DXGI_ERROR_DEVICE_HUNG
+#define DXGI_ERROR_DEVICE_HUNG                                   0x887A0006L
+#endif
+#ifndef DXGI_ERROR_DEVICE_RESET
+#define DXGI_ERROR_DEVICE_RESET                                  0x887A0007L
+#endif
+#ifndef DXGI_ERROR_WAS_STILL_DRAWING
+#define DXGI_ERROR_WAS_STILL_DRAWING                             0x887A000AL
+#endif
+#ifndef DXGI_ERROR_FRAME_STATISTICS_DISJOINT
+#define DXGI_ERROR_FRAME_STATISTICS_DISJOINT                     0x887A000BL
+#endif
+#ifndef DXGI_ERROR_GRAPHICS_VIDPN_SOURCE_IN_USE
+#define DXGI_ERROR_GRAPHICS_VIDPN_SOURCE_IN_USE                  0x887A000CL
+#endif
+#ifndef DXGI_ERROR_DRIVER_INTERNAL_ERROR
+#define DXGI_ERROR_DRIVER_INTERNAL_ERROR                         0x887A0020L
+#endif
+#ifndef DXGI_ERROR_NONEXCLUSIVE
+#define DXGI_ERROR_NONEXCLUSIVE                                  0x887A0021L
+#endif
+#ifndef DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
+#define DXGI_ERROR_NOT_CURRENTLY_AVAILABLE                       0x887A0022L
+#endif
+#ifndef DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED
+#define DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED                    0x887A0023L
+#endif
+#ifndef DXGI_ERROR_REMOTE_OUTOFMEMORY
+#define DXGI_ERROR_REMOTE_OUTOFMEMORY                            0x887A0024L
+#endif
+#ifndef DXGI_ERROR_ACCESS_LOST
+#define DXGI_ERROR_ACCESS_LOST                                   0x887A0026L
+#endif
+#ifndef DXGI_ERROR_WAIT_TIMEOUT
+#define DXGI_ERROR_WAIT_TIMEOUT                                  0x887A0027L
+#endif
+#ifndef DXGI_ERROR_SESSION_DISCONNECTED
+#define DXGI_ERROR_SESSION_DISCONNECTED                          0x887A0028L
+#endif
+#ifndef DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE
+#define DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE                      0x887A0029L
+#endif
+#ifndef DXGI_ERROR_CANNOT_PROTECT_CONTENT
+#define DXGI_ERROR_CANNOT_PROTECT_CONTENT                        0x887A002AL
+#endif
+#ifndef DXGI_ERROR_ACCESS_DENIED
+#define DXGI_ERROR_ACCESS_DENIED                                 0x887A002BL
+#endif
+#ifndef DXGI_ERROR_NAME_ALREADY_EXISTS
+#define DXGI_ERROR_NAME_ALREADY_EXISTS                           0x887A002CL
+#endif
+#ifndef DXGI_ERROR_SDK_COMPONENT_MISSING
+#define DXGI_ERROR_SDK_COMPONENT_MISSING                         0x887A002DL
+#endif
+#ifndef DXGI_ERROR_NOT_CURRENT
+#define DXGI_ERROR_NOT_CURRENT                                   0x887A002EL
+#endif
+#ifndef DXGI_ERROR_HW_PROTECTION_OUTOFMEMORY
+#define DXGI_ERROR_HW_PROTECTION_OUTOFMEMORY                     0x887A0030L
+#endif
+#ifndef DXGI_STATUS_UNOCCLUDED
+#define DXGI_STATUS_UNOCCLUDED                                   0x087A0009L
+#endif
+#ifndef DXGI_STATUS_DDA_WAS_STILL_DRAWING
+#define DXGI_STATUS_DDA_WAS_STILL_DRAWING                        0x087A000AL
+#endif
+#ifndef DXGI_ERROR_MODE_CHANGE_IN_PROGRESS
+#define DXGI_ERROR_MODE_CHANGE_IN_PROGRESS                       0x887A0025L
+#endif
+#ifndef DXGI_STATUS_PRESENT_REQUIRED
+#define DXGI_STATUS_PRESENT_REQUIRED                             0x087A002FL
+#endif
+#ifndef DXGI_DDI_ERR_WASSTILLDRAWING
+#define DXGI_DDI_ERR_WASSTILLDRAWING                             0x887B0001L
+#endif
+#ifndef DXGI_DDI_ERR_UNSUPPORTED
+#define DXGI_DDI_ERR_UNSUPPORTED                                 0x887B0002L
+#endif
+#ifndef DXGI_DDI_ERR_NONEXCLUSIVE
+#define DXGI_DDI_ERR_NONEXCLUSIVE                                0x887B0003L
+#endif
+#ifndef D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
+#define D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS                0x88790001L
+#endif
+#ifndef D3D10_ERROR_FILE_NOT_FOUND
+#define D3D10_ERROR_FILE_NOT_FOUND                               0x88790002L
+#endif
+#ifndef D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
+#define D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS                0x887C0001L
+#endif
+#ifndef D3D11_ERROR_FILE_NOT_FOUND
+#define D3D11_ERROR_FILE_NOT_FOUND                               0x887C0002L
+#endif
+#ifndef D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS
+#define D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS                 0x887C0003L
+#endif
+#ifndef D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD
+#define D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD 0x887C0004L
+#endif
+#ifndef D3D12_ERROR_ADAPTER_NOT_FOUND
+#define D3D12_ERROR_ADAPTER_NOT_FOUND                            0x887E0001L
+#endif
+#ifndef D3D12_ERROR_DRIVER_VERSION_MISMATCH
+#define D3D12_ERROR_DRIVER_VERSION_MISMATCH                      0x887E0002L
+#endif
+#ifndef D2DERR_WRONG_STATE
+#define D2DERR_WRONG_STATE                                       0x88990001L
+#endif
+#ifndef D2DERR_NOT_INITIALIZED
+#define D2DERR_NOT_INITIALIZED                                   0x88990002L
+#endif
+#ifndef D2DERR_UNSUPPORTED_OPERATION
+#define D2DERR_UNSUPPORTED_OPERATION                             0x88990003L
+#endif
+#ifndef D2DERR_SCANNER_FAILED
+#define D2DERR_SCANNER_FAILED                                    0x88990004L
+#endif
+#ifndef D2DERR_SCREEN_ACCESS_DENIED
+#define D2DERR_SCREEN_ACCESS_DENIED                              0x88990005L
+#endif
+#ifndef D2DERR_DISPLAY_STATE_INVALID
+#define D2DERR_DISPLAY_STATE_INVALID                             0x88990006L
+#endif
+#ifndef D2DERR_ZERO_VECTOR
+#define D2DERR_ZERO_VECTOR                                       0x88990007L
+#endif
+#ifndef D2DERR_INTERNAL_ERROR
+#define D2DERR_INTERNAL_ERROR                                    0x88990008L
+#endif
+#ifndef D2DERR_DISPLAY_FORMAT_NOT_SUPPORTED
+#define D2DERR_DISPLAY_FORMAT_NOT_SUPPORTED                      0x88990009L
+#endif
+#ifndef D2DERR_INVALID_CALL
+#define D2DERR_INVALID_CALL                                      0x8899000AL
+#endif
+#ifndef D2DERR_NO_HARDWARE_DEVICE
+#define D2DERR_NO_HARDWARE_DEVICE                                0x8899000BL
+#endif
+#ifndef D2DERR_RECREATE_TARGET
+#define D2DERR_RECREATE_TARGET                                   0x8899000CL
+#endif
+#ifndef D2DERR_TOO_MANY_SHADER_ELEMENTS
+#define D2DERR_TOO_MANY_SHADER_ELEMENTS                          0x8899000DL
+#endif
+#ifndef D2DERR_SHADER_COMPILE_FAILED
+#define D2DERR_SHADER_COMPILE_FAILED                             0x8899000EL
+#endif
+#ifndef D2DERR_MAX_TEXTURE_SIZE_EXCEEDED
+#define D2DERR_MAX_TEXTURE_SIZE_EXCEEDED                         0x8899000FL
+#endif
+#ifndef D2DERR_UNSUPPORTED_VERSION
+#define D2DERR_UNSUPPORTED_VERSION                               0x88990010L
+#endif
+#ifndef D2DERR_BAD_NUMBER
+#define D2DERR_BAD_NUMBER                                        0x88990011L
+#endif
+#ifndef D2DERR_WRONG_FACTORY
+#define D2DERR_WRONG_FACTORY                                     0x88990012L
+#endif
+#ifndef D2DERR_LAYER_ALREADY_IN_USE
+#define D2DERR_LAYER_ALREADY_IN_USE                              0x88990013L
+#endif
+#ifndef D2DERR_POP_CALL_DID_NOT_MATCH_PUSH
+#define D2DERR_POP_CALL_DID_NOT_MATCH_PUSH                       0x88990014L
+#endif
+#ifndef D2DERR_WRONG_RESOURCE_DOMAIN
+#define D2DERR_WRONG_RESOURCE_DOMAIN                             0x88990015L
+#endif
+#ifndef D2DERR_PUSH_POP_UNBALANCED
+#define D2DERR_PUSH_POP_UNBALANCED                               0x88990016L
+#endif
+#ifndef D2DERR_RENDER_TARGET_HAS_LAYER_OR_CLIPRECT
+#define D2DERR_RENDER_TARGET_HAS_LAYER_OR_CLIPRECT               0x88990017L
+#endif
+#ifndef D2DERR_INCOMPATIBLE_BRUSH_TYPES
+#define D2DERR_INCOMPATIBLE_BRUSH_TYPES                          0x88990018L
+#endif
+#ifndef D2DERR_WIN32_ERROR
+#define D2DERR_WIN32_ERROR                                       0x88990019L
+#endif
+#ifndef D2DERR_TARGET_NOT_GDI_COMPATIBLE
+#define D2DERR_TARGET_NOT_GDI_COMPATIBLE                         0x8899001AL
+#endif
+#ifndef D2DERR_TEXT_EFFECT_IS_WRONG_TYPE
+#define D2DERR_TEXT_EFFECT_IS_WRONG_TYPE                         0x8899001BL
+#endif
+#ifndef D2DERR_TEXT_RENDERER_NOT_RELEASED
+#define D2DERR_TEXT_RENDERER_NOT_RELEASED                        0x8899001CL
+#endif
+#ifndef D2DERR_EXCEEDS_MAX_BITMAP_SIZE
+#define D2DERR_EXCEEDS_MAX_BITMAP_SIZE                           0x8899001DL
+#endif
+
+
 #endif /* __MINGW32__ */
 
