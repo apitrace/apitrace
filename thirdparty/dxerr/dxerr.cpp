@@ -53,10 +53,6 @@
 #include <dwrite.h>
 #endif
 
-#ifdef __MINGW32__
-#include "d3derr.hpp"
-#endif
-
 #define XAUDIO2_E_INVALID_CALL          0x88960001
 #define XAUDIO2_E_XMA_DECODER_ERROR     0x88960002
 #define XAUDIO2_E_XAPO_CREATION_FAILED  0x88960003

@@ -36,7 +36,6 @@
 
 #include <d3d10_1.h>
 
-#include "d3derr.hpp"
 
 #include "dxgiint.h"
 
