@@ -1237,6 +1237,10 @@ D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT = Struct("D3D11_FEATURE_DATA_GPU_
     (UINT, "MaxGPUVirtualAddressBitsPerProcess"),
 ])
 
+D3D11_FEATURE_DATA_D3D11_OPTIONS4 = Struct('D3D11_FEATURE_DATA_D3D11_OPTIONS4', [
+    (BOOL, 'ExtendedNV12SharedTextureSupported'),
+])
+
 D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", [
     ("D3D11_FEATURE_THREADING", Pointer(D3D11_FEATURE_DATA_THREADING)),
     ("D3D11_FEATURE_DOUBLES", Pointer(D3D11_FEATURE_DATA_DOUBLES)),
@@ -1255,6 +1259,7 @@ D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", 
     ("D3D11_FEATURE_D3D11_OPTIONS2", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS2)),
     ("D3D11_FEATURE_D3D11_OPTIONS3", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS3)),
     ("D3D11_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT", Pointer(D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT)),
+    ("D3D11_FEATURE_D3D11_OPTIONS4", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS4)),
 ], Blob(Void, "FeatureSupportDataSize"), False)
 
 ID3D11DeviceContext.methods += [
@@ -2651,4 +2656,59 @@ ID3D11Device3.methods += [
 d3d11.addInterfaces([
     ID3D11Device3,
     ID3D11DeviceContext3,
+])
+
+
+#
+# D3D11.4
+#
+
+D3D11_FENCE_FLAG = Enum('D3D11_FENCE_FLAG', [
+    'D3D11_FENCE_FLAG_NONE',
+    'D3D11_FENCE_FLAG_SHARED',
+    'D3D11_FENCE_FLAG_SHARED_CROSS_ADAPTER',
+])
+
+ID3D11Device4 = Interface('ID3D11Device4', ID3D11Device3)
+ID3D11Device5 = Interface('ID3D11Device5', ID3D11Device4)
+ID3D11Multithread = Interface('ID3D11Multithread', IUnknown)
+#ID3D11VideoContext2 = Interface('ID3D11VideoContext2', ID3D11VideoContext1)
+
+ID3D11Device4.methods += [
+    StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')]),
+    StdMethod(Void, 'UnregisterDeviceRemoved', [(DWORD, 'dwCookie')]),
+]
+
+ID3D11Device5.methods += [
+    StdMethod(HRESULT, 'OpenSharedFence', [(HANDLE, 'hFence'), (REFIID, 'ReturnedInterface'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
+    StdMethod(HRESULT, 'CreateFence', [(UINT64, 'InitialValue'), (D3D11_FENCE_FLAG, 'Flags'), (REFIID, 'ReturnedInterface'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
+]
+ID3D11Multithread.methods += [
+    StdMethod(Void, 'Enter', []),
+    StdMethod(Void, 'Leave', []),
+    StdMethod(BOOL, 'SetMultithreadProtected', [(BOOL, 'bMTProtect')]),
+    StdMethod(BOOL, 'GetMultithreadProtected', [], sideeffects=False),
+]
+
+#ID3D11VideoContext2.methods += [
+#    StdMethod(Void, 'VideoProcessorSetOutputHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
+#    StdMethod(Void, 'VideoProcessorGetOutputHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(OpaqueBlob(Void, 'Size'), 'pMetaData')], sideeffects=False),
+#    StdMethod(Void, 'VideoProcessorSetStreamHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
+#    StdMethod(Void, 'VideoProcessorGetStreamHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(Blob(Void, 'Size'), 'pMetaData')], sideeffects=False),
+#]
+
+PFN_DESTRUCTION_CALLBACK = Opaque("PFN_DESTRUCTION_CALLBACK")
+
+ID3DDestructionNotifier = Interface('ID3DDestructionNotifier', IUnknown)
+
+ID3DDestructionNotifier.methods += [
+    StdMethod(HRESULT, 'RegisterDestructionCallback', [(PFN_DESTRUCTION_CALLBACK, 'callbackFn'), (OpaquePointer(Void), 'pData'), Out(Pointer(UINT), 'pCallbackID')], sideeffects=False),
+    StdMethod(HRESULT, 'UnregisterDestructionCallback', [(UINT, 'callbackID')], sideeffects=False),
+]
+
+d3d11.addInterfaces([
+    ID3D11Device5,
+    ID3D11Multithread,
+    #ID3D11VideoContext2,
+    ID3DDestructionNotifier
 ])
