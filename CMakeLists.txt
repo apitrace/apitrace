@@ -31,7 +31,7 @@ project (apitrace)
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
-option (WINDOWS_XP "Target Windows XP (on MinGW)" OFF)
+set (WINDOWS_XP "ON" CACHE STRING "Target Windows XP (on MinGW)" FORCE)
 
 option (ENABLE_CLI "Enable command Line interface." ON)
 
