@@ -1,5 +1,5 @@
 if (MSVC)
-    cmake_minimum_required (VERSION 3.4.0)
+    cmake_minimum_required (VERSION 3.7.0)
 else ()
     cmake_minimum_required (VERSION 2.8.11)
 endif ()
@@ -128,8 +128,8 @@ if (ENABLE_GUI)
 endif ()
 
 if (MSVC)
-    if (${MSVC_VERSION} LESS 1900)
-        message (FATAL_ERROR "Visual Studio 2015 or later required")
+    if (${MSVC_VERSION} LESS 1910)
+        message (FATAL_ERROR "Visual Studio 2017 or later required")
     endif ()
 endif ()
 
@@ -227,6 +227,7 @@ if (MSVC)
     add_compiler_flags (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
     add_compiler_flags (-wd4505) # unreferenced local function has been removed
     add_compiler_flags (-wd4512) # assignment operator could not be generated
+    add_compiler_flags (-wd4577) # 'noexcept' used with no exception handling mode specified
     add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
     
     # Use static runtime

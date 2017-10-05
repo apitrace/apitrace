@@ -91,9 +91,9 @@ Android is no longer supported.  See https://git.io/vH2gW for more information.
 
 Additional requirements:
 
-* CMake 3.4 or later
+* CMake 3.7 or later
 
-* Microsoft Visual Studio 2015 or newer (instructions presume 2015)
+* Microsoft Visual Studio 2017 or later
 
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.
@@ -104,7 +104,7 @@ To build with Visual Studio first open a Command Prompt window (*not* Visual
 Studio Command Prompt window), change into the Apitrace source, and invoke
 CMake GUI as:
 
-    cmake-gui -H. -Bbuild -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
 
 and press the _Configure_ button.
 
@@ -127,7 +127,11 @@ generators are available on your system:
 
 At the end of the output, choose a generator and start configuring the project:
 
-    cmake -H. -Bbuild -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+    cmake -H. -Bbuild -G "Visual Studio 15 2017" -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+
+Note as off Qt version 5.9.1 there's no `msvc2017` directory, only `msvc2015`
+and `msvc2017_64`, but `msvc2015` should work as MSVC 2017 is binary backwards
+compatible with MSVC 2015.
 
 After you've successfully configured, you can start the build by invoking CMake as:
 
@@ -135,7 +139,7 @@ After you've successfully configured, you can start the build by invoking CMake 
 
 ### Deployment ###
 
-To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc2015\bin` is in the system path, or use
+To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the system path, or use
 [Qt's Windows deployment tool](http://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
@@ -145,7 +149,7 @@ to copy all necessary DLLs, like:
 ### 64-bits ###
 
 The steps to build 64-bits version are similar, but choosing _Visual Studio xx
-Win64_ instead of _Visual Studio xx_, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2015_64`
+Win64_ instead of _Visual Studio xx_, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2017_64`
 for Qt path.
 
 ### Windows XP ###
