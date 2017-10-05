@@ -15,37 +15,12 @@ matrix:
   - os: linux
     dist: trusty
     env:
-    - LABEL="ubuntu64"
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.9 g++-4.9 libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DENABLE_GUI=1"
-  - os: linux
-    dist: trusty
-    env:
-    - LABEL="ubuntu32"
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.9-multilib g++-4.9-multilib"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
-  - os: linux
-    dist: trusty
-    env:
-    - LABEL="ubuntu64-clang"
-    - APT_PACKAGES="clang-3.6 libc++-dev libc++abi-dev libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=clang-3.6 -DCMAKE_CXX_COMPILER=clang++-3.6 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
-  - os: linux
-    dist: trusty
-    env:
     - LABEL="mingw32"
     - APT_REPOS="ppa:tobydox/mingw-x-trusty"
     - APT_PACKAGES="mingw32-x-gcc"
     - MINGW_ROOT=/opt/mingw32
     - MINGW_PREFIX=i686-w64-mingw32
-    - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
-  - os: osx
-    osx_image: xcode8.2
-    env:
-    - LABEL="mac64"
-    - CMAKE_OPTIONS="-DENABLE_GUI=1"
+    - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DWINDOWS_XP=1 -DENABLE_GUI=0"
 
 before_install:
 - |
