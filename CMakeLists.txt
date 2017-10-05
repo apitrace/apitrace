@@ -331,6 +331,13 @@ if (ENABLE_FRAME_POINTER)
 endif ()
 
 if (WIN32)
+    # Increase number of sections in obj files
+    if (MSVC)
+        add_compiler_flags (-bigobj)
+    else ()
+        add_compiler_flags (-Wa,-mbig-obj)
+    endif ()
+
     # Enable Data Execution Prevention and Address Space Layout Randomization
     if (MSVC)
         add_linker_flags (/NXCOMPAT /DYNAMICBASE)
