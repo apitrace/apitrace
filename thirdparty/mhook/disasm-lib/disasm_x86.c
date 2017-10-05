@@ -741,7 +741,7 @@ BOOL X86_InitInstruction(INSTRUCTION *Instruction)
 	if (X86Instruction->HasSelector) \
 	{ \
 		assert((op)->Flags & OP_FAR); \
-		APPEND(OPCSTR, SIZE_LEFT, "%s 0x%02X:[", DataSizes[((op)->Length >> 1)], X86Instruction->Selector); \
+		APPEND(OPCSTR, SIZE_LEFT, "%s 0x%02lX:[", DataSizes[((op)->Length >> 1)], X86Instruction->Selector); \
 	} \
 	else \
 	{ \
