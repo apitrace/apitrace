@@ -20,7 +20,7 @@ matrix:
     - APT_PACKAGES="mingw32-x-gcc"
     - MINGW_ROOT=/opt/mingw32
     - MINGW_PREFIX=i686-w64-mingw32
-    - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DWINDOWS_XP=1 -DENABLE_GUI=0"
+    - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
 
 before_install:
 - |

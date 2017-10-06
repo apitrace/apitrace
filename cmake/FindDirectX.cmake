@@ -147,10 +147,6 @@ if (WIN32)
     find_winsdk_library (DDRAW   ddraw)
     find_combined       (DDRAW   DDRAW DDRAW)
 
-    if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
-        set (WINDOWS_XP TRUE)
-    endif ()
-
     if (MSVC)
         # Windows 7 SDKs, used by XP toolset, do not include d3d.h
         set (DirectX_D3D_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/dxsdk_aug2007)
@@ -186,7 +182,7 @@ if (WIN32)
     find_dxsdk_library  (D3DX9   d3dx9)
     find_combined       (D3DX9   D3DX9 D3DX9)
 
-    if (NOT WINDOWS_XP)
+    if (FALSE)
         find_winsdk_header  (DXGI    dxgi.h)
         find_winsdk_header  (DXGI1_2 dxgi1_2.h)
         find_winsdk_header  (DXGI1_3 dxgi1_3.h)
