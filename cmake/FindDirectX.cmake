@@ -151,11 +151,13 @@ if (WIN32)
         set (WINDOWS_XP TRUE)
     endif ()
 
-    if (WINDOWS_XP)
+    if (MSVC)
         # Windows 7 SDKs, used by XP toolset, do not include d3d.h
-        find_dxsdk_header   (D3D     d3d.h)
+        set (DirectX_D3D_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/dxsdk_aug2007)
+        set (DirectX_D3D_INCLUDE_FOUND TRUE)
+        mark_as_advanced (DirectX_D3D_INCLUDE_FOUND)
     else ()
-        find_winsdk_header  (D3D     d3d.h)
+        find_dxsdk_header  (D3D     d3d.h)
     endif ()
     find_combined       (D3D     D3D DDRAW)
 
