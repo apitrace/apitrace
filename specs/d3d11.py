@@ -2831,10 +2831,30 @@ ID3DDestructionNotifier.methods += [
     StdMethod(HRESULT, 'UnregisterDestructionCallback', [(UINT, 'callbackID')], sideeffects=False),
 ]
 
+IUseCounted = Interface('IUseCounted', IUnknown)
+IUseCounted.methods += [
+    StdMethod(ULONG, 'UCAddUse', []),
+    StdMethod(ULONG, 'UCReleaseUse', []),
+    StdMethod(Void, 'UCBreakCyclicReferences', []),
+    StdMethod(Void, 'UCEstablishCyclicReferences', []),
+    StdMethod(Void, 'UCDestroy', []),
+]
+
+ILayeredUseCounted = Interface('ILayeredUseCounted', IUseCounted)
+
+ID3D11LayeredUseCounted = Interface('ID3D11LayeredUseCounted', ILayeredUseCounted)
+
+IUseCounted2 = Interface('IUseCounted2', IUseCounted)
+IUseCounted2.methods += [
+    StdMethod(HRESULT, 'UCQueryInterface', [(UINT, 'flags'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvObj')]),
+]
+
 d3d11.addInterfaces([
     ID3D11Device4,
     ID3D11Device5, # Requires Windows 10.0.15021 SDK
     ID3D11Multithread,
     ID3D11VideoContext2,
-    ID3DDestructionNotifier
+    ID3DDestructionNotifier,
+    ID3D11LayeredUseCounted,
+    IUseCounted2,
 ])

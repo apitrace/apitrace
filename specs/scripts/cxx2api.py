@@ -467,7 +467,7 @@ def main():
         location = decl.location
         if location is None:
             return False
-        return os.path.basename(location.file_name) in args
+        return os.path.basename(location.file_name) in map(os.path.basename, args)
 
     module, _ = os.path.splitext(main_header)
     visitor = decl2_dumper_t(module)

@@ -54,3 +54,37 @@ struct IDXGIFactoryDWM: public IUnknown
 
 
 DEFINE_GUID(IID_IWarpPrivateAPI,0xF13EBCD1,0x672C,0x4F8B,0xA6,0x31,0x95,0x39,0xCA,0x74,0x8D,0x71);
+
+
+struct IUseCounted: public IUnknown
+{
+    virtual ULONG STDMETHODCALLTYPE UCAddUse(void) = 0;
+    virtual ULONG STDMETHODCALLTYPE UCReleaseUse(void) = 0;
+    virtual void STDMETHODCALLTYPE UCBreakCyclicReferences(void) = 0;
+    virtual void STDMETHODCALLTYPE UCEstablishCyclicReferences(void) = 0;
+    virtual void STDMETHODCALLTYPE UCDestroy(void) = 0;
+};
+
+struct ILayeredUseCounted: public IUseCounted
+{
+#if 0
+    virtual HRESULT STDMETHODCALLTYPE LUCCompleteLayerConstruction(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCBeginLayerDestruction(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCDeferDeletion(int) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCDestroyStatus(E_LUC_Destroy eStatus) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCGetInternalIdentity(void const *pLayeredChildArgs, UINT uiArgSize) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCGetInternalIdentity(void **ppInternalIdentity) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCGetChildType(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCCompleteInitialization(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LUCPrepareForDestruction(void) = 0;
+#endif
+};
+
+struct ID3D11LayeredUseCounted: public ILayeredUseCounted
+{
+};
+
+struct IUseCounted2: public IUseCounted
+{
+    virtual HRESULT STDMETHODCALLTYPE UCQueryInterface(UINT flags, REFIID riid, void **ppvObj) = 0;
+};
