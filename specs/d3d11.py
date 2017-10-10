@@ -2638,6 +2638,19 @@ ID3D11DeviceContext3.methods += [
     StdMethod(Void, "GetHardwareProtectionState", [Out(Pointer(BOOL), "pHwProtectionEnable")], sideeffects=False),
 ]
 
+ID3D11Fence = Interface('ID3D11Fence', ID3D11DeviceChild)
+ID3D11Fence.methods += [
+    StdMethod(HRESULT, 'CreateSharedHandle', [(Pointer(Const(SECURITY_ATTRIBUTES)), 'pAttributes'), (DWORD, 'dwAccess'), (LPCWSTR, 'lpName'), Out(Pointer(HANDLE), 'pHandle')]),
+    StdMethod(UINT64, 'GetCompletedValue', []),
+    StdMethod(HRESULT, 'SetEventOnCompletion', [(UINT64, 'Value'), (HANDLE, 'hEvent')]),
+]
+
+ID3D11DeviceContext4 = Interface('ID3D11DeviceContext4', ID3D11DeviceContext3)
+ID3D11DeviceContext4.methods += [
+    StdMethod(HRESULT, 'Signal', [(ObjPointer(ID3D11Fence), 'pFence'), (UINT64, 'Value')]),
+    StdMethod(HRESULT, 'Wait', [(ObjPointer(ID3D11Fence), 'pFence'), (UINT64, 'Value')]),
+]
+
 ID3D11Device3 = Interface("ID3D11Device3", ID3D11Device2)
 ID3D11Device3.methods += [
     StdMethod(HRESULT, "CreateTexture2D1", [(Pointer(Const(D3D11_TEXTURE2D_DESC1)), "pDesc1"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc1)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D1)), "ppTexture2D")]),
@@ -2656,6 +2669,7 @@ ID3D11Device3.methods += [
 d3d11.addInterfaces([
     ID3D11Device3,
     ID3D11DeviceContext3,
+    #ID3D11DeviceContext4, # XXX: Requires Windows 10.0.15021 SDK
 ])
 
 
