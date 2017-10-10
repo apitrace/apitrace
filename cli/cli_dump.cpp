@@ -79,6 +79,7 @@ usage(void)
         "    --call-nos[=BOOL]    dump call numbers[default: yes]\n"
         "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
         "    --blobs              dump blobs into files\n"
+        "    --multiline[=BOOL]   dump newline in strings literally [default: yes]\n"
         "\n"
     ;
 }
@@ -90,6 +91,7 @@ enum {
     CALL_NOS_OPT,
     ARG_NAMES_OPT,
     BLOBS_OPT,
+    MULTILINE_OPT,
 };
 
 const static char *
@@ -106,6 +108,7 @@ longOptions[] = {
     {"call-nos", optional_argument, 0, CALL_NOS_OPT},
     {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
     {"blobs", no_argument, 0, BLOBS_OPT},
+    {"multiline", optional_argument, 0, MULTILINE_OPT},
     {0, 0, 0, 0}
 };
 
@@ -198,6 +201,13 @@ command(int argc, char *argv[])
                 dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
             }
             break;
+        case MULTILINE_OPT:
+            if (trace::boolOption(optarg)) {
+                dumpFlags &= ~trace::DUMP_FLAG_NO_MULTILINE;
+            } else {
+                dumpFlags |= trace::DUMP_FLAG_NO_MULTILINE;
+            }
+            break;
         case BLOBS_OPT:
             blobs = true;
             break;
@@ -252,6 +262,9 @@ command(int argc, char *argv[])
                 }
             }
             delete call;
+            if (dumpFlags & trace::DUMP_FLAG_NO_MULTILINE) {
+                std::cout << std::endl;
+            }
         }
     }
 
