@@ -54,9 +54,9 @@ PUBLIC ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
     if (strcmp(pathname, "/proc/self/exe") == 0 ||
         (sscanf(pathname, "/proc/%lu/exe", &pid) == 1 &&
          pid == getpid())) {
-#ifndef _NDEBUG
-        std::cerr << "readlink(" << pathname << ") from " << getModuleFromAddress(ReturnAddress()) << "\n";
-#endif
+        if (0) {
+            std::cerr << "readlink(\"" << pathname << "\") from " << getModuleFromAddress(ReturnAddress()) << "\n";
+        }
         if (!g_processName.empty()) {
             size_t len = g_processName.length();
             if (len < bufsiz) {
@@ -143,15 +143,15 @@ static DWORD WINAPI
 MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
 {
     if (hModule == nullptr) {
-#ifndef NDEBUG
-        void *pCallerAddr = ReturnAddress();
-        HMODULE hCallerModule = GetModuleFromAddress(pCallerAddr);
-        char szCaller[MAX_PATH];
-        DWORD dwRet = pfnGetModuleFileNameA(hCallerModule, szCaller, sizeof szCaller);
-        assert(dwRet > 0);
+        if (0) {
+            void *pCallerAddr = ReturnAddress();
+            HMODULE hCallerModule = GetModuleFromAddress(pCallerAddr);
+            char szCaller[MAX_PATH];
+            DWORD dwRet = pfnGetModuleFileNameA(hCallerModule, szCaller, sizeof szCaller);
+            assert(dwRet > 0);
 
-        std::cerr << "GetModuleFileNameA(" << hModule << ") from " << szCaller << "\n";
-#endif
+            std::cerr << "GetModuleFileNameA(" << hModule << ") from " << szCaller << "\n";
+        }
 
         assert(!g_processName.empty());
         assert(nSize != 0);
