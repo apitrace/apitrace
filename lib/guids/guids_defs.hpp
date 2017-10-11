@@ -35,6 +35,9 @@
 #define GUID_ENTRY(l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8,name) \
     EXTERN_C CONST IID name = { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } };
 
+#define GUID_DUPLI(l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8,name) \
+    EXTERN_C CONST IID name = { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } };
+
 #include "guids_entries.h"
 
 #endif

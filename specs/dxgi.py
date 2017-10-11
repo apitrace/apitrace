@@ -995,3 +995,66 @@ dxgi.addInterfaces([
     IDXGIAdapter3,
 ])
 
+
+#
+# DXGI 1.5
+#
+
+DXGI_HDR_METADATA_TYPE = Enum('DXGI_HDR_METADATA_TYPE', [
+    'DXGI_HDR_METADATA_TYPE_NONE',
+    'DXGI_HDR_METADATA_TYPE_HDR10',
+])
+
+DXGI_HDR_METADATA_HDR10 = Struct('DXGI_HDR_METADATA_HDR10', [
+    (Array(UINT16, 2), 'RedPrimary'),
+    (Array(UINT16, 2), 'GreenPrimary'),
+    (Array(UINT16, 2), 'BluePrimary'),
+    (Array(UINT16, 2), 'WhitePoint'),
+    (UINT, 'MaxMasteringLuminance'),
+    (UINT, 'MinMasteringLuminance'),
+    (UINT16, 'MaxContentLightLevel'),
+    (UINT16, 'MaxFrameAverageLightLevel'),
+])
+
+DXGI_OFFER_RESOURCE_FLAGS = FakeEnum(UINT, [
+    'DXGI_OFFER_RESOURCE_FLAG_ALLOW_DECOMMIT',
+])
+
+DXGI_RECLAIM_RESOURCE_RESULTS = Enum('DXGI_RECLAIM_RESOURCE_RESULTS', [
+    'DXGI_RECLAIM_RESOURCE_RESULT_OK',
+    'DXGI_RECLAIM_RESOURCE_RESULT_DISCARDED',
+    'DXGI_RECLAIM_RESOURCE_RESULT_NOT_COMMITTED',
+])
+
+DXGI_FEATURE, DXGI_FEATURE_DATA = EnumPolymorphic('DXGI_FEATURE', 'Feature', [
+    ('DXGI_FEATURE_PRESENT_ALLOW_TEARING', Pointer(BOOL)),
+], Blob(Void, "FeatureSupportDataSize"), False)
+
+IDXGIOutput5 = Interface('IDXGIOutput5', IDXGIOutput4)
+IDXGISwapChain4 = Interface('IDXGISwapChain4', IDXGISwapChain3)
+IDXGIDevice4 = Interface('IDXGIDevice4', IDXGIDevice3)
+IDXGIFactory5 = Interface('IDXGIFactory5', IDXGIFactory4)
+
+IDXGIOutput5.methods += [
+    StdMethod(HRESULT, 'DuplicateOutput1', [(ObjPointer(IUnknown), 'pDevice'), (UINT, 'Flags'), (UINT, 'SupportedFormatsCount'), (Array(Const(DXGI_FORMAT), 'SupportedFormatsCount'), 'pSupportedFormats'), Out(Pointer(ObjPointer(IDXGIOutputDuplication)), 'ppOutputDuplication')]),
+]
+
+IDXGISwapChain4.methods += [
+    StdMethod(HRESULT, 'SetHDRMetaData', [(DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Void, 'Size'), 'pMetaData')]),
+]
+
+IDXGIDevice4.methods += [
+    StdMethod(HRESULT, 'OfferResources1', [(UINT, 'NumResources'), (Array(Const(ObjPointer(IDXGIResource)), 'NumResources'), 'ppResources'), (DXGI_OFFER_RESOURCE_PRIORITY, 'Priority'), (DXGI_OFFER_RESOURCE_FLAGS, 'Flags')]),
+    StdMethod(HRESULT, 'ReclaimResources1', [(UINT, 'NumResources'), (Array(Const(ObjPointer(IDXGIResource)), 'NumResources'), 'ppResources'), Out(Array(DXGI_RECLAIM_RESOURCE_RESULTS, 'NumResources'), 'pResults')]),
+]
+
+IDXGIFactory5.methods += [
+    StdMethod(HRESULT, 'CheckFeatureSupport', [(DXGI_FEATURE, 'Feature'), Out(DXGI_FEATURE_DATA, 'pFeatureSupportData'), (UINT, 'FeatureSupportDataSize')], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGIOutput5,
+    IDXGISwapChain4,
+    IDXGIDevice4,
+    IDXGIFactory5,
+])
