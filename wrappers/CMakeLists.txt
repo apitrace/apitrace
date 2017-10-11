@@ -202,8 +202,8 @@ if (WIN32)
     endif ()
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
-    if (DirectX_D3D11_3_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D11_3_INCLUDE_DIR})
+    if (DirectX_D3D11_4_INCLUDE_FOUND)
+        include_directories (BEFORE SYSTEM ${DirectX_D3D11_4_INCLUDE_DIR})
 
         add_custom_command (
             OUTPUT dxgitrace.cpp

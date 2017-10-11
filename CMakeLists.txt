@@ -140,8 +140,9 @@ if (WIN32)
 
     find_package (DirectX)
 
-    if (MSVC AND NOT DirectX_D3D11_3_INCLUDE_FOUND)
-        message (FATAL_ERROR "Windows 10 SDK must be selected (-DCMAKE_SYSTEM_VERSION=10.0) for D3D11.3 support")
+    if (MSVC AND NOT DirectX_D3D11_4_INCLUDE_FOUND)
+        # XXX: is it might be necessary to explicitely select it via -DCMAKE_SYSTEM_VERSION=?
+        message (FATAL_ERROR "Windows 10.0.14393 SDK or newer is required for D3D11.4 support")
     endif ()
 
     set (ENABLE_EGL false)

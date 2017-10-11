@@ -271,10 +271,10 @@ if (WIN32)
             ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    if (DirectX_D3D11_3_INCLUDE_FOUND)
+    if (DirectX_D3D11_4_INCLUDE_FOUND)
         add_definitions (-DHAVE_DXGI)
         include_directories (BEFORE SYSTEM
-            ${DirectX_D3D11_3_INCLUDE_DIR}
+            ${DirectX_D3D11_4_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
         )
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
@@ -336,7 +336,7 @@ if (WIN32)
         retrace_common
         d3dhelpers
     )
-    if (DirectX_D3D11_3_INCLUDE_FOUND)
+    if (DirectX_D3D11_4_INCLUDE_FOUND)
         target_link_libraries (d3dretrace directxtex)
     endif ()
 

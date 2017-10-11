@@ -1,8 +1,8 @@
 add_definitions (-DHAVE_DDRAW)
 add_definitions (-DHAVE_D3D9)
 
-if (DirectX_D3D11_3_INCLUDE_FOUND)
-    include_directories (BEFORE SYSTEM ${DirectX_D3D11_3_INCLUDE_DIR})
+if (DirectX_D3D11_4_INCLUDE_FOUND)
+    include_directories (BEFORE SYSTEM ${DirectX_D3D11_4_INCLUDE_DIR})
     add_definitions (-DHAVE_D3D10_1)
     add_definitions (-DHAVE_D3D11_1)
 endif ()

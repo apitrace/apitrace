@@ -34,7 +34,7 @@
 
 #include "winsdk_compat.h"
 
-#include <d3d11_3.h>
+#include <d3d11_4.h>
 
 
 #include "dxgiint.h"
