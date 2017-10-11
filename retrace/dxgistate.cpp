@@ -37,9 +37,6 @@
 #include "d3d11state.hpp"
 #include "d3d11imports.hpp"
 
-#ifdef __MINGW32__
-#define nullptr NULL
-#endif
 #include "DirectXTex.h"
 
 
