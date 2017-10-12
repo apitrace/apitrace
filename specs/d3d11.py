@@ -2227,13 +2227,96 @@ D3D_MIN_PRECISION = Enum("D3D_MIN_PRECISION", [
     "D3D_MIN_PRECISION_ANY_10",
 ])
 
+D3D11_VIDEO_DECODER_SUB_SAMPLE_MAPPING_BLOCK = Struct('D3D11_VIDEO_DECODER_SUB_SAMPLE_MAPPING_BLOCK', [
+    (UINT, 'ClearSize'),
+    (UINT, 'EncryptedSize'),
+])
+
+D3D11_VIDEO_DECODER_BUFFER_DESC1 = Struct('D3D11_VIDEO_DECODER_BUFFER_DESC1', [
+    (D3D11_VIDEO_DECODER_BUFFER_TYPE, 'BufferType'),
+    (UINT, 'DataOffset'),
+    (UINT, 'DataSize'),
+    (Blob(Void, "{self}.IVSize"), "pIV"),
+    (UINT, 'IVSize'),
+    (Pointer(D3D11_VIDEO_DECODER_SUB_SAMPLE_MAPPING_BLOCK), 'pSubSampleMappingBlock'),
+    (UINT, 'SubSampleMappingCount'),
+])
+
+D3D11_VIDEO_DECODER_BEGIN_FRAME_CRYPTO_SESSION = Struct('D3D11_VIDEO_DECODER_BEGIN_FRAME_CRYPTO_SESSION', [
+    (Pointer(ID3D11CryptoSession), 'pCryptoSession'),
+    (UINT, 'BlobSize'),
+    (Blob(Void, '{self}.BlobSize'), 'pBlob'),
+    (Pointer(GUID), 'pKeyInfoId'),
+    (UINT, 'PrivateDataSize'),
+    (Blob(Void, '{self}.PrivateDataSize'), 'pPrivateData'),
+])
+
+D3D11_VIDEO_DECODER_CAPS = Enum('D3D11_VIDEO_DECODER_CAPS', [
+    'D3D11_VIDEO_DECODER_CAPS_DOWNSAMPLE',
+    'D3D11_VIDEO_DECODER_CAPS_NON_REAL_TIME',
+    'D3D11_VIDEO_DECODER_CAPS_DOWNSAMPLE_DYNAMIC',
+    'D3D11_VIDEO_DECODER_CAPS_DOWNSAMPLE_REQUIRED',
+    'D3D11_VIDEO_DECODER_CAPS_UNSUPPORTED',
+])
+
+D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINTS = Enum('D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINTS', [
+    'D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINT_MULTIPLANE_OVERLAY_ROTATION',
+    'D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINT_MULTIPLANE_OVERLAY_RESIZE',
+    'D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINT_MULTIPLANE_OVERLAY_COLOR_SPACE_CONVERSION',
+    'D3D11_VIDEO_PROCESSOR_BEHAVIOR_HINT_TRIPLE_BUFFER_OUTPUT',
+])
+
+D3D11_VIDEO_PROCESSOR_STREAM_BEHAVIOR_HINT = Struct('D3D11_VIDEO_PROCESSOR_STREAM_BEHAVIOR_HINT', [
+    (BOOL, 'Enable'),
+    (UINT, 'Width'),
+    (UINT, 'Height'),
+    (DXGI_FORMAT, 'Format'),
+])
+
+D3D11_CRYPTO_SESSION_STATUS = Enum('D3D11_CRYPTO_SESSION_STATUS', [
+    'D3D11_CRYPTO_SESSION_STATUS_OK',
+    'D3D11_CRYPTO_SESSION_STATUS_KEY_LOST',
+    'D3D11_CRYPTO_SESSION_STATUS_KEY_AND_CONTENT_LOST',
+])
+
+D3D11_KEY_EXCHANGE_HW_PROTECTION_INPUT_DATA = Struct('D3D11_KEY_EXCHANGE_HW_PROTECTION_INPUT_DATA', [
+    (UINT, 'PrivateDataSize'),
+    (UINT, 'HWProtectionDataSize'),
+    (Array(BYTE, 4), 'pbInput'),
+])
+
+D3D11_KEY_EXCHANGE_HW_PROTECTION_OUTPUT_DATA = Struct('D3D11_KEY_EXCHANGE_HW_PROTECTION_OUTPUT_DATA', [
+    (UINT, 'PrivateDataSize'),
+    (UINT, 'MaxHWProtectionDataSize'),
+    (UINT, 'HWProtectionDataSize'),
+    (UINT64, 'TransportTime'),
+    (UINT64, 'ExecutionTime'),
+    (Array(BYTE, 4), 'pbOutput'),
+])
+
+D3D11_KEY_EXCHANGE_HW_PROTECTION_DATA = Struct('D3D11_KEY_EXCHANGE_HW_PROTECTION_DATA', [
+    (UINT, 'HWProtectionFunctionID'),
+    (Pointer(D3D11_KEY_EXCHANGE_HW_PROTECTION_INPUT_DATA), 'pInputData'),
+    (Pointer(D3D11_KEY_EXCHANGE_HW_PROTECTION_OUTPUT_DATA), 'pOutputData'),
+    (HRESULT, 'Status'),
+])
+
+D3D11_VIDEO_SAMPLE_DESC = Struct('D3D11_VIDEO_SAMPLE_DESC', [
+    (UINT, 'Width'),
+    (UINT, 'Height'),
+    (DXGI_FORMAT, 'Format'),
+    (DXGI_COLOR_SPACE_TYPE, 'ColorSpace'),
+])
+
 ID3D11BlendState1 = Interface("ID3D11BlendState1", ID3D11BlendState)
 ID3D11RasterizerState1 = Interface("ID3D11RasterizerState1", ID3D11RasterizerState)
 ID3DDeviceContextState = Interface("ID3DDeviceContextState", ID3D11DeviceChild)
 ID3D11DeviceContext1 = Interface("ID3D11DeviceContext1", ID3D11DeviceContext)
+ID3D11VideoContext1 = Interface('ID3D11VideoContext1', ID3D11VideoContext)
+ID3D11VideoDevice1 = Interface('ID3D11VideoDevice1', ID3D11VideoDevice)
+ID3D11VideoProcessorEnumerator1 = Interface('ID3D11VideoProcessorEnumerator1', ID3D11VideoProcessorEnumerator)
 ID3D11Device1 = Interface("ID3D11Device1", ID3D11Device)
 ID3DUserDefinedAnnotation = Interface("ID3DUserDefinedAnnotation", IUnknown)
-
 
 D3D11_COPY_FLAGS = Flags(UINT, [
     "D3D11_COPY_NO_OVERWRITE",
@@ -2328,6 +2411,33 @@ ID3D11DeviceContext1.methods += [
     StdMethod(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Array(Const(D3D11_RECT), "NumRects"), "pRect"), (UINT, "NumRects")]),
 ]
 
+ID3D11VideoContext1.methods += [
+    StdMethod(HRESULT, 'SubmitDecoderBuffers1', [(ObjPointer(ID3D11VideoDecoder), 'pDecoder'), (UINT, 'NumBuffers'), (Array(Const(D3D11_VIDEO_DECODER_BUFFER_DESC1), 'NumBuffers'), 'pBufferDesc')]),
+    StdMethod(HRESULT, 'GetDataForNewHardwareKey', [(ObjPointer(ID3D11CryptoSession), 'pCryptoSession'), (UINT, 'PrivateInputSize'), (Blob(Const(Void), 'PrivateInputSize'), 'pPrivatInputData'), Out(Pointer(UINT64), 'pPrivateOutputData')]),
+    StdMethod(HRESULT, 'CheckCryptoSessionStatus', [(ObjPointer(ID3D11CryptoSession), 'pCryptoSession'), Out(Pointer(D3D11_CRYPTO_SESSION_STATUS), 'pStatus')]),
+    StdMethod(HRESULT, 'DecoderEnableDownsampling', [(ObjPointer(ID3D11VideoDecoder), 'pDecoder'), (DXGI_COLOR_SPACE_TYPE, 'InputColorSpace'), (Pointer(Const(D3D11_VIDEO_SAMPLE_DESC)), 'pOutputDesc'), (UINT, 'ReferenceFrameCount')]),
+    StdMethod(HRESULT, 'DecoderUpdateDownsampling', [(ObjPointer(ID3D11VideoDecoder), 'pDecoder'), (Pointer(Const(D3D11_VIDEO_SAMPLE_DESC)), 'pOutputDesc')]),
+    StdMethod(Void, 'VideoProcessorSetOutputColorSpace1', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (DXGI_COLOR_SPACE_TYPE, 'ColorSpace')]),
+    StdMethod(Void, 'VideoProcessorSetOutputShaderUsage', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (BOOL, 'ShaderUsage')]),
+    StdMethod(Void, 'VideoProcessorGetOutputColorSpace1', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), Out(Pointer(DXGI_COLOR_SPACE_TYPE), 'pColorSpace')], sideeffects=False),
+    StdMethod(Void, 'VideoProcessorGetOutputShaderUsage', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), Out(Pointer(BOOL), 'pShaderUsage')], sideeffects=False),
+    StdMethod(Void, 'VideoProcessorSetStreamColorSpace1', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), (DXGI_COLOR_SPACE_TYPE, 'ColorSpace')]),
+    StdMethod(Void, 'VideoProcessorSetStreamMirror', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), (BOOL, 'Enable'), (BOOL, 'FlipHorizontal'), (BOOL, 'FlipVertical')]),
+    StdMethod(Void, 'VideoProcessorGetStreamColorSpace1', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), Out(Pointer(DXGI_COLOR_SPACE_TYPE), 'pColorSpace')], sideeffects=False),
+    StdMethod(Void, 'VideoProcessorGetStreamMirror', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), Out(Pointer(BOOL), 'pEnable'), Out(Pointer(BOOL), 'pFlipHorizontal'), Out(Pointer(BOOL), 'pFlipVertical')]),
+    StdMethod(HRESULT, 'VideoProcessorGetBehaviorHints', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'OutputWidth'), (UINT, 'OutputHeight'), (DXGI_FORMAT, 'OutputFormat'), (UINT, 'StreamCount'), (Pointer(Const(D3D11_VIDEO_PROCESSOR_STREAM_BEHAVIOR_HINT)), 'pStreams'), Out(Pointer(UINT), 'pBehaviorHints')], sideeffects=False),
+]
+
+ID3D11VideoDevice1.methods += [
+    StdMethod(HRESULT, 'GetCryptoSessionPrivateDataSize', [(Pointer(Const(GUID)), 'pCryptoType'), (Pointer(Const(GUID)), 'pDecoderProfile'), (Pointer(Const(GUID)), 'pKeyExchangeType'), Out(Pointer(UINT), 'pPrivateInputSize'), Out(Pointer(UINT), 'pPrivateOutputSize')], sideeffects=False),
+    StdMethod(HRESULT, 'GetVideoDecoderCaps', [(Pointer(Const(GUID)), 'pDecoderProfile'), (UINT, 'SampleWidth'), (UINT, 'SampleHeight'), (Pointer(Const(DXGI_RATIONAL)), 'pFrameRate'), (UINT, 'BitRate'), (Pointer(Const(GUID)), 'pCryptoType'), Out(Pointer(UINT), 'pDecoderCaps')], sideeffects=False),
+    StdMethod(HRESULT, 'CheckVideoDecoderDownsampling', [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), 'pInputDesc'), (DXGI_COLOR_SPACE_TYPE, 'InputColorSpace'), (Pointer(Const(D3D11_VIDEO_DECODER_CONFIG)), 'pInputConfig'), (Pointer(Const(DXGI_RATIONAL)), 'pFrameRate'), (Pointer(Const(D3D11_VIDEO_SAMPLE_DESC)), 'pOutputDesc'), Out(Pointer(BOOL), 'pSupported'), Out(Pointer(BOOL), 'pRealTimeHint')], sideeffects=False),
+    StdMethod(HRESULT, 'RecommendVideoDecoderDownsampleParameters', [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), 'pInputDesc'), (DXGI_COLOR_SPACE_TYPE, 'InputColorSpace'), (Pointer(Const(D3D11_VIDEO_DECODER_CONFIG)), 'pInputConfig'), (Pointer(Const(DXGI_RATIONAL)), 'pFrameRate'), Out(Pointer(D3D11_VIDEO_SAMPLE_DESC), 'pRecommendedOutputDesc')], sideeffects=False),
+]
+
+ID3D11VideoProcessorEnumerator1.methods += [
+    StdMethod(HRESULT, 'CheckVideoProcessorFormatConversion', [(DXGI_FORMAT, 'InputFormat'), (DXGI_COLOR_SPACE_TYPE, 'InputColorSpace'), (DXGI_FORMAT, 'OutputFormat'), (DXGI_COLOR_SPACE_TYPE, 'OutputColorSpace'), Out(Pointer(BOOL), 'pSupported')], sideeffects=False),
+]
 
 ID3D11Device1.methods += [
     StdMethod(Void, "GetImmediateContext1", [Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppImmediateContext")]),
@@ -2686,7 +2796,7 @@ D3D11_FENCE_FLAG = Enum('D3D11_FENCE_FLAG', [
 ID3D11Device4 = Interface('ID3D11Device4', ID3D11Device3)
 ID3D11Device5 = Interface('ID3D11Device5', ID3D11Device4)
 ID3D11Multithread = Interface('ID3D11Multithread', IUnknown)
-#ID3D11VideoContext2 = Interface('ID3D11VideoContext2', ID3D11VideoContext1)
+ID3D11VideoContext2 = Interface('ID3D11VideoContext2', ID3D11VideoContext1)
 
 ID3D11Device4.methods += [
     StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')]),
@@ -2697,6 +2807,7 @@ ID3D11Device5.methods += [
     StdMethod(HRESULT, 'OpenSharedFence', [(HANDLE, 'hFence'), (REFIID, 'ReturnedInterface'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
     StdMethod(HRESULT, 'CreateFence', [(UINT64, 'InitialValue'), (D3D11_FENCE_FLAG, 'Flags'), (REFIID, 'ReturnedInterface'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
 ]
+
 ID3D11Multithread.methods += [
     StdMethod(Void, 'Enter', []),
     StdMethod(Void, 'Leave', []),
@@ -2704,12 +2815,12 @@ ID3D11Multithread.methods += [
     StdMethod(BOOL, 'GetMultithreadProtected', [], sideeffects=False),
 ]
 
-#ID3D11VideoContext2.methods += [
-#    StdMethod(Void, 'VideoProcessorSetOutputHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
-#    StdMethod(Void, 'VideoProcessorGetOutputHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(OpaqueBlob(Void, 'Size'), 'pMetaData')], sideeffects=False),
-#    StdMethod(Void, 'VideoProcessorSetStreamHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
-#    StdMethod(Void, 'VideoProcessorGetStreamHDRMetaData', [Out(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(Blob(Void, 'Size'), 'pMetaData')], sideeffects=False),
-#]
+ID3D11VideoContext2.methods += [
+    StdMethod(Void, 'VideoProcessorSetOutputHDRMetaData', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
+    StdMethod(Void, 'VideoProcessorGetOutputHDRMetaData', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(OpaqueBlob(Void, 'Size'), 'pMetaData')], sideeffects=False),
+    StdMethod(Void, 'VideoProcessorSetStreamHDRMetaData', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), (DXGI_HDR_METADATA_TYPE, 'Type'), (UINT, 'Size'), (Blob(Const(Void), 'Size'), 'pHDRMetaData')]),
+    StdMethod(Void, 'VideoProcessorGetStreamHDRMetaData', [(ObjPointer(ID3D11VideoProcessor), 'pVideoProcessor'), (UINT, 'StreamIndex'), Out(Pointer(DXGI_HDR_METADATA_TYPE), 'pType'), (UINT, 'Size'), Out(Blob(Void, 'Size'), 'pMetaData')], sideeffects=False),
+]
 
 PFN_DESTRUCTION_CALLBACK = Opaque("PFN_DESTRUCTION_CALLBACK")
 
@@ -2724,6 +2835,6 @@ d3d11.addInterfaces([
     ID3D11Device4,
     #ID3D11Device5, # XXX: Requires Windows 10.0.15021 SDK
     ID3D11Multithread,
-    #ID3D11VideoContext2,
+    ID3D11VideoContext2,
     ID3DDestructionNotifier
 ])
