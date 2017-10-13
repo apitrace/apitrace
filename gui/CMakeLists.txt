@@ -144,15 +144,18 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
 
         # windeployqt needs VCINSTALLDIR to copy MSVC Runtime files, but it's
         # usually not define with MSBuild builds.
-        if ($ENV{VCINSTALLDIR})
-            set (VCINSTALLDIR "$ENV{VCINSTALLDIR}")
-        elseif (MSVC12)
-            set (VCINSTALLDIR "\$ENV{VS120COMNTOOLS}/../../VC")
+        if (DEFINED ENV{VCINSTALLDIR})
+            set (VCINSTALLDIR "$ENV{VCINSTALLDIR}" CACHE PATH "VC installation directory")
         elseif (MSVC14)
-            set (VCINSTALLDIR "\$ENV{VS140COMNTOOLS}/../../VC")
+            # https://developercommunity.visualstudio.com/solutions/21956/view.html
+            get_filename_component (VSINSTALLDIR [HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\SxS\\VS7;15.0] REALPATH CACHE)
+            if (IS_DIRECTORY "${VSINSTALLDIR}")
+                set (VCINSTALLDIR "${VSINSTALLDIR}/VC" CACHE PATH "VC installation directory")
+            endif ()
         else ()
             message (FATAL_ERROR "Unsupported MSVC version ${MSVC_VERSION}")
         endif ()
+        message (STATUS "VCINSTALLDIR: ${VCINSTALLDIR}")
 
         install (CODE "
             message (STATUS \"Running Qt Deploy Tool...\")
