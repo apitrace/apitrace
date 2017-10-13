@@ -2779,7 +2779,7 @@ ID3D11Device3.methods += [
 d3d11.addInterfaces([
     ID3D11Device3,
     ID3D11DeviceContext3,
-    #ID3D11DeviceContext4, # XXX: Requires Windows 10.0.15021 SDK
+    ID3D11DeviceContext4, # Requires Windows 10.0.15021 SDK
 ])
 
 
@@ -2833,7 +2833,7 @@ ID3DDestructionNotifier.methods += [
 
 d3d11.addInterfaces([
     ID3D11Device4,
-    #ID3D11Device5, # XXX: Requires Windows 10.0.15021 SDK
+    ID3D11Device5, # Requires Windows 10.0.15021 SDK
     ID3D11Multithread,
     ID3D11VideoContext2,
     ID3DDestructionNotifier

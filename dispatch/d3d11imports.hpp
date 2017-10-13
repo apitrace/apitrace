@@ -37,6 +37,43 @@
 #include <d3d11_4.h>
 
 
+/*
+ * Windows 10.0.15063.0 SDK definitions, so we can build with 10.0.14393.0 a
+ * bit longer, until AppVeyor includes something newer.
+ */
+
+#ifndef __ID3D11Fence_INTERFACE_DEFINED__
+#define __ID3D11Fence_INTERFACE_DEFINED__
+EXTERN_C const IID IID_ID3D11Fence;
+struct ID3D11Fence: public ID3D11DeviceChild {
+    virtual HRESULT STDMETHODCALLTYPE CreateSharedHandle(const SECURITY_ATTRIBUTES *, DWORD, LPCWSTR, HANDLE *) = 0;
+    virtual UINT64 STDMETHODCALLTYPE GetCompletedValue(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetEventOnCompletion(UINT64, HANDLE) = 0;
+};
+#endif
+
+#ifndef __ID3D11DeviceContext4_INTERFACE_DEFINED__
+#define __ID3D11DeviceContext4_INTERFACE_DEFINED__
+EXTERN_C const IID IID_ID3D11DeviceContext4;
+struct ID3D11DeviceContext4: public ID3D11DeviceContext3 {
+    virtual HRESULT STDMETHODCALLTYPE Signal(ID3D11Fence *, UINT64) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Wait(ID3D11Fence *, UINT64) = 0;
+};
+#endif
+
+#ifndef __ID3D11Device5_INTERFACE_DEFINED__
+#define __ID3D11Device5_INTERFACE_DEFINED__
+typedef enum D3D11_FENCE_FLAG {
+    D3D11_FENCE_FLAG_NONE                 = 0x1,
+    D3D11_FENCE_FLAG_SHARED               = 0x2,
+    D3D11_FENCE_FLAG_SHARED_CROSS_ADAPTER = 0x4
+} D3D11_FENCE_FLAG;
+EXTERN_C const IID IID_ID3D11Device5;
+struct ID3D11Device5: public ID3D11Device4 {
+    virtual HRESULT STDMETHODCALLTYPE OpenSharedFence(HANDLE, REFIID, void **) = 0;
+    virtual HRESULT STDMETHODCALLTYPE CreateFence(UINT64, D3D11_FENCE_FLAG, REFIID, void **) = 0;
+};
+#endif
+
+
 #include "dxgiint.h"
-
-
