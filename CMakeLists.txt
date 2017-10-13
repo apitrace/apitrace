@@ -140,9 +140,20 @@ if (WIN32)
 
     find_package (DirectX)
 
+    # https://developer.microsoft.com/en-us/windows/projects/campaigns/windows-dev-essentials-how-windows-10-sdks-ship
+    set (REQUIRED_WINDOWS_SDK 10.0.14393.0)
     if (MSVC AND NOT DirectX_D3D11_4_INCLUDE_FOUND)
-        # XXX: is it might be necessary to explicitely select it via -DCMAKE_SYSTEM_VERSION=?
-        message (FATAL_ERROR "Windows 10.0.14393 SDK or newer is required for D3D11.4 support")
+        if (CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+            message (SEND_ERROR
+                "Windows ${REQUIRED_WINDOWS_SDK} SDK required, but ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION} found.\n"
+                "Install it then select it by configuring with -DCMAKE_SYSTEM_VERSION=${REQUIRED_WINDOWS_SDK} option.")
+
+        else ()
+            message (SEND_ERROR
+                "Windows ${REQUIRED_WINDOWS_SDK} SDK required.\n"
+                "Install it then select it by invoking `vcvarsall.bat <arch> ${REQUIRED_WINDOWS_SDK}`"
+            )
+        endif ()
     endif ()
 
     set (ENABLE_EGL false)
