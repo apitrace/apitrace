@@ -86,6 +86,7 @@ class LeakDetector(unpickle.Unpickler):
             'CGLCreateContext',
             'eglCreateContext',
             'glXCreateContext',
+            'glXCreateNewContext',
             'glXCreateContextAttribsARB',
             'glXCreateContextWithConfigSGIX',
             'wglCreateContext',
