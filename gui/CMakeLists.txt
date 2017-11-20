@@ -73,7 +73,8 @@ set (CMAKE_AUTOMOC ON)
 
 # Workaround https://github.com/apitrace/apitrace/issues/528
 if (${CMAKE_VERSION} VERSION_LESS 3.9.0 OR
-    ${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.9.5)
+    ${CMAKE_VERSION} VERSION_EQUAL 3.9.5 OR
+    ${CMAKE_VERSION} VERSION_GREATER 3.9.5)
     # Silence `Note: No relevant classes found. No output generated.`
     set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
 endif ()
