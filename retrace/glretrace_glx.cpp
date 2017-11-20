@@ -151,6 +151,11 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
     }
 }
 
+static void retrace_glXSwapBuffersMscOML(trace::Call &call) {
+    // ignore additional arguments
+    retrace_glXSwapBuffers(call);
+}
+
 static void retrace_glXCreateNewContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     if (!orig_context) {
@@ -289,7 +294,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     //{"glXSelectEvent", &retrace_glXSelectEvent},
     //{"glXSelectEventSGIX", &retrace_glXSelectEventSGIX},
     //{"glXSet3DfxModeMESA", &retrace_glXSet3DfxModeMESA},
-    //{"glXSwapBuffersMscOML", &retrace_glXSwapBuffersMscOML},
+    {"glXSwapBuffersMscOML", &retrace_glXSwapBuffersMscOML},
     {"glXSwapBuffers", &retrace_glXSwapBuffers},
     {"glXSwapIntervalEXT", &retrace::ignore},
     {"glXSwapIntervalMESA", &retrace::ignore},
