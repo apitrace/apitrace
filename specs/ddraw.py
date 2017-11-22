@@ -901,7 +901,7 @@ DirectDrawPaletteCapsFlags = Flags(DWORD, [
     "DDPCAPS_4BIT",
     "DDPCAPS_8BITENTRIES",
     "DDPCAPS_8BIT",
-    "DDPCAPS_INITIALIZE",
+    #"DDPCAPS_INITIALIZE", # Obsolete.  It previously defined as 0x8 but defined now 0x0.
     "DDPCAPS_PRIMARYSURFACE",
     "DDPCAPS_PRIMARYSURFACELEFT",
     "DDPCAPS_ALLOW256",
