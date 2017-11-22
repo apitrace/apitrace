@@ -144,7 +144,6 @@ void Dumper::visit(Bitmask *bitmask) {
     const BitmaskSig *sig = bitmask->sig;
     bool first = true;
     for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
-        assert(it->value || first);
         if ((it->value && (value & it->value) == it->value) ||
             (!it->value && value == 0)) {
             if (!first) {
