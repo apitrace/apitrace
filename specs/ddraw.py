@@ -108,24 +108,38 @@ DDBLTFX = Struct("DDBLTFX", [
     (DWORD, "dwZBufferHigh"),
     (DWORD, "dwZBufferBaseDest"),
     (DWORD, "dwZDestConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwZDestConst"),
-    (LPDIRECTDRAWSURFACE, "lpDDSZBufferDest"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSZBufferDest"),
+
     (DWORD, "dwZSrcConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwZSrcConst"),
-    (LPDIRECTDRAWSURFACE, "lpDDSZBufferSrc"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSZBufferSrc"),
+
     (DWORD, "dwAlphaEdgeBlendBitDepth"),
     (DWORD, "dwAlphaEdgeBlend"),
     (DWORD, "dwReserved"),
     (DWORD, "dwAlphaDestConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwAlphaDestConst"),
-    (LPDIRECTDRAWSURFACE, "lpDDSAlphaDest"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSAlphaDest"),
+
     (DWORD, "dwAlphaSrcConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwAlphaSrcConst"),
     (LPDIRECTDRAWSURFACE, "lpDDSAlphaSrc"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwFillColor"),
     (DWORD, "dwFillDepth"),
     (DWORD, "dwFillPixel"),
-    (LPDIRECTDRAWSURFACE, "lpDDSPattern"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSPattern"),
+
     (DDCOLORKEY, "ddckDestColorkey"),
     (DDCOLORKEY, "ddckSrcColorkey"),
 ])
@@ -547,6 +561,8 @@ DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
     (DWORD, "dwSize"),
     (DirectDrawPixelFormatFlags, "dwFlags"),
     (DWORD, "dwFourCC"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwRGBBitCount"),
     (DWORD, "dwYUVBitCount"),
     (DWORD, "dwZBufferBitDepth"),
@@ -554,12 +570,16 @@ DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
     (DWORD, "dwLuminanceBitCount"),
     (DWORD, "dwBumpBitCount"),
     (DWORD, "dwPrivateFormatBitCount"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwRBitMask"),
     (DWORD, "dwYBitMask"),
     (DWORD, "dwStencilBitDepth"),
     (DWORD, "dwLuminanceBitMask"),
     (DWORD, "dwBumpDuBitMask"),
     (DWORD, "dwOperations"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwGBitMask"),
     (DWORD, "dwUBitMask"),
     (DWORD, "dwZBitMask"),
@@ -568,10 +588,14 @@ DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
         (WORD, "wFlipMSTypes"),
         (WORD, "wBltMSTypes"),
     ]), "MultiSampleCaps"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwBBitMask"),
     (DWORD, "dwVBitMask"),
     (DWORD, "dwStencilBitMask"),
     (DWORD, "dwBumpLuminanceBitMask"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwRGBAlphaBitMask"),
     (DWORD, "dwYUVAlphaBitMask"),
     (DWORD, "dwLuminanceAlphaBitMask"),
@@ -586,11 +610,17 @@ DDOVERLAYFX = Struct("DDOVERLAYFX", [
     (DWORD, "dwAlphaEdgeBlend"),
     (DWORD, "dwReserved"),
     (DWORD, "dwAlphaDestConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwAlphaDestConst"),
-    (LPDIRECTDRAWSURFACE, "lpDDSAlphaDest"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSAlphaDest"),
+
     (DWORD, "dwAlphaSrcConstBitDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwAlphaSrcConst"),
-    (LPDIRECTDRAWSURFACE, "lpDDSAlphaSrc"),
+    #(LPDIRECTDRAWSURFACE, "lpDDSAlphaSrc"),
+
     (DDCOLORKEY, "dckDestColorkey"),
     (DDCOLORKEY, "dckSrcColorkey"),
     (DWORD, "dwDDFX"),
@@ -671,12 +701,18 @@ DDSURFACEDESC = Struct("DDSURFACEDESC", [
     (DirectDrawSurfaceDescFlags, "dwFlags"),
     (DWORD, "dwHeight"),
     (DWORD, "dwWidth"),
+
+    # FIXME: Anonymous union
     (LONG, "lPitch"),
     (DWORD, "dwLinearSize"),
+
     (DWORD, "dwBackBufferCount"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwMipMapCount"),
     (DWORD, "dwZBufferBitDepth"),
     (DWORD, "dwRefreshRate"),
+
     (DWORD, "dwAlphaBitDepth"),
     (DWORD, "dwReserved"),
     (IntPointer("LPVOID"), "lpSurface"),
@@ -694,23 +730,36 @@ DDSURFACEDESC2 = Struct("DDSURFACEDESC2", [
     (DirectDrawSurfaceDescFlags, "dwFlags"),
     (DWORD, "dwHeight"),
     (DWORD, "dwWidth"),
+
+    # FIXME: Anonymous union
     (LONG, "lPitch"),
     (DWORD, "dwLinearSize"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwBackBufferCount"),
     (DWORD, "dwDepth"),
+
+    # FIXME: Anonymous union
     (DWORD, "dwMipMapCount"),
     (DWORD, "dwRefreshRate"),
     (DWORD, "dwSrcVBHandle"),
+
     (DWORD, "dwAlphaBitDepth"),
     (DWORD, "dwReserved"),
     (IntPointer("LPVOID"), "lpSurface"),
+
+    # FIXME: Anonymous union
     (DDCOLORKEY, "ddckCKDestOverlay"),
     (DWORD, "dwEmptyFaceColor"),
+
     (DDCOLORKEY, "ddckCKDestBlt"),
     (DDCOLORKEY, "ddckCKSrcOverlay"),
     (DDCOLORKEY, "ddckCKSrcBlt"),
+
+    # FIXME: Anonymous union
     (DDPIXELFORMAT, "ddpfPixelFormat"),
     (DWORD, "dwFVF"),
+
     (DDSCAPS2, "ddsCaps"),
     (DWORD, "dwTextureStage"),
 ])
