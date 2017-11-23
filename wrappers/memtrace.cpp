@@ -45,8 +45,6 @@
 #  define HAVE_SSE2
 
 // TODO: Detect and leverage SSE 4.1 and 4.2 at runtime
-#  undef HAVE_SSE41
-#  undef HAVE_SSE42
 
 #endif
 

@@ -37,6 +37,8 @@ option (ENABLE_EGL "Enable EGL support." ON)
 
 option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
 
+option (ENABLE_SSE42 "Enable SSE 4.2 intrinsics." OFF)
+
 option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
@@ -313,6 +315,13 @@ else ()
         else ()
             add_compiler_flags (-mincoming-stack-boundary=2)
         endif ()
+    endif ()
+
+    if (ENABLE_SSE42)
+        if (MINGW)
+            add_compiler_flags (-msse4.2)
+        endif ()
+        add_definitions (-DENABLE_SSE42)
     endif ()
 
     # Be nice to Eclipse
