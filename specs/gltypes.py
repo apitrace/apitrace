@@ -121,6 +121,7 @@ GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
 GLfence = Handle("fence", GLuint)
 GLtextureHandle = Handle("textureHandle", GLuint64)
+GLimageHandle = Handle("imageHandle", GLuint64)
 GLsubroutine = Handle("subroutine", GLuint, key=('program', GLhandleARB))
 
 
