@@ -325,6 +325,11 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
                 print '}'
             else:
                 print "    %s = %s;" % (entry, lvalue)
+            if entry.startswith('_textureHandle_map') or entry.startswith('_imageHandle_map'):
+                print '    if (%s != %s) {' % (rvalue, lvalue)
+                print '        std::cout << "Bindless handle doesn\'t match, GPU failures ahead.\\n";'
+                print '    }'
+
             print '    if (retrace::verbosity >= 2) {'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
             print '    }'
