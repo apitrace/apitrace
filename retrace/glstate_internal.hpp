@@ -132,6 +132,38 @@ public:
 const PixelFormat *
 getPixelFormat(GLenum internalFormat);
 
+/**
+ * Helper class to temporarily create a temporary id for a specified target until
+ * control leaves the declaration scope.
+ */
+class TempId
+{
+private:
+    GLenum target;
+    GLuint id;
+
+public:
+    TempId(GLenum _target);
+    GLuint ID(){ return id; }
+    ~TempId();
+};
+
+/**
+ * Helper class to temporarily bind a texture to the specified target until
+ * control leaves the declaration scope.
+ */
+class TextureBinding
+{
+private:
+    GLenum target;
+    GLuint id;
+    GLuint prev_id;
+
+public:
+    TextureBinding(GLenum _target, GLuint _id);
+    GLuint ID(){ return id; }
+    ~TextureBinding();
+};
 
 /**
  * Helper class to temporarily bind a buffer to the specified target until
@@ -149,7 +181,6 @@ public:
 
     ~BufferBinding();
 };
-
 
 /**
  * Helper class to temporarily map a buffer (if necessary), and unmap when
