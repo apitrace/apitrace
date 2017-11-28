@@ -133,6 +133,7 @@ Retracer::Retracer(QObject *parent)
       m_doubleBuffered(true),
       m_singlethread(false),
       m_useCoreProfile(false),
+      m_msaaResolve(true),
       m_captureState(false),
       m_captureThumbnails(false),
       m_captureCall(0),
@@ -233,6 +234,16 @@ void Retracer::setProfiling(bool gpu, bool cpu, bool pixels)
     m_profileGpu = gpu;
     m_profileCpu = cpu;
     m_profilePixels = pixels;
+}
+
+bool Retracer::isMsaaResolve() const
+{
+    return m_msaaResolve;
+}
+
+void Retracer::setMsaaResolve(bool resolve)
+{
+    m_msaaResolve = resolve;
 }
 
 void Retracer::setCaptureAtCallNumber(qlonglong num)
@@ -345,6 +356,10 @@ void Retracer::run()
 
     if (m_useCoreProfile) {
         arguments << QLatin1String("--core");
+    }
+
+    if (!m_msaaResolve) {
+        arguments << QLatin1String("--msaa-no-resolve");
     }
 
     if (m_captureState) {
