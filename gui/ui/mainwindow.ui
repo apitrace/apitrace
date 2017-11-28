@@ -103,7 +103,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>77</width>
+     <width>85</width>
      <height>100</height>
     </size>
    </property>
@@ -215,7 +215,17 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0" colspan="2">
+         <item row="1" column="2">
+          <widget class="QCheckBox" name="surfacesResolveMSAA">
+           <property name="text">
+            <string>Resolve (MSAA)</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="3">
           <widget class="QTreeWidget" name="surfacesTreeWidget">
            <column>
             <property name="text">
@@ -455,7 +465,7 @@
          <property name="maximum">
           <number>1024</number>
          </property>
-       </widget>
+        </widget>
        </item>
       </layout>
      </item>
