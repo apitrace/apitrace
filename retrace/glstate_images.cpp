@@ -301,7 +301,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 
         GLint buffer_size = 0;
         glGetBufferParameteriv(GL_TEXTURE_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-        
+
         glBindBuffer(GL_TEXTURE_BUFFER, active_buffer);
 
         glGetIntegerv(GL_TEXTURE_BUFFER_FORMAT_ARB, &desc.internalFormat);
@@ -467,6 +467,170 @@ getTexImageOES(GLenum target, GLint level, GLenum format, GLenum type,
     glDeleteFramebuffers(1, &fbo);
 }
 
+/**
+ * Simple Shader compile
+ */
+static inline int
+compileShader(const GLchar* shaderSource, GLenum shaderType )
+{
+
+    uint id;
+    GLint result;
+    int logLength;
+    char logInfo[1000];
+
+    id = glCreateShader(shaderType);
+    glShaderSource(id, 1, (const GLchar**)&shaderSource, NULL);
+    glCompileShader(id);
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+
+    if (result == GL_FALSE) {
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &logLength);
+        glGetShaderInfoLog(id, logLength, NULL, &logInfo[0]);
+        std::cerr << std::endl << logInfo << std::endl;
+        return -1;
+    }
+
+    return id;
+}
+
+/**
+ * Program Creation / Linking.
+ */
+static inline int
+createProgram(GLint vshaderID, GLint pshaderID )
+{
+
+    uint id;
+    GLint result;
+    int logLength;
+    char logInfo[1000];
+
+    id = glCreateProgram();
+    glAttachShader(id, vshaderID);
+    glAttachShader(id, pshaderID);
+    glLinkProgram(id);
+    glGetProgramiv(id, GL_LINK_STATUS, &result);
+
+    if (result == GL_FALSE) {
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &logLength);
+        glGetShaderInfoLog(id, logLength, NULL, &logInfo[0]);
+        std::cerr << std::endl << logInfo << std::endl;
+        return -1;
+    }
+
+    return id;
+}
+
+/**
+ * OpenGL does not easily fetch multisample texels. Obtain the pixels by attaching the
+ * texture to a framebuffer and using a multisample texel fetch.
+ */
+static inline void
+getTexImageMSAA(GLenum target, GLenum format, GLenum type,
+               ImageDesc &desc, GLubyte *pixels, bool resolve)
+{
+    // Assume MSAA texture is already bound.
+    // Collect existing state to replace later.
+
+
+    // zero out the destination buffer.
+    memset(pixels, 0x80, desc.height * desc.width * 4 * desc.samples);
+
+    // Create an empty texture of correct size. (tall)
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, desc.height * desc.samples, 0, format, type, 0);
+
+    // Create render buffer
+    //GLuint rboId;
+    //glGenRenderbuffers(1, &rboId);
+    //glBindRenderbuffer(GL_RENDERBUFFER, rboId);
+    //glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, desc.width, desc.height * desc.samples);
+
+    // Create FBO
+    GLuint fboId;
+    glGenFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId, 0);
+    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboId);
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cerr << "Framebuffer not done..." << std::endl;
+        return;
+    }
+
+    // Create blitting program
+    const GLchar* const vShaderSource =
+        "in vec4 Position;\n            "
+        "void main() {\n                "
+        "     gl_Position = Position;\n "
+        "}\n                            ";
+    GLint vshaderID = compileShader(vShaderSource, GL_VERTEX_SHADER);
+
+    const GLchar* const pShaderSource =
+        "#version 430\n;                                        "
+        "uniform int texHeight;\n                               "
+        "uniform sampler2DMS Sampler;\n                         "
+        "layout(location =0) out vec4 FragColor;\n              "
+        "void main() {\n                                        "
+        "     ivec2 coord = ivec2(gl_FragCoord.xy);\n           "
+        "     coord.y %= texHeight;\n                           "
+        "     int height = int(gl_FragCoord.y / texHeight);\n   "
+        "     FragColor = texelFetch(Sampler, coord, height);\n "
+        "}\n                                                    ";
+
+    GLint pshaderID = compileShader(pShaderSource, GL_FRAGMENT_SHADER);
+
+    GLint programID = createProgram(vshaderID, pshaderID);
+    glDeleteShader(vshaderID);
+    glDeleteShader(pshaderID);
+    glUseProgram(programID);
+
+    // Pass uniform for texture height
+    GLint myLoc = glGetUniformLocation(programID, "texHeight");
+    glProgramUniform1i(programID, myLoc, desc.height);
+
+    // Vertices for 2 tri strip
+    const GLint channels = 4;
+    const GLint vertices = 4;
+    static const float vertArray[vertices][channels] = {
+         1.0f, -1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f,
+    };
+
+    GLuint vao, vbo[1]; //only position
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, vbo); // only position
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+
+    // Copy vertex data into vertex buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertArray), vertArray, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    // Super tall texture.
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glViewport(0 /*X*/, 0 /*Y*/, desc.width, desc.height * desc.samples);
+    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glReadPixels(0 /*X*/, 0 /*Y*/, desc.width, desc.height * desc.samples, format, type, pixels);
+
+}
 
 static inline void
 dumpActiveTextureLevel(StateWriter &writer, Context &context,
@@ -474,10 +638,15 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
                        const std::string & label,
                        const char *userLabel)
 {
-    if (target == GL_TEXTURE_2D_MULTISAMPLE ||
-        target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY) {
-        std::cerr << "warning: dumping of MSAA textures (" << enumToString(target) << ") is unsupported\n";
-        return;
+
+    bool multiSample = (target == GL_TEXTURE_2D_MULTISAMPLE
+                        || target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY) ? true : false;
+
+    if (multiSample) {
+        std::cerr << std::endl << std::endl;
+        std::cerr << "Dumping of MSAA textures (" << enumToString(target) << ") is not yet supported.\n";
+        std::cerr << "label: " << label << std::endl;
+        std::cerr << "user label: " << userLabel << std::endl << std::endl;
     }
 
     ImageDesc desc;
@@ -513,13 +682,25 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     image::ChannelType channelType;
     getImageFormat(format, type, channels, channelType);
 
-    if (0) {
-        std::cerr << enumToString(desc.internalFormat) << " "
-                  << enumToString(format) << " "
-                  << enumToString(type) << "\n";
+    if (multiSample) {
+        std::cerr << enumToString(desc.internalFormat) << std::endl
+                  << enumToString(format) << std::endl
+                  << enumToString(type) << std::endl
+                  << "desc (w,h,d) (" << desc.width << ", " << desc.height << ", " << desc.depth << ")" << std::endl;
+        std::cerr << "channels: " << channels << ", channelType: " << channelType << std::endl;
+
     }
 
-    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
+    image::Image *image;
+
+    if (multiSample) {
+        std::cerr << "Sample Num: " << desc.samples << "\n";
+    }
+
+    // Assuming that the MSAA texture, make it taller by X samples.
+    uint samples = std::max(desc.samples, 1);
+
+    image = new image::Image(desc.width, desc.height*desc.depth*samples, channels, true, channelType);
 
     PixelPackState pps(context);
 
@@ -542,7 +723,14 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
             pixelFormat->unpackSpan(static_cast<const uint8_t *>(map),
                                     reinterpret_cast<float *>(image->pixels), image->width);
         }
-    } else {
+    } else if (multiSample) {
+        // Perform multisample retrieval here:
+        // MSAA textures have no LOD only sample number.
+        bool resolve = true;
+        getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+    }
+    else {
+
         if (context.ES) {
             getTexImageOES(target, level, format, type, desc, image->pixels);
         } else {
@@ -887,11 +1075,11 @@ getBoundRenderbufferDesc(Context &context, ImageDesc &desc)
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &desc.width);
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &desc.height);
     desc.depth = 1;
-    
+
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &desc.samples);
 
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &desc.internalFormat);
-    
+
     return desc.valid();
 }
 
@@ -906,7 +1094,7 @@ getRenderbufferDesc(Context &context, GLint renderbuffer, ImageDesc &desc)
     getBoundRenderbufferDesc(context, desc);
 
     glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
-    
+
     return desc.valid();
 }
 
@@ -1123,7 +1311,7 @@ getDrawBufferImage(int n)
         delete image;
         return NULL;
     }
-     
+
     return image;
 }
 
@@ -1410,7 +1598,7 @@ dumpDrawableImages(StateWriter &writer, Context &context)
             dumpReadBufferImage(writer, context, "GL_STENCIL_INDEX", NULL, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
         }
     }
-    
+
     // Restore original read framebuffer
     if (context.read_framebuffer_object) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
