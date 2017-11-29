@@ -81,6 +81,12 @@ struct ImageDesc
         internalFormat(GL_NONE)
     {}
 
+    inline
+    ImageDesc(const ImageDesc& src) :
+            width(src.width), height(src.height), depth(src.depth),
+            samples(src.samples), internalFormat(src.internalFormat)
+    {}
+
     inline bool
     operator == (const ImageDesc &other) const {
         return width == other.width &&
@@ -534,89 +540,113 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 {
     // Assume MSAA texture is already bound.
 
-    // zero out the destination buffer.
-    memset(pixels, 0x80, desc.height * desc.width * 4 * desc.samples);
+    if (resolve){
+        // copy back a finished resolved MSAA surface
 
-    // Create an empty texture of correct size. (tall)
-    TempId tex = TempId(GL_TEXTURE);
-    TextureBinding bt = TextureBinding(GL_TEXTURE_2D, tex.ID());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, desc.height * desc.samples, 0, format, type, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
-
-    // Create FBO
-    TempId fbo = TempId(GL_FRAMEBUFFER);
-    BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
-
-    GLenum DrawBuffers = GL_COLOR_ATTACHMENT0;
-    glDrawBuffers(1, &DrawBuffers);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cerr << "Framebuffer not done..." << std::endl;
-        return;
     }
+    else{
+        // read out each individual sample surface with border for MSAA surface
 
-    // Create blitting program
-    const GLchar* const vShaderSource =
-        "in vec4 Position;\n            "
-        "void main() {\n                "
-        "     gl_Position = Position;\n "
-        "}\n                            ";
+        ImageDesc new_desc = ImageDesc(desc);
 
-    const GLchar* const pShaderSource =
-        "#version 430\n;                                        "
-        "uniform int texHeight;\n                               "
-        "uniform sampler2DMS Sampler;\n                         "
-        "layout(location =0) out vec4 FragColor;\n              "
-        "void main() {\n                                        "
-        "     ivec2 coord = ivec2(gl_FragCoord.xy);\n           "
-        "     coord.y %= texHeight;\n                           "
-        "     int height = int(gl_FragCoord.y / texHeight);\n   "
-        "     FragColor = texelFetch(Sampler, coord, height);\n "
-        "}\n                                                    ";
+        // Border adds in between lines of 0 alpha for first line to separate
+        new_desc.height += 1;
 
-    TempId prog = TempId(GL_PROGRAM);
-    createProgram(prog.ID(), vShaderSource, pShaderSource);
+        // zero out the destination buffer. height * width * samples (extra rows between samples)
+        GLuint total_height = new_desc.height * new_desc.samples - 1;
+        memset(pixels, 0x80, total_height * new_desc.width * sizeof(int));
 
-    GLint savedProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &savedProgram);
-    glUseProgram(prog.ID());
+        // Create an empty texture of correct size. (tall)
+        TempId tex = TempId(GL_TEXTURE);
+        TextureBinding bt = TextureBinding(GL_TEXTURE_2D, tex.ID());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_desc.width, total_height, 0, format, type, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
 
-    // Pass uniform for texture height
-    GLint myLoc = glGetUniformLocation(prog.ID(), "texHeight");
-    glProgramUniform1i(prog.ID(), myLoc, desc.height);
+        // Create FBO
+        TempId fbo = TempId(GL_FRAMEBUFFER);
+        BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
 
-    TempId vao = TempId(GL_VERTEX_ARRAY);
-    TempId vbo = TempId(GL_ARRAY_BUFFER);
+        GLenum DrawBuffers = GL_COLOR_ATTACHMENT0;
+        glDrawBuffers(1, &DrawBuffers);
 
-    // Copy vertex data into vertex buffer
-    const GLint channels = 4;
-    const GLint vertices = 4;
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cerr << "Framebuffer not done..." << std::endl;
+            return;
+        }
 
-    // Vertices for 2 tri strip
-    static const float vertArray[vertices][channels] = {
-         1.0f, -1.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f,
-    };
+        // Create blitting program
+        const GLchar* const vShaderSource =
+            "in vec4 Position;\n            "
+            "void main() {\n                "
+            "     gl_Position = Position;\n "
+            "}\n                            ";
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertArray), vertArray, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
+        const GLchar* const pShaderSource =
+            "#version 430\n;                                          "
+            "uniform ivec3 texDim; // Width, Height, borderH\n        "
+            "uniform sampler2DMS Sampler;\n                           "
+            "layout(location = 0) out vec4 FragColor;\n               "
+            "void main() {\n                                          "
+            "   ivec2 coord = ivec2(gl_FragCoord.xy);\n               "
+            "   int height = int(gl_FragCoord.y / texDim.y);\n        "
+            "   coord.y = (coord.y % texDim.z);\n                     "
+            "   coord.x = texDim.x - coord.x - 1;\n                   "
+            "   if (coord.y == (texDim.z-1)) { \n                     "
+            "       int alpha = coord.x%2; \n                         "
+            "       FragColor = vec4(0,1,0,alpha); \n                 "
+            "   } \n                                                  "
+            "   else { \n                                             "
+            "       FragColor = texelFetch(Sampler, coord, height);\n "
+            "   } \n                                                  "
+            "}\n                                                      ";
 
-    // Super tall texture.
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glViewport(0 /*X*/, 0 /*Y*/, desc.width, desc.height * desc.samples);
-    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        TempId prog = TempId(GL_PROGRAM);
+        createProgram(prog.ID(), vShaderSource, pShaderSource);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glUseProgram(savedProgram);
+        GLint savedProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &savedProgram);
+        glUseProgram(prog.ID());
 
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(0 /*X*/, 0 /*Y*/, desc.width, desc.height * desc.samples, format, type, pixels);
+        // Pass uniform for texture height
+        GLint myLoc = glGetUniformLocation(prog.ID(), "texDim");
+        glProgramUniform3i(prog.ID(), myLoc, desc.width, desc.height, new_desc.height);
 
+        TempId vao = TempId(GL_VERTEX_ARRAY);
+        TempId vbo = TempId(GL_ARRAY_BUFFER);
+
+        // Copy vertex data into vertex buffer
+        const GLint channels = 4;
+        const GLint vertices = 4;
+
+        // Vertices for 2 tri strip
+        static const float vertArray[vertices][channels] = {
+            1.0f, -1.0f, 0.0f, 1.0f,
+            1.0f,  1.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f, 1.0f,
+        };
+
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertArray), vertArray, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(0);
+
+        // Super tall texture.
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glViewport(0 /*X*/, 0 /*Y*/, new_desc.width, total_height);
+        glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glReadPixels(0 /*X*/, 0 /*Y*/, new_desc.width, total_height, format, type, pixels);
+
+        // Put back state
+        glUseProgram(savedProgram);
+        glDeleteProgram(prog.ID());
+        glDisableVertexAttribArray(0);
+    }
 }
 
 static inline void
@@ -680,12 +710,6 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     }
 
     image::Image *image;
-
-    // Assuming that the MSAA texture, make it taller by X samples.
-    uint samples = std::max(desc.samples, 1);
-
-    image = new image::Image(desc.width, desc.height*desc.depth*samples, channels, true, channelType);
-
     PixelPackState pps(context);
 
     if (target == GL_TEXTURE_BUFFER) {
@@ -694,6 +718,8 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         assert(pixelFormat);
         assert(format == GL_RGBA);
         assert(type == GL_FLOAT);
+
+        image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
         assert(image->bytesPerPixel == sizeof(float[4]));
 
         GLint buffer = 0;
@@ -710,10 +736,18 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     } else if (multiSample) {
         // Perform multisample retrieval here:
         // MSAA textures have no LOD only sample number.
-        bool resolve = true;
+        // Assuming that the MSAA texture,
+        // make it taller by X samples and add a row between each sample
+        uint samples = std::max(desc.samples, 1);
+        uint total_height = ((desc.height + 1) * samples) - 1;
+        image = new image::Image(desc.width, total_height, channels, true, channelType);
+
+        bool resolve = false;
         getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
     }
     else {
+        // Create a simple image single sample size.
+        image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
 
         if (context.ES) {
             getTexImageOES(target, level, format, type, desc, image->pixels);
