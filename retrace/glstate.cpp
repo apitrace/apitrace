@@ -127,20 +127,23 @@ TempId::TempId(GLenum _target) :
     id(0)
 {
     switch (target){
-    case GL_TEXTURE:
-        glGenTextures(1, &id);
+    case GL_ARRAY_BUFFER:
+        glGenBuffers(1, &id);
         break;
     case GL_FRAMEBUFFER:
         glGenFramebuffers(1, &id);
         break;
-    case GL_VERTEX_ARRAY:
-        glGenVertexArrays(1, &id);
-        break;
-    case GL_ARRAY_BUFFER:
-        glGenBuffers(1, &id);
-        break;
     case GL_PROGRAM:
         id = glCreateProgram();
+        break;
+    case GL_RENDERBUFFER:
+        glGenRenderbuffers(1, &id);
+        break;
+    case GL_TEXTURE:
+        glGenTextures(1, &id);
+        break;
+    case GL_VERTEX_ARRAY:
+        glGenVertexArrays(1, &id);
         break;
     default:
         assert(false);
@@ -152,20 +155,23 @@ TempId::TempId(GLenum _target) :
 TempId::~TempId()
 {
     switch (target){
-    case GL_TEXTURE:
-        glDeleteTextures(1, &id);
+    case GL_ARRAY_BUFFER:
+        glDeleteBuffers(1, &id);
         break;
     case GL_FRAMEBUFFER:
         glDeleteFramebuffers(1, &id);
         break;
-    case GL_VERTEX_ARRAY:
-        glGenVertexArrays(1, &id);
-        break;
-    case GL_ARRAY_BUFFER:
-        glDeleteBuffers(1, &id);
-        break;
     case GL_PROGRAM:
         glDeleteProgram(id);
+        break;
+    case GL_RENDERBUFFER:
+        glGenRenderbuffers(1, &id);
+        break;
+    case GL_TEXTURE:
+        glDeleteTextures(1, &id);
+        break;
+    case GL_VERTEX_ARRAY:
+        glGenVertexArrays(1, &id);
         break;
     default:
         assert(false);
@@ -217,6 +223,8 @@ getBufferBinding(GLenum target) {
         return GL_PIXEL_UNPACK_BUFFER_BINDING;
     case GL_QUERY_BUFFER:
         return GL_QUERY_BUFFER_BINDING;
+    case GL_RENDERBUFFER:
+        return GL_RENDERBUFFER_BINDING;
     case GL_SHADER_STORAGE_BUFFER:
         return GL_SHADER_STORAGE_BUFFER_BINDING;
     case GL_TEXTURE_BUFFER:
@@ -241,23 +249,34 @@ BufferBinding::BufferBinding(GLenum _target, GLuint _buffer) :
     glGetIntegerv(binding, (GLint *) &prevBuffer);
 
     if (prevBuffer != buffer) {
-        if (target == GL_FRAMEBUFFER) {
-            glBindFramebuffer(target, prevBuffer);
+        switch(target)
+        {
+        case GL_FRAMEBUFFER:
+            glBindFramebuffer(target, buffer);
+            break;
+        case GL_RENDERBUFFER:
+            glBindRenderbuffer(target, buffer);
+            break;
+        default:
+            glBindBuffer(target, buffer);
+            break;
         }
-        else {
-            glBindBuffer(target, prevBuffer);
-        }
-
     }
 }
 
 BufferBinding::~BufferBinding() {
     if (prevBuffer != buffer) {
-        if (target == GL_FRAMEBUFFER) {
-            glBindFramebuffer(target, buffer);
-        }
-        else {
-            glBindBuffer(target, buffer);
+        switch(target)
+        {
+        case GL_FRAMEBUFFER:
+            glBindFramebuffer(target, prevBuffer);
+            break;
+        case GL_RENDERBUFFER:
+            glBindRenderbuffer(target, prevBuffer);
+            break;
+        default:
+            glBindBuffer(target, prevBuffer);
+            break;
         }
     }
 }

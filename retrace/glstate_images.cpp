@@ -539,14 +539,53 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
                ImageDesc &desc, GLubyte *pixels, bool resolve)
 {
     // Assume MSAA texture is already bound.
-
     if (resolve){
         // copy back a finished resolved MSAA surface
+        memset(pixels, 0x80, desc.height * desc.width * sizeof(int));
+
+        // Create Src FBO
+        GLint msaa_tex;
+        glGetIntegerv(getTextureBinding(GL_TEXTURE_2D_MULTISAMPLE), &msaa_tex);
+        TempId fbo_src = TempId(GL_FRAMEBUFFER);
+        BufferBinding fb_src = BufferBinding(GL_FRAMEBUFFER, fbo_src.ID());
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_src.ID());
+
+        TempId rbo = TempId(GL_RENDERBUFFER);
+        BufferBinding rb = BufferBinding(GL_RENDERBUFFER, rbo.ID());
+
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, desc.samples, desc.internalFormat, desc.width, desc.height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo.ID());
+
+        // Create Dest FBO
+        TempId fbo_dst = TempId(GL_FRAMEBUFFER);
+        BufferBinding fb_dst = BufferBinding(GL_FRAMEBUFFER, fbo_dst.ID());
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_src.ID());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_dst.ID());
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+        // Create an empty texture of correct size.
+        TempId tex = TempId(GL_TEXTURE);
+        TextureBinding bt = TextureBinding(GL_TEXTURE_2D, tex.ID());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, desc.height, 0, format, type, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cerr << "Framebuffer not done..." << std::endl;
+            return;
+        }
+
+        // Blit frame buffer from MSAA to 2D Non MSAA.
+        glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_dst.ID());
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glReadPixels(0 /*X*/, 0 /*Y*/, desc.width, desc.height, format, type, pixels);
 
     }
     else{
         // read out each individual sample surface with border for MSAA surface
-
         ImageDesc new_desc = ImageDesc(desc);
 
         // Border adds in between lines of 0 alpha for first line to separate
@@ -565,9 +604,7 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
         // Create FBO
         TempId fbo = TempId(GL_FRAMEBUFFER);
         BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
-
-        GLenum DrawBuffers = GL_COLOR_ATTACHMENT0;
-        glDrawBuffers(1, &DrawBuffers);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -632,7 +669,6 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
         glEnableVertexAttribArray(0);
 
         // Super tall texture.
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
         glViewport(0 /*X*/, 0 /*Y*/, new_desc.width, total_height);
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -692,21 +728,12 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     image::ChannelType channelType;
     getImageFormat(format, type, channels, channelType);
 
-    if (multiSample && 0 /*Debug printout*/) {
-
+    if (multiSample && 1 /*Debug printout*/) {
         std::cerr << std::endl << std::endl;
-        std::cerr << "Dumping of MSAA textures: " << std::endl;
-        std::cerr << enumToString(target) << std::endl;
-        std::cerr << "label: " << label << std::endl;
-        std::cerr << "user label: " << userLabel << std::endl;
-
-        std::cerr << std::endl;
-        std::cerr << enumToString(desc.internalFormat) << std::endl
-                  << enumToString(format) << std::endl
-                  << enumToString(type) << std::endl;
-
-        std::cerr << "desc (w,h,d) (" << desc.width << ", " << desc.height << ", " << desc.depth << ")" << std::endl;
-        std::cerr << "channels: " << channels << ", channelType: " << channelType << std::endl;
+        std::cerr << label << ", " << userLabel << std::endl;
+        std::cerr << enumToString(desc.internalFormat) << ", " << enumToString(format) << ", " << enumToString(type) << std::endl;
+        std::cerr << "desc (w,h,d) (" << desc.width << ", " << desc.height << ", " << desc.depth << "), "
+                  << "channels: " << channels << ", channelType: " << channelType << std::endl;
     }
 
     image::Image *image;
@@ -734,14 +761,22 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
                                     reinterpret_cast<float *>(image->pixels), image->width);
         }
     } else if (multiSample) {
-        // Perform multisample retrieval here: MSAA textures have no LOD only sample number.
-        // For unresolved MSAA... make it taller by X samples and add a row between each sample
-        uint samples = std::max(desc.samples, 1);
-        uint total_height = ((desc.height + 1) * samples) - 1;
-        image = new image::Image(desc.width, total_height, channels, true, channelType);
+        // Perform multisample retrieval here.
+        bool resolve = true;
 
-        bool resolve = false;
-        getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+        if (resolve){
+            // For resolved MSAA...
+            image = new image::Image(desc.width, desc.height, channels, true, channelType);
+            getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+        }
+        else {
+            // For unresolved MSAA...
+            // Make it taller by X samples and add a row between each sample
+            uint samples = std::max(desc.samples, 1);
+            uint total_height = ((desc.height + 1) * samples) - 1;
+            image = new image::Image(desc.width, total_height, channels, true, channelType);
+            getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+        }
     }
     else {
         // Create a simple image single sample size.
