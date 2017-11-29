@@ -659,13 +659,6 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     bool multiSample = (target == GL_TEXTURE_2D_MULTISAMPLE
                         || target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY) ? true : false;
 
-    if (multiSample) {
-        std::cerr << std::endl << std::endl;
-        std::cerr << "Dumping of MSAA textures (" << enumToString(target) << ") is not yet supported.\n";
-        std::cerr << "label: " << label << std::endl;
-        std::cerr << "user label: " << userLabel << std::endl << std::endl;
-    }
-
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
@@ -699,7 +692,14 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     image::ChannelType channelType;
     getImageFormat(format, type, channels, channelType);
 
-    if (multiSample) {
+    if (multiSample && 0 /*Debug printout*/) {
+
+        std::cerr << std::endl << std::endl;
+        std::cerr << "Dumping of MSAA textures: " << std::endl;
+        std::cerr << enumToString(target) << std::endl;
+        std::cerr << "label: " << label << std::endl;
+        std::cerr << "user label: " << userLabel << std::endl;
+
         std::cerr << std::endl;
         std::cerr << enumToString(desc.internalFormat) << std::endl
                   << enumToString(format) << std::endl
@@ -734,10 +734,8 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
                                     reinterpret_cast<float *>(image->pixels), image->width);
         }
     } else if (multiSample) {
-        // Perform multisample retrieval here:
-        // MSAA textures have no LOD only sample number.
-        // Assuming that the MSAA texture,
-        // make it taller by X samples and add a row between each sample
+        // Perform multisample retrieval here: MSAA textures have no LOD only sample number.
+        // For unresolved MSAA... make it taller by X samples and add a row between each sample
         uint samples = std::max(desc.samples, 1);
         uint total_height = ((desc.height + 1) * samples) - 1;
         image = new image::Image(desc.width, total_height, channels, true, channelType);
