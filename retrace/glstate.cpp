@@ -188,13 +188,13 @@ TextureBinding::TextureBinding(GLenum _target, GLuint _id) :
     GLenum binding = getTextureBinding(target);
     glGetIntegerv(binding, (GLint *) &prev_id);
     if (prev_id != id) {
-        glBindTexture(target, prev_id);
+        glBindTexture(target, id);
     }
 }
 
 TextureBinding::~TextureBinding() {
     if (prev_id != id) {
-        glBindTexture(target, id);
+        glBindTexture(target, prev_id);
     }
 }
 
@@ -252,13 +252,13 @@ BufferBinding::BufferBinding(GLenum _target, GLuint _buffer) :
         switch(target)
         {
         case GL_FRAMEBUFFER:
-            glBindFramebuffer(target, prevBuffer);
+            glBindFramebuffer(target, buffer);
             break;
         case GL_RENDERBUFFER:
-            glBindRenderbuffer(target, prevBuffer);
+            glBindRenderbuffer(target, buffer);
             break;
         default:
-            glBindBuffer(target, prevBuffer);
+            glBindBuffer(target, buffer);
             break;
         }
     }
@@ -269,13 +269,13 @@ BufferBinding::~BufferBinding() {
         switch(target)
         {
         case GL_FRAMEBUFFER:
-            glBindFramebuffer(target, buffer);
+            glBindFramebuffer(target, prevBuffer);
             break;
         case GL_RENDERBUFFER:
-            glBindRenderbuffer(target, buffer);
+            glBindRenderbuffer(target, prevBuffer);
             break;
         default:
-            glBindBuffer(target, buffer);
+            glBindBuffer(target, prevBuffer);
             break;
         }
     }

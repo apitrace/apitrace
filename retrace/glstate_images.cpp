@@ -540,49 +540,92 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 {
     // Assume MSAA texture is already bound.
     if (resolve){
-        // copy back a finished resolved MSAA surface
-        memset(pixels, 0x80, desc.height * desc.width * sizeof(int));
 
-        // Create Src FBO
-        GLint msaa_tex;
-        glGetIntegerv(getTextureBinding(GL_TEXTURE_2D_MULTISAMPLE), &msaa_tex);
-        TempId fbo_src = TempId(GL_FRAMEBUFFER);
-        BufferBinding fb_src = BufferBinding(GL_FRAMEBUFFER, fbo_src.ID());
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_src.ID());
 
-        TempId rbo = TempId(GL_RENDERBUFFER);
-        BufferBinding rb = BufferBinding(GL_RENDERBUFFER, rbo.ID());
 
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, desc.samples, desc.internalFormat, desc.width, desc.height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo.ID());
-
-        // Create Dest FBO
-        TempId fbo_dst = TempId(GL_FRAMEBUFFER);
-        BufferBinding fb_dst = BufferBinding(GL_FRAMEBUFFER, fbo_dst.ID());
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_src.ID());
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_dst.ID());
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-        // Create an empty texture of correct size.
+        // Create an empty texture of correct size. (tall)
         TempId tex = TempId(GL_TEXTURE);
         TextureBinding bt = TextureBinding(GL_TEXTURE_2D, tex.ID());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, desc.height, 0, format, type, 0);
+
+        // Create FBO
+        TempId fbo = TempId(GL_FRAMEBUFFER);
+        BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        GLuint result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (result != GL_FRAMEBUFFER_COMPLETE)
         {
             std::cerr << "Framebuffer not done..." << std::endl;
             return;
         }
 
-        // Blit frame buffer from MSAA to 2D Non MSAA.
-        glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_dst.ID());
+        // Create blitting program
+        const GLchar* const vShaderSource =
+            "in vec4 Position;\n            "
+            "void main() {\n                "
+            "     gl_Position = Position;\n "
+            "}\n                            ";
+
+        const GLchar* const pShaderSource =
+            "#version 430\n;                                          "
+            "uniform ivec3 texDim; // Width, Height, samples\n        "
+            "uniform sampler2DMS Sampler;\n                           "
+            "layout(location = 0) out vec4 FragColor;\n               "
+            "void main() {\n                                          "
+            "   ivec2 coord = ivec2(gl_FragCoord.xy);\n               "
+            "   vec4 outColor = { 0, 0, 0, 0 }; \n                    "
+            "   for (int i=0; i<int(texDim.z); i++) {                 "
+            "       outColor += texelFetch(Sampler, coord, i);\n      "
+            "   } \n                                                  "
+            "   FragColor = outColor / float(texDim.z); \n            "
+            "}\n                                                      ";
+
+        TempId prog = TempId(GL_PROGRAM);
+        createProgram(prog.ID(), vShaderSource, pShaderSource);
+
+        GLint savedProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &savedProgram);
+        glUseProgram(prog.ID());
+
+        // Pass uniform for texture height
+        GLint myLoc = glGetUniformLocation(prog.ID(), "texDim");
+        glProgramUniform3i(prog.ID(), myLoc, desc.width, desc.height, desc.samples);
+
+        TempId vao = TempId(GL_VERTEX_ARRAY);
+        TempId vbo = TempId(GL_ARRAY_BUFFER);
+
+        // Copy vertex data into vertex buffer
+        const GLint channels = 4;
+        const GLint vertices = 4;
+
+        // Vertices for 2 tri strip
+        static const float vertArray[vertices][channels] = {
+            1.0f, -1.0f, 0.0f, 1.0f,
+            1.0f,  1.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f, 1.0f,
+        };
+
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertArray), vertArray, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(0);
+
+        // Super tall texture.
+        glViewport(0 /*X*/, 0 /*Y*/, desc.width, desc.height);
+        glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
         glReadBuffer(GL_COLOR_ATTACHMENT0);
         glReadPixels(0 /*X*/, 0 /*Y*/, desc.width, desc.height, format, type, pixels);
 
+        // Put back state
+        glUseProgram(savedProgram);
+        glDisableVertexAttribArray(0);
     }
     else{
         // read out each individual sample surface with border for MSAA surface
@@ -593,20 +636,22 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 
         // zero out the destination buffer. height * width * samples (extra rows between samples)
         GLuint total_height = new_desc.height * new_desc.samples - 1;
-        memset(pixels, 0x80, total_height * new_desc.width * sizeof(int));
+
 
         // Create an empty texture of correct size. (tall)
         TempId tex = TempId(GL_TEXTURE);
         TextureBinding bt = TextureBinding(GL_TEXTURE_2D, tex.ID());
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_desc.width, total_height, 0, format, type, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
 
         // Create FBO
         TempId fbo = TempId(GL_FRAMEBUFFER);
         BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
+
+        GLuint result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (result != GL_FRAMEBUFFER_COMPLETE)
         {
             std::cerr << "Framebuffer not done..." << std::endl;
             return;
@@ -680,7 +725,6 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 
         // Put back state
         glUseProgram(savedProgram);
-        glDeleteProgram(prog.ID());
         glDisableVertexAttribArray(0);
     }
 }
@@ -767,6 +811,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         if (resolve){
             // For resolved MSAA...
             image = new image::Image(desc.width, desc.height, channels, true, channelType);
+            memset(pixels, 0x80, desc.width * desc.height * sizeof(int));
             getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
         }
         else {
@@ -775,6 +820,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
             uint samples = std::max(desc.samples, 1);
             uint total_height = ((desc.height + 1) * samples) - 1;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
+            memset(pixels, 0x80, desc.width * total_height * sizeof(int));
             getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
         }
     }
