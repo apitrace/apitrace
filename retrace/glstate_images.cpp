@@ -81,12 +81,6 @@ struct ImageDesc
         internalFormat(GL_NONE)
     {}
 
-    inline
-    ImageDesc(const ImageDesc& src) :
-            width(src.width), height(src.height), depth(src.depth),
-            samples(src.samples), internalFormat(src.internalFormat)
-    {}
-
     inline bool
     operator == (const ImageDesc &other) const {
         return width == other.width &&
