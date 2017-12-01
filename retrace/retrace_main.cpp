@@ -84,6 +84,8 @@ bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
 
+bool resolveMSAA = true;
+
 Driver driver = DRIVER_DEFAULT;
 const char *driverModule = NULL;
 
@@ -351,7 +353,7 @@ private:
     RelayRace *race;
 
     unsigned leg;
-    
+
     os::mutex mutex;
     os::condition_variable wake_cond;
 
@@ -593,7 +595,7 @@ static void
 mainLoop() {
     addCallbacks(retracer);
 
-    long long startTime = 0; 
+    long long startTime = 0;
     frameNo = 0;
 
     startTime = os::getTime();
@@ -614,7 +616,7 @@ mainLoop() {
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
 
     if ((retrace::verbosity >= -1) || (retrace::profiling)) {
-        std::cout << 
+        std::cout <<
             "Rendered " << frameNo << " frames"
             " in " <<  timeInterval << " secs,"
             " average of " << (frameNo/timeInterval) << " fps\n";
@@ -633,7 +635,7 @@ mainLoop() {
 
 static void
 usage(const char *argv0) {
-    std::cout << 
+    std::cout <<
         "Usage: " << argv0 << " [OPTION] TRACE [...]\n"
         "Replay TRACE.\n"
         "\n"
@@ -658,6 +660,7 @@ usage(const char *argv0) {
         "      --headless          don't show windows\n"
         "      --sb                use a single buffer visual\n"
         "  -m, --mrt               dump all MRTs and depth/stencil\n"
+        "      --msaa-no-resolve   dump raw sample images of multisampled texture instead of resolved texture\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-alpha    Include alpha channel in snapshots.\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
@@ -692,6 +695,7 @@ enum {
     PDRAWCALLS_OPT,
     PLMETRICS_OPT,
     GENPASS_OPT,
+    MSAA_NO_RESOLVE_OPT,
     SB_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
@@ -723,6 +727,7 @@ longOptions[] = {
     {"headless", no_argument, 0, HEADLESS_OPT},
     {"help", no_argument, 0, 'h'},
     {"mrt", no_argument, 0, 'm'},
+    {"msaa-no-resolve", no_argument, 0, MSAA_NO_RESOLVE_OPT},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
     {"ppd", no_argument, 0, PPD_OPT},
@@ -887,6 +892,9 @@ int main(int argc, char **argv)
             break;
         case 'm':
             retrace::snapshotMRT = true;
+            break;
+        case MSAA_NO_RESOLVE_OPT:
+            retrace::resolveMSAA = false;
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;

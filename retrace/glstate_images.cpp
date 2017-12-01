@@ -34,6 +34,7 @@
 
 #include "image.hpp"
 #include "state_writer.hpp"
+#include "retrace.hpp"
 #include "glproc.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"
@@ -60,6 +61,10 @@ OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *
 
 #endif /* __APPLE__ */
 
+
+namespace retrace {
+    extern bool resolveMSAA;
+}
 
 namespace glstate {
 
@@ -718,7 +723,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     image::ChannelType channelType;
     getImageFormat(format, type, channels, channelType);
 
-    if (multiSample && 1 /*Debug printout*/) {
+    if (0) {
         std::cerr << std::endl << std::endl;
         std::cerr << label << ", " << userLabel << std::endl;
         std::cerr << enumToString(desc.internalFormat) << ", " << enumToString(format) << ", " << enumToString(type) << std::endl;
@@ -752,13 +757,12 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         }
     } else if (multiSample) {
         // Perform multisample retrieval here.
-        bool resolve = false;
 
-        if (resolve){
+        if (retrace::resolveMSAA){
             // For resolved MSAA...
             image = new image::Image(desc.width, desc.height, channels, true, channelType);
             memset(image->pixels, 0x80, desc.width * desc.height * sizeof(int));
-            getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+            getTexImageMSAA(target, format, type, desc, image->pixels, true);
         }
         else {
             // For unresolved MSAA...
@@ -767,7 +771,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
             uint total_height = ((desc.height + 1) * samples) - 1;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
             memset(image->pixels, 0x80, desc.width * total_height * sizeof(int));
-            getTexImageMSAA(target, format, type, desc, image->pixels, resolve);
+            getTexImageMSAA(target, format, type, desc, image->pixels, false);
         }
     }
     else {
