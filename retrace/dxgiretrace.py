@@ -455,7 +455,9 @@ class D3DRetracer(Retracer):
             print r'    }'
             # Interpret argument as string
             Retracer.extractArg(self, function, arg, LPCSTR, lvalue, rvalue)
-            print r'    assert(pData);'
+            print r'    if (!pData) {'
+            print r'        return;'
+            print r'    }'
             print r'    assert(DataSize >= strlen((const char *)pData));'
             print r'    // Some applications include the trailing zero terminator in the data'
             print r'    DataSize = strlen((const char *)pData);'
