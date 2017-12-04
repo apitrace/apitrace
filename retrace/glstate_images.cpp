@@ -479,7 +479,7 @@ static inline int
 compileShader(const GLchar* shaderSource, GLenum shaderType )
 {
 
-    uint id;
+    GLuint id;
     GLint result;
     int logLength;
     char logInfo[1000];
@@ -503,7 +503,7 @@ compileShader(const GLchar* shaderSource, GLenum shaderType )
  * Program Creation / Linking.
  */
 static inline void
-createProgram(uint program_id, const GLchar* vShaderSource, const GLchar* pShaderSource )
+createProgram(GLuint program_id, const GLchar* vShaderSource, const GLchar* pShaderSource)
 {
     GLint result;
     int logLength;
@@ -767,8 +767,8 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         else {
             // For unresolved MSAA...
             // Make it taller by X samples and add a row between each sample
-            uint samples = std::max(desc.samples, 1);
-            uint total_height = ((desc.height + 1) * samples) - 1;
+            GLuint samples = std::max(desc.samples, 1);
+            GLuint total_height = ((desc.height + 1) * samples) - 1;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
             memset(image->pixels, 0x80, desc.width * total_height * sizeof(int));
             getTexImageMSAA(target, format, type, desc, image->pixels, false);
