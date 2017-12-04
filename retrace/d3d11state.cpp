@@ -191,6 +191,11 @@ dumpShaders(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
         dumpShader<ID3D11DeviceChild>(writer, "PS", pPixelShader);
     }
 
+    com_ptr<ID3D11ComputeShader> pComputeShader;
+    pDeviceContext->CSGetShader(&pComputeShader, NULL, NULL);
+    if (pComputeShader) {
+        dumpShader<ID3D11DeviceChild>(writer, "CS", pComputeShader);
+    }
 
     writer.endObject();
     writer.endMember(); // shaders
