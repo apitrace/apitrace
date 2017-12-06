@@ -368,6 +368,7 @@ void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
     m_retracer->setFileName(m_trace->fileName());
     m_retracer->setAPI(m_api);
     m_retracer->setCaptureState(dumpState);
+    m_retracer->setMsaaResolve(m_ui.surfacesResolveMSAA->isChecked());
     m_retracer->setCaptureThumbnails(dumpThumbnails);
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
@@ -924,7 +925,7 @@ void MainWindow::showSelectedSurface()
 
     ImageViewer *viewer =
         new ImageViewer(this, m_ui.surfacesOpaqueCB->isChecked(),
-                        m_ui.surfacesAlphaCB->isChecked());
+                              m_ui.surfacesAlphaCB->isChecked());
 
     QString title;
     if (selectedCall()) {
@@ -1156,6 +1157,8 @@ void MainWindow::initConnections()
     connect(m_ui.surfacesOpaqueCB, SIGNAL(stateChanged(int)), this,
             SLOT(updateSurfacesView()));
     connect(m_ui.surfacesAlphaCB, SIGNAL(stateChanged(int)), this,
+            SLOT(updateSurfacesView()));
+    connect(m_ui.surfacesResolveMSAA, SIGNAL(stateChanged(int)), this,
             SLOT(updateSurfacesView()));
 }
 

@@ -203,6 +203,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="resolveMSAACheckBox">
+       <property name="text">
+        <string>resolveMSAA</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Zoom:</string>
