@@ -1395,6 +1395,10 @@ D3D_FEATURE_LEVEL = Enum("D3D_FEATURE_LEVEL", [
     "D3D_FEATURE_LEVEL_11_1",
 ])
 
+D3D11_RASTERIZED_STREAM = FakeEnum(UINT, [
+    "D3D11_SO_NO_RASTERIZED_STREAM",
+])
+
 ID3D11Device.methods += [
     StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), 1), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
     StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
@@ -1407,7 +1411,7 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CreateInputLayout", [(Array(Const(D3D11_INPUT_ELEMENT_DESC), "NumElements"), "pInputElementDescs"), (UINT, "NumElements"), (Blob(Const(Void), "BytecodeLength"), "pShaderBytecodeWithInputSignature"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D11InputLayout)), "ppInputLayout")]),
     StdMethod(HRESULT, "CreateVertexShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11VertexShader)), "ppVertexShader")]),
     StdMethod(HRESULT, "CreateGeometryShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader")]),
-    StdMethod(HRESULT, "CreateGeometryShaderWithStreamOutput", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (Array(Const(D3D11_SO_DECLARATION_ENTRY), "NumEntries"), "pSODeclaration"), (UINT, "NumEntries"), (Array(Const(UINT), "NumStrides"), "pBufferStrides"), (UINT, "NumStrides"), (UINT, "RasterizedStream"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader")]),
+    StdMethod(HRESULT, "CreateGeometryShaderWithStreamOutput", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (Array(Const(D3D11_SO_DECLARATION_ENTRY), "NumEntries"), "pSODeclaration"), (UINT, "NumEntries"), (Array(Const(UINT), "NumStrides"), "pBufferStrides"), (UINT, "NumStrides"), (D3D11_RASTERIZED_STREAM, "RasterizedStream"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader")]),
     StdMethod(HRESULT, "CreatePixelShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11PixelShader)), "ppPixelShader")]),
     StdMethod(HRESULT, "CreateHullShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11HullShader)), "ppHullShader")]),
     StdMethod(HRESULT, "CreateDomainShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11DomainShader)), "ppDomainShader")]),
