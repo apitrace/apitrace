@@ -43,6 +43,9 @@ public:
     bool isProfiling() const;
     void setProfiling(bool gpu, bool cpu, bool pixels);
 
+    bool isMsaaResolve() const;
+    void setMsaaResolve(bool resolve);
+
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
 
@@ -77,6 +80,7 @@ private:
     bool m_doubleBuffered;
     bool m_singlethread;
     bool m_useCoreProfile;
+    bool m_msaaResolve;
     bool m_captureState;
     bool m_captureThumbnails;
     qlonglong m_captureCall;
