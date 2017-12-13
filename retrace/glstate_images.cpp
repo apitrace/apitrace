@@ -619,20 +619,15 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 
         const GLchar* const pShaderSource =
             "#version 430\n;                                          "
-            "uniform ivec3 texDim; // Width, Height, borderH\n        "
+            "uniform ivec2 texDim; // Width, Height\n                 "
             "uniform sampler2DMS Sampler;\n                           "
             "layout(location = 0) out vec4 FragColor;\n               "
             "void main() {\n                                          "
             "   ivec2 coord = ivec2(gl_FragCoord.xy);\n               "
             "   int height = int(gl_FragCoord.y / texDim.y);\n        "
-            "   coord.y = (coord.y % texDim.z);\n                     "
+            "   coord.y = (coord.y % texDim.y);\n                     "
             "   coord.x = texDim.x - coord.x - 1;\n                   "
-            "   if (coord.y == (texDim.z-1)) { \n                     "
-            "       FragColor = vec4(0.25,0.25,0.25,0.0); \n          "
-            "   } \n                                                  "
-            "   else { \n                                             "
-            "       FragColor = texelFetch(Sampler, coord, height);\n "
-            "   } \n                                                  "
+            "   FragColor = texelFetch(Sampler, coord, height);\n     "
             "}\n                                                      ";
 
 
@@ -643,9 +638,9 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
          * Pass uniform for texture dimensions and viewport height
          * Add bottom border to each sample window only (in-between samples)
          */
-        viewport_height = (desc.height + 1) * desc.samples - 1;
+        viewport_height = desc.height * desc.samples;
         GLint myLoc = glGetUniformLocation(prog.ID(), "texDim");
-        glProgramUniform3i(prog.ID(), myLoc, desc.width, desc.height, desc.height+1);
+        glProgramUniform2i(prog.ID(), myLoc, desc.width, desc.height);
     }
 
     glViewport(0, 0, desc.width, viewport_height);
@@ -653,8 +648,8 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, desc.width, viewport_height, 0, format, type, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bt.ID(), 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, desc.internalFormat, desc.width, viewport_height, 0, format, type, NULL);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, bt.ID(), 0);
 
     GLuint result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result != GL_FRAMEBUFFER_COMPLETE)
@@ -761,16 +756,15 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         if (retrace::resolveMSAA){
             // For resolved MSAA...
             image = new image::Image(desc.width, desc.height, channels, true, channelType);
-            memset(image->pixels, 0x80, desc.width * desc.height * sizeof(int));
+            memset(image->pixels, 0x0, desc.width * desc.height * sizeof(int));
             getTexImageMSAA(target, format, type, desc, image->pixels, true);
         }
         else {
             // For unresolved MSAA...
-            // Make it taller by X samples and add a row between each sample
             GLuint samples = std::max(desc.samples, 1);
-            GLuint total_height = ((desc.height + 1) * samples) - 1;
+            GLuint total_height = desc.height * samples;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
-            memset(image->pixels, 0x80, desc.width * total_height * sizeof(int));
+            memset(image->pixels, 0x0, desc.width * total_height * sizeof(int));
             getTexImageMSAA(target, format, type, desc, image->pixels, false);
         }
     }
