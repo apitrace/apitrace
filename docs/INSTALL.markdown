@@ -74,9 +74,13 @@ differ depending on the actual Linux distribution.
 
 # Mac OS X #
 
-Build as:
+First install Qt through [Homebrew](https://brew.sh/) like
 
-    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/QtX.Y.Z/X.Y/clang_64
+    brew install qt5
+
+Then do:
+
+    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
     make -C build
 
 
