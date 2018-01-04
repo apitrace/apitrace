@@ -649,7 +649,19 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     glEnableVertexAttribArray(0);
 
     glTexImage2D(GL_TEXTURE_2D, 0, desc.internalFormat, desc.width, viewport_height, 0, format, type, NULL);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, bt.ID(), 0);
+
+    switch(format)
+    {
+        case GL_DEPTH_COMPONENT:
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, bt.ID(), 0);
+            break;
+        case GL_STENCIL_INDEX:
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, bt.ID(), 0);
+            break;
+        default:
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, bt.ID(), 0);
+            break;
+    }
 
     GLuint result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result != GL_FRAMEBUFFER_COMPLETE)
@@ -659,7 +671,7 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     }
 
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
