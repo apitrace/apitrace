@@ -209,6 +209,8 @@ getBufferBinding(GLenum target) {
         return GL_COPY_READ_BUFFER_BINDING;
     case GL_COPY_WRITE_BUFFER:
         return GL_COPY_WRITE_BUFFER_BINDING;
+    case GL_DRAW_BUFFER:
+        return GL_DRAW_BUFFER;
     case GL_DRAW_INDIRECT_BUFFER:
         return GL_DRAW_INDIRECT_BUFFER_BINDING;
     case GL_FRAMEBUFFER:
@@ -223,6 +225,8 @@ getBufferBinding(GLenum target) {
         return GL_PIXEL_UNPACK_BUFFER_BINDING;
     case GL_QUERY_BUFFER:
         return GL_QUERY_BUFFER_BINDING;
+    case GL_READ_BUFFER:
+        return GL_READ_BUFFER;
     case GL_RENDERBUFFER:
         return GL_RENDERBUFFER_BINDING;
     case GL_SHADER_STORAGE_BUFFER:
@@ -251,6 +255,12 @@ BufferBinding::BufferBinding(GLenum _target, GLuint _buffer) :
     if (prevBuffer != buffer) {
         switch(target)
         {
+        case GL_DRAW_BUFFER:
+            glDrawBuffer(buffer);
+            break;
+        case GL_READ_BUFFER:
+            glReadBuffer(buffer);
+            break;
         case GL_FRAMEBUFFER:
             glBindFramebuffer(target, buffer);
             break;
@@ -268,6 +278,12 @@ BufferBinding::~BufferBinding() {
     if (prevBuffer != buffer) {
         switch(target)
         {
+        case GL_DRAW_BUFFER:
+            glDrawBuffer(prevBuffer);
+            break;
+        case GL_READ_BUFFER:
+            glReadBuffer(prevBuffer);
+            break;
         case GL_FRAMEBUFFER:
             glBindFramebuffer(target, prevBuffer);
             break;

@@ -560,7 +560,8 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 
     TempId fbo = TempId(GL_FRAMEBUFFER);
     BufferBinding fb = BufferBinding(GL_FRAMEBUFFER, fbo.ID());
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    BufferBinding Db = BufferBinding(GL_DRAW_BUFFER, GL_COLOR_ATTACHMENT0);
+    BufferBinding Rb = BufferBinding(GL_READ_BUFFER, GL_COLOR_ATTACHMENT0);
 
     GLint savedProgram;
     glGetIntegerv(GL_CURRENT_PROGRAM, &savedProgram);
@@ -650,16 +651,20 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
 
     glTexImage2D(GL_TEXTURE_2D, 0, desc.internalFormat, desc.width, viewport_height, 0, format, type, NULL);
 
+    GLuint clearBufferBit;
     switch(format)
     {
         case GL_DEPTH_COMPONENT:
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, bt.ID(), 0);
+            clearBufferBit = GL_DEPTH_BUFFER_BIT;
             break;
         case GL_STENCIL_INDEX:
             glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, bt.ID(), 0);
+            clearBufferBit = GL_STENCIL_BUFFER_BIT;
             break;
         default:
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, bt.ID(), 0);
+            clearBufferBit = GL_COLOR_BUFFER_BIT;
             break;
     }
 
@@ -671,11 +676,9 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     }
 
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear( clearBufferBit );
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(0, 0, desc.width, viewport_height, format, type, pixels);
 
 exit_clean:
@@ -1821,9 +1824,12 @@ dumpFramebuffer(StateWriter &writer, Context &context)
         glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundRb);
 
         ImageDesc colorDesc;
-        if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, draw_buffer0, colorDesc)) {
-            if (colorDesc.samples) {
-                multisample = true;
+        /* If a draw buffer is not bound then we shouldn't query the attachment. */
+        if (draw_buffer0 != 0) {
+            if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, draw_buffer0, colorDesc)) {
+                if (colorDesc.samples) {
+                    multisample = true;
+                }
             }
         }
 
