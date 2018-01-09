@@ -421,10 +421,10 @@ dumpUniformBlock(StateWriter &writer,
         GLchar* block_name = new GLchar[active_uniform_block_max_name_length];
 
         GLint block_data_size = 0;
-        glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_data_size);
+        glGetActiveUniformBlockiv(program, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_data_size);
 
         GLsizei length = 0;
-        glGetActiveUniformBlockName(program, index, active_uniform_block_max_name_length, &length, block_name);
+        glGetActiveUniformBlockName(program, block_index, active_uniform_block_max_name_length, &length, block_name);
 
         std::cerr
             << "uniform `" << name << "`, size " << size << ", type " << enumToString(desc.type) << "\n"
@@ -440,12 +440,18 @@ dumpUniformBlock(StateWriter &writer,
     GLint start = 0;
     glGetIntegeri_v(GL_UNIFORM_BUFFER_START, slot, &start);
 
-    BufferMapping mapping;
-    const GLbyte *raw_data = (const GLbyte *)mapping.map(GL_UNIFORM_BUFFER, ubo);
-    if (raw_data) {
-        std::string qualifiedName = resolveUniformName(name, size);
+    /* If ubo is zero, don't try to map to a 0 bound buffer. */
+    if (ubo) {
+        BufferMapping mapping;
+        const GLbyte *raw_data = (const GLbyte *)mapping.map(GL_UNIFORM_BUFFER, ubo);
+        if (raw_data) {
+            std::string qualifiedName = resolveUniformName(name, size);
 
-        dumpAttribArray(writer, qualifiedName, desc, raw_data + start + offset);
+            dumpAttribArray(writer, qualifiedName, desc, raw_data + start + offset);
+        }
+    }
+    else {
+        std::cerr << "Uniform buffer object not bound.\n";
     }
 }
 
