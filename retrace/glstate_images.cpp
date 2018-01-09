@@ -652,6 +652,7 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     glTexImage2D(GL_TEXTURE_2D, 0, desc.internalFormat, desc.width, viewport_height, 0, format, type, NULL);
 
     GLuint clearBufferBit;
+  
     switch(format)
     {
         case GL_DEPTH_COMPONENT:
