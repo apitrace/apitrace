@@ -285,6 +285,7 @@ BufferBinding::~BufferBinding() {
 BufferMapping::BufferMapping() :
     target(GL_NONE),
     buffer(0),
+    map_size(0),
     map_pointer(NULL),
     unmap(false)
 {
@@ -299,6 +300,7 @@ BufferMapping::map(GLenum _target, GLuint _buffer)
 
     target = _target;
     buffer = _buffer;
+    map_size = 0;
     map_pointer = NULL;
     unmap = false;
 
@@ -330,7 +332,14 @@ BufferMapping::map(GLenum _target, GLuint _buffer)
         }
     }
 
+    glGetBufferParameteriv(target, GL_BUFFER_SIZE, (GLint*)&map_size);
+
     return map_pointer;
+}
+
+GLuint
+BufferMapping::getSize() const {
+    return map_size;
 }
 
 BufferMapping::~BufferMapping() {

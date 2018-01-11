@@ -190,6 +190,7 @@ class BufferMapping
 {
     GLuint target;
     GLuint buffer;
+    GLuint map_size;
     GLvoid *map_pointer;
     bool unmap;
 
@@ -198,6 +199,9 @@ public:
 
     GLvoid *
     map(GLenum _target, GLuint _buffer);
+
+    GLuint
+    getSize() const;
 
     ~BufferMapping();
 };

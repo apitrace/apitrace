@@ -445,6 +445,14 @@ dumpUniformBlock(StateWriter &writer,
     if (raw_data) {
         std::string qualifiedName = resolveUniformName(name, size);
 
+        GLuint actual_count = mapping.getSize() / array_stride;
+        if (actual_count < desc.size) {
+            std::cerr
+                << "warning: uniform " << qualifiedName << " has fewer actual elements (" << actual_count
+                << ") than declared as used by the shader (" << desc.size << ")\n";
+            desc.size = actual_count;
+        }
+
         dumpAttribArray(writer, qualifiedName, desc, raw_data + start + offset);
     }
 }
