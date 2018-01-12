@@ -116,13 +116,19 @@ class D3DRetracer(Retracer):
     def handleFailure(self, interface, methodOrFunction):
         # Catch when device is removed, and report the reason.
         if interface is not None:
+            print r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {'
             getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
             if getDeviceRemovedReasonMethod is not None:
-                print r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {'
                 print r'            HRESULT _reason = _this->GetDeviceRemovedReason();'
                 print r'            retrace::failed(call, _reason);'
-                print r'            exit(EXIT_FAILURE);'
-                print r'        }'
+            getDeviceMethod = interface.getMethodByName("GetDevice")
+            if getDeviceMethod is not None and len(getDeviceMethod.args) == 1:
+                print r'            com_ptr<%s> _pDevice;' % getDeviceMethod.args[0].type.type.type
+                print r'            _this->GetDevice(&_pDevice);'
+                print r'            HRESULT _reason = _pDevice->GetDeviceRemovedReason();'
+                print r'            retrace::failed(call, _reason);'
+            print r'            exit(EXIT_FAILURE);'
+            print r'        }'
 
         Retracer.handleFailure(self, interface, methodOrFunction)
 
