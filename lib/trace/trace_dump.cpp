@@ -249,7 +249,7 @@ void Dumper::visit(StackFrame *frame) {
 void Dumper::visit(Backtrace & backtrace) {
     for (auto & frame : backtrace) {
         visit(frame);
-        os << "\n";
+        os << '\n';
     }
 }
 
@@ -306,14 +306,14 @@ void Dumper::visit(Call *call)
     }
 
     if (!(dumpFlags & DUMP_FLAG_NO_MULTILINE)) {
-        os << "\n";
+        os << '\n';
 
         if (call->backtrace != NULL) {
             os << bold << red << "Backtrace:\n" << normal;
             visit(*call->backtrace);
         }
         if (callFlags & CALL_FLAG_END_FRAME) {
-            os << "\n";
+            os << '\n';
         }
     }
 }

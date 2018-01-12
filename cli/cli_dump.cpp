@@ -36,6 +36,7 @@
 #include <memory>
 #include <fstream>
 #include <string>
+#include <regex>
 
 #include "cxx_compat.hpp" // for std::to_string, std::make_unique
 
@@ -75,6 +76,7 @@ usage(void)
         "    --color[=WHEN]\n"
         "    --colour[=WHEN]      colored syntax highlighting\n"
         "                         WHEN is 'auto', 'always', or 'never'\n"
+        "    --grep[=REGEX]       dump only calls whose function names match regex\n"
         "    --thread-ids=[=BOOL] dump thread ids [default: no]\n"
         "    --call-nos[=BOOL]    dump call numbers[default: yes]\n"
         "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
@@ -87,6 +89,7 @@ usage(void)
 enum {
     CALLS_OPT = CHAR_MAX + 1,
     COLOR_OPT,
+    GREP_OPT,
     THREAD_IDS_OPT,
     CALL_NOS_OPT,
     ARG_NAMES_OPT,
@@ -104,6 +107,7 @@ longOptions[] = {
     {"calls", required_argument, 0, CALLS_OPT},
     {"colour", optional_argument, 0, COLOR_OPT},
     {"color", optional_argument, 0, COLOR_OPT},
+    {"grep", required_argument, 0, GREP_OPT},
     {"thread-ids", optional_argument, 0, THREAD_IDS_OPT},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT},
     {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
@@ -154,6 +158,8 @@ command(int argc, char *argv[])
 {
     trace::DumpFlags dumpFlags = 0;
     bool blobs = false;
+    bool grep = false;
+    std::regex grepRegex;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -179,6 +185,10 @@ command(int argc, char *argv[])
                 std::cerr << "error: unknown color argument " << optarg << "\n";
                 return 1;
             }
+            break;
+        case GREP_OPT:
+            grepRegex = std::regex(optarg);
+            grep = true;
             break;
         case THREAD_IDS_OPT:
             if (trace::boolOption(optarg)) {
@@ -255,16 +265,25 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = p.parse_call())) {
-            if (calls.contains(*call)) {
+            if (call->no > calls.getLast()) {
+                delete call;
+                break;
+            }
+            if (calls.contains(*call) &&
+                (!grep ||
+                 std::regex_search(call->sig->name, grepRegex))) {
                 if (verbose ||
                     !(call->flags & trace::CALL_FLAG_VERBOSE)) {
                     dumper->visit(call);
+                    if (dumpFlags & trace::DUMP_FLAG_NO_MULTILINE) {
+                        std::cout << '\n';
+                    }
+                    if (grep) {
+                        std::cout << std::flush;
+                    }
                 }
             }
             delete call;
-            if (dumpFlags & trace::DUMP_FLAG_NO_MULTILINE) {
-                std::cout << std::endl;
-            }
         }
     }
 
