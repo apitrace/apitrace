@@ -229,8 +229,12 @@ class D3DRetracer(Retracer):
 
         if method.name == 'SetFullscreenState':
             print r'    if (retrace::forceWindowed) {'
-            print r'         Fullscreen = FALSE;'
-            print r'         pTarget = NULL;'
+            print r'         DXGI_SWAP_CHAIN_DESC Desc;'
+            print r'         _this->GetDesc(&Desc);'
+            print r'         if (Desc.BufferDesc.Format != DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM) {'
+            print r'             Fullscreen = FALSE;'
+            print r'             pTarget = nullptr;'
+            print r'        }'
             print r'    }'
 
         # notify frame has been completed

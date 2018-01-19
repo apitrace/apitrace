@@ -54,7 +54,8 @@ createWindowForSwapChain(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
     UINT Height = pSwapChainDesc->BufferDesc.Height;
     if (!Width)  Width = 1024;
     if (!Height) Height = 768;
-    if (retrace::forceWindowed) {
+    if (retrace::forceWindowed &&
+        pSwapChainDesc->BufferDesc.Format != DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM) {
         pSwapChainDesc->Windowed = TRUE;
         pSwapChainDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_NONPREROTATED;
     }
