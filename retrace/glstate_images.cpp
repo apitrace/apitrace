@@ -546,10 +546,10 @@ getTexImageMSAA(GLenum target, GLenum format, GLenum type,
     const GLint channels = 4;
     const GLint vertices = 4;
     static const float vertArray[vertices][channels] = {
-        1.0f, -1.0f, 0.0f, 1.0f,
-        1.0f,  1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f,
+        {  1.0f, -1.0f, 0.0f, 1.0f },
+        {  1.0f,  1.0f, 0.0f, 1.0f },
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        { -1.0f,  1.0f, 0.0f, 1.0f },
     };
 
     /*
