@@ -108,18 +108,18 @@ public:
         delete [] buf;
     }
 
-    // Fake move constructor
-    // std::deque:push_back with move semantics was added only from c++11.
-    BoundBlob(const BoundBlob & other)
+    // Move constructor
+    BoundBlob(BoundBlob && other)
     {
         size = other.size;
         buf = other.buf;
-        const_cast<BoundBlob &>(other).size = 0;
-        const_cast<BoundBlob &>(other).buf = 0;
+        other.size = 0;
+        other.buf = nullptr;
     }
 
-    // Disallow assignment operator
-    BoundBlob& operator = (const BoundBlob &);
+    // Disallow copy/assignment
+    BoundBlob(const BoundBlob & other) = delete;
+    BoundBlob & operator = (const BoundBlob &) = delete;
 };
 
 size_t BoundBlob::totalSize = 0;
@@ -148,7 +148,8 @@ Blob::~Blob() {
         boundBlobQueue.pop_front();
     }
 
-    boundBlobQueue.push_back(BoundBlob(size, buf));
+    BoundBlob bb(size, buf);
+    boundBlobQueue.push_back(std::move(bb));
 }
 
 StackFrame::~StackFrame() {
