@@ -382,7 +382,7 @@ class D3DRetracer(Retracer):
             print '    } else {'
             print '        return;'
             print '    }'
-        
+
         if method.name == 'Unmap':
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
@@ -408,6 +408,14 @@ class D3DRetracer(Retracer):
             assert ppShader.output
             print r'    if (retrace::dumpingState && SUCCEEDED(_result)) {'
             print r'        (*%s)->SetPrivateData(d3dstate::GUID_D3DSTATE, BytecodeLength, pShaderBytecode);' % ppShader.name
+            print r'    }'
+
+        if method.name == 'CreateBuffer':
+            ppBuffer = method.args[-1]
+            print r'    if (retrace::dumpingState && SUCCEEDED(_result)) {'
+            print r'       char label[32];'
+            print r'       _snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index
+            print r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(label)+1, label);' % ppBuffer.name
             print r'    }'
 
     def retraceInterfaceMethodBody(self, interface, method):

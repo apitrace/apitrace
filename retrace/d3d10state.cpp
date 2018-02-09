@@ -65,7 +65,7 @@ dumpBlendState(StateWriter &writer, ID3D10Device *pDevice)
     writer.beginMember("BlendState");
     dumpStateObjectDesc(writer, pBlendState);
     writer.endMember(); // BlendState
-    
+
     writer.beginMember("BlendFactor");
     writer.beginArray();
     writer.writeFloat(BlendFactor[0]);
@@ -177,6 +177,21 @@ dumpShaders(StateWriter &writer, ID3D10Device *pDevice)
     writer.endMember(); // shaders
 }
 
+static void
+dumpConstantBuffers(StateWriter &writer, ID3D10Device *pDevice)
+{
+    ID3D10Buffer *pConstantBuffers[D3D10_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
+
+    pDevice->VSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+    dumpBuffers(writer, "VS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+    pDevice->GSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+    dumpBuffers(writer, "GS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+    pDevice->PSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+    dumpBuffers(writer, "PS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+}
+
 
 void
 dumpDevice(StateWriter &writer, ID3D10Device *pDevice)
@@ -184,6 +199,8 @@ dumpDevice(StateWriter &writer, ID3D10Device *pDevice)
     dumpParameters(writer, pDevice);
 
     dumpShaders(writer, pDevice);
+
+    dumpConstantBuffers(writer, pDevice);
 
     dumpTextures(writer, pDevice);
 

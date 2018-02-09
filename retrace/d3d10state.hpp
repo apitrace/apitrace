@@ -112,6 +112,34 @@ getObjectName(T *pObject)
 }
 
 
+template <typename T>
+inline void
+dumpBuffers(StateWriter &writer, const char *stageName,
+            UINT numBuffers, T **ppBuffers)
+{
+    bool hasBuffers = false;
+    for (UINT i = 0; i < numBuffers; ++i) {
+        hasBuffers = hasBuffers || (ppBuffers[i] != 0);
+    }
+    if (!hasBuffers) {
+        return;
+    }
+    writer.beginMember(stageName);
+    writer.beginArray();
+    for (UINT i = 0; i < numBuffers; ++i) {
+        std::string name("null");
+
+        if (ppBuffers[i]) {
+            name = getObjectName(ppBuffers[i]);
+            ppBuffers[i]->Release();
+        }
+        writer.writeString(name);
+    }
+    writer.endArray();
+    writer.endMember();
+}
+
+
 image::Image *
 getSubResourceImage(ID3D10Device *pDevice,
                     ID3D10Resource *pResource,

@@ -33,6 +33,7 @@
 #include "d3d11imports.hpp"
 #include "d3d10state.hpp"
 #include "dxgistate_so.hpp"
+#include "dxgistate.hpp"
 
 
 namespace d3dstate {
@@ -66,7 +67,7 @@ dumpBlendState(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     writer.beginMember("BlendState");
     dumpStateObjectDesc(writer, pBlendState);
     writer.endMember(); // BlendState
-    
+
     writer.beginMember("BlendFactor");
     writer.beginArray();
     writer.writeFloat(BlendFactor[0]);
@@ -202,6 +203,93 @@ dumpShaders(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 }
 
 
+static void
+dumpConstantBuffers(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
+{
+    writer.beginMember("uniforms");
+    writer.beginObject();
+    if (pDeviceContext->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED) {
+        ID3D11Buffer *pConstantBuffers[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
+
+        pDeviceContext->VSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+        dumpBuffers(writer, "VS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+        pDeviceContext->HSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+        dumpBuffers(writer, "HS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+        pDeviceContext->DSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+        dumpBuffers(writer, "DS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+        pDeviceContext->GSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+        dumpBuffers(writer, "GS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+        pDeviceContext->PSGetConstantBuffers(0, ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+        dumpBuffers(writer, "PS", ARRAYSIZE(pConstantBuffers), pConstantBuffers);
+
+    }
+    writer.endObject();
+    writer.endMember();
+}
+
+
+static void
+dumpBuffers(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
+{
+    writer.beginMember("buffers");
+    writer.beginObject();
+
+    UINT numBuffers = D3D11_SO_BUFFER_SLOT_COUNT;
+    ID3D11Buffer *soBuffers[D3D11_SO_BUFFER_SLOT_COUNT];
+    pDeviceContext->SOGetTargets(numBuffers, soBuffers);
+    dumpBuffers(writer, "SO", ARRAYSIZE(soBuffers), soBuffers);
+
+    ID3D11Buffer *vertexBuffers[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    UINT strides[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    UINT offsets[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+    pDeviceContext->IAGetVertexBuffers(0, ARRAYSIZE(vertexBuffers),
+                                       vertexBuffers, strides, offsets);
+    bool hasVBs = false;
+    for (UINT i = 0; i < ARRAYSIZE(vertexBuffers); ++i) {
+        hasVBs = hasVBs || (vertexBuffers[i] != 0);
+    }
+    if (hasVBs) {
+        writer.beginMember("Vertex Buffers");
+        writer.beginArray();
+        for (UINT i = 0; i < ARRAYSIZE(vertexBuffers); ++i) {
+            char label[64];
+            std::string name;
+
+            if (vertexBuffers[i]) {
+                name = getObjectName(vertexBuffers[i]);
+                _snprintf(label, sizeof label, "%s, stride: %d, offset: %d",
+                          name.c_str(), strides[i], offsets[i]);
+                vertexBuffers[i]->Release();
+            } else {
+                _snprintf(label, sizeof label, "null");
+            }
+            writer.writeString(label);
+        }
+        writer.endArray();
+        writer.endMember();
+    }
+
+    ID3D11Buffer *indexBuffer = NULL;
+    DXGI_FORMAT iaFormat;
+    UINT iaOffset;
+    pDeviceContext->IAGetIndexBuffer(&indexBuffer, &iaFormat, &iaOffset);
+    if (indexBuffer) {
+        char label[64];
+        std::string formatName = d3dstate::getDXGIFormatName(iaFormat);
+        std::string name = getObjectName(indexBuffer);
+        _snprintf(label, sizeof label, "%s, format: %s, offset: %d",
+                  name.c_str(), formatName.c_str(), iaOffset);
+        writer.writeStringMember("Index Buffer", label);
+        indexBuffer->Release();
+    }
+    writer.endObject();
+    writer.endMember();
+}
+
 void
 dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
@@ -209,17 +297,9 @@ dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 
     dumpShaders(writer, pDeviceContext);
 
-    // TODO: dump constant buffers
-    writer.beginMember("uniforms");
-    writer.beginObject();
-    writer.endObject();
-    writer.endMember(); // uniforms
+    dumpConstantBuffers(writer, pDeviceContext);
 
-    // TODO: dump stream-out buffer, vertex buffer
-    writer.beginMember("buffers");
-    writer.beginObject();
-    writer.endObject();
-    writer.endMember(); // buffers
+    dumpBuffers(writer, pDeviceContext);
 
     dumpTextures(writer, pDeviceContext);
 
