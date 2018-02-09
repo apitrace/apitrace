@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2016-2018 VMware, Inc.
  * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
@@ -316,57 +317,65 @@ getOptionalHeader(HMODULE hModule,
     return pOptionalHeader;
 }
 
-static PVOID
+template< typename T >
+static bool
 getImageDirectoryEntry(HMODULE hModule,
                        const char *szModule,
-                       UINT Entry)
+                       UINT Entry,
+                       T ** ppEntry)
 {
     MEMORY_BASIC_INFORMATION MemoryInfo;
     if (VirtualQuery(hModule, &MemoryInfo, sizeof MemoryInfo) != sizeof MemoryInfo) {
         debugPrintf("inject: warning: %s: VirtualQuery failed\n", szModule);
-        return NULL;
+        return false;
     }
     if (MemoryInfo.Protect & (PAGE_NOACCESS | PAGE_EXECUTE)) {
         debugPrintf("inject: warning: %s: no read access (Protect = 0x%08lx)\n", szModule, MemoryInfo.Protect);
-        return NULL;
+        return false;
     }
 
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule, szModule);
-    if (!pOptionalHeader ||
-        pOptionalHeader->DataDirectory[Entry].Size == 0) {
-        return NULL;
+    if (!pOptionalHeader) {
+        return false;
     }
 
+    assert(pOptionalHeader->NumberOfRvaAndSizes > Entry);
+    if (pOptionalHeader->DataDirectory[Entry].Size == 0) {
+        return false;
+    }
+
+    assert(pOptionalHeader->DataDirectory[Entry].Size >= sizeof(T));
     UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[Entry].VirtualAddress;
     if (!ImportAddress) {
-        return NULL;
+        return false;
     }
 
-    return rvaToVa<VOID>(hModule, ImportAddress);
+    *ppEntry = rvaToVa<T>(hModule, ImportAddress);
+    return true;
 }
 
 
 static PIMAGE_IMPORT_DESCRIPTOR
 getFirstImportDescriptor(HMODULE hModule, const char *szModule)
 {
-    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_IMPORT);
-    return reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pEntry);
+    PIMAGE_IMPORT_DESCRIPTOR pEntry = nullptr;
+    return getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_IMPORT, &pEntry) ? pEntry : nullptr;
 }
 
 
 static PImgDelayDescr
 getDelayImportDescriptor(HMODULE hModule, const char *szModule)
 {
-    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
-    return reinterpret_cast<PImgDelayDescr>(pEntry);
+    PImgDelayDescr pEntry = nullptr;
+    return getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &pEntry) ? pEntry : nullptr;
 }
 
 
 static PIMAGE_EXPORT_DIRECTORY
 getExportDescriptor(HMODULE hModule)
 {
-    PVOID pEntry = getImageDirectoryEntry(hModule, "(wrapper)", IMAGE_DIRECTORY_ENTRY_EXPORT);
-    return reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(pEntry);
+    PIMAGE_EXPORT_DIRECTORY pEntry = nullptr;
+    return getImageDirectoryEntry(hModule, "(wrapper)", IMAGE_DIRECTORY_ENTRY_EXPORT, &pEntry) ? pEntry : nullptr;
 }
 
 
@@ -693,12 +702,22 @@ patchModule(HMODULE hModule,
     PImgDelayDescr pDelayDescriptor = getDelayImportDescriptor(hModule, szModule);
     if (pDelayDescriptor) {
         while (pDelayDescriptor->rvaDLLName) {
+            if (pDelayDescriptor->grAttrs > 1) {
+                debugPrintf("inject: warning: ignoring delay import section (grAttrs = 0x%08lx)\n",
+                            pDelayDescriptor->grAttrs);
+                break;
+            }
+
             if (VERBOSITY > 1) {
                 const char* szName = getDescriptorName(hModule, pDelayDescriptor);
                 debugPrintf("inject: found %sdelay-load import entry for module %s\n",
                             pDelayDescriptor->grAttrs & dlattrRva ? "" : "old-style ",
                             szName);
             }
+
+#ifdef _WIN64
+            assert(pDelayDescriptor->grAttrs & dlattrRva);
+#endif
 
             patchDescriptor(hModule, szModule, pDelayDescriptor, action);
 
