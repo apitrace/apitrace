@@ -41,9 +41,7 @@ Call::~Call() {
         delete arg.value;
     }
 
-    if (ret) {
-        delete ret;
-    }
+    delete ret;
 }
 
 Value &
@@ -153,15 +151,9 @@ Blob::~Blob() {
 }
 
 StackFrame::~StackFrame() {
-    if (module != NULL) {
-        delete [] module;
-    }
-    if (function != NULL) {
-        delete [] function;
-    }
-    if (filename != NULL) {
-        delete [] filename;
-    }
+    delete [] module;
+    delete [] function;
+    delete [] filename;
 }
 
 

@@ -505,9 +505,7 @@ RelayRace::~RelayRace() {
     std::vector<RelayRunner*>::const_iterator it;
     for (it = runners.begin(); it != runners.end(); ++it) {
         RelayRunner* runner = *it;
-        if (runner) {
-            delete runner;
-        }
+        delete runner;
     }
 }
 
