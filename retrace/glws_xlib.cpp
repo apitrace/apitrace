@@ -177,7 +177,8 @@ processKeys(Window window)
 Window
 createWindow(XVisualInfo *visinfo,
              const char *name,
-             int width, int height)
+             int width, int height,
+             bool borderless)
 {
     Window root = RootWindow(display, screen);
 
@@ -190,6 +191,11 @@ createWindow(XVisualInfo *visinfo,
 
     unsigned long mask;
     mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
+
+    if (borderless) {
+        attr.override_redirect = True;
+        mask |= CWOverrideRedirect;
+    }
 
     int x = 0, y = 0;
 

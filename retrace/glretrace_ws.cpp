@@ -79,7 +79,7 @@ static glws::Drawable *
 createDrawableHelper(glfeatures::Profile profile, int width = 32, int height = 32,
                      const glws::pbuffer_info *pbInfo = NULL) {
     glws::Visual *visual = getVisual(profile);
-    glws::Drawable *draw = glws::createDrawable(visual, width, height, pbInfo);
+    glws::Drawable *draw = glws::createDrawable(visual, width, height, pbInfo, retrace::borderlessWindow);
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
         exit(1);

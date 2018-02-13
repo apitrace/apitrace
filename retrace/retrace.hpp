@@ -169,6 +169,10 @@ extern bool profilingMemoryUsage;
 extern bool dumpingState;
 extern bool dumpingSnapshots;
 
+/**
+ * Use borderless window on retrace
+ */
+extern bool borderlessWindow;
 
 enum Driver {
     DRIVER_DEFAULT,

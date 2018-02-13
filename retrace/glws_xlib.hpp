@@ -55,7 +55,8 @@ processKeys(Window window);
 Window
 createWindow(XVisualInfo *visinfo,
              const char *name,
-             int width, int height);
+             int width, int height,
+             bool borderless);
 
 void
 resizeWindow(Window, int width, int height);
