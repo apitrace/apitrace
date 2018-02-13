@@ -954,6 +954,14 @@ ID3D10Multithread.methods += [
     StdMethod(BOOL, "GetMultithreadProtected", [], sideeffects=False),
 ]
 
+ID3D10DebugTest = Interface('ID3D10DebugTest', IUnknown)
+ID3D10DebugTest.methods += [
+    StdMethod(Void, 'PreventFurtherExecutionOnError', [(BOOL, 'Enable')]),
+    StdMethod(Void, 'VSSetConstantBuffer14', [(ObjPointer(ID3D10Buffer), 'pCB14')]),
+    StdMethod(Void, 'GSSetConstantBuffer14', [(ObjPointer(ID3D10Buffer), 'pCB14')]),
+    StdMethod(Void, 'PSSetConstantBuffer14', [(ObjPointer(ID3D10Buffer), 'pCB14')]),
+]
+
 D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
     "D3D10_DRIVER_TYPE_HARDWARE",
     "D3D10_DRIVER_TYPE_REFERENCE",
@@ -975,6 +983,7 @@ d3d10.addInterfaces([
     ID3D10InfoQueue,
     ID3D10Multithread,
     ID3D10SwitchToRef,
+    ID3D10DebugTest,
 ])
 
 

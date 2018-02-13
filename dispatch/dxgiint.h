@@ -88,3 +88,28 @@ struct IUseCounted2: public IUseCounted
 {
     virtual HRESULT STDMETHODCALLTYPE UCQueryInterface(UINT flags, REFIID riid, void **ppvObj) = 0;
 };
+
+
+struct ID3D10Buffer;
+
+struct ID3D10DebugTest: public IUnknown
+{
+    virtual void STDMETHODCALLTYPE PreventFurtherExecutionOnError(BOOL Enable) = 0;
+    virtual void STDMETHODCALLTYPE VSSetConstantBuffer14(ID3D10Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE GSSetConstantBuffer14(ID3D10Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE PSSetConstantBuffer14(ID3D10Buffer *pCB14) = 0;
+};
+
+struct ID3D11Buffer;
+
+struct ID3D11DebugTest: public IUnknown
+{
+    virtual void STDMETHODCALLTYPE PreventFurtherExecutionOnError(BOOL Enable) = 0;
+    virtual void STDMETHODCALLTYPE VSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE HSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE DSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE GSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE PSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+    virtual void STDMETHODCALLTYPE CSSetConstantBuffer14(ID3D11Buffer *pCB14) = 0;
+};
+

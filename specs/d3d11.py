@@ -2460,9 +2460,21 @@ ID3DUserDefinedAnnotation.methods += [
     StdMethod(BOOL, "GetStatus", [], sideeffects=False),
 ]
 
+ID3D11DebugTest = Interface('ID3D11DebugTest', IUnknown)
+ID3D11DebugTest.methods += [
+    StdMethod(Void, 'PreventFurtherExecutionOnError', [(BOOL, 'Enable')]),
+    StdMethod(Void, 'VSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+    StdMethod(Void, 'HSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+    StdMethod(Void, 'DSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+    StdMethod(Void, 'GSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+    StdMethod(Void, 'PSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+    StdMethod(Void, 'CSSetConstantBuffer14', [(ObjPointer(ID3D11Buffer), 'pCB14')]),
+]
+
 d3d11.addInterfaces([
     ID3D11Device1,
     ID3DUserDefinedAnnotation,
+    ID3D11DebugTest,
 ])
 
 
