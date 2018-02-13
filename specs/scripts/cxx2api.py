@@ -36,8 +36,8 @@ copyright = '''
 # Usage:
 #
 #   sudo apt-get install castxml mingw-w64-i686-dev
-#   pip install 'pygccxml>=1.7.1'
-#   python specs/scripts/cxx2api.py -Idxsdk/Include dcomp.h dcomptypes.h dcompanimation.h
+#   pip install 'pygccxml==1.9.1'
+#   python specs/scripts/cxx2api.py -Idxsdk/Include -DD2D_USE_C_DEFINITIONS dcomp.h dcomptypes.h dcompanimation.h
 #
 # See also:
 # - http://pygccxml.readthedocs.org/en/develop/index.html
@@ -267,7 +267,7 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
         struct = decl
         print(r'%s = Struct(%r, [' % (decl_name, decl_name))
         for variable in struct.variables(allow_empty=True):
-            var_type = dump_type(variable.type)
+            var_type = dump_type(variable.decl_type)
             print(r'    (%s, %r),' % (var_type, variable.name))
         print(r'])')
         print()
@@ -299,7 +299,7 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
         for arg in args:
             if arg.attributes is not None:
                 sys.stderr.write('warning: found %s attribute %r\n' % (arg.name, arg.attributes))
-            res_arg_type = dump_type(arg.type)
+            res_arg_type = dump_type(arg.decl_type)
             res_arg = '(%s, %r)' % (res_arg_type, arg.name)
 
             # Infer output arguments
@@ -317,13 +317,13 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
 
     def visit_typedef(self):
         typedef = self.decl
-        base_type = dump_type(typedef.type)
+        base_type = dump_type(typedef.decl_type)
         if base_type == typedef.name:
             # Ignore `typedef struct Foo Foo;`
             return
         if base_type == '':
-            if isinstance(typedef.type, declarations.cpptypes.declarated_t):
-                base_decl = typedef.type.declaration
+            if isinstance(typedef.decl_type, declarations.cpptypes.declarated_t):
+                base_decl = typedef.decl_type.declaration
                 self.visit_struct(typedef.name, base_decl)
                 return
         print(r'%s = Alias(%r, %s)' % (typedef.name, typedef.name, base_type))
