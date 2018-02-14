@@ -23,7 +23,6 @@ add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
   enc/cluster.c
   enc/compress_fragment.c
   enc/compress_fragment_two_pass.c
-  enc/compressor.cc # XXX
   enc/encode.c
   enc/entropy_encode.c
   enc/histogram.c
@@ -31,7 +30,6 @@ add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
   enc/memory.c
   enc/metablock.c
   enc/static_dict.c
-  enc/streams.cc # XXX
   enc/utf8_util.c)
 
 install (

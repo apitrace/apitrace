@@ -33,7 +33,7 @@
 
 #include "cli.hpp"
 
-#include <brotli/enc/compressor.h>
+#include <brotli/enc/encode.h>
 #include <zlib.h>  // for crc32
 
 #include "trace_file.hpp"
@@ -75,44 +75,6 @@ enum Format {
 };
 
 
-class BrotliTraceIn : public brotli::BrotliIn
-{
-private:
-    trace::File *stream;
-    char buf[1 << 16];
-    bool eof = false;
-
-public:
-    uLong crc;
-
-    BrotliTraceIn(trace::File *s) :
-        stream(s)
-    {
-        crc = crc32(0L, Z_NULL, 0);
-    }
-
-    ~BrotliTraceIn() {
-    }
-
-    const void *
-    Read(size_t n, size_t* bytes_read) override
-    {
-        if (n > sizeof buf) {
-            n = sizeof buf;
-        } else if (n == 0) {
-            return eof ? nullptr : buf;
-        }
-        *bytes_read = stream->read(buf, n);
-        if (*bytes_read == 0) {
-            eof = true;
-            return nullptr;
-        }
-        crc32(crc, reinterpret_cast<const Bytef *>(buf), *bytes_read);
-        return buf;
-    }
-};
-
-
 static int
 repack_generic(trace::File *inFile, trace::OutStream *outFile)
 {
@@ -133,7 +95,10 @@ repack_generic(trace::File *inFile, trace::OutStream *outFile)
 static int
 repack_brotli(trace::File *inFile, const char *outFileName, int quality)
 {
-    brotli::BrotliParams params;
+    BrotliEncoderState *s = BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
+    if (!s) {
+        return EXIT_FAILURE;
+    }
 
     // Brotli default quality is 11, but there are problems using quality
     // higher than 9:
@@ -142,44 +107,82 @@ repack_brotli(trace::File *inFile, const char *outFileName, int quality)
     //   issue as https://github.com/google/brotli/issues/330
     // - Some traces get lower compression ratio with 11 than 9.  Possibly the
     //   same issue as https://github.com/google/brotli/issues/222
-    params.quality = 9;
+    BrotliEncoderSetParameter(s, BROTLI_PARAM_QUALITY, 9);
 
     // The larger the window, the higher the compression ratio and
     // decompression speeds, so choose the maximum.
-    params.lgwin = 24;
+    BrotliEncoderSetParameter(s, BROTLI_PARAM_LGWIN, 24);
 
     if (quality > 0) {
-        params.quality = quality;
+        BrotliEncoderSetParameter(s, BROTLI_PARAM_QUALITY, quality);
     }
 
-    BrotliTraceIn in(inFile);
     FILE *fout = fopen(outFileName, "wb");
     if (!fout) {
         return EXIT_FAILURE;
     }
-    assert(fout);
-    brotli::BrotliFileOut out(fout);
-    if (!BrotliCompress(params, &in, &out)) {
-        std::cerr << "error: brotli compression failed\n";
-        return EXIT_FAILURE;
-    }
+
+    uLong inCrc = crc32(0L, Z_NULL, 0);
+    static const size_t kFileBufferSize = 1 << 16;
+    uint8_t *input = (uint8_t *)malloc(kFileBufferSize * 2);
+    uint8_t *output = input + kFileBufferSize;
+    size_t available_in = 0;
+    const uint8_t *next_in = nullptr;
+    size_t available_out = kFileBufferSize;
+    uint8_t *next_out = output;
+    bool is_eof = false;
+    do {
+        if (available_in == 0 && !is_eof) {
+            available_in = inFile->read(input, kFileBufferSize);
+            next_in = input;
+            if (available_in == 0) {
+                is_eof = true;
+            } else {
+                crc32(inCrc, reinterpret_cast<const Bytef *>(input), available_in);
+            }
+        }
+
+        if (!BrotliEncoderCompressStream(s,
+                                         is_eof ? BROTLI_OPERATION_FINISH : BROTLI_OPERATION_PROCESS,
+                                         &available_in, &next_in,
+                                         &available_out, &next_out, nullptr)) {
+            std::cerr << "error: failed to compress data\n";
+            return EXIT_FAILURE;
+        }
+
+        if (available_out != kFileBufferSize) {
+            size_t out_size = kFileBufferSize - available_out;
+            fwrite(output, 1, out_size, fout);
+            if (ferror(fout)) {
+                std::cerr << "error: failed to write to " << outFileName << "\n";
+                return EXIT_FAILURE;
+            }
+            available_out = kFileBufferSize;
+            next_out = output;
+        }
+    } while(!BrotliEncoderIsFinished(s));
+
     fclose(fout);
 
+    BrotliEncoderDestroyInstance(s);
+
+    // Do a CRC check
     std::unique_ptr<trace::File> outFileIn(trace::File::createBrotli());
     if (!outFileIn->open(outFileName)) {
         std::cerr << "error: failed to open " << outFileName << " for reading\n";
         return EXIT_FAILURE;
     }
-    BrotliTraceIn outIn(outFileIn.get());
-    size_t bytes_read;
+    uLong outCrc = crc32(0L, Z_NULL, 0);
     do {
-        outIn.Read(65536, &bytes_read);
-    } while (bytes_read > 0);
-
-    if (in.crc != outIn.crc) {
+        available_in = inFile->read(input, kFileBufferSize);
+        crc32(inCrc, reinterpret_cast<const Bytef *>(input), available_in);
+    } while (available_in > 0);
+    if (inCrc != outCrc) {
         std::cerr << "error: CRC mismatch reading " << outFileName << "\n";
         return EXIT_FAILURE;
     }
+
+    free(input);
 
     return EXIT_SUCCESS;
 }
