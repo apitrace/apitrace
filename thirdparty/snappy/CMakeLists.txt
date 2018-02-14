@@ -12,10 +12,18 @@ if (NOT MSVC)
 endif ()
 
 add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
-    snappy.cc
+    snappy-internal.h
+    snappy-stubs-internal.h
+    snappy-c.cc
     snappy-sinksource.cc
     snappy-stubs-internal.cc
-    snappy-c.cc
+    snappy.cc
+    config.h
+
+    snappy-c.h
+    snappy-sinksource.h
+    snappy.h
+    snappy-stubs-public.h
 )
 
 install (

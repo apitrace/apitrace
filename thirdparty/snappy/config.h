@@ -2,6 +2,9 @@
  * that actually affect the library, given that most of them are meant for the
  * tests, which we don't build. */
 
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
+
 /* Define to 1 if the compiler supports __builtin_ctz and friends. */
 #if defined(__GNUCC__)
 #  define HAVE_BUILTIN_CTZ 1
@@ -114,6 +117,9 @@
 /* Define to the one symbol short name of this package. */
 /* #undef PACKAGE_TARNAME */
 
+/* Define to the home page for this package. */
+/* #undef PACKAGE_URL */
+
 /* Define to the version of this package. */
 /* #undef PACKAGE_VERSION */
 
@@ -124,7 +130,7 @@
 /* #undef VERSION */
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
-   significant byte first (like Motorola and SPARC, unlike Intel and VAX). */
+   significant byte first (like Motorola and SPARC, unlike Intel). */
 #if defined(__GLIBC__)
 #  include <endian.h>
 #  if __BYTE_ORDER == __BIG_ENDIAN
