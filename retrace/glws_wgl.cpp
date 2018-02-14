@@ -97,9 +97,11 @@ public:
     HDC hDC;
 
     WglDrawable(const Visual *vis, int width, int height,
-                const glws::pbuffer_info *pbInfo) :
-        Drawable(vis, width, height, pbInfo ? true : false)
+                const glws::pbuffer_info *pbInfo, bool borderless) :
+        Drawable(vis, width, height, pbInfo ? true : false, borderless)
     {
+
+        // TODO: Implement borderless
 
         if (pbInfo) {
             createPbuffer(vis, pbInfo, width, height);
@@ -107,7 +109,6 @@ public:
         }
         else {
             hWnd = ws::createWindow("glretrace", width, height);
-
             hDC = GetDC(hWnd);
 
             PIXELFORMATDESCRIPTOR pfd;
@@ -448,9 +449,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
 Drawable *
 createDrawable(const Visual *visual, int width, int height,
-               const glws::pbuffer_info *pbInfo)
+               const glws::pbuffer_info *pbInfo, bool borderless)
 {
-    return new WglDrawable(visual, width, height, pbInfo);
+    return new WglDrawable(visual, width, height, pbInfo, borderless);
 }
 
 Context *
