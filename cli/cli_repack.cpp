@@ -33,7 +33,7 @@
 
 #include "cli.hpp"
 
-#include <brotli/enc/encode.h>
+#include <brotli/encode.h>
 #include <zlib.h>  // for crc32
 
 #include "trace_file.hpp"

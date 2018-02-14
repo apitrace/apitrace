@@ -9,28 +9,30 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 add_convenience_library(brotli_common STATIC EXCLUDE_FROM_ALL
-  common/dictionary.c)
+  c/common/dictionary.c)
 add_convenience_library(brotli_dec STATIC EXCLUDE_FROM_ALL
-  dec/bit_reader.c
-  dec/decode.c
-  dec/huffman.c
-  dec/state.c)
+  c/dec/bit_reader.c
+  c/dec/decode.c
+  c/dec/huffman.c
+  c/dec/state.c)
 add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
-  enc/backward_references.c
-  enc/bit_cost.c
-  enc/block_splitter.c
-  enc/brotli_bit_stream.c
-  enc/cluster.c
-  enc/compress_fragment.c
-  enc/compress_fragment_two_pass.c
-  enc/encode.c
-  enc/entropy_encode.c
-  enc/histogram.c
-  enc/literal_cost.c
-  enc/memory.c
-  enc/metablock.c
-  enc/static_dict.c
-  enc/utf8_util.c)
+  c/enc/backward_references.c
+  c/enc/backward_references_hq.c
+  c/enc/bit_cost.c
+  c/enc/block_splitter.c
+  c/enc/brotli_bit_stream.c
+  c/enc/cluster.c
+  c/enc/compress_fragment.c
+  c/enc/compress_fragment_two_pass.c
+  c/enc/dictionary_hash.c
+  c/enc/encode.c
+  c/enc/entropy_encode.c
+  c/enc/histogram.c
+  c/enc/literal_cost.c
+  c/enc/memory.c
+  c/enc/metablock.c
+  c/enc/static_dict.c
+  c/enc/utf8_util.c)
 
 install (
     FILES LICENSE

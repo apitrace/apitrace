@@ -32,7 +32,7 @@
 
 #include <iostream>
 
-#include <brotli/dec/decode.h>
+#include <brotli/decode.h>
 
 #include "os.hpp"
 
@@ -53,7 +53,7 @@ protected:
     virtual bool rawSkip(size_t length) override;
     virtual int  rawPercentRead(void) override;
 private:
-    BrotliState *state;
+    BrotliDecoderState *state;
     std::ifstream m_stream;
     static const size_t kFileBufferSize = 65536;
     uint8_t input[kFileBufferSize];
@@ -63,7 +63,7 @@ private:
 
 BrotliFile::BrotliFile(void)
 {
-    state = BrotliCreateState(nullptr, nullptr, nullptr);
+    state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
     available_in = 0;
     next_in = input;
 }
@@ -71,7 +71,7 @@ BrotliFile::BrotliFile(void)
 BrotliFile::~BrotliFile()
 {
     close();
-    BrotliDestroyState(state);
+    BrotliDecoderDestroyInstance(state);
 }
 
 bool BrotliFile::rawOpen(const char *filename)
@@ -91,11 +91,11 @@ size_t BrotliFile::rawRead(void *buffer, size_t length)
     uint8_t* next_out = output;
 
     while (true) {
-        BrotliResult result;
-        result = BrotliDecompressStream(&available_in, &next_in,
-                                        &available_out, &next_out, &total_out,
-                                        state);
-        if (result == BROTLI_RESULT_NEEDS_MORE_INPUT) {
+        BrotliDecoderResult result;
+        result = BrotliDecoderDecompressStream(state,
+                                               &available_in, &next_in,
+                                               &available_out, &next_out, &total_out);
+        if (result == BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT) {
             if (m_stream.fail()) {
                 break;
             }
@@ -109,8 +109,8 @@ size_t BrotliFile::rawRead(void *buffer, size_t length)
             }
             next_in = input;
         } else {
-            assert(result == BROTLI_RESULT_NEEDS_MORE_OUTPUT ||
-                   result == BROTLI_RESULT_SUCCESS);
+            assert(result == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT ||
+                   result == BROTLI_DECODER_RESULT_SUCCESS);
             break;
         }
     }

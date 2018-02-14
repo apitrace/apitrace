@@ -471,6 +471,7 @@ if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
 endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
 add_subdirectory (thirdparty/brotli)
 
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
