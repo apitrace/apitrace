@@ -291,8 +291,13 @@ getDescriptorName(HMODULE hModule,
     if (pDelayDescriptor->grAttrs & dlattrRva) {
         return rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
     } else {
-        // old-stye, with ImgDelayDescr::szName being a LPCSTR
+#ifdef _WIN64
+        assert(pDelayDescriptor->grAttrs & dlattrRva);
+        return "???";
+#else
+        // old-style, with ImgDelayDescr::szName being a LPCSTR
         return reinterpret_cast<LPCSTR>(pDelayDescriptor->rvaDLLName);
+#endif
     }
 }
 
