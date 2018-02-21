@@ -65,7 +65,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr mhook winmm)
+    target_link_libraries (retrace_common dxerr mhook winmm psapi)
 endif ()
 
 

@@ -35,6 +35,12 @@
 #ifndef _WIN32
 #include <unistd.h> // for isatty()
 #endif
+#ifdef _WIN32
+#include <malloc.h> // _get_heap_handle
+#include <new.h>
+#include <windows.h>
+#include <psapi.h>
+#endif
 
 #include "os_binary.hpp"
 #include "os_crtdbg.hpp"
@@ -814,6 +820,81 @@ adjustProcessName(const std::string &name)
 }
 
 
+#ifdef _WIN32
+
+// Diagnose OOM
+static int
+new_failure_handler(size_t size)
+{
+    fprintf(stderr, "error: failed to allocate %zu bytes\n", size);
+
+    // Describe the heap features:
+    // 0 - default heap
+    // 2 - low fragmentation heap
+    // etc.
+    ULONG HeapCompatibility;
+    if (HeapQueryInformation(reinterpret_cast<HANDLE>(_get_heap_handle()),
+                             HeapCompatibilityInformation,
+                             &HeapCompatibility, sizeof HeapCompatibility, nullptr)) {
+        fprintf(stderr, "info: heap features %lu\n", HeapCompatibility);
+    }
+
+#define MB (1024*1024)
+
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof statex;
+    if (GlobalMemoryStatusEx(&statex)) {
+        fprintf(stderr, "info: %lu%% memory in use\n", statex.dwMemoryLoad);
+        fprintf(stderr, "info: %llu total MB of physical memory\n", statex.ullTotalPhys/MB);
+        fprintf(stderr, "info: %llu free  MB of physical memory\n", statex.ullAvailPhys/MB);
+        fprintf(stderr, "info: %llu total MB of paging file\n", statex.ullTotalPageFile/MB);
+        fprintf(stderr, "info: %llu free  MB of paging file\n", statex.ullAvailPageFile/MB);
+        fprintf(stderr, "info: %llu total MB of virtual memory\n", statex.ullTotalVirtual/MB);
+        fprintf(stderr, "info: %llu free  MB of virtual memory\n", statex.ullAvailVirtual/MB);
+        fprintf(stderr, "info: %llu free  MB of extended memory\n", statex.ullAvailExtendedVirtual/MB);
+    }
+
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof pmc)) {
+        fprintf(stderr, "info: %lu page faults\n", pmc.PageFaultCount);
+        fprintf(stderr, "info: %zu MB peak working set\n", size_t(pmc.PeakWorkingSetSize/MB));
+        fprintf(stderr, "info: %zu MB working set\n", size_t(pmc.WorkingSetSize/MB));
+        fprintf(stderr, "info: %zu MB quota peak paged pool usage\n", size_t(pmc.QuotaPeakPagedPoolUsage/MB));
+        fprintf(stderr, "info: %zu MB quota paged pool usage\n", size_t(pmc.QuotaPagedPoolUsage/MB));
+        fprintf(stderr, "info: %zu MB quota peak non-paged pool usage\n", size_t(pmc.QuotaPeakNonPagedPoolUsage/MB));
+        fprintf(stderr, "info: %zu MB quota non-paged pool usage\n", size_t(pmc.QuotaNonPagedPoolUsage/MB));
+        fprintf(stderr, "info: %zu MB page file used\n", size_t(pmc.PagefileUsage/MB));
+        fprintf(stderr, "info: %zu MB peak page file used\n", size_t(pmc.PeakPagefileUsage/MB));
+    }
+
+    // Describe free virtual memory
+    LPCVOID lpAddress = nullptr;
+    MEMORY_BASIC_INFORMATION MBI;
+    size_t NumFree = 0;
+    size_t TotalFree = 0;
+    size_t LargestFree = 0;
+    while (VirtualQuery(lpAddress, &MBI, sizeof MBI) == sizeof MBI) {
+        assert(MBI.RegionSize > 0);
+        if (MBI.State == MEM_FREE) {
+            ++NumFree;
+            TotalFree += MBI.RegionSize;
+            LargestFree = std::max(LargestFree, size_t(MBI.RegionSize));
+        }
+        if (LPCBYTE(lpAddress) >= (LPCBYTE)MBI.BaseAddress + MBI.RegionSize) {
+            break;
+        }
+        lpAddress = (LPCBYTE)MBI.BaseAddress + MBI.RegionSize;
+    }
+    fprintf(stderr, "info: %zu MB virtual address free\n", TotalFree/MB);
+    fprintf(stderr, "info: %zu free virtual address regions\n", NumFree);
+    fprintf(stderr, "info: %zu MB largest free virtual address region\n", LargestFree/MB);
+
+    return 0;
+}
+
+#endif
+
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -823,6 +904,16 @@ int main(int argc, char **argv)
     bool snapshotThreaded = false;
 
     os::setDebugOutput(os::OUTPUT_STDERR);
+
+#ifdef _WIN32
+#ifdef _MSC_VER
+    // Hook new and malloc failures
+    _set_new_handler(new_failure_handler);
+    _set_new_mode(1);
+#else
+    (void)new_failure_handler;
+#endif
+#endif
 
     assert(snapshotFrequency.empty());
 
