@@ -204,6 +204,15 @@ add_definitions (
     -D__STDC_FORMAT_MACROS
 )
 
+
+include(CheckRtldDeepbind)
+apitrace_check_rtld_deepbind()
+if (apitrace_has_rtld_deepbind)
+  add_definitions(
+    -DAPITRACE_HAS_RTLD_DEEPBIND
+  )
+endif()
+
 if (WIN32)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
