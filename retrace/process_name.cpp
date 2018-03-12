@@ -48,14 +48,20 @@ static std::string g_processName;
 extern "C"  {
 
 
-PUBLIC ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
+PUBLIC ssize_t
+readlink(const char *pathname, char *buf, size_t bufsiz)
 {
+    /*
+     * NOTE: Best to avoid std::cerr/cout as this fuction might be called
+     * before libstdc++ has initialized.
+     */
     unsigned long pid = 0;
     if (strcmp(pathname, "/proc/self/exe") == 0 ||
         (sscanf(pathname, "/proc/%lu/exe", &pid) == 1 &&
          pid == getpid())) {
         if (0) {
-            std::cerr << "readlink(\"" << pathname << "\") from " << getModuleFromAddress(ReturnAddress()) << "\n";
+            std::string callerModule(getModuleFromAddress(ReturnAddress()));
+            fprintf(stderr, "readlink(\"%s\") from %s\n", pathname, callerModule.c_str());
         }
         if (!g_processName.empty()) {
             size_t len = g_processName.length();
@@ -69,7 +75,7 @@ PUBLIC ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
             }
         } else {
             // FIXME: We need to defer retrace::setUp() until after the first trace is loaded.
-            std::cerr << "warning: process name not yet set\n";
+            fprintf(stderr, "warning: process name not yet set\n");
             return -1;
         }
     }
