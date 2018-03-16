@@ -41,6 +41,10 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
             add_definitions (-D_XM_X86_)
         endif ()
         set (MINGW_GUID mingw/guid.cpp)
+    else ()
+        # MSVC uses intrinsics by default, but it seems to expose bugs for some
+        # formats.
+        add_definitions (-D_XM_NO_INTRINSICS_)
     endif ()
 
     add_library (directxtex STATIC
