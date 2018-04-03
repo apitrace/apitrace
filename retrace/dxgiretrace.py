@@ -101,13 +101,13 @@ class D3DRetracer(Retracer):
         # the debug layers are present, by creating a null device, and checking
         # the result.  It's simpler to retry.
         if function.name.startswith('D3D10CreateDevice'):
-            print r'        if (_result == E_FAIL && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {'
+            print r'        if ((_result == E_FAIL || _result == DXGI_ERROR_SDK_COMPONENT_MISSING) && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {'
             print r'            retrace::warning(call) << "Direct3D 10.x SDK Debug Layer (d3d10sdklayers.dll) not available, continuing without debug output\n";'
             print r'            Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
             Retracer.doInvokeFunction(self, function)
             print r'        }'
         if function.name.startswith('D3D11CreateDevice'):
-            print r'        if (_result == E_FAIL && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {'
+            print r'        if ((_result == E_FAIL || _result == DXGI_ERROR_SDK_COMPONENT_MISSING) && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {'
             print r'            retrace::warning(call) << "Direct3D 11.x SDK Debug Layer (d3d11*sdklayers.dll) not available, continuing without debug output\n";'
             print r'            Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
             Retracer.doInvokeFunction(self, function)
