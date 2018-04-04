@@ -44,7 +44,7 @@ class D3DRetracer(Retracer):
 
     def invokeFunction(self, function):
         if function.name in ('Direct3DCreate9', 'Direct3DCreate9Ex'):
-            print 'if (retrace::debug >= 2 && !g_szD3D9DllName && LoadLibraryA("d3d9d.dll")) {'
+            print 'if (retrace::debug >= 3 && !g_szD3D9DllName && LoadLibraryA("d3d9d.dll")) {'
             print '    /*'
             print '     * D3D9D only works for simple applications, it will often report bogus errors'
             print '     * on complex traces, or traces which use unofficial D3D9 features.'
@@ -58,7 +58,7 @@ class D3DRetracer(Retracer):
         # d3d8d.dll can be found in the Aug 2007 DXSDK.  It works on XP, but
         # not on Windows 7.
         if function.name in ('Direct3DCreate8'):
-            print 'if (retrace::debug >= 2 && !g_szD3D8DllName && LoadLibraryA("d3d8d.dll")) {'
+            print 'if (retrace::debug >= 3 && !g_szD3D8DllName && LoadLibraryA("d3d8d.dll")) {'
             print '    g_szD3D8DllName = "d3d8d.dll";'
             print '}'
 

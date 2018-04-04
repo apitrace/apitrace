@@ -72,7 +72,7 @@ class D3DRetracer(Retracer):
 
             if function.name.startswith('D3D10CreateDevice'):
                 # Toggle debugging
-                print r'    if (retrace::debug) {'
+                print r'    if (retrace::debug >= 2) {'
                 print r'        Flags |= D3D10_CREATE_DEVICE_DEBUG;'
                 print r'    } else {'
                 print r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
@@ -83,7 +83,7 @@ class D3DRetracer(Retracer):
 
             if function.name.startswith('D3D11CreateDevice'):
                 # Toggle debugging
-                print r'    if (retrace::debug) {'
+                print r'    if (retrace::debug >= 2) {'
                 print r'        Flags |= D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    } else {'
                 print r'        Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
@@ -328,7 +328,7 @@ class D3DRetracer(Retracer):
             # SrcDepthPitch is garbagge for non 3D textures.
             # XXX: It also seems to expect padding bytes at the end of the last
             # row, but we never record (or allocate) those...
-            print r'    if (retrace::debug && pDstBox && pDstBox->front == 0 && pDstBox->back == 1) {'
+            print r'    if (retrace::debug >= 2 && pDstBox && pDstBox->front == 0 && pDstBox->back == 1) {'
             print r'        SrcDepthPitch = 0;'
             print r'    }'
 
