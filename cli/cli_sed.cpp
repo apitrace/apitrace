@@ -33,6 +33,7 @@
 
 #include "os_string.hpp"
 
+#include "trace_callset.hpp"
 #include "trace_parser.hpp"
 #include "trace_writer.hpp"
 
@@ -55,12 +56,15 @@ usage(void)
         "                             XXX: Only works for enums and strings.\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
         "    --property=NAME=VALUE    Set a property\n"
+        "    --calls=CALLSET          Apply search/replace only to specified calls.\n"
+        "                             All other calls remain untouched.\n"
     ;
 }
 
 
 enum {
     PROPERTY_OPT = CHAR_MAX + 1,
+    CALLS_OPT
 };
 
 const static char *
@@ -71,6 +75,7 @@ longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"output", required_argument, 0, 'o'},
     {"property", required_argument, 0, PROPERTY_OPT},
+    {"calls", required_argument, 0, CALLS_OPT},
     {0, 0, 0, 0}
 };
 
@@ -205,7 +210,8 @@ static int
 sed_trace(Replacements &replacements,
           const trace::Properties &extraProperties,
           const char *inFileName,
-          std::string &outFileName)
+          std::string &outFileName,
+          const trace::CallSet &calls)
 {
     trace::Parser p;
 
@@ -235,9 +241,10 @@ sed_trace(Replacements &replacements,
 
     trace::Call *call;
     while ((call = p.parse_call())) {
-
-        for (auto & replacement : replacements) {
-            replacement.visit(call);
+        if (calls.empty() || calls.contains(*call)) {
+            for (auto & replacement : replacements) {
+                replacement.visit(call);
+            }
         }
 
         writer.writeCall(call);
@@ -334,6 +341,7 @@ command(int argc, char *argv[])
     Replacements replacements;
     trace::Properties extraProperties;
     std::string outFileName;
+    trace::CallSet calls;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -362,6 +370,9 @@ command(int argc, char *argv[])
                extraProperties[name] = value;
                break;
             }
+        case CALLS_OPT:
+            calls.merge(optarg);
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -385,7 +396,7 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    return sed_trace(replacements, extraProperties, argv[optind], outFileName);
+    return sed_trace(replacements, extraProperties, argv[optind], outFileName, calls);
 }
 
 

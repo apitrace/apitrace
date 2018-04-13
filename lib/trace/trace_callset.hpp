@@ -173,15 +173,15 @@ namespace trace {
         }
 
         inline bool
-        contains(const trace::Call &call) {
+        contains(const trace::Call &call) const {
             return contains(call.no, call.flags);
         }
 
-        CallNo getFirst() {
+        CallNo getFirst() const {
             return limits.start;
         }
 
-        CallNo getLast() {
+        CallNo getLast() const {
             return limits.stop;
         }
     };
