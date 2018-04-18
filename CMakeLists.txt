@@ -536,7 +536,7 @@ include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 # We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
 add_definitions (-DGTEST_HAS_TR1_TUPLE=0)
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/include)
+include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/include)
 add_library (gtest ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/src/gtest-all.cc)
 set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest)
 target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
