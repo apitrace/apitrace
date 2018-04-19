@@ -12,3 +12,4 @@ EXPORTS
         D3DPERF_GetStatus
         DXVA2CreateDirect3DDeviceManager9
         DXVA2CreateVideoService
+        Direct3D9ForceHybridEnumeration @16
