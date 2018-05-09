@@ -1,6 +1,7 @@
 EXPORTS
 	CreateDXGIFactory
 	CreateDXGIFactory1
+	CreateDXGIFactory2
 	D3D10CreateDevice
 	D3D10CreateDeviceAndSwapChain
 	D3D10CreateDevice1

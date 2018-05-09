@@ -223,7 +223,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (dxgitrace MODULE
+        add_library (dxgitrace SHARED
             dxgitrace.def
             dxgitrace.cpp
             d3dcommonshader.cpp
@@ -235,8 +235,37 @@ if (WIN32)
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
         )
-        install (TARGETS dxgitrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS dxgitrace RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR})
         install_pdb (dxgitrace DESTINATION ${WRAPPER_INSTALL_DIR})
+
+        add_library (dxgistub MODULE
+            dxgi.def
+        )
+        target_link_libraries (dxgistub
+            dxgitrace
+        )
+        set_target_properties (dxgistub PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME "dxgi"
+        )
+        install (TARGETS dxgistub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+
+        add_library (d3d11stub MODULE
+            d3d11.def
+        )
+        target_link_libraries (d3d11stub
+            dxgitrace
+        )
+        set_target_properties (d3d11stub PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME "d3d11"
+        )
+        install (TARGETS d3d11stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+
+        if (MSVC)
+            set_target_properties (dxgistub PROPERTIES LINK_FLAGS "/NOENTRY")
+            set_target_properties (d3d11stub PROPERTIES LINK_FLAGS "/NOENTRY")
+        endif ()
     endif ()
 
     # d2d1.dll, dwrite.dll
