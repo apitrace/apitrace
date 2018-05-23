@@ -33,6 +33,8 @@ set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
 option (ENABLE_CLI "Enable command Line interface." ON)
 
+option (ENABLE_X11 "Enable X11 support." ON)
+
 option (ENABLE_EGL "Enable EGL support." ON)
 
 option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
@@ -161,7 +163,7 @@ if (WIN32)
     set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
-else ()
+elseif (ENABLE_X11)
     find_package (X11)
 
     if (X11_FOUND)
