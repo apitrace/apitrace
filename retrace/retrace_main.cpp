@@ -116,6 +116,7 @@ bool useCallNos = true;
 bool singleThread = false;
 bool ignoreRetvals = false;
 bool contextCheck = true;
+int64_t minCpuTime = 1000;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
@@ -709,7 +710,8 @@ enum {
     SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
     DUMP_FORMAT_OPT,
-    MARKERS_OPT
+    MARKERS_OPT,
+    MIN_CPU_TIME_OPT,
 };
 
 const static char *
@@ -754,6 +756,7 @@ longOptions[] = {
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
+    {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
     {0, 0, 0, 0}
 };
 
@@ -1118,6 +1121,9 @@ int main(int argc, char **argv)
             retrace::profilingWithBackends = true;
             retrace::profilingNumPasses = true;
             break;
+        case MIN_CPU_TIME_OPT:
+            retrace::minCpuTime = atol(optarg);
+            break;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);
@@ -1152,7 +1158,8 @@ int main(int argc, char **argv)
         retrace::profiler.setup(retrace::profilingCpuTimes,
                                 retrace::profilingGpuTimes,
                                 retrace::profilingPixelsDrawn,
-                                retrace::profilingMemoryUsage);
+                                retrace::profilingMemoryUsage,
+                                retrace::minCpuTime);
     }
 
     os::setExceptionCallback(exceptionCallback);
