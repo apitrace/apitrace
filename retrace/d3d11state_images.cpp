@@ -503,6 +503,56 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
 }
 
 
+static image::Image *
+getUnorderedAccessViewImage(ID3D11DeviceContext *pDevice,
+                            ID3D11UnorderedAccessView *pUAView,
+                            DXGI_FORMAT *dxgiFormat)
+{
+    if (!pUAView) {
+        return nullptr;
+    }
+
+    com_ptr<ID3D11Resource> pResource;
+    pUAView->GetResource(&pResource);
+    assert(pResource);
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC Desc;
+    pUAView->GetDesc(&Desc);
+
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
+
+    UINT MipSlice;
+    switch (Desc.ViewDimension) {
+    case D3D11_UAV_DIMENSION_BUFFER:
+        MipSlice = 0;
+        break;
+    case D3D11_UAV_DIMENSION_TEXTURE1D:
+        MipSlice = Desc.Texture1D.MipSlice;
+        break;
+    case D3D11_UAV_DIMENSION_TEXTURE1DARRAY:
+        MipSlice = Desc.Texture1DArray.MipSlice;
+        break;
+    case D3D11_UAV_DIMENSION_TEXTURE2D:
+        MipSlice = Desc.Texture2D.MipSlice;
+        break;
+    case D3D11_UAV_DIMENSION_TEXTURE2DARRAY:
+        MipSlice = Desc.Texture2DArray.MipSlice;
+        break;
+    case D3D11_UAV_DIMENSION_TEXTURE3D:
+        MipSlice = Desc.Texture3D.MipSlice;
+        break;
+    case D3D11_UAV_DIMENSION_UNKNOWN:
+    default:
+        assert(0);
+        return nullptr;
+    }
+
+    return getSubResourceImage(pDevice, pResource, Desc.Format, 0, MipSlice);
+}
+
+
 static void
 dumpStageTextures(StateWriter &writer, ID3D11DeviceContext *pDevice, const char *stageName,
                   UINT NumViews,
@@ -626,6 +676,34 @@ dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
             pDepthStencilView->Release();
         }
 
+        ID3D11UnorderedAccessView *pUAViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
+        pDevice->OMGetRenderTargetsAndUnorderedAccessViews(
+            0, pRenderTargetViews, &pDepthStencilView,
+            0, ARRAYSIZE(pUAViews), pUAViews);
+
+        for (UINT i = 0; i < ARRAYSIZE(pUAViews); ++i) {
+            if (!pUAViews[i]) {
+                continue;
+            }
+
+            image::Image *image;
+            DXGI_FORMAT dxgiFormat;
+            image = getUnorderedAccessViewImage(pDevice, pUAViews[i],
+                                                &dxgiFormat);
+            if (image) {
+                char label[64];
+                _snprintf(label, sizeof label, "UNORDERED_ACCESS_%u", i);
+                StateWriter::ImageDesc imgDesc;
+                imgDesc.depth = 1;
+                imgDesc.format = getDXGIFormatName(dxgiFormat);
+                writer.beginMember(label);
+                writer.writeImage(image, imgDesc);
+                writer.endMember();
+                delete image;
+            }
+
+            pUAViews[i]->Release();
+        }
     }
 
     writer.endObject();
