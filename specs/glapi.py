@@ -2811,6 +2811,7 @@ glapi.addFunctions([
     # GL_KHR_robustness
     GlFunction(GLenum, "glGetGraphicsResetStatus", [], sideeffects=False),
     GlFunction(Void, "glReadnPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "data")]),
+    GlFunction(Void, "glReadnPixelsKHR", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "data")]),
     GlFunction(Void, "glGetnUniformfv", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformiv", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformuiv", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "params")], sideeffects=False),
