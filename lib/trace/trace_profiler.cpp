@@ -48,12 +48,13 @@ Profiler::~Profiler()
 {
 }
 
-void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_)
+void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_, int64_t minCpuTime_)
 {
     cpuTimes = cpuTimes_;
     gpuTimes = gpuTimes_;
     pixelsDrawn = pixelsDrawn_;
     memoryUsage = memoryUsage_;
+    minCpuTime = minCpuTime_;
 
     std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura vsize_start vsize_dura rss_start rss_dura pixels program name" << std::endl;
 }

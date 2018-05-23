@@ -100,7 +100,7 @@ public:
     Profiler();
     ~Profiler();
 
-    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_);
+    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_, int64_t minCpuTime_);
 
     void addCall(unsigned no,
                  const char* name,
