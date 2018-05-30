@@ -527,6 +527,9 @@ getUnorderedAccessViewImage(ID3D11DeviceContext *pDevice,
     switch (Desc.ViewDimension) {
     case D3D11_UAV_DIMENSION_BUFFER:
         MipSlice = 0;
+        if (Desc.Buffer.Flags & D3D11_BUFFER_UAV_FLAG_RAW) {
+            *dxgiFormat = DXGI_FORMAT_R32_UINT;
+        }
         break;
     case D3D11_UAV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MipSlice;
@@ -677,9 +680,8 @@ dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
         }
 
         ID3D11UnorderedAccessView *pUAViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
-        pDevice->OMGetRenderTargetsAndUnorderedAccessViews(
-            0, pRenderTargetViews, &pDepthStencilView,
-            0, ARRAYSIZE(pUAViews), pUAViews);
+        pDevice->OMGetRenderTargetsAndUnorderedAccessViews(0, nullptr, nullptr,
+                                                           0, ARRAYSIZE(pUAViews), pUAViews);
 
         for (UINT i = 0; i < ARRAYSIZE(pUAViews); ++i) {
             if (!pUAViews[i]) {
