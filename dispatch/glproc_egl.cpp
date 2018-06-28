@@ -54,6 +54,10 @@ void *_libGlHandle = NULL;
 
 #else
 
+#ifndef RTLD_DEEPBIND
+#define RTLD_DEEPBIND 0
+#endif
+
 /*
  * Lookup a public EGL/GL/GLES symbol
  *
