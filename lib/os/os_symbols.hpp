@@ -41,7 +41,7 @@
 #include <dlfcn.h>
 
 inline std::string
-getModuleFromAddress(const void *address)
+getModuleFromAddress(void *address)
 {
     Dl_info info;
     if (dladdr(address, &info)) {
