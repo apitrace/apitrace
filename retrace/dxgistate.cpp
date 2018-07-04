@@ -250,7 +250,7 @@ ConvertImage(DXGI_FORMAT SrcFormat,
              void *SrcData,
              UINT SrcPitch,
              UINT Width, UINT Height,
-             bool allowsRawViews)
+             bool isDepthStencil)
 {
     unsigned numChannels;
     image::ChannelType channelType;
@@ -276,9 +276,7 @@ ConvertImage(DXGI_FORMAT SrcFormat,
         break;
 
     case DXGI_FORMAT_R32_TYPELESS:
-        if (allowsRawViews) {
-            SrcFormat = DXGI_FORMAT_R32_UINT;
-        }
+        SrcFormat = isDepthStencil ? DXGI_FORMAT_D32_FLOAT : DXGI_FORMAT_R32_UINT;
         break;
 
     default:

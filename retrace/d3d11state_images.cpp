@@ -294,7 +294,7 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
                          StagingDesc.Width, StagingDesc.Height,
-                         (Desc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS) != 0);
+                         Desc.BindFlags & D3D11_BIND_DEPTH_STENCIL);
 
     pDeviceContext->Unmap(pStagingResource, 0);
 

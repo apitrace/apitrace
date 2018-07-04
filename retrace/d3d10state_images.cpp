@@ -336,7 +336,7 @@ getSubResourceImage(ID3D10Device *pDevice,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
                          StagingDesc.Width, StagingDesc.Height,
-                         false);
+                         Desc.BindFlags & D3D10_BIND_DEPTH_STENCIL);
 
     unmapResource(pStagingResource, 0);
 
