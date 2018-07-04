@@ -249,12 +249,13 @@ image::Image *
 ConvertImage(DXGI_FORMAT SrcFormat,
              void *SrcData,
              UINT SrcPitch,
-             UINT Width, UINT Height)
+             UINT Width, UINT Height,
+             bool allowsRawViews)
 {
     unsigned numChannels;
     image::ChannelType channelType;
 
-    // DirectXTex doesn't support the typeless depth-stencil variants
+    // DirectXTex doesn't support the typeless depth-stencil/uav variants
     switch (SrcFormat) {
     case DXGI_FORMAT_R24G8_TYPELESS:
     case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
@@ -272,6 +273,12 @@ ConvertImage(DXGI_FORMAT SrcFormat,
     case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
     case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
         SrcFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        break;
+
+    case DXGI_FORMAT_R32_TYPELESS:
+        if (allowsRawViews) {
+            SrcFormat = DXGI_FORMAT_R32_UINT;
+        }
         break;
 
     default:

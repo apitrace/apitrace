@@ -59,7 +59,8 @@ image::Image *
 ConvertImage(DXGI_FORMAT SrcFormat,
              void *SrcData,
              UINT SrcPitch,
-             UINT Width, UINT Height);
+             UINT Width, UINT Height,
+             bool allowsRawViews);
 
 
 image::Image *

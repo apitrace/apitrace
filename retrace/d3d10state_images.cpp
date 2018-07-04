@@ -335,7 +335,8 @@ getSubResourceImage(ID3D10Device *pDevice,
     image = ConvertImage(Format,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
-                         StagingDesc.Width, StagingDesc.Height);
+                         StagingDesc.Width, StagingDesc.Height,
+                         false);
 
     unmapResource(pStagingResource, 0);
 

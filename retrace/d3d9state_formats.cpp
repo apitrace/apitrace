@@ -239,7 +239,7 @@ ConvertImageDXGI(D3DFORMAT SrcFormat,
 
     assert(SrcPitch >= 0);
 
-    return ConvertImage(Format, SrcData, SrcPitch, Width, Height);
+    return ConvertImage(Format, SrcData, SrcPitch, Width, Height, false);
 }
 
 #endif /* HAVE_DXGI */

@@ -293,7 +293,8 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
     image = ConvertImage(Format,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
-                         StagingDesc.Width, StagingDesc.Height);
+                         StagingDesc.Width, StagingDesc.Height,
+                         (Desc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS) != 0);
 
     pDeviceContext->Unmap(pStagingResource, 0);
 
