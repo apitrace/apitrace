@@ -238,8 +238,15 @@ if (WIN32)
         install (TARGETS dxgitrace RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR})
         install_pdb (dxgitrace DESTINATION ${WRAPPER_INSTALL_DIR})
 
+
+        #
+        # dxgi.dll and d3d11.dll stubs that merely dispatch entry points to
+        # dxgitrace.dll
+        #
+
         add_library (dxgistub MODULE
             dxgi.def
+            stub.cpp
         )
         target_link_libraries (dxgistub
             dxgitrace
@@ -252,6 +259,7 @@ if (WIN32)
 
         add_library (d3d11stub MODULE
             d3d11.def
+            stub.cpp
         )
         target_link_libraries (d3d11stub
             dxgitrace
@@ -261,11 +269,6 @@ if (WIN32)
             OUTPUT_NAME "d3d11"
         )
         install (TARGETS d3d11stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-
-        if (MSVC)
-            set_target_properties (dxgistub PROPERTIES LINK_FLAGS "/NOENTRY")
-            set_target_properties (d3d11stub PROPERTIES LINK_FLAGS "/NOENTRY")
-        endif ()
     endif ()
 
     # d2d1.dll, dwrite.dll
