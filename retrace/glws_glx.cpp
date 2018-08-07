@@ -430,6 +430,7 @@ GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
                            const glws::pbuffer_info *pbInfo, int w, int h)
 {
     int samples = 0;
+    int doubleBuffer = 0;
 
     // XXX ideally, we'd populate these attributes according to the Visual info
     Attributes<int> attribs;
@@ -439,7 +440,10 @@ GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
     attribs.add(GLX_GREEN_SIZE, 1);
     attribs.add(GLX_BLUE_SIZE, 1);
     attribs.add(GLX_ALPHA_SIZE, 1);
-    //attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+
+    glXGetFBConfigAttrib(dpy, visinfo->fbconfig, GLX_DOUBLEBUFFER,
+                         &doubleBuffer);
+    attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
     attribs.add(GLX_DEPTH_SIZE, 1);
     attribs.add(GLX_STENCIL_SIZE, 1);
     if (samples > 1) {
