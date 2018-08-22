@@ -74,7 +74,7 @@ class D3DRetracer(Retracer):
                 # Toggle debugging
                 print r'    if (retrace::debug >= 2) {'
                 print r'        Flags |= D3D10_CREATE_DEVICE_DEBUG;'
-                print r'    } else {'
+                print r'    } else if (retrace::debug < 0) {'
                 print r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
                 print r'    }'
 
@@ -85,7 +85,7 @@ class D3DRetracer(Retracer):
                 # Toggle debugging
                 print r'    if (retrace::debug >= 2) {'
                 print r'        Flags |= D3D11_CREATE_DEVICE_DEBUG;'
-                print r'    } else {'
+                print r'    } else if (retrace::debug < 0) {'
                 print r'        Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    }'
 

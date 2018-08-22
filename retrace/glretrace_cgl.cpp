@@ -382,7 +382,7 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
             }
             frame_complete(call);
         } else {
-            if (retrace::debug) {
+            if (retrace::debug > 0) {
                 retrace::warning(call) << "context has no drawable\n";
             }
         }
@@ -415,7 +415,7 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
         return;
     }
 
-    if (retrace::debug) {
+    if (retrace::debug > 0) {
         retrace::warning(call) << "external IOSurface not supported\n";
     }
 
@@ -447,13 +447,13 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
     GLvoid * pixels = NULL;
 
     glretrace::Context *currentContext = glretrace::getCurrentContext();
-    if (retrace::debug && currentContext != context) {
+    if (retrace::debug > 0 && currentContext != context) {
         retrace::warning(call) << "current context mismatch\n";
     }
 
     glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 
-    if (retrace::debug && currentContext && !currentContext->insideBeginEnd) {
+    if (retrace::debug > 0 && currentContext && !currentContext->insideBeginEnd) {
         glretrace::checkGlError(call);
     }
 }

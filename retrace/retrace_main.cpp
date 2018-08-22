@@ -82,7 +82,7 @@ trace::Profiler profiler;
 
 
 int verbosity = 0;
-unsigned debug = 1;
+int debug = 1;
 bool markers = false;
 bool snapshotMRT = false;
 bool snapshotAlpha = false;
@@ -922,7 +922,7 @@ int main(int argc, char **argv)
             usage(argv[0]);
             return 0;
         case 'b':
-            retrace::debug = 0;
+            retrace::debug = -1;
             retrace::verbosity = -1;
             break;
         case MARKERS_OPT:

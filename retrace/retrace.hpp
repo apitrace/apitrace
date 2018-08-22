@@ -111,7 +111,7 @@ extern int verbosity;
 /**
  * Debugging checks.
  */
-extern unsigned debug;
+extern int debug;
 
 /**
  * Call no markers.

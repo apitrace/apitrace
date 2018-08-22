@@ -133,7 +133,7 @@ class GlRetracer(Retracer):
             # crashes on other systems, particularly with NVIDIA Linux drivers.
             print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
             print r'    if (!currentContext) {'
-            print r'        if (retrace::debug) {'
+            print r'        if (retrace::debug > 0) {'
             print r'            retrace::warning(call) << "no current context\n";'
             print r'        }'
             print r'#ifndef _WIN32'
@@ -323,7 +323,7 @@ class GlRetracer(Retracer):
            is_draw_arrays or \
            is_draw_elements or \
            function.name.startswith('glBeginTransformFeedback'):
-            print r'    if (retrace::debug) {'
+            print r'    if (retrace::debug > 0) {'
             print r'        _validateActiveProgram(call);'
             print r'    }'
 
@@ -416,7 +416,7 @@ class GlRetracer(Retracer):
         # Error checking
         if function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (retrace::debug && currentContext && !currentContext->insideBeginEnd) {'
+            print '    if (retrace::debug > 0 && currentContext && !currentContext->insideBeginEnd) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glLoadProgramNV'):
                 print r'        GLint error_position = -1;'
@@ -623,7 +623,7 @@ _getActiveProgram(void)
 static void
 _validateActiveProgram(trace::Call &call)
 {
-    assert(retrace::debug);
+    assert(retrace::debug > 0);
 
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (!currentContext ||

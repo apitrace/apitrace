@@ -233,7 +233,7 @@ lookupAddress(unsigned long long address, Range &range) {
         return;
     }
 
-    if (retrace::debug && address >= 64 * 1024 * 1024) {
+    if (retrace::debug > 0 && address >= 64 * 1024 * 1024) {
         /* Likely not an offset, but an address that should had been swizzled */
         std::cerr << "warning: passing high address 0x" << std::hex << address << std::dec << " as uintptr_t\n";
     }

@@ -119,7 +119,7 @@ Context *
 createContext(Context *shareContext, glfeatures::Profile profile) {
     glws::Visual *visual = getVisual(profile);
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
-    glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug);
+    glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug > 0);
     if (!ctx) {
         std::cerr << "error: failed to create " << profile << " context.\n";
         exit(1);
@@ -263,7 +263,7 @@ updateDrawable(int width, int height) {
     currentDrawable->show();
 
     // Ensure the drawable dimensions, as perceived by glstate match.
-    if (retrace::debug) {
+    if (retrace::debug > 0) {
         GLint newWidth = 0;
         GLint newHeight = 0;
         if (glstate::getDrawableBounds(&newWidth, &newHeight) &&

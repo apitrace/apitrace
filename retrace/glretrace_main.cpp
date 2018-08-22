@@ -479,7 +479,7 @@ initContext() {
     }
 
     /* Setup debug message call back */
-    if (retrace::debug) {
+    if (retrace::debug > 0) {
         if (currentContext->KHR_debug) {
             if (currentProfile.desktop()) {
                 glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
@@ -565,7 +565,7 @@ frame_complete(trace::Call &call) {
 
     glws::Drawable *currentDrawable = currentContext->drawable;
     assert(currentDrawable);
-    if (retrace::debug &&
+    if (retrace::debug > 0 &&
         !currentDrawable->pbuffer &&
         !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
