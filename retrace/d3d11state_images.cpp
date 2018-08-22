@@ -707,6 +707,33 @@ dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
 
             pUAViews[i]->Release();
         }
+
+        ID3D11UnorderedAccessView *pCSUAViews[D3D11_1_UAV_SLOT_COUNT];
+        pDevice->CSGetUnorderedAccessViews(0, ARRAYSIZE(pCSUAViews), pCSUAViews);
+
+        for (UINT i = 0; i < ARRAYSIZE(pCSUAViews); ++i) {
+            if (!pCSUAViews[i]) {
+                continue;
+            }
+
+            image::Image *image;
+            DXGI_FORMAT dxgiFormat;
+            image = getUnorderedAccessViewImage(pDevice, pCSUAViews[i],
+                                                &dxgiFormat);
+            if (image) {
+                char label[64];
+                _snprintf(label, sizeof label, "CSUNORDERED_ACCESS_%u", i);
+                StateWriter::ImageDesc imgDesc;
+                imgDesc.depth = 1;
+                imgDesc.format = getDXGIFormatName(dxgiFormat);
+                writer.beginMember(label);
+                writer.writeImage(image, imgDesc);
+                writer.endMember();
+                delete image;
+            }
+
+            pCSUAViews[i]->Release();
+        }
     }
 
     writer.endObject();
