@@ -231,7 +231,13 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
         if (DirectX::IsCompressed(SrcFormat)) {
             hr = DirectX::Decompress(SrcImage, DstFormat, ScratchImage);
         } else {
-            hr = DirectX::Convert(SrcImage, DstFormat, DirectX::TEX_FILTER_DEFAULT, 0.0f, ScratchImage);
+            /*
+             * Avoid WIC, as it's not reliable (e.g, R32_FLOAT ->
+             * R32G32B32A32_FLOAT will fail with E_INVALIDARG.)
+             */
+            DWORD filter = DirectX::TEX_FILTER_FORCE_NON_WIC;
+
+            hr = DirectX::Convert(SrcImage, DstFormat, filter, 0.0f, ScratchImage);
         }
 
         if (SUCCEEDED(hr)) {
@@ -301,7 +307,8 @@ ConvertImage(DXGI_FORMAT SrcFormat,
                        image->start(), image->stride(),
                        Width, Height);
     if (FAILED(hr)) {
-        std::cerr << "warning: failed to convert from format " << SrcFormat << " to format " << DstFormat << "\n";
+        std::cerr << "warning: failed to convert from format " << getDXGIFormatName(SrcFormat)
+                  << " to format " << getDXGIFormatName(DstFormat) << "\n";
         delete image;
         image = NULL;
     }
