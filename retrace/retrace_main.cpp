@@ -890,7 +890,47 @@ new_failure_handler(size_t size)
     return 0;
 }
 
+#ifndef DBG_PRINTEXCEPTION_WIDE_C
+#define DBG_PRINTEXCEPTION_WIDE_C 0x4001000A
 #endif
+
+// Intercept OutputDebugString and write the message to stderr.
+static LONG CALLBACK
+VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
+{
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+    DWORD ExceptionCode = pExceptionRecord->ExceptionCode;
+
+    if (ExceptionCode == DBG_PRINTEXCEPTION_C) {
+       ULONG_PTR nLength = pExceptionRecord->ExceptionInformation[0];
+       PCSTR pString = reinterpret_cast<PCSTR>(pExceptionRecord->ExceptionInformation[1]);
+
+       if (nLength > 1 && pString) {
+           // nLength includes trailing null character
+           --nLength;
+
+           fprintf(stderr, "%u: debug: %s",
+                   retrace::callNo,
+                   pString);
+           char last = pString[nLength - 1];
+           if (last != '\r' && last != '\n') {
+               fputc('\n', stderr);
+           }
+       }
+
+       return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    if (ExceptionCode == DBG_PRINTEXCEPTION_WIDE_C) {
+       // Do nothing, as this exception will be rethrown as a
+       // DBG_PRINTEXCEPTION_C.
+       return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+#endif  // _WIN32
 
 
 extern "C"
@@ -911,6 +951,9 @@ int main(int argc, char **argv)
 #else
     (void)new_failure_handler;
 #endif
+   if (!IsDebuggerPresent()) {
+      AddVectoredExceptionHandler(0, VectoredHandler);
+   }
 #endif
 
     assert(snapshotFrequency.empty());
