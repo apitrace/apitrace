@@ -342,7 +342,6 @@ getSubResourceImage(ID3D10Device *pDevice,
 
     if (image) {
         image->label = getObjectName(pResource);
-        std::cerr << image->label << "\n";
     }
 
 no_map:
