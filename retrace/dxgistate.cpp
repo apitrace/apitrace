@@ -224,6 +224,12 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
         return hr;
     }
 
+    /*
+     * Avoid WIC, as it's not reliable (e.g, R32_FLOAT ->
+     * R32G32B32A32_FLOAT will fail with E_INVALIDARG.)
+     */
+    DWORD filter = DirectX::TEX_FILTER_FORCE_NON_WIC;
+
     if (SrcFormat != DstFormat) {
         DirectX::ScratchImage ScratchImage;
         ScratchImage.Initialize2D(DstFormat, Width, Height, 1, 1);
@@ -231,20 +237,14 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
         if (DirectX::IsCompressed(SrcFormat)) {
             hr = DirectX::Decompress(SrcImage, DstFormat, ScratchImage);
         } else {
-            /*
-             * Avoid WIC, as it's not reliable (e.g, R32_FLOAT ->
-             * R32G32B32A32_FLOAT will fail with E_INVALIDARG.)
-             */
-            DWORD filter = DirectX::TEX_FILTER_FORCE_NON_WIC;
-
             hr = DirectX::Convert(SrcImage, DstFormat, filter, 0.0f, ScratchImage);
         }
 
         if (SUCCEEDED(hr)) {
-            hr = CopyRectangle(*ScratchImage.GetImage(0, 0, 0), rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
+            hr = DirectX::CopyRectangle(*ScratchImage.GetImage(0, 0, 0), rect, DstImage, filter, 0, 0);
         }
     } else {
-        hr = CopyRectangle(SrcImage, rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
+        hr = DirectX::CopyRectangle(SrcImage, rect, DstImage, filter, 0, 0);
     }
 
     return hr;
