@@ -40,7 +40,8 @@ getSubResourceImage(ID3D11DeviceContext *pDevice,
                     ID3D11Resource *pResource,
                     DXGI_FORMAT Format,
                     UINT ArraySlice,
-                    UINT MipSlice);
+                    UINT MipSlice,
+                    UINT NumElements = 0);
 
 
 } /* namespace d3dstate */

@@ -211,7 +211,8 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
                     ID3D11Resource *pResource,
                     DXGI_FORMAT Format,
                     UINT ArraySlice,
-                    UINT MipSlice)
+                    UINT MipSlice,
+                    UINT NumElements)
 {
     image::Image *image = NULL;
     UINT SubResource;
@@ -287,13 +288,19 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
 
     hr = pDeviceContext->Map(pStagingResource, 0, D3D11_MAP_READ, 0, &MappedSubResource);
     if (FAILED(hr)) {
-        goto no_map;
+        return nullptr;
+    }
+
+    UINT Width = StagingDesc.Width;
+    if (NumElements) {
+        assert(StagingDesc.Height == 1);
+        Width = NumElements;
     }
 
     image = ConvertImage(Format,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
-                         StagingDesc.Width, StagingDesc.Height,
+                         Width, StagingDesc.Height,
                          Desc.BindFlags & D3D11_BIND_DEPTH_STENCIL);
 
     pDeviceContext->Unmap(pStagingResource, 0);
@@ -302,7 +309,6 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
         image->label = getObjectName(pResource);
     }
 
-no_map:
     return image;
 }
 
@@ -524,12 +530,14 @@ getUnorderedAccessViewImage(ID3D11DeviceContext *pDevice,
     }
 
     UINT MipSlice;
+    UINT NumElements = 0;
     switch (Desc.ViewDimension) {
     case D3D11_UAV_DIMENSION_BUFFER:
         MipSlice = 0;
         if (Desc.Buffer.Flags & D3D11_BUFFER_UAV_FLAG_RAW) {
             *dxgiFormat = DXGI_FORMAT_R32_UINT;
         }
+        NumElements = Desc.Buffer.NumElements;
         break;
     case D3D11_UAV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MipSlice;
@@ -552,7 +560,7 @@ getUnorderedAccessViewImage(ID3D11DeviceContext *pDevice,
         return nullptr;
     }
 
-    return getSubResourceImage(pDevice, pResource, Desc.Format, 0, MipSlice);
+    return getSubResourceImage(pDevice, pResource, Desc.Format, 0, MipSlice, NumElements);
 }
 
 
