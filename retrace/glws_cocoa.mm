@@ -118,7 +118,7 @@ public:
                                    styleMask:NSWindowStyleMaskTitled |
                                              NSWindowStyleMaskClosable |
                                              NSWindowStyleMaskMiniaturizable
-                                     backing:NSBackingStoreRetained
+                                     backing:NSBackingStoreBuffered
                                        defer:NO];
         assert(window != nil);
 
