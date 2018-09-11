@@ -49,7 +49,7 @@ protected:
 
 public:
     Dumper(std::ostream &_os, DumpFlags _flags);
-    ~Dumper();
+    virtual ~Dumper();
 
     virtual void visit(Null *) override;
     virtual void visit(Bool *node) override;

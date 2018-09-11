@@ -106,7 +106,7 @@ public:
         }
     }
 
-    ~Replacer() {
+    virtual ~Replacer() {
     }
 
     void visit(Null *) override {
