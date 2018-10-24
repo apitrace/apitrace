@@ -466,6 +466,7 @@ callFlagTable[] = {
     { "glXQueryExtensionsString",                      CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXQueryVersion",                               CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },
+    { "glXSwapBuffersMscOML",                          CALL_FLAG_SWAPBUFFERS },
     { "wglDescribePixelFormat",                        CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "wglGetCurrentContext",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "wglGetCurrentDC",                               CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
