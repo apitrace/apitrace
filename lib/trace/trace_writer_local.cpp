@@ -39,6 +39,10 @@
 #include "trace_format.hpp"
 #include "os_backtrace.hpp"
 
+#ifdef _WIN32
+#include <shlobj.h>
+#endif
+
 
 namespace trace {
 
@@ -104,15 +108,12 @@ LocalWriter::open(void) {
 #else
         os::String prefix = os::getCurrentDir();
 #ifdef _WIN32
-        // Avoid writing into Windows' system directory as quite often access
-        // will be denied.
-        if (IsWindows8OrGreater()) {
-            char szDirectory[MAX_PATH + 1];
-            GetSystemDirectoryA(szDirectory, sizeof szDirectory);
-            if (stricmp(prefix, szDirectory) == 0) {
-                GetTempPathA(sizeof szDirectory, szDirectory);
-                prefix = szDirectory;
-            }
+        // Default to user's desktop, as current directory often points to
+        // system directory or program files, which are not generally writable.
+        char szDesktopPath[MAX_PATH];
+        HRESULT hr = SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, 0, szDesktopPath);
+        if (SUCCEEDED(hr)) {
+            prefix = szDesktopPath;
         }
 #endif
 #endif
