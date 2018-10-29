@@ -177,8 +177,16 @@ simplest way to determine what API an application uses is to:
 * sort DLLs alphabetically, and look for the DLLs such as `opengl32.dll`,
   `d3d9.dll`, etc.
 
-Copy the appropriate `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the
-wrappers directory to the directory with the application you want to trace.
+Copy the appropriate DLL from wrappers directory to the directory with the
+application you want to trace.
+
+| API    | DLLs to copy                       |
+| ------ | ---------------------------------- |
+| OpenGL | opengl32.dll                       |
+| D3D11  | dxgitrace.dll, dxgi.dll, d3d11.dll |
+| D3D9   | d3d9.dll                           |
+| D3D8   | d3d8.dll                           |
+
 Then run the application as usual.
 
 You can specify the written trace filename by setting the `TRACE_FILE`
