@@ -89,6 +89,7 @@ ChooseConversionFormat(DXGI_FORMAT Format, unsigned &numChannels, image::Channel
     case DXGI_FORMAT_B8G8R8X8_UNORM:
     case DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM:
     case DXGI_FORMAT_BC7_UNORM:
+    case DXGI_FORMAT_B4G4R4A4_UNORM:
         return DXGI_FORMAT_R8G8B8A8_UNORM;
 
     // SRGB
@@ -112,32 +113,49 @@ ChooseConversionFormat(DXGI_FORMAT Format, unsigned &numChannels, image::Channel
     case DXGI_FORMAT_BC5_SNORM:
         return DXGI_FORMAT_R8G8B8A8_SNORM;
 
-    // Unsigned
-    case DXGI_FORMAT_R32G32B32A32_UINT:
-    case DXGI_FORMAT_R32G32B32_UINT:
-    case DXGI_FORMAT_R16G16B16A16_UINT:
-    case DXGI_FORMAT_R32G32_UINT:
-    case DXGI_FORMAT_R10G10B10A2_UINT:
+    // 8-bit unsigned
     case DXGI_FORMAT_R8G8B8A8_UINT:
-    case DXGI_FORMAT_R16G16_UINT:
-    case DXGI_FORMAT_R32_UINT:
     case DXGI_FORMAT_R8G8_UINT:
-    case DXGI_FORMAT_R16_UINT:
     case DXGI_FORMAT_R8_UINT:
         return DXGI_FORMAT_R8G8B8A8_UINT;
 
-    // Signed
+    // 4-channel integers
+    case DXGI_FORMAT_R32G32B32A32_UINT:
     case DXGI_FORMAT_R32G32B32A32_SINT:
-    case DXGI_FORMAT_R32G32B32_SINT:
+    case DXGI_FORMAT_R16G16B16A16_UINT:
     case DXGI_FORMAT_R16G16B16A16_SINT:
-    case DXGI_FORMAT_R32G32_SINT:
     case DXGI_FORMAT_R8G8B8A8_SINT:
+    case DXGI_FORMAT_R10G10B10A2_UINT:
+        numChannels = 4;
+        channelType = image::TYPE_FLOAT;
+        return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+    // 3-channel integers
+    case DXGI_FORMAT_R32G32B32_UINT:
+    case DXGI_FORMAT_R32G32B32_SINT:
+        numChannels = 3;
+        channelType = image::TYPE_FLOAT;
+        return DXGI_FORMAT_R32G32B32_FLOAT;
+
+    // 2-channel integers
+    case DXGI_FORMAT_R32G32_UINT:
+    case DXGI_FORMAT_R32G32_SINT:
+    case DXGI_FORMAT_R16G16_UINT:
     case DXGI_FORMAT_R16G16_SINT:
-    case DXGI_FORMAT_R32_SINT:
     case DXGI_FORMAT_R8G8_SINT:
+        numChannels = 2;
+        channelType = image::TYPE_FLOAT;
+        return DXGI_FORMAT_R32G32_FLOAT;
+
+    // 1-channel integers
+    case DXGI_FORMAT_R32_UINT:
+    case DXGI_FORMAT_R32_SINT:
+    case DXGI_FORMAT_R16_UINT:
     case DXGI_FORMAT_R16_SINT:
     case DXGI_FORMAT_R8_SINT:
-        return DXGI_FORMAT_R8G8B8A8_SINT;
+        numChannels = 1;
+        channelType = image::TYPE_FLOAT;
+        return DXGI_FORMAT_R32_FLOAT;
 
     // Depth
     case DXGI_FORMAT_D32_FLOAT:
