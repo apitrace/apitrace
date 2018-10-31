@@ -350,12 +350,21 @@ dumpShaderResourceViewImage(StateWriter &writer,
     pShaderResourceView->GetDesc(&Desc);
 
     UINT MipSlice = 0;
+    UINT NumElements = 0;
     UINT FirstArraySlice = 0;
     UINT ArraySize = 1;
 
     switch (Desc.ViewDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
+        NumElements = Desc.Buffer.NumElements;
+        break;
     case D3D11_SRV_DIMENSION_BUFFEREX:
+        NumElements = Desc.BufferEx.NumElements;
+        if (Desc.BufferEx.Flags & D3D11_BUFFER_UAV_FLAG_RAW) {
+            // Raw buffers
+            assert(Desc.Format == DXGI_FORMAT_R32_TYPELESS);
+            Desc.Format = DXGI_FORMAT_R32_UINT;
+        }
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MostDetailedMip;
@@ -400,7 +409,7 @@ dumpShaderResourceViewImage(StateWriter &writer,
     for (UINT ArraySlice = FirstArraySlice; ArraySlice < FirstArraySlice + ArraySize; ++ArraySlice) {
 
         image::Image *image;
-        image = getSubResourceImage(pDevice, pResource, Desc.Format, ArraySlice, MipSlice);
+        image = getSubResourceImage(pDevice, pResource, Desc.Format, ArraySlice, MipSlice, NumElements);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label,
