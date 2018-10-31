@@ -291,6 +291,7 @@ ConvertImage(DXGI_FORMAT SrcFormat,
 
     DXGI_FORMAT DstFormat = ChooseConversionFormat(SrcFormat, numChannels, channelType);
     if (DstFormat == DXGI_FORMAT_UNKNOWN) {
+        std::cerr << "warning: don't know how to convert format " << getDXGIFormatName(SrcFormat) << "\n";
         return NULL;
     }
 

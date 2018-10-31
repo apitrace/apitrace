@@ -57,6 +57,7 @@ struct ResourceDesc
     UINT BindFlags;
     UINT CPUAccessFlags;
     UINT MiscFlags;
+    UINT StructureByteStride;
 };
 
 
@@ -76,6 +77,7 @@ getResourceDesc(ID3D11Resource *pResource, ResourceDesc *pDesc)
     pDesc->BindFlags = 0;
     pDesc->CPUAccessFlags = 0;
     pDesc->MiscFlags = 0;
+    pDesc->StructureByteStride = 0;
 
     pResource->GetType(&pDesc->Type);
     switch (pDesc->Type) {
@@ -88,6 +90,7 @@ getResourceDesc(ID3D11Resource *pResource, ResourceDesc *pDesc)
             pDesc->BindFlags = Desc.BindFlags;
             pDesc->CPUAccessFlags = Desc.CPUAccessFlags;
             pDesc->MiscFlags = Desc.MiscFlags;
+            pDesc->StructureByteStride = Desc.StructureByteStride;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
@@ -292,15 +295,30 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
     }
 
     UINT Width = StagingDesc.Width;
+    UINT Height = StagingDesc.Height;
     if (NumElements) {
         assert(StagingDesc.Height == 1);
         Width = NumElements;
     }
 
+    if (Desc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED) {
+        assert(Format == DXGI_FORMAT_UNKNOWN);
+        Format = DXGI_FORMAT_R32_UINT;
+
+        assert(Desc.StructureByteStride > 0);
+        assert(Desc.StructureByteStride % 4 == 0);
+        Width = Desc.StructureByteStride / 4;
+
+        assert(NumElements);
+        Height = NumElements;
+
+        MappedSubResource.RowPitch = Desc.StructureByteStride;
+    }
+
     image = ConvertImage(Format,
                          MappedSubResource.pData,
                          MappedSubResource.RowPitch,
-                         Width, StagingDesc.Height,
+                         Width, Height,
                          Desc.BindFlags & D3D11_BIND_DEPTH_STENCIL);
 
     pDeviceContext->Unmap(pStagingResource, 0);
@@ -535,7 +553,9 @@ getUnorderedAccessViewImage(ID3D11DeviceContext *pDevice,
     case D3D11_UAV_DIMENSION_BUFFER:
         MipSlice = 0;
         if (Desc.Buffer.Flags & D3D11_BUFFER_UAV_FLAG_RAW) {
-            *dxgiFormat = DXGI_FORMAT_R32_UINT;
+            // Raw buffers
+            assert(Desc.Format == DXGI_FORMAT_R32_TYPELESS);
+            Desc.Format = DXGI_FORMAT_R32_UINT;
         }
         NumElements = Desc.Buffer.NumElements;
         break;
