@@ -282,6 +282,10 @@ class D3DRetracer(Retracer):
             print r'    if (hSoftware) {'
             print r'        _result = _this->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppAdapter));'
             print r'    } else {'
+            print r'        if (Adapter != 0) {'
+            print r'            retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";'
+            print r'            Adapter = 0;'
+            print r'        }'
             Retracer.invokeInterfaceMethod(self, interface, method)
             print r'    }'
             return
