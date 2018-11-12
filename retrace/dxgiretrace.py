@@ -261,6 +261,8 @@ class D3DRetracer(Retracer):
             print r'    const char *szSoftware = NULL;'
             print r'    switch (retrace::driver) {'
             print r'    case retrace::DRIVER_REFERENCE:'
+            print r'        szSoftware = "d3d11ref.dll";'
+            print r'        break;'
             print r'    case retrace::DRIVER_SOFTWARE:'
             print r'        szSoftware = "d3d10warp.dll";'
             print r'        break;'
