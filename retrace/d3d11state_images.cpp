@@ -635,6 +635,8 @@ dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDevice)
         pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
         dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
+        pDevice->CSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+        dumpStageTextures(writer, pDevice, "CS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
     }
 
     writer.endObject();
