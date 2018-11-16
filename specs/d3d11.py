@@ -1262,6 +1262,14 @@ D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", 
     ("D3D11_FEATURE_D3D11_OPTIONS4", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS4)),
 ], Blob(Void, "FeatureSupportDataSize"), False)
 
+D3D11_NUM_RTVS = FakeEnum(UINT, [
+    "D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL",
+])
+
+D3D11_NUM_UAVS = FakeEnum(UINT, [
+    "D3D11_KEEP_UNORDERED_ACCESS_VIEWS",
+])
+
 ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "PSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
@@ -1290,7 +1298,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "OMSetRenderTargets", [(UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumViews"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView")]),
-    StdMethod(Void, "OMSetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumRTVs"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs"), "ppUnorderedAccessViews"), (Array(Const(UINT), "NumUAVs"), "pUAVInitialCounts")]),
+    StdMethod(Void, "OMSetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumRTVs == D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL ? 0 : NumRTVs"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs == D3D11_KEEP_UNORDERED_ACCESS_VIEWS ? 0 : NumUAVs"), "ppUnorderedAccessViews"), (Array(Const(UINT), "NumUAVs"), "pUAVInitialCounts")]),
     StdMethod(Void, "OMSetBlendState", [(ObjPointer(ID3D11BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (UINT, "SampleMask")]),
     StdMethod(Void, "OMSetDepthStencilState", [(ObjPointer(ID3D11DepthStencilState), "pDepthStencilState"), (UINT, "StencilRef")]),
     StdMethod(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppSOTargets"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
@@ -1346,7 +1354,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "OMGetRenderTargets", [(UINT, "NumViews"), Out(Array(ObjPointer(ID3D11RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView")]),
-    StdMethod(Void, "OMGetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), Out(Array(ObjPointer(ID3D11RenderTargetView), "NumRTVs"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), Out(Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
+    StdMethod(Void, "OMGetRenderTargetsAndUnorderedAccessViews", [(D3D11_NUM_RTVS, "NumRTVs"), Out(Array(ObjPointer(ID3D11RenderTargetView), "NumRTVs"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView"), (UINT, "UAVStartSlot"), (D3D11_NUM_UAVS, "NumUAVs"), Out(Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
     StdMethod(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D11BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(UINT), "pSampleMask")]),
     StdMethod(Void, "OMGetDepthStencilState", [Out(Pointer(ObjPointer(ID3D11DepthStencilState)), "ppDepthStencilState"), Out(Pointer(UINT), "pStencilRef")]),
     StdMethod(Void, "SOGetTargets", [(UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppSOTargets")]),
