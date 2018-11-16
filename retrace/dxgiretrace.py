@@ -88,6 +88,9 @@ class D3DRetracer(Retracer):
                 print r'    } else if (retrace::debug < 0) {'
                 print r'        Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    }'
+                print r'    if (IsWindows8OrGreater()) {'
+                print r'        Flags |= D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT;'
+                print r'    }'
 
                 # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE')
