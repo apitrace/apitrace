@@ -127,6 +127,11 @@ class D3DCommonTracer(DllTracer):
                 print '    MemoryShadow & _MapShadow = m_MapShadow;'
                 print '    %s *pResourceInstance = m_pInstance;' % interface.name
             else:
+                print r'    static bool _warned = false;'
+                print r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED && !_warned) {'
+                print r'        os::log("apitrace: warning: map with deferred context may not be realiably traced\n");'
+                print r'        _warned = true;'
+                print r'    }'
                 print '    _MAP_DESC & _MapDesc = m_MapDescs[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type
                 print '    MemoryShadow & _MapShadow = m_MapShadows[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type
                 print '    Wrap%spResourceInstance = static_cast<Wrap%s>(%s);' % (resourceArg.type, resourceArg.type, resourceArg.name)
