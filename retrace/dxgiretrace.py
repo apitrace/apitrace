@@ -182,6 +182,60 @@ class D3DRetracer(Retracer):
     def doInvokeInterfaceMethod(self, interface, method):
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
+        # Force driver
+        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapters'):
+            print r'    const char *szSoftware = NULL;'
+            print r'    switch (retrace::driver) {'
+            print r'    case retrace::DRIVER_REFERENCE:'
+            print r'        szSoftware = "d3d11ref.dll";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_SOFTWARE:'
+            print r'        szSoftware = "d3d10warp.dll";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_MODULE:'
+            print r'        szSoftware = retrace::driverModule;'
+            print r'        break;'
+            print r'    default:'
+            print r'        break;'
+            print r'    }'
+            print r'    HMODULE hSoftware = NULL;'
+            print r'    if (szSoftware) {'
+            print r'        hSoftware = LoadLibraryA(szSoftware);'
+            print r'        if (!hSoftware) {'
+            print r'            retrace::warning(call) << "failed to load " << szSoftware << "\n";'
+            print r'        }'
+            print r'    }'
+            print r'    if (hSoftware) {'
+            print r'        _result = _this->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppAdapter));'
+            print r'    } else {'
+            print r'        if (Adapter != 0) {'
+            print r'            retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";'
+            print r'            Adapter = 0;'
+            print r'        }'
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print r'    }'
+            return
+
+        if interface.name.startswith('IDXGIFactory') and method.name == 'CreateSoftwareAdapter':
+            print r'    const char *szSoftware = NULL;'
+            print r'    switch (retrace::driver) {'
+            print r'    case retrace::DRIVER_REFERENCE:'
+            print r'        szSoftware = "d3d11ref.dll";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_MODULE:'
+            print r'        szSoftware = retrace::driverModule;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_SOFTWARE:'
+            print r'    default:'
+            print r'        szSoftware = "d3d10warp.dll";'
+            print r'        break;'
+            print r'    }'
+            print r'    Module = LoadLibraryA("d3d10warp");'
+            print r'    if (!Module) {'
+            print r'        retrace::warning(call) << "failed to load " << szSoftware << "\n";'
+            print r'    }'
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+
         # Keep retrying ID3D11VideoContext::DecoderBeginFrame when returns E_PENDING
         if interface.name == 'ID3D11VideoContext' and method.name == 'DecoderBeginFrame':
             print r'    while (_result == D3DERR_WASSTILLDRAWING || _result == E_PENDING) {'
@@ -258,40 +312,6 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
             print r'        pSharedResource = NULL;'
             print r'    }'
-
-        # Force driver
-        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapters'):
-            print r'    const char *szSoftware = NULL;'
-            print r'    switch (retrace::driver) {'
-            print r'    case retrace::DRIVER_REFERENCE:'
-            print r'        szSoftware = "d3d11ref.dll";'
-            print r'        break;'
-            print r'    case retrace::DRIVER_SOFTWARE:'
-            print r'        szSoftware = "d3d10warp.dll";'
-            print r'        break;'
-            print r'    case retrace::DRIVER_MODULE:'
-            print r'        szSoftware = retrace::driverModule;'
-            print r'        break;'
-            print r'    default:'
-            print r'        break;'
-            print r'    }'
-            print r'    HMODULE hSoftware = NULL;'
-            print r'    if (szSoftware) {'
-            print r'        hSoftware = LoadLibraryA(szSoftware);'
-            print r'        if (!hSoftware) {'
-            print r'            retrace::warning(call) << "failed to load " << szSoftware << "\n";'
-            print r'        }'
-            print r'    }'
-            print r'    if (hSoftware) {'
-            print r'        _result = _this->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppAdapter));'
-            print r'    } else {'
-            print r'        if (Adapter != 0) {'
-            print r'            retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";'
-            print r'            Adapter = 0;'
-            print r'        }'
-            Retracer.invokeInterfaceMethod(self, interface, method)
-            print r'    }'
-            return
 
         if interface.name.startswith('ID3D10Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
