@@ -29,6 +29,9 @@ Replay an OpenGL trace with
 Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
 `apitrace replay` for more options.
 
+On dual GPU macs one can choose the GPU by setting the `VENDOR` environment
+variable to the desired GPU vendor (e.g, `Intel`, or `AMD`.)
+
 If you run into problems [check if it is a known issue and file an issue if
 not](BUGS.markdown).
 
