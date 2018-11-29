@@ -2778,7 +2778,7 @@ parameters = [
     ("",	X,	1,	"GL_HIGH_INT"),	# 0x8DF5
     ("",	X,	1,	"GL_UNSIGNED_INT_10_10_10_2_OES"),	# 0x8DF6
     ("",	X,	1,	"GL_INT_10_10_10_2_OES"),	# 0x8DF7
-    ("",	X,	1,	"GL_SHADER_BINARY_FORMATS"),	# 0x8DF8
+    ("glGet",	E,	'_glGetInteger(GL_NUM_SHADER_BINARY_FORMATS)',	"GL_SHADER_BINARY_FORMATS"),	# 0x8DF8
     ("glGet",	I,	1,	"GL_NUM_SHADER_BINARY_FORMATS"),	# 0x8DF9
     ("glGet",	B,	1,	"GL_SHADER_COMPILER"),	# 0x8DFA
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNIFORM_VECTORS"),	# 0x8DFB
@@ -3477,15 +3477,15 @@ parameters = [
     ("",	I,	1,	"GL_TOP_LEVEL_ARRAY_STRIDE"),	# 0x930D
     ("",	I,	1,	"GL_LOCATION"),	# 0x930E
     ("",	I,	1,	"GL_LOCATION_INDEX"),	# 0x930F
-    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_WIDTH"),	# 0x9310
-    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_HEIGHT"),	# 0x9311
-    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_LAYERS"),	# 0x9312
-    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_SAMPLES"),	# 0x9313
-    ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS"),	# 0x9314
-    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_WIDTH"),	# 0x9315
-    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_HEIGHT"),	# 0x9316
-    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_LAYERS"),	# 0x9317
-    ("",	X,	1,	"GL_MAX_FRAMEBUFFER_SAMPLES"),	# 0x9318
+    ("glGetFramebufferParameter",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_WIDTH"),	# 0x9310
+    ("glGetFramebufferParameter",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_HEIGHT"),	# 0x9311
+    ("glGetFramebufferParameter",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_LAYERS"),	# 0x9312
+    ("glGetFramebufferParameter",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_SAMPLES"),	# 0x9313
+    ("glGetFramebufferParameter",	I,	1,	"GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS"),	# 0x9314
+    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_WIDTH"),	# 0x9315
+    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_HEIGHT"),	# 0x9316
+    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_LAYERS"),	# 0x9317
+    ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_SAMPLES"),	# 0x9318
     ("",	X,	1,	"GL_RASTER_MULTISAMPLE_EXT"),	# 0x9327
     ("",	X,	1,	"GL_RASTER_SAMPLES_EXT"),	# 0x9328
     ("",	X,	1,	"GL_MAX_RASTER_SAMPLES_EXT"),	# 0x9329
