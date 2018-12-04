@@ -44,14 +44,38 @@ class D3DCommonTracer(DllTracer):
             print '    DumpShader(trace::localWriter, %s, %s);' % (arg.name, arg.type.size)
             return
 
-        # Serialize the swapchain dimensions
-        if function.name == 'CreateSwapChain' and arg.name == 'pDesc' \
+        # Serialize the swap-chain dimensions
+        if function.name.startswith('CreateSwapChain') and arg.name == 'pDesc' \
            or arg.name == 'pSwapChainDesc':
-            print r'    DXGI_SWAP_CHAIN_DESC *_pSwapChainDesc = NULL;'
-            print r'    DXGI_SWAP_CHAIN_DESC _SwapChainDesc;'
+            assert isinstance(arg.type, stdapi.Pointer)
+            descType = arg.type.type.mutable()
+            print r'    %s *_pSwapChainDesc = nullptr;' % descType
+            print r'    %s _SwapChainDesc;' % descType
             print r'    if (%s) {' % arg.name
             print r'        _SwapChainDesc = *%s;' % arg.name
-            if function.name != 'CreateSwapChain' or not self.interface.name.endswith('DWM'):
+            if self.interface is not None and self.interface.name.endswith('DWM'):
+                # Obtain size from the output
+                print r'        assert(pOutput);'
+                print r'        DXGI_OUTPUT_DESC _OutputDesc;'
+                print r'        if (SUCCEEDED(pOutput->GetDesc(&_OutputDesc))) {'
+                print r'            _SwapChainDesc.BufferDesc.Width  = _OutputDesc.DesktopCoordinates.right  - _OutputDesc.DesktopCoordinates.left;'
+                print r'            _SwapChainDesc.BufferDesc.Height = _OutputDesc.DesktopCoordinates.bottom - _OutputDesc.DesktopCoordinates.top;'
+                print r'        }'
+            elif function.name == 'CreateSwapChainForHwnd':
+                # Obtain size from the window
+                print r'        RECT _rect;'
+                print r'        if (GetClientRect(hWnd, &_rect)) {'
+                print r'            if (%s->Width == 0) {' % arg.name
+                print r'                _SwapChainDesc.Width = _rect.right  - _rect.left;'
+                print r'            }'
+                print r'            if (%s->Height == 0) {' % arg.name
+                print r'                _SwapChainDesc.Height = _rect.bottom - _rect.top;'
+                print r'            }'
+                print r'        }'
+            elif function.name.startswith('CreateSwapChainFor'):
+                # TODO
+                pass
+            else:
                 # Obtain size from the window
                 print r'        RECT _rect;'
                 print r'        if (GetClientRect(%s->OutputWindow, &_rect)) {' % arg.name
@@ -61,13 +85,6 @@ class D3DCommonTracer(DllTracer):
                 print r'            if (%s->BufferDesc.Height == 0) {' % arg.name
                 print r'                _SwapChainDesc.BufferDesc.Height = _rect.bottom - _rect.top;'
                 print r'            }'
-                print r'        }'
-            else:
-                # Obtain size from the output
-                print r'        DXGI_OUTPUT_DESC _OutputDesc;'
-                print r'        if (SUCCEEDED(pOutput->GetDesc(&_OutputDesc))) {'
-                print r'            _SwapChainDesc.BufferDesc.Width  = _OutputDesc.DesktopCoordinates.right  - _OutputDesc.DesktopCoordinates.left;'
-                print r'            _SwapChainDesc.BufferDesc.Height = _OutputDesc.DesktopCoordinates.bottom - _OutputDesc.DesktopCoordinates.top;'
                 print r'        }'
             print r'        _pSwapChainDesc = &_SwapChainDesc;'
             print r'    }'

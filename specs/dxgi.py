@@ -337,6 +337,7 @@ DXGI_SWAP_EFFECT = Enum("DXGI_SWAP_EFFECT", [
     "DXGI_SWAP_EFFECT_DISCARD",
     "DXGI_SWAP_EFFECT_SEQUENTIAL",
     "DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL",
+    "DXGI_SWAP_EFFECT_FLIP_DISCARD",
 ])
 
 DXGI_SWAP_CHAIN_FLAG = Flags(UINT, [
@@ -350,6 +351,9 @@ DXGI_SWAP_CHAIN_FLAG = Flags(UINT, [
     "DXGI_SWAP_CHAIN_FLAG_FOREGROUND_LAYER",
     "DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO",
     "DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO",
+    "DXGI_SWAP_CHAIN_FLAG_HW_PROTECTED",
+    "DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING",
+    "DXGI_SWAP_CHAIN_FLAG_RESTRICTED_TO_ALL_HOLOGRAPHIC_DISPLAYS",
 ])
 
 DXGI_SWAP_CHAIN_DESC = Struct("DXGI_SWAP_CHAIN_DESC", [
@@ -700,7 +704,7 @@ IDXGISwapChain1.methods += [
 IDXGIFactory2 = Interface("IDXGIFactory2", IDXGIFactory1)
 IDXGIFactory2.methods += [
     StdMethod(BOOL, "IsWindowedStereoEnabled", [], sideeffects=False),
-    StdMethod(HRESULT, "CreateSwapChainForHwnd", [(ObjPointer(IUnknown), "pDevice"), (HWND, "WindowHandle"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (Pointer(Const(DXGI_SWAP_CHAIN_FULLSCREEN_DESC)), "pFullscreenDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
+    StdMethod(HRESULT, "CreateSwapChainForHwnd", [(ObjPointer(IUnknown), "pDevice"), (HWND, "hWnd"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (Pointer(Const(DXGI_SWAP_CHAIN_FULLSCREEN_DESC)), "pFullscreenDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
     StdMethod(HRESULT, "CreateSwapChainForCoreWindow", [(ObjPointer(IUnknown), "pDevice"), (ObjPointer(IUnknown), "pWindow"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
     StdMethod(HRESULT, "GetSharedResourceAdapterLuid", [(HANDLE, "hResource"), Out(Pointer(LUID), "pLuid")], sideeffects=False),
     StdMethod(HRESULT, "RegisterStereoStatusWindow", [(HWND, "WindowHandle"), (UINT, "wMsg"), Out(Pointer(DWORD), "pdwCookie")], sideeffects=False),
