@@ -144,19 +144,32 @@ if (WIN32)
 
     find_package (DirectX)
 
-    # https://developer.microsoft.com/en-us/windows/projects/campaigns/windows-dev-essentials-how-windows-10-sdks-ship
-    set (REQUIRED_WINDOWS_SDK 10.0.14393.0)
-    if (MSVC AND NOT DirectX_D3D11_4_INCLUDE_FOUND)
-        if (CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
-            message (SEND_ERROR
-                "Windows ${REQUIRED_WINDOWS_SDK} SDK required, but ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION} found.\n"
-                "Install it then select it by configuring with -DCMAKE_SYSTEM_VERSION=${REQUIRED_WINDOWS_SDK} option.")
+    if (MSVC)
+        # Log Windows SDK version
+        unset (WINDOWS_SDK_VERSION)
+        if (DEFINED CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+            set (WINDOWS_SDK_VERSION ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION})
+        elseif (DEFINED ENV{WindowsSDKLibVersion})
+            string (REGEX REPLACE "\\\\$" "" WINDOWS_SDK_VERSION "$ENV{WindowsSDKLibVersion}")
+        endif ()
+        if (DEFINED WINDOWS_SDK_VERSION)
+            message (STATUS "Using Windows SDK ${WINDOWS_SDK_VERSION}")
+        endif ()
 
-        else ()
-            message (SEND_ERROR
-                "Windows ${REQUIRED_WINDOWS_SDK} SDK required.\n"
-                "Install it then select it by invoking `vcvarsall.bat <arch> ${REQUIRED_WINDOWS_SDK}`"
-            )
+        # https://developer.microsoft.com/en-us/windows/projects/campaigns/windows-dev-essentials-how-windows-10-sdks-ship
+        set (REQUIRED_WINDOWS_SDK 10.0.14393.0)
+        if (NOT DirectX_D3D11_4_INCLUDE_FOUND)
+            if (CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+                message (SEND_ERROR
+                    "Windows ${REQUIRED_WINDOWS_SDK} SDK required, but ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION} found.\n"
+                    "Install it then select it by configuring with -DCMAKE_SYSTEM_VERSION=${REQUIRED_WINDOWS_SDK} option.")
+
+            else ()
+                message (SEND_ERROR
+                    "Windows ${REQUIRED_WINDOWS_SDK} SDK required.\n"
+                    "Install it then select it by invoking `vcvarsall.bat <arch> ${REQUIRED_WINDOWS_SDK}`"
+                )
+            endif ()
         endif ()
     endif ()
 

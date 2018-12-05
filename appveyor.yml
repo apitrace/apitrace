@@ -11,7 +11,7 @@ init:
 
 shallow_clone: true
 
-# https://www.appveyor.com/docs/build-environment/#build-worker-images
+# https://www.appveyor.com/docs/windows-images-software/
 image: Visual Studio 2017
 
 environment:
