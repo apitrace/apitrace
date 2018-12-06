@@ -22,6 +22,7 @@
 *.pdb
 *.png
 *.pnm
+*.pfm
 *.pyc
 *.pyo
 *.so
