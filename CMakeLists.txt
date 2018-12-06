@@ -9,10 +9,6 @@ if (CMAKE_GENERATOR STREQUAL "Xcode")
     message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
 endif ()
 
-if (APPLE)
-    set (CMAKE_OSX_ARCHITECTURES "" CACHE STRING "Build architectures for OSX" FORCE)
-endif ()
-
 # http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
 if (POLICY CMP0042)
     cmake_policy (SET CMP0042 NEW)
@@ -176,6 +172,7 @@ if (WIN32)
     set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
+    add_definitions (-DGL_SILENCE_DEPRECATION)
 elseif (ENABLE_X11)
     find_package (X11)
 

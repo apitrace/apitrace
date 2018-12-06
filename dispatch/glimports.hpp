@@ -125,21 +125,6 @@ typedef struct _WGLSWAP
 
 #elif defined(__APPLE__)
 
-#include <TargetConditionals.h>
-
-#if TARGET_OS_IPHONE
-#elif TARGET_OS_MAC
-#include <AvailabilityMacros.h>
-
-/* Silence deprecated OpenGL warnings. */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-#include <OpenGL/OpenGLAvailability.h>
-#undef OPENGL_DEPRECATED
-#undef OPENGL_DEPRECATED_MSG
-#define OPENGL_DEPRECATED(from, to)
-#define OPENGL_DEPRECATED_MSG(from, to, msg)
-#endif
-
 #include <OpenGL/OpenGL.h>
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
@@ -233,7 +218,6 @@ CGLError CGLGetSurface(CGLContextObj ctx, CGSConnectionID* cid, CGSWindowID* wid
 CGLError CGLUpdateContext(CGLContextObj ctx);
 
 }
-#endif
 
 #else
 
