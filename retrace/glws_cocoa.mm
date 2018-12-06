@@ -149,7 +149,7 @@ public:
         if (currentContext != nil) {
             [currentContext update];
             [window makeKeyAndOrderFront:nil];
-            [currentContext setView:view];
+            [view setOpenGLContext:currentContext];
             [currentContext makeCurrentContext];
         }
 
@@ -393,7 +393,7 @@ makeCurrentInternal(Drawable *drawable, Drawable *readable, Context *context)
         CocoaContext *cocoaContext = static_cast<CocoaContext *>(context);
 
         [cocoaDrawable->window makeKeyAndOrderFront:nil];
-        [cocoaContext->context setView:[cocoaDrawable->window contentView]];
+        [cocoaDrawable->view setOpenGLContext:cocoaContext->context];
         [cocoaContext->context makeCurrentContext];
 
         cocoaDrawable->currentContext = cocoaContext->context;
