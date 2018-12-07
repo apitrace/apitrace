@@ -49,7 +49,9 @@
 namespace os {
 
 void log(const char *format, ...)
-#ifdef __GNUC__
+#if defined(__MINGW32__)
+    __attribute__ ((format (__MINGW_PRINTF_FORMAT, 1, 2)))
+#elif  defined(__GNUC__)
     __attribute__ ((format (printf, 1, 2)))
 #endif
 ;
