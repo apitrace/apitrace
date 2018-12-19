@@ -52,8 +52,8 @@ usage(void)
         << "Snappy compression allows for faster replay and smaller memory footprint,\n"
         << "at the expense of a slightly smaller compression ratio than zlib\n"
         << "\n"
-        << "    -b,--brotli  Use Brotli compression\n"
-        << "    -z,--zlib    Use ZLib compression\n"
+        << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality 0-11, default 9)\n"
+        << "    -z,--zlib              Use ZLib compression\n"
         << "\n";
 }
 
