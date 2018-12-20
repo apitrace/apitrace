@@ -659,7 +659,7 @@ usage(const char *argv0) {
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
         "      --samples=N         use GL_ARB_multisample (default is 1)\n"
-        "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
+        "      --driver=DRIVER     force driver type (`hw`, `dgpu`, `igpu`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --fullscreen        allow fullscreen\n"
         "      --headless          don't show windows\n"
         "      --sb                use a single buffer visual\n"
@@ -933,6 +933,22 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
 #endif  // _WIN32
 
 
+/*
+ * Direct NVIDIA Optimus driver to use the High Performance Graphics.
+ *
+ * If we invoked glGetString(GL_VENDOR) or glGetString(GL_RENDERER) this
+ * wouldn't be necessary, but glretrace skips such calls.
+ *
+ * See also:
+ * - http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
+ */
+#ifdef _WIN32
+extern "C" {
+     __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000000;
+}
+#endif
+
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -1005,6 +1021,15 @@ int main(int argc, char **argv)
         case DRIVER_OPT:
             if (strcasecmp(optarg, "hw") == 0) {
                 driver = DRIVER_HARDWARE;
+            } else if (strcasecmp(optarg, "dgpu") == 0) {
+                driver = DRIVER_DISCRETE;
+#ifdef _WIN32
+                NvOptimusEnablement = 0x00000001;
+#endif
+            } else if (strcasecmp(optarg, "igpu") == 0) {
+                driver = DRIVER_INTEGRATED;
+            } else if (strcasecmp(optarg, "sw") == 0) {
+                driver = DRIVER_SOFTWARE;
             } else if (strcasecmp(optarg, "sw") == 0) {
                 driver = DRIVER_SOFTWARE;
             } else if (strcasecmp(optarg, "ref") == 0) {
@@ -1243,19 +1268,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-
-/*
- * Direct NVIDIA Optimus driver to use the High Performance Graphics.
- *
- * If we invoked glGetString(GL_VENDOR) or glGetString(GL_RENDERER) this
- * wouldn't be necessary, but glretrace skips such calls.
- *
- * See also:
- * - http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
- */
-#ifdef _WIN32
-extern "C" {
-     __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-}
-#endif

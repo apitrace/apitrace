@@ -43,26 +43,67 @@ class D3DRetracer(Retracer):
         Retracer.retraceApi(self, api)
 
     def invokeFunction(self, function):
-        if function.name in ('Direct3DCreate9', 'Direct3DCreate9Ex'):
-            print 'if (retrace::debug >= 3 && !g_szD3D9DllName && LoadLibraryA("d3d9d.dll")) {'
-            print '    /*'
-            print '     * D3D9D only works for simple applications, it will often report bogus errors'
-            print '     * on complex traces, or traces which use unofficial D3D9 features.'
-            print '     */'
-            print '    g_szD3D9DllName = "d3d9d.dll";'
-            print '    SDKVersion |= 0x80000000;'
-            print '} else {'
-            print '    SDKVersion &= ~0x80000000;'
-            print '}'
+        if function.name.startswith('Direct3DCreate9'):
+            print r'    if (retrace::debug >= 3 && !g_szD3D9DllName && LoadLibraryA("d3d9d.dll")) {'
+            print r'        /*'
+            print r'         * D3D9D only works for simple applications, it will often report bogus errors'
+            print r'         * on complex traces, or traces which use unofficial D3D9 features.'
+            print r'         */'
+            print r'        g_szD3D9DllName = "d3d9d.dll";'
+            print r'        SDKVersion |= 0x80000000;'
+            print r'    } else {'
+            print r'        SDKVersion &= ~0x80000000;'
+            print r'    }'
 
         # d3d8d.dll can be found in the Aug 2007 DXSDK.  It works on XP, but
         # not on Windows 7.
-        if function.name in ('Direct3DCreate8'):
-            print 'if (retrace::debug >= 3 && !g_szD3D8DllName && LoadLibraryA("d3d8d.dll")) {'
-            print '    g_szD3D8DllName = "d3d8d.dll";'
-            print '}'
+        if function.name.startswith('Direct3DCreate8'):
+            print r'    if (retrace::debug >= 3 && !g_szD3D8DllName && LoadLibraryA("d3d8d.dll")) {'
+            print r'        g_szD3D8DllName = "d3d8d.dll";'
+            print r'    }'
+
+        if function.name.startswith('Direct3DCreate9'):
+            print r'    // 0: default'
+            print r'    // 1: force discrete'
+            print r'    // 2/3: force integrated'
+            print r'    UINT uHybrid = 0;'
+            print r'    if (retrace::driver == retrace::DRIVER_DISCRETE) {'
+            print r'        uHybrid = 1;'
+            print r'    }'
+            print r'    if (retrace::driver == retrace::DRIVER_INTEGRATED) {'
+            print r'        uHybrid = 2;'
+            print r'    }'
+            print r'    if (uHybrid != 0) {'
+            print r'        HMODULE hD3D9 = LoadLibraryA("D3D9");'
+            print r'        assert(hD3D9);'
+            print r'        typedef void (WINAPI *PFNDIRECT3D9FORCEHYBRIDENUMERATION)(UINT);'
+            print r'        PFNDIRECT3D9FORCEHYBRIDENUMERATION pfnDirect3D9ForceHybridEnumeration ='
+            print r'            (PFNDIRECT3D9FORCEHYBRIDENUMERATION)GetProcAddress(hD3D9, MAKEINTRESOURCEA(16));'
+            print r'        if (pfnDirect3D9ForceHybridEnumeration) {'
+            print r'            pfnDirect3D9ForceHybridEnumeration(uHybrid);'
+            print r'        }'
+            print r'    }'
 
         Retracer.invokeFunction(self, function)
+
+        if function.name.startswith('Direct3DCreate'):
+            print r'    if (retrace::driver == retrace::DRIVER_DISCRETE ||'
+            print r'        retrace::driver == retrace::DRIVER_INTEGRATED) {'
+            if function.name == 'Direct3DCreate9Ex':
+                print r'        auto pD3D = SUCCEEDED(_result) ? *ppD3D : nullptr;'
+            else:
+                print r'        auto pD3D = _result;'
+            if function.name.startswith('Direct3DCreate9'):
+                print r'        D3DADAPTER_IDENTIFIER9 Identifier;'
+            else:
+                assert function.name.startswith('Direct3DCreate8')
+                print r'        D3DADAPTER_IDENTIFIER8 Identifier;'
+            print r'        if (pD3D) {'
+            print r'            if (SUCCEEDED(pD3D->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &Identifier))) {'
+            print r'                std::cerr << "info: using " << Identifier.Description << std::endl;'
+            print r'            }'
+            print r'        }'
+            print r'    }'
 
     createDeviceMethodNames = [
         'CreateDevice',
@@ -139,11 +180,13 @@ class D3DRetracer(Retracer):
                 print r'            pPresentationParameters->BackBufferFormat = Mode.Format;'
                 print r'        }'
                 print r'    }'
-        
+
         if method.name in self.createDeviceMethodNames:
             # override the device type
             print r'    switch (retrace::driver) {'
             print r'    case retrace::DRIVER_HARDWARE:'
+            print r'    case retrace::DRIVER_DISCRETE:'
+            print r'    case retrace::DRIVER_INTEGRATED:'
             print r'        DeviceType = D3DDEVTYPE_HAL;'
             print r'        break;'
             print r'    case retrace::DRIVER_SOFTWARE:'

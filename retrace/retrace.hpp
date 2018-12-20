@@ -173,6 +173,8 @@ extern bool dumpingSnapshots;
 enum Driver {
     DRIVER_DEFAULT,
     DRIVER_HARDWARE, // force hardware
+    DRIVER_DISCRETE, // force discrete GPU
+    DRIVER_INTEGRATED, // force integrated GPU
     DRIVER_SOFTWARE,
     DRIVER_REFERENCE,
     DRIVER_NULL,

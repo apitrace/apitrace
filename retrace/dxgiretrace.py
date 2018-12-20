@@ -140,6 +140,9 @@ class D3DRetracer(Retracer):
         # need to override inside the EnumAdapters call below
         print r'    if (pAdapter == NULL) {'
         print r'        switch (retrace::driver) {'
+        print r'        case retrace::DRIVER_INTEGRATED:'
+        print r'            retrace::warning(call) << "integrated gpu selection not yet implemented\n";'
+        print r'        case retrace::DRIVER_DISCRETE:'
         print r'        case retrace::DRIVER_HARDWARE:'
         print r'            DriverType = %s_HARDWARE;' % enum
         print r'            Software = NULL;'
