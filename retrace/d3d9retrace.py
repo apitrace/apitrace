@@ -137,6 +137,41 @@ class D3DRetracer(Retracer):
             else:
                 print r'    d3d8Dumper.bindDevice(_this);'
 
+        if method.name in self.createDeviceMethodNames:
+            # override the device type
+            print r'    switch (retrace::driver) {'
+            print r'    case retrace::DRIVER_HARDWARE:'
+            print r'    case retrace::DRIVER_DISCRETE:'
+            print r'    case retrace::DRIVER_INTEGRATED:'
+            print r'        DeviceType = D3DDEVTYPE_HAL;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_SOFTWARE:'
+            print r'        BehaviorFlags &= ~D3DCREATE_PUREDEVICE;'
+            print r'        BehaviorFlags &= ~D3DCREATE_HARDWARE_VERTEXPROCESSING;'
+            print r'        BehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_REFERENCE:'
+            print r'        DeviceType = D3DDEVTYPE_REF;'
+            print r'        BehaviorFlags &= ~D3DCREATE_PUREDEVICE;'
+            print r'        BehaviorFlags &= ~D3DCREATE_HARDWARE_VERTEXPROCESSING;'
+            print r'        BehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_NULL:'
+            if interface.name.startswith('IDirect3D9'):
+                print r'        DeviceType = D3DDEVTYPE_NULLREF;'
+            else:
+                print r'        retrace::warning(call) << "null driver not supported\n";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_MODULE:'
+            print r'        retrace::warning(call) << "driver module not supported\n";'
+            print r'        break;'
+            print r'    default:'
+            print r'        assert(0);'
+            print r'        /* fall-through */'
+            print r'    case retrace::DRIVER_DEFAULT:'
+            print r'        break;'
+            print r'    }'
+
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
             print r'    HWND hWnd = pPresentationParameters->hDeviceWindow;'
@@ -180,38 +215,6 @@ class D3DRetracer(Retracer):
                 print r'            pPresentationParameters->BackBufferFormat = Mode.Format;'
                 print r'        }'
                 print r'    }'
-
-        if method.name in self.createDeviceMethodNames:
-            # override the device type
-            print r'    switch (retrace::driver) {'
-            print r'    case retrace::DRIVER_HARDWARE:'
-            print r'    case retrace::DRIVER_DISCRETE:'
-            print r'    case retrace::DRIVER_INTEGRATED:'
-            print r'        DeviceType = D3DDEVTYPE_HAL;'
-            print r'        break;'
-            print r'    case retrace::DRIVER_SOFTWARE:'
-            print r'        BehaviorFlags &= ~D3DCREATE_PUREDEVICE;'
-            print r'        BehaviorFlags &= ~D3DCREATE_HARDWARE_VERTEXPROCESSING;'
-            print r'        BehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;'
-            print r'        break;'
-            print r'    case retrace::DRIVER_REFERENCE:'
-            print r'        DeviceType = D3DDEVTYPE_REF;'
-            print r'        break;'
-            print r'    case retrace::DRIVER_NULL:'
-            if interface.name.startswith('IDirect3D9'):
-                print r'        DeviceType = D3DDEVTYPE_NULLREF;'
-            else:
-                print r'        retrace::warning(call) << "null driver not supported\n";'
-            print r'        break;'
-            print r'    case retrace::DRIVER_MODULE:'
-            print r'        retrace::warning(call) << "driver module not supported\n";'
-            print r'        break;'
-            print r'    default:'
-            print r'        assert(0);'
-            print r'        /* fall-through */'
-            print r'    case retrace::DRIVER_DEFAULT:'
-            print r'        break;'
-            print r'    }'
 
         if method.name in ('Reset', 'ResetEx'):
             # force windowed mode
