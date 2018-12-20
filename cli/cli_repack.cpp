@@ -52,7 +52,7 @@ usage(void)
         << "Snappy compression allows for faster replay and smaller memory footprint,\n"
         << "at the expense of a slightly smaller compression ratio than zlib\n"
         << "\n"
-        << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality 0-11, default 9)\n"
+        << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality " << BROTLI_MIN_QUALITY << "-" << BROTLI_MAX_QUALITY << ", default " << BROTLI_DEFAULT_QUALITY << ")\n"
         << "    -z,--zlib              Use ZLib compression\n"
         << "\n";
 }
@@ -100,22 +100,20 @@ repack_brotli(trace::File *inFile, const char *outFileName, int quality)
         return EXIT_FAILURE;
     }
 
-    // Brotli default quality is 11, but there are problems using quality
+    // Brotli default quality is 11.  There used to be problems using quality
     // higher than 9:
     //
     // - Some traces cause compression to be extremely slow.  Possibly the same
     //   issue as https://github.com/google/brotli/issues/330
     // - Some traces get lower compression ratio with 11 than 9.  Possibly the
     //   same issue as https://github.com/google/brotli/issues/222
-    BrotliEncoderSetParameter(s, BROTLI_PARAM_QUALITY, 9);
+    //
+    // but not any more.
+    BrotliEncoderSetParameter(s, BROTLI_PARAM_QUALITY, quality);
 
     // The larger the window, the higher the compression ratio and
     // decompression speeds, so choose the maximum.
     BrotliEncoderSetParameter(s, BROTLI_PARAM_LGWIN, 24);
-
-    if (quality > 0) {
-        BrotliEncoderSetParameter(s, BROTLI_PARAM_QUALITY, quality);
-    }
 
     FILE *fout = fopen(outFileName, "wb");
     if (!fout) {
@@ -222,7 +220,7 @@ command(int argc, char *argv[])
 {
     Format format = FORMAT_SNAPPY;
     int opt;
-    int quality = -1;
+    int quality = BROTLI_DEFAULT_QUALITY;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
@@ -232,6 +230,10 @@ command(int argc, char *argv[])
             format = FORMAT_BROTLI;
             if (optarg) {
                 quality = atoi(optarg);
+                if (quality < BROTLI_MIN_QUALITY || quality > BROTLI_MAX_QUALITY) {
+                    std::cerr << "error: brotli quality must be between " << BROTLI_MIN_QUALITY << " and " << BROTLI_MAX_QUALITY << std::endl;
+                    return 1;
+                }
             }
             break;
         case 'z':
