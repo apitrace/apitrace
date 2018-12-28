@@ -448,5 +448,4 @@ d3dperf.addFunctions([
     StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE', sideeffects=False),
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], sideeffects=False),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0', sideeffects=False),
-    StdFunction(Void, "Direct3D9ForceHybridEnumeration", [(UINT, "Mode")], internal=True),
 ])

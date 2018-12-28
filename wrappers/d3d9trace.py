@@ -159,3 +159,16 @@ if __name__ == '__main__':
     api.addModule(dxva2)
     tracer = D3D9Tracer()
     tracer.traceApi(api)
+
+    print r'EXTERN_C PUBLIC'
+    print r'void __stdcall Direct3D9ForceHybridEnumeration(UINT uHybrid) {'
+    print r'    typedef void (WINAPI *PFNDIRECT3D9FORCEHYBRIDENUMERATION)(UINT);'
+    print r'    PFNDIRECT3D9FORCEHYBRIDENUMERATION pfnDirect3D9ForceHybridEnumeration ='
+    print r'        (PFNDIRECT3D9FORCEHYBRIDENUMERATION)g_modD3D9.getProcAddress(MAKEINTRESOURCEA(16));'
+    print r'    if (pfnDirect3D9ForceHybridEnumeration) {'
+    print r'        pfnDirect3D9ForceHybridEnumeration(uHybrid);'
+    print r'    } else {'
+    print r'        os::log("warning: ignoring call to unavailable function %s\n", __FUNCTION__);'
+    print r'    }'
+    print r'}'
+    print
