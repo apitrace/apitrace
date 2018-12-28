@@ -13,36 +13,32 @@ env:
 matrix:
   include:
   - os: linux
-    dist: trusty
+    dist: xenial
     env:
     - LABEL="ubuntu64"
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.9 g++-4.9 libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DENABLE_GUI=1"
+    - APT_PACKAGES="gcc-5 g++-5 libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
+    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DENABLE_GUI=1"
   - os: linux
-    dist: trusty
+    dist: xenial
     env:
     - LABEL="ubuntu32"
-    - APT_REPOS="ppa:ubuntu-toolchain-r/test"
-    - APT_PACKAGES="gcc-4.9-multilib g++-4.9-multilib"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-4.9 -DCMAKE_CXX_COMPILER=g++-4.9 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
+    - APT_PACKAGES="linux-libc-dev gcc-multilib gcc-5-multilib g++-5-multilib"
+    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - os: linux
-    dist: trusty
+    dist: xenial
     env:
     - LABEL="ubuntu64-clang"
-    - APT_PACKAGES="clang-3.6 libc++-dev libc++abi-dev libdwarf-dev libprocps3-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=clang-3.6 -DCMAKE_CXX_COMPILER=clang++-3.6 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
+    - APT_PACKAGES="build-essential clang-4.0 libc++-dev libc++abi-dev libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
+    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=clang-4.0 -DCMAKE_CXX_COMPILER=clang++-4.0 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
   - os: linux
-    dist: trusty
+    dist: xenial
     env:
     - LABEL="mingw32"
-    - APT_REPOS="ppa:tobydox/mingw-x-trusty"
-    - APT_PACKAGES="mingw32-x-gcc"
-    - MINGW_ROOT=/opt/mingw32
+    - APT_PACKAGES="g++-mingw-w64-i686"
     - MINGW_PREFIX=i686-w64-mingw32
     - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
   - os: linux
-    dist: trusty
+    dist: xenial
     services:
     - docker
     env:
@@ -59,20 +55,11 @@ before_install:
 - |
     if [ "$APT_PACKAGES" ]
     then
-      for APT_REPO in $APT_REPOS
-      do
-        sudo add-apt-repository -y $APT_REPO
-      done
-      if [ "$CXX" == "clang++" ]
-      then
-        wget -nv -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo apt-add-repository -y 'deb http://llvm.org/apt/trusty llvm-toolchain-trusty-3.6 main'
-      fi
       sudo apt-get update -qq
       sudo apt-get install -qq -y $APT_PACKAGES
     fi
+- if [ "$LABEL" = "ubuntu64-clang" ]; then sudo ln -s /usr/include/libcxxabi/__cxxabi_config.h /usr/include/c++/v1/__cxxabi_config.h; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install qt5; export CMAKE_PREFIX_PATH=$(brew --prefix qt5); fi
-- if [ "$MINGW_ROOT" ]; then export PATH=$MINGW_ROOT/bin:$PATH; fi
 - cmake --version
 - |
     if [ "$MINGW_PREFIX" ]
@@ -81,7 +68,7 @@ before_install:
       echo "set (CMAKE_C_COMPILER $MINGW_PREFIX-gcc)" >> Toolchain.cmake
       echo "set (CMAKE_CXX_COMPILER $MINGW_PREFIX-g++)" >> Toolchain.cmake
       echo "set (CMAKE_RC_COMPILER $MINGW_PREFIX-windres)" >> Toolchain.cmake
-      echo "set (CMAKE_FIND_ROOT_PATH $MINGW_ROOT)" >> Toolchain.cmake
+      echo "set (CMAKE_FIND_ROOT_PATH /usr/$MINGW_PREFIX)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> Toolchain.cmake
