@@ -95,13 +95,29 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
         return NULL;
     }
 
+    com_ptr<IDirect3DSurface9> pResolveSurface;
+    if (Desc.MultiSampleType == D3DMULTISAMPLE_NONE) {
+        pResolveSurface = pRenderTarget;
+    } else {
+        hr = pDevice->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &pResolveSurface, nullptr);
+        if (FAILED(hr)) {
+            std::cerr << "warning: failed to create resolve rendertarget\n";
+            return nullptr;
+        }
+        hr = pDevice->StretchRect(pRenderTarget, nullptr, pResolveSurface, nullptr, D3DTEXF_NONE);
+        if (FAILED(hr)) {
+            std::cerr << "warning: failed to resolve render target\n";
+            return nullptr;
+        }
+    }
+
     com_ptr<IDirect3DSurface9> pStagingSurface;
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
     if (FAILED(hr)) {
         return NULL;
     }
 
-    hr = pDevice->GetRenderTargetData(pRenderTarget, pStagingSurface);
+    hr = pDevice->GetRenderTargetData(pResolveSurface, pStagingSurface);
     if (FAILED(hr)) {
         std::cerr << "warning: GetRenderTargetData failed\n";
         return NULL;
