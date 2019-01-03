@@ -43,55 +43,55 @@ class CglTracer(GlTracer):
         if function.name == 'CGLReleaseContext':
             # Unlike other GL APIs like EGL or GLX, CGL will make the context
             # not current if it's the current context.
-            print '    if (_CGLGetContextRetainCount(ctx) == 1) {'
-            print '        if (gltrace::releaseContext((uintptr_t)ctx)) {'
-            print '            if (_CGLGetCurrentContext() == ctx) {'
-            print '                gltrace::clearContext();'
-            print '            }'
-            print '        }'
-            print '    }'
+            print('    if (_CGLGetContextRetainCount(ctx) == 1) {')
+            print('        if (gltrace::releaseContext((uintptr_t)ctx)) {')
+            print('            if (_CGLGetCurrentContext() == ctx) {')
+            print('                gltrace::clearContext();')
+            print('            }')
+            print('        }')
+            print('    }')
 
         if function.name == 'CGLDestroyContext':
             # The same rule applies here about the  as for CGLReleaseContext.
-            print '    if (gltrace::releaseContext((uintptr_t)ctx)) {'
-            print '        if (_CGLGetCurrentContext() == ctx) {'
-            print '            gltrace::clearContext();'
-            print '        }'
-            print '    }'
+            print('    if (gltrace::releaseContext((uintptr_t)ctx)) {')
+            print('        if (_CGLGetCurrentContext() == ctx) {')
+            print('            gltrace::clearContext();')
+            print('        }')
+            print('    }')
 
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'CGLCreateContext':
-            print '    if (_result == kCGLNoError) {'
-            print '        gltrace::createContext((uintptr_t)*ctx);'
-            print '    }'
+            print('    if (_result == kCGLNoError) {')
+            print('        gltrace::createContext((uintptr_t)*ctx);')
+            print('    }')
 
         if function.name == 'CGLSetCurrentContext':
-            print '    if (_result == kCGLNoError) {'
-            print '        if (ctx != NULL) {'
-            print '            gltrace::setContext((uintptr_t)ctx);'
-            print '        } else {'
-            print '            gltrace::clearContext();'
-            print '        }'
-            print '    }'
+            print('    if (_result == kCGLNoError) {')
+            print('        if (ctx != NULL) {')
+            print('            gltrace::setContext((uintptr_t)ctx);')
+            print('        } else {')
+            print('            gltrace::clearContext();')
+            print('        }')
+            print('    }')
 
         if function.name == 'CGLRetainContext':
-            print '    gltrace::retainContext((uintptr_t)ctx);'
+            print('    gltrace::retainContext((uintptr_t)ctx);')
 
 
 if __name__ == '__main__':
-    print
-    print '#include <stdlib.h>'
-    print '#include <string.h>'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print
-    print '// To validate our prototypes'
-    print '#define GL_GLEXT_PROTOTYPES'
-    print
-    print '#include "glproc.hpp"'
-    print '#include "glsize.hpp"'
-    print
+    print()
+    print('#include <stdlib.h>')
+    print('#include <string.h>')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print()
+    print('// To validate our prototypes')
+    print('#define GL_GLEXT_PROTOTYPES')
+    print()
+    print('#include "glproc.hpp"')
+    print('#include "glsize.hpp"')
+    print()
 
     module = Module()
     module.mergeModule(cglapi)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     tracer = CglTracer()
     tracer.traceApi(api)
 
-    print r'''
+    print(r'''
 
 PUBLIC
 void * gll_noop = 0;
@@ -130,4 +130,4 @@ _init(void) {
     setenv("SDL_OPENGL_LIBRARY", "/System/Library/Frameworks/OpenGL.framework/OpenGL", 1);
 }
 
-'''
+''')

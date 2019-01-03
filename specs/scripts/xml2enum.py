@@ -58,8 +58,8 @@ for arg in sys.argv[1:]:
             params.setdefault(value, name)
 
 
-    values = params.keys()
+    values = list(params.keys())
     values.sort()
     for value in values:
         name = params[value]
-        print '    "%s",\t\t# 0x%04X' % (name, value)
+        print('    "%s",\t\t# 0x%04X' % (name, value))

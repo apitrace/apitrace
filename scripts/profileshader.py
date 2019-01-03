@@ -58,13 +58,13 @@ def process(stream, groupField):
             continue
 
         if fields[callCol] == 'call':
-            callId = long(fields[callIdCol])
-            duration = long(fields[gpuDuraCol])
+            callId = int(fields[callIdCol])
+            duration = int(fields[gpuDuraCol])
             group = fields[groupCol]
 
             maxGroupLen = max(maxGroupLen, len(group))
 
-            if times.has_key(group):
+            if group in times:
                 times[group]['draws'] += 1
                 times[group]['duration'] += duration
 
@@ -74,7 +74,7 @@ def process(stream, groupField):
             else:
                 times[group] = {'draws': 1, 'duration': duration, 'longest': callId, 'longestDuration': duration}
 
-    times = sorted(times.items(), key=lambda x: x[1]['duration'], reverse=True)
+    times = sorted(list(times.items()), key=lambda x: x[1]['duration'], reverse=True)
 
     if groupField == 'program':
         groupTitle = 'Shader[id]'
@@ -84,9 +84,9 @@ def process(stream, groupField):
     groupTitle = groupField.center(maxGroupLen)
     groupLine = '-' * maxGroupLen
 
-    print '+-%s-+--------------+--------------------+--------------+-------------+' % groupLine
-    print '| %s |   Draws [#]  |   Duration [ns]  v | Per Call[ns] | Longest[id] |' % groupTitle
-    print '+-%s-+--------------+--------------------+--------------+-------------+' % groupLine
+    print('+-%s-+--------------+--------------------+--------------+-------------+' % groupLine)
+    print('| %s |   Draws [#]  |   Duration [ns]  v | Per Call[ns] | Longest[id] |' % groupTitle)
+    print('+-%s-+--------------+--------------------+--------------+-------------+' % groupLine)
 
     for group in times:
         id = str(group[0]).rjust(maxGroupLen)
@@ -94,9 +94,9 @@ def process(stream, groupField):
         dura = str(group[1]['duration']).rjust(18)
         perCall = str(group[1]['duration'] / group[1]['draws']).rjust(12)
         longest = str(group[1]['longest']).rjust(11)
-        print "| %s | %s | %s | %s | %s |" % (id, draw, dura, perCall, longest)
+        print("| %s | %s | %s | %s | %s |" % (id, draw, dura, perCall, longest))
 
-    print '+-%s-+--------------+--------------------+--------------+-------------+' % groupLine
+    print('+-%s-+--------------+--------------------+--------------+-------------+' % groupLine)
 
 
 def main():

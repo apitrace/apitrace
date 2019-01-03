@@ -27,9 +27,9 @@
 '''Describe GL parameters.'''
 
 
-from stdapi import *
+from .stdapi import *
 
-from gltypes import *
+from .gltypes import *
 
 
 # Shorthands for the types

@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from dxgi import *
+from .dxgi import *
 
 
 D3D10_DEBUG_FEATURE = Flags(UINT, [

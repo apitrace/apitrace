@@ -94,8 +94,8 @@ for arg in sys.argv[1:]:
                 params[value] = canonical(origName, name)
 
 
-    values = params.keys()
+    values = list(params.keys())
     values.sort()
     for value in values:
         name = params[value]
-        print '    ("",\tX,\t1,\t"%s"),\t# 0x%04X' % (name, value)
+        print('    ("",\tX,\t1,\t"%s"),\t# 0x%04X' % (name, value))

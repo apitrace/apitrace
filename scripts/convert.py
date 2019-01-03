@@ -100,9 +100,9 @@ def detectApiFromCsv(inCsv):
     import csv
     csvReader = csv.reader(open(inCsv, 'rt'), )
     for row in csvReader:
-        print row
+        print(row)
         event = row[2]
-        print event
+        print(event)
         if event.startswith("Direct3DCreate9"):
             return "d3d9"
         if event.startswith("CreateDXGIFactory"):

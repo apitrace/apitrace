@@ -24,10 +24,10 @@
 ##########################################################################/
 
 
-from dxgi import *
-from d2d1 import D2D_MATRIX_3X2_F, D2D_RECT_F
-from d3d9types import D3DMATRIX
-from d2d1 import D2D1_COMPOSITE_MODE
+from .dxgi import *
+from .d2d1 import D2D_MATRIX_3X2_F, D2D_RECT_F
+from .d3d9types import D3DMATRIX
+from .d2d1 import D2D1_COMPOSITE_MODE
 
 DCOMPOSITION_BITMAP_INTERPOLATION_MODE = Enum('DCOMPOSITION_BITMAP_INTERPOLATION_MODE', [
     'DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR',

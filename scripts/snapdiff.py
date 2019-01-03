@@ -40,6 +40,7 @@ from PIL import Image
 from PIL import ImageChops
 from PIL import ImageEnhance
 from PIL import ImageFilter
+from functools import reduce
 
 
 thumbSize = 320
@@ -50,12 +51,12 @@ class Comparer:
     '''Image comparer.'''
 
     def __init__(self, ref_image, src_image, alpha = False):
-        if isinstance(ref_image, basestring):
+        if isinstance(ref_image, str):
             self.ref_im = Image.open(ref_image)
         else:
             self.ref_im = ref_image
 
-        if isinstance(src_image, basestring):
+        if isinstance(src_image, str):
             self.src_im = Image.open(src_image)
         else:
             self.src_im = src_image
@@ -114,7 +115,7 @@ class Comparer:
         # Compute absolute error
 
         if self.size_mismatch():
-            return sys.maxint
+            return sys.maxsize
 
         # TODO: this is approximate due to the grayscale conversion
         h = self.diff.convert('L').histogram()

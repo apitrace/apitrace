@@ -38,7 +38,7 @@ pngSignature = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
 
 
 def dumpSurfaces(state, memberName):
-    for name, imageObj in state[memberName].iteritems():
+    for name, imageObj in state[memberName].items():
         data = imageObj['__data__']
         data = base64.b64decode(data)
 

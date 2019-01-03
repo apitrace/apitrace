@@ -107,7 +107,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
             DEPENDS
                 ddrawtrace.py
                 dlltrace.py
@@ -137,7 +137,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
             DEPENDS
                 d3d8trace.py
                 dlltrace.py
@@ -171,7 +171,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
             DEPENDS
                 d3d9trace.py
                 dlltrace.py
@@ -207,7 +207,7 @@ if (WIN32)
 
         add_custom_command (
             OUTPUT dxgitrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
             DEPENDS
                 dxgitrace.py
                 dlltrace.py
@@ -290,7 +290,7 @@ if (WIN32)
 
         add_custom_command (
             OUTPUT d2d1trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
             DEPENDS
                 d2d1trace.py
                 dlltrace.py
@@ -316,7 +316,7 @@ if (WIN32)
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS
                 wgltrace.py
                 gltrace.py
@@ -351,7 +351,7 @@ elseif (APPLE)
     # OpenGL framework
     add_custom_command (
         OUTPUT cgltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
         DEPENDS
             cgltrace.py
             gltrace.py
@@ -391,7 +391,7 @@ elseif (X11_FOUND)
     # libGL.so
     add_custom_command (
         OUTPUT glxtrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
         DEPENDS
             glxtrace.py
             gltrace.py
@@ -433,7 +433,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     # libEGL.so/libGL.so
     add_custom_command (
         OUTPUT egltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
         DEPENDS
             egltrace.py
             gltrace.py

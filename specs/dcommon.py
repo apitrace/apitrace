@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from winapi import *
+from .winapi import *
 
 
 DWRITE_MEASURING_MODE = Enum("DWRITE_MEASURING_MODE", [

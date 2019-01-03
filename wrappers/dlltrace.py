@@ -36,7 +36,7 @@ from specs.stdapi import API
 class DllDispatcher(Dispatcher):
 
     def dispatchModule(self, module):
-        print r'Module g_mod%s("%s");' % (module.name.upper(), module.name)
+        print(r'Module g_mod%s("%s");' % (module.name.upper(), module.name))
 
         Dispatcher.dispatchModule(self, module)
 
@@ -47,8 +47,8 @@ class DllDispatcher(Dispatcher):
 class DllTracer(Tracer):
 
     def header(self, api):
-        print r'#include "dlltrace.hpp"'
-        print
+        print(r'#include "dlltrace.hpp"')
+        print()
 
         for module in api.modules:
             dispatcher = DllDispatcher()

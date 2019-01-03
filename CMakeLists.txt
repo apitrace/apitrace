@@ -102,10 +102,7 @@ else ()
     endmacro()
 endif ()
 
-find_host_package (PythonInterp 2.7 REQUIRED)
-if (NOT PYTHON_VERSION_MAJOR EQUAL 2)
-    message (FATAL_ERROR "Python 2.x required and requested, but Python ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} found.")
-endif ()
+find_host_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 find_package (Threads)
 
@@ -634,7 +631,7 @@ set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 
 execute_process (
-    COMMAND ${PYTHON_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
+    COMMAND ${Python3_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
     OUTPUT_VARIABLE CPACK_PACKAGE_VERSION_PATCH
 )
 

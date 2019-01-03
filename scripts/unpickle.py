@@ -38,7 +38,7 @@ import optparse
 import sys
 import time
 import re
-import cPickle as pickle
+import pickle as pickle
 
 
 # Same as trace_model.hpp's call flags
@@ -58,7 +58,7 @@ CALL_FLAG_MARKER_POP        = (1 << 10)
 class Pointer(long):
 
     def __str__(self):
-        if self == 0L:
+        if self == 0:
             return 'NULL'
         else:
             return hex(self).rstrip('L')
@@ -73,7 +73,7 @@ class Visitor:
         self.dispatch[type(None)] = self.visitNone
         self.dispatch[bool] = self.visitBool
         self.dispatch[int] = self.visitInt
-        self.dispatch[long] = self.visitInt
+        self.dispatch[int] = self.visitInt
         self.dispatch[float] = self.visitFloat
         self.dispatch[str] = self.visitStr
         self.dispatch[tuple] = self.visitTuple
@@ -140,18 +140,18 @@ class Dumper(Visitor):
             return repr(obj)
 
     def visitTuple(self, obj):
-        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
+        return '(' + ', '.join(map(self.visit, obj)) + ')'
 
     def visitList(self, obj):
         if len(obj) == 1:
             return '&' + self.visit(obj[0])
-        return '{' + ', '.join(itertools.imap(self.visit, obj)) + '}'
+        return '{' + ', '.join(map(self.visit, obj)) + '}'
 
     def visitItems(self, items):
         return ', '.join(['%s = %s' % (name, self.visit(value)) for name, value in items])
 
     def visitDict(self, obj):
-        return '{' + self.visitItems(obj.iteritems()) + '}'
+        return '{' + self.visitItems(iter(obj.items())) + '}'
 
     def visitByteArray(self, obj):
         return 'blob(%u)' % len(obj)
@@ -167,7 +167,7 @@ class Hasher(Visitor):
         return obj
 
     def visitIterable(self, obj):
-        return tuple(itertools.imap(self.visit, obj))
+        return tuple(map(self.visit, obj))
 
     def visitByteArray(self, obj):
         return str(obj)
@@ -279,7 +279,7 @@ class Counter(Unpickler):
     def parse(self):
         Unpickler.parse(self)
 
-        functionFrequencies = self.functionFrequencies.items()
+        functionFrequencies = list(self.functionFrequencies.items())
         functionFrequencies.sort(lambda (name1, freq1), (name2, freq2): cmp(freq1, freq2))
         for name, frequency in functionFrequencies:
             sys.stdout.write('%8u %s\n' % (frequency, name))

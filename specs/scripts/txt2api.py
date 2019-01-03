@@ -31,7 +31,7 @@
 import sys
 import re
 import optparse
-from urllib2 import urlopen
+from urllib.request import urlopen
 
 
 def stderr(x):
@@ -116,7 +116,7 @@ class TxtParser(LineParser):
                 self.consume()
             line = self.consume()
             self.parse_section(line)
-        print
+        print()
 
     def parse_section(self, name):
         if name == 'Name Strings':
@@ -136,7 +136,7 @@ class TxtParser(LineParser):
             name = line.strip()
             if name.startswith('EGL_'):
                 self.prefix = ''
-            print '    # %s' % name
+            print('    # %s' % name)
 
     def skip_c_comments(self):
         while not self.eof():
@@ -192,7 +192,7 @@ class TxtParser(LineParser):
             args.append(arg)
             if self.tokens[0] == ',':
                 self.tokens.pop(0)
-        print '    GlFunction(%s, "%s", [%s]%s),' % (ret, name, ', '.join(args), extra)
+        print('    GlFunction(%s, "%s", [%s]%s),' % (ret, name, ', '.join(args), extra))
 
     def parse_arg(self):
         type = self.parse_type()

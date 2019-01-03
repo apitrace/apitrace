@@ -25,8 +25,8 @@
 
 """d3d9caps.h"""
 
-from winapi import *
-from d3d9types import *
+from .winapi import *
+from .d3d9types import *
 
 D3DVS20CAPS = Flags(DWORD, [
     "D3DVS20CAPS_PREDICATION",

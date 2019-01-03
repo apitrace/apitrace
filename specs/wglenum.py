@@ -27,7 +27,7 @@
 """WGL enum description"""
 
 
-from stdapi import *
+from .stdapi import *
 
 WGLenum = FakeEnum(Int, [
     "WGL_GPU_VENDOR_AMD",		# 0x1F00

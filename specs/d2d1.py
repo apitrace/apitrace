@@ -25,9 +25,9 @@
 ##########################################################################/
 
 
-from winapi import *
-from dxgi import DXGI_FORMAT, IDXGISurface
-from dwrite import *
+from .winapi import *
+from .dxgi import DXGI_FORMAT, IDXGISurface
+from .dwrite import *
 
 
 

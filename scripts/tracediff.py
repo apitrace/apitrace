@@ -237,7 +237,7 @@ class BlobReplacer(Rebuilder):
         return Blob(len(obj), hash(str(obj)))
 
     def visitCall(self, call):
-        call.args = map(self.visit, call.args)
+        call.args = list(map(self.visit, call.args))
         call.ret = self.visit(call.ret)
 
 
@@ -312,7 +312,7 @@ class PythonDiffer(Differ):
             elif tag == 'equal':
                 self.equal(alo, ahi, blo, bhi)
             else:
-                raise ValueError, 'unknown tag %s' % (tag,)
+                raise ValueError('unknown tag %s' % (tag,))
 
     def isjunk(self, call):
         return call.functionName == 'glGetError' and call.ret in ('GL_NO_ERROR', 0)
@@ -338,12 +338,12 @@ class PythonDiffer(Differ):
             elif tag == 'equal':
                 self.replace_similar(_alo, _ahi, _blo, _bhi)
             else:
-                raise ValueError, 'unknown tag %s' % (tag,)
+                raise ValueError('unknown tag %s' % (tag,))
 
     def replace_similar(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
         assert ahi - alo == bhi - blo
-        for i in xrange(0, bhi - blo):
+        for i in range(0, bhi - blo):
             self.highlighter.write('| ')
             a_call = self.a[alo + i]
             b_call = self.b[blo + i]
@@ -355,7 +355,7 @@ class PythonDiffer(Differ):
             self.highlighter.write('(')
             sep = ''
             numArgs = max(len(a_call.args), len(b_call.args))
-            for j in xrange(numArgs):
+            for j in range(numArgs):
                 self.highlighter.write(sep)
                 try:
                     a_argName, a_argVal = a_call.args[j]
@@ -402,7 +402,7 @@ class PythonDiffer(Differ):
     def delete(self, alo, ahi, blo, bhi):
         assert alo < ahi
         assert blo == bhi
-        for i in xrange(alo, ahi):
+        for i in range(alo, ahi):
             call = self.a[i]
             self.highlighter.write('- ')
             self.dumpCallNos(call.no, None)
@@ -413,7 +413,7 @@ class PythonDiffer(Differ):
     def insert(self, alo, ahi, blo, bhi):
         assert alo == ahi
         assert blo < bhi
-        for i in xrange(blo, bhi):
+        for i in range(blo, bhi):
             call = self.b[i]
             self.highlighter.write('+ ')
             self.dumpCallNos(None, call.no)
@@ -425,7 +425,7 @@ class PythonDiffer(Differ):
             return
         assert alo < ahi and blo < bhi
         assert ahi - alo == bhi - blo
-        for i in xrange(0, bhi - blo):
+        for i in range(0, bhi - blo):
             self.highlighter.write('  ')
             a_call = self.a[alo + i]
             b_call = self.b[blo + i]

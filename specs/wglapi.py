@@ -27,9 +27,9 @@
 """WGL API description"""
 
 
-from glapi import *
-from winapi import *
-from wglenum import *
+from .glapi import *
+from .winapi import *
+from .wglenum import *
 
 
 wglapi = Module("WGL")

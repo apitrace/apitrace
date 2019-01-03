@@ -41,12 +41,12 @@ class DDrawTracer(DllTracer):
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
-    print '#include "d3dimports.hpp"'
-    print '#include "trace_writer_local.hpp"'
-    print '#include "d3d7size.hpp"'
-    print '#include "os.hpp"'
-    print
+    print('#define INITGUID')
+    print('#include "d3dimports.hpp"')
+    print('#include "trace_writer_local.hpp"')
+    print('#include "d3d7size.hpp"')
+    print('#include "os.hpp"')
+    print()
 
     api = API()
     api.addModule(ddraw)

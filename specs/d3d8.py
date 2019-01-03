@@ -25,9 +25,9 @@
 
 """d3d8.h"""
 
-from winapi import *
-from d3d8types import *
-from d3d8caps import *
+from .winapi import *
+from .d3d8types import *
+from .d3d8caps import *
 
 
 D3DSHADER8 = Blob(Const(DWORD), "_shaderSize(pFunction)")

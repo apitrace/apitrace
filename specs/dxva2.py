@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from d3d9 import *
+from .d3d9 import *
 
 
 HRESULT = MAKE_HRESULT(errors = [

@@ -24,8 +24,8 @@
 ##########################################################################/
 
 
-from dxgi import *
-from d3d11sdklayers import *
+from .dxgi import *
+from .d3d11sdklayers import *
 
 
 HRESULT = MAKE_HRESULT([

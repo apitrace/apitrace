@@ -25,7 +25,7 @@
 
 """d3dtypes.h"""
 
-from winapi import *
+from .winapi import *
 
 D3DVALUE = Float
 LPD3DVALUE = Pointer(D3DVALUE)

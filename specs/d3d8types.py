@@ -25,7 +25,7 @@
 
 """d3d8types.h"""
 
-from winapi import *
+from .winapi import *
 
 D3DCOLOR = Alias("D3DCOLOR", DWORD)
 

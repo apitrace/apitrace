@@ -31,15 +31,15 @@ from specs.d2d1 import d2d1
 
 
 if __name__ == '__main__':
-    print '#include "guids_defs.hpp"'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#define DWRITE_EXPORT WINAPI'
-    print
-    print '#include "d2dimports.hpp"'
-    print
+    print('#include "guids_defs.hpp"')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print('#include "os.hpp"')
+    print()
+    print('#define DWRITE_EXPORT WINAPI')
+    print()
+    print('#include "d2dimports.hpp"')
+    print()
 
     api = API()
     api.addModule(d2d1)

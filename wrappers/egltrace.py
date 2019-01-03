@@ -52,71 +52,71 @@ class EglTracer(GlTracer):
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'eglCreateContext':
-            print '    if (_result != EGL_NO_CONTEXT)'
-            print '        gltrace::createContext((uintptr_t)_result);'
+            print('    if (_result != EGL_NO_CONTEXT)')
+            print('        gltrace::createContext((uintptr_t)_result);')
 
         if function.name == 'eglMakeCurrent':
-            print r'    if (_result) {'
-            print r'        // update the profile'
-            print r'        if (ctx != EGL_NO_CONTEXT) {'
-            print r'            gltrace::setContext((uintptr_t)ctx);'
-            print r'            gltrace::Context *tr = gltrace::getContext();'
-            print r'            EGLint api = EGL_OPENGL_ES_API;'
-            print r'            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
-            print r'            if (api == EGL_OPENGL_API) {'
-            print r'                assert(tr->profile.api == glfeatures::API_GL);'
-            print r'            } else if (api == EGL_OPENGL_ES_API) {'
-            print r'                EGLint client_version = 1;'
-            print r'                _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &client_version);'
-            print r'                if (tr->profile.api != glfeatures::API_GLES ||'
-            print r'                    tr->profile.major < client_version) {'
-            print r'                    std::string version = tr->profile.str();'
-            print r'                    os::log("apitrace: warning: eglMakeCurrent: expected OpenGL ES %i.x context, but got %s\n",'
-            print r'                            client_version, version.c_str());'
-            print r'                }'
-            print r'            } else {'
-            print r'                assert(0);'
-            print r'            }'
-            print r'        } else {'
-            print r'            gltrace::clearContext();'
-            print r'        }'
-            print r'    }'
+            print(r'    if (_result) {')
+            print(r'        // update the profile')
+            print(r'        if (ctx != EGL_NO_CONTEXT) {')
+            print(r'            gltrace::setContext((uintptr_t)ctx);')
+            print(r'            gltrace::Context *tr = gltrace::getContext();')
+            print(r'            EGLint api = EGL_OPENGL_ES_API;')
+            print(r'            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);')
+            print(r'            if (api == EGL_OPENGL_API) {')
+            print(r'                assert(tr->profile.api == glfeatures::API_GL);')
+            print(r'            } else if (api == EGL_OPENGL_ES_API) {')
+            print(r'                EGLint client_version = 1;')
+            print(r'                _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &client_version);')
+            print(r'                if (tr->profile.api != glfeatures::API_GLES ||')
+            print(r'                    tr->profile.major < client_version) {')
+            print(r'                    std::string version = tr->profile.str();')
+            print(r'                    os::log("apitrace: warning: eglMakeCurrent: expected OpenGL ES %i.x context, but got %s\n",')
+            print(r'                            client_version, version.c_str());')
+            print(r'                }')
+            print(r'            } else {')
+            print(r'                assert(0);')
+            print(r'            }')
+            print(r'        } else {')
+            print(r'            gltrace::clearContext();')
+            print(r'        }')
+            print(r'    }')
 
         if function.name == 'eglDestroyContext':
-            print '    if (_result) {'
-            print '        gltrace::releaseContext((uintptr_t)ctx);'
-            print '    }'
+            print('    if (_result) {')
+            print('        gltrace::releaseContext((uintptr_t)ctx);')
+            print('    }')
 
         if function.name == 'glEGLImageTargetTexture2DOES':
-            print '    image_info *info = _EGLImageKHR_get_image_info(target, image);'
-            print '    if (info) {'
-            print '        GLint level = 0;'
-            print '        GLint internalformat = info->internalformat;'
-            print '        GLsizei width = info->width;'
-            print '        GLsizei height = info->height;'
-            print '        GLint border = 0;'
-            print '        GLenum format = info->format;'
-            print '        GLenum type = info->type;'
-            print '        const GLvoid * pixels = info->pixels;'
+            print('    image_info *info = _EGLImageKHR_get_image_info(target, image);')
+            print('    if (info) {')
+            print('        GLint level = 0;')
+            print('        GLint internalformat = info->internalformat;')
+            print('        GLsizei width = info->width;')
+            print('        GLsizei height = info->height;')
+            print('        GLint border = 0;')
+            print('        GLenum format = info->format;')
+            print('        GLenum type = info->type;')
+            print('        const GLvoid * pixels = info->pixels;')
             self.emitFakeTexture2D()
-            print '        _EGLImageKHR_free_image_info(info);'
-            print '    }'
+            print('        _EGLImageKHR_free_image_info(info);')
+            print('    }')
 
 
 if __name__ == '__main__':
-    print '#include <stdlib.h>'
-    print '#include <string.h>'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print
-    print '// To validate our prototypes'
-    print '#define GL_GLEXT_PROTOTYPES'
-    print '#define EGL_EGLEXT_PROTOTYPES'
-    print
-    print '#include "glproc.hpp"'
-    print '#include "glsize.hpp"'
-    print '#include "eglsize.hpp"'
-    print
+    print('#include <stdlib.h>')
+    print('#include <string.h>')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print()
+    print('// To validate our prototypes')
+    print('#define GL_GLEXT_PROTOTYPES')
+    print('#define EGL_EGLEXT_PROTOTYPES')
+    print()
+    print('#include "glproc.hpp"')
+    print('#include "glsize.hpp"')
+    print('#include "eglsize.hpp"')
+    print()
     
     module = Module()
     module.mergeModule(eglapi)
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     tracer = EglTracer()
     tracer.traceApi(api)
 
-    print r'''
+    print(r'''
 #if defined(ANDROID)
 
 /*
@@ -186,4 +186,4 @@ void APIENTRY glWeightPointerOESBounds(GLint size, GLenum type, GLsizei stride, 
  */
 
 #endif /* ANDROID */
-'''
+''')

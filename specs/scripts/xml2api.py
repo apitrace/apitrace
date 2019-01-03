@@ -126,7 +126,7 @@ def processRequire(node, filterName):
 
 
 def printPrototypes(prototypes, extensionName, functionNames, skip=set()):
-    print '    # %s' % extensionName
+    print('    # %s' % extensionName)
 
     if extensionName == 'GL_EXT_direct_state_access':
         functionNames.sort()
@@ -134,9 +134,9 @@ def printPrototypes(prototypes, extensionName, functionNames, skip=set()):
     for functionName in functionNames:
         if functionName not in skip:
             prototype = prototypes[functionName]
-            print '    %s,' % prototype
+            print('    %s,' % prototype)
 
-    print
+    print()
 
 
 def main():

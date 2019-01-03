@@ -25,10 +25,10 @@
 
 """d3d.h"""
 
-from winapi import *
-from ddraw import *
-from d3dtypes import *
-from d3dcaps import *
+from .winapi import *
+from .ddraw import *
+from .d3dtypes import *
+from .d3dcaps import *
 
 d3dnextFlags = Flags(DWORD, [
     "D3DNEXT_NEXT",

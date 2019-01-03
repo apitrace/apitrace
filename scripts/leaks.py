@@ -124,11 +124,11 @@ class LeakDetector(unpickle.Unpickler):
                 pass
 
     def dumpLeaks(self, currentCallNo):
-        for kind, objectDict in self.objectDicts.iteritems():
+        for kind, objectDict in self.objectDicts.items():
             self.dumpNamespaceLeaks(currentCallNo, objectDict, kind)
 
     def dumpNamespaceLeaks(self, currentCallNo, objectDict, kind):
-        for name, creationCallNo in (sorted(objectDict.iteritems(),key=lambda t: t[1])):
+        for name, creationCallNo in (sorted(iter(objectDict.items()),key=lambda t: t[1])):
             sys.stderr.write('%u: error: %s %u was not destroyed until %s\n' % (creationCallNo, kind, name, currentCallNo))
         objectDict.clear()
 

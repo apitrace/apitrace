@@ -80,12 +80,12 @@ class Retracer:
             self.retraceExe,
         ] + args + self.args
         if self.env:
-            for name, value in self.env.iteritems():
+            for name, value in self.env.items():
                 sys.stderr.write('%s=%s ' % (name, value))
         sys.stderr.write(' '.join(cmd) + '\n')
         try:
             return subprocess.Popen(cmd, env=self.env, stdout=stdout, stderr=NULL)
-        except OSError, ex:
+        except OSError as ex:
             sys.stderr.write('error: failed to execute %s: %s\n' % (cmd[0], ex.strerror))
             sys.exit(1)
 
@@ -157,7 +157,7 @@ def read_pnm(stream):
     while line.startswith('#'):
         comment += line[1:]
         line = stream.readline()
-    width, height = map(int, line.strip().split())
+    width, height = list(map(int, line.strip().split()))
     maximum = int(stream.readline().strip())
     if bytesPerChannel == 1:
         assert maximum == 255

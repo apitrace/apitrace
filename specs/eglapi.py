@@ -26,9 +26,9 @@
 """EGL API description."""
 
 
-from stdapi import *
-from gltypes import *
-from eglenum import *
+from .stdapi import *
+from .gltypes import *
+from .eglenum import *
 
 EGLNativeDisplayType = Opaque("EGLNativeDisplayType")
 EGLNativeWindowType = Opaque("EGLNativeWindowType")

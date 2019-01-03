@@ -64,21 +64,21 @@ class GlxTracer(GlTracer):
 
     def traceFunctionImplBody(self, function):
         if function.name in self.destroyContextFunctionNames:
-            print '    gltrace::releaseContext((uintptr_t)ctx);'
+            print('    gltrace::releaseContext((uintptr_t)ctx);')
 
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name in self.createContextFunctionNames:
-            print '    if (_result != NULL)'
-            print '        gltrace::createContext((uintptr_t)_result);'
+            print('    if (_result != NULL)')
+            print('        gltrace::createContext((uintptr_t)_result);')
 
         if function.name in self.makeCurrentFunctionNames:
-            print '    if (_result) {'
-            print '        if (ctx != NULL)'
-            print '            gltrace::setContext((uintptr_t)ctx);'
-            print '        else'
-            print '            gltrace::clearContext();'
-            print '    }'
+            print('    if (_result) {')
+            print('        if (ctx != NULL)')
+            print('            gltrace::setContext((uintptr_t)ctx);')
+            print('        else')
+            print('            gltrace::clearContext();')
+            print('    }')
 
         if function.name == 'glXBindTexImageEXT':
             # FIXME: glXBindTexImageEXT gets called frequently, so we should
@@ -87,7 +87,7 @@ class GlxTracer(GlTracer):
             #   emit emitFakeTexture2D when it changes
             # - keep a global hash of the pixels
             # FIXME: Handle mipmaps
-            print r'''
+            print(r'''
                 unsigned glx_target = 0;
                 _glXQueryDrawable(display, drawable, GLX_TEXTURE_TARGET_EXT, &glx_target);
                 GLenum target;
@@ -148,29 +148,29 @@ class GlxTracer(GlTracer):
                     std::unique_ptr<GLbyte[]> data(new GLbyte[height * row_stride]);
                     GLvoid *pixels = data.get();
                     _glGetTexImage(target, level, format, type, pixels);
-            '''
+            ''')
             self.emitFakeTexture2D()
-            print r'''
+            print(r'''
                 }
-            '''
+            ''')
 
 
 if __name__ == '__main__':
-    print
-    print '#include <stdlib.h>'
-    print '#include <string.h>'
-    print
-    print '#include <memory>'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print
-    print '// To validate our prototypes'
-    print '#define GL_GLEXT_PROTOTYPES'
-    print '#define GLX_GLXEXT_PROTOTYPES'
-    print
-    print '#include "glproc.hpp"'
-    print '#include "glsize.hpp"'
-    print
+    print()
+    print('#include <stdlib.h>')
+    print('#include <string.h>')
+    print()
+    print('#include <memory>')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print()
+    print('// To validate our prototypes')
+    print('#define GL_GLEXT_PROTOTYPES')
+    print('#define GLX_GLXEXT_PROTOTYPES')
+    print()
+    print('#include "glproc.hpp"')
+    print('#include "glsize.hpp"')
+    print()
 
     module = Module()
     module.mergeModule(glxapi)

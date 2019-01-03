@@ -181,8 +181,8 @@ class SpecParser(LineParser):
                 category = self.prefix.upper() + '_' + category
             if category != self.category:
                 if self.category is not None:
-                    print
-                print '    # %s' % category
+                    print()
+                print('    # %s' % category)
                 self.category = category
 
         if self.prefix == 'wgl':
@@ -190,7 +190,7 @@ class SpecParser(LineParser):
         else:
             constructor = 'GlFunction'
 
-        print '    %s(%s, "%s", [%s]%s),' % (constructor, ret_type, function_name, ', '.join(args), extra)
+        print('    %s(%s, "%s", [%s]%s),' % (constructor, ret_type, function_name, ', '.join(args), extra))
 
     array_re = re.compile(r'^array\s+\[(.*)\]$')
 

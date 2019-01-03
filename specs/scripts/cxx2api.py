@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 
 copyright = '''
 ##########################################################################
@@ -46,7 +46,7 @@ copyright = '''
 
 import os.path
 import sys
-import cStringIO as StringIO
+import io as StringIO
 import subprocess
 
 from pygccxml import utils
@@ -467,7 +467,7 @@ def main():
         location = decl.location
         if location is None:
             return False
-        return os.path.basename(location.file_name) in map(os.path.basename, args)
+        return os.path.basename(location.file_name) in list(map(os.path.basename, args))
 
     module, _ = os.path.splitext(main_header)
     visitor = decl2_dumper_t(module)

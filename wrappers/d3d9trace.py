@@ -35,7 +35,7 @@ class D3D9Tracer(DllTracer):
     def serializeArgValue(self, function, arg):
         # Dump shaders as strings
         if arg.type is D3DSHADER9:
-            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
+            print('    DumpShader(trace::localWriter, %s);' % (arg.name))
             return
 
         DllTracer.serializeArgValue(self, function, arg)
@@ -79,26 +79,26 @@ class D3D9Tracer(DllTracer):
             if interface.base.name == 'IDirect3DBaseTexture9':
                 assert method.getArgByName('Level') is not None
                 if method.getArgByName('FaceType'):
-                    print r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;'
+                    print(r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;')
                 else:
-                    print r'   UINT _Key = Level;'
-                print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(_Key);'
-                print '    if (it != _MappedData.end()) {'
+                    print(r'   UINT _Key = Level;')
+                print('    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(_Key);')
+                print('    if (it != _MappedData.end()) {')
                 self.emit_memcpy('(LPBYTE)it->second.second', 'it->second.first')
-                print '        _MappedData.erase(it);'
-                print '    }'
+                print('        _MappedData.erase(it);')
+                print('    }')
             else:
                 assert method.getArgByName('Level') is None
-                print '    if (_MappedSize && m_pbData) {'
+                print('    if (_MappedSize && m_pbData) {')
                 self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
-                print '    }'
+                print('    }')
 
         if interface.name == 'IDirectXVideoDecoder' and method.name == 'ReleaseBuffer':
-            print '    std::map<UINT, std::pair<void *, UINT> >::iterator it = _MappedData.find(BufferType);'
-            print '    if (it != _MappedData.end()) {'
+            print('    std::map<UINT, std::pair<void *, UINT> >::iterator it = _MappedData.find(BufferType);')
+            print('    if (it != _MappedData.end()) {')
             self.emit_memcpy('it->second.first', 'it->second.second')
-            print '        _MappedData.erase(it);'
-            print '    }'
+            print('        _MappedData.erase(it);')
+            print('    }')
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
@@ -106,51 +106,51 @@ class D3D9Tracer(DllTracer):
             if interface.base.name == 'IDirect3DBaseTexture9':
                 assert method.getArgByName('Level') is not None
                 if method.getArgByName('FaceType'):
-                    print r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;'
+                    print(r'   UINT _Key = static_cast<UINT>(FaceType) + Level*6;')
                 else:
-                    print r'   UINT _Key = Level;'
-                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-                print '        size_t mappedSize;'
-                print '        VOID * pbData;'
-                print '        _getMapInfo(_this, %s, pbData, mappedSize);' % ', '.join(method.argNames()[:-1])
-                print '        _MappedData[_Key] = std::make_pair(mappedSize, pbData);'
-                print '    } else {'
-                print '        _MappedData.erase(_Key);'
-                print '    }'
+                    print(r'   UINT _Key = Level;')
+                print('    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {')
+                print('        size_t mappedSize;')
+                print('        VOID * pbData;')
+                print('        _getMapInfo(_this, %s, pbData, mappedSize);' % ', '.join(method.argNames()[:-1]))
+                print('        _MappedData[_Key] = std::make_pair(mappedSize, pbData);')
+                print('    } else {')
+                print('        _MappedData.erase(_Key);')
+                print('    }')
             else:
                 # FIXME: handle recursive locks
                 assert method.getArgByName('Level') is None
                 if method.name == 'Lock':
                     # Ignore D3DLOCK_READONLY for buffers.
                     # https://github.com/apitrace/apitrace/issues/435
-                    print '    if (SUCCEEDED(_result)) {'
+                    print('    if (SUCCEEDED(_result)) {')
                 else:
-                    print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-                print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
-                print '    } else {'
-                print '        m_pbData = NULL;'
-                print '        _MappedSize = 0;'
-                print '    }'
+                    print('    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {')
+                print('        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1]))
+                print('    } else {')
+                print('        m_pbData = NULL;')
+                print('        _MappedSize = 0;')
+                print('    }')
 
         if interface.name == 'IDirectXVideoDecoder' and method.name == 'GetBuffer':
-            print '    if (SUCCEEDED(_result)) {'
-            print '        _MappedData[BufferType] = std::make_pair(*ppBuffer, *pBufferSize);'
-            print '    } else {'
-            print '        _MappedData[BufferType] = std::make_pair(nullptr, 0);'
-            print '    }'
+            print('    if (SUCCEEDED(_result)) {')
+            print('        _MappedData[BufferType] = std::make_pair(*ppBuffer, *pBufferSize);')
+            print('    } else {')
+            print('        _MappedData[BufferType] = std::make_pair(nullptr, 0);')
+            print('    }')
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include "d3d9imports.hpp"'
-    print '#include "d3d9size.hpp"'
-    print '#include "d3d9shader.hpp"'
-    print '#include "dxva2imports.hpp"'
-    print
+    print('#define INITGUID')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print('#include "os.hpp"')
+    print()
+    print('#include "d3d9imports.hpp"')
+    print('#include "d3d9size.hpp"')
+    print('#include "d3d9shader.hpp"')
+    print('#include "dxva2imports.hpp"')
+    print()
 
     d3d9.mergeModule(d3dperf)
 
@@ -160,15 +160,15 @@ if __name__ == '__main__':
     tracer = D3D9Tracer()
     tracer.traceApi(api)
 
-    print r'EXTERN_C PUBLIC'
-    print r'void __stdcall Direct3D9ForceHybridEnumeration(UINT uHybrid) {'
-    print r'    typedef void (WINAPI *PFNDIRECT3D9FORCEHYBRIDENUMERATION)(UINT);'
-    print r'    PFNDIRECT3D9FORCEHYBRIDENUMERATION pfnDirect3D9ForceHybridEnumeration ='
-    print r'        (PFNDIRECT3D9FORCEHYBRIDENUMERATION)g_modD3D9.getProcAddress(MAKEINTRESOURCEA(16));'
-    print r'    if (pfnDirect3D9ForceHybridEnumeration) {'
-    print r'        pfnDirect3D9ForceHybridEnumeration(uHybrid);'
-    print r'    } else {'
-    print r'        os::log("warning: ignoring call to unavailable function %s\n", __FUNCTION__);'
-    print r'    }'
-    print r'}'
-    print
+    print(r'EXTERN_C PUBLIC')
+    print(r'void __stdcall Direct3D9ForceHybridEnumeration(UINT uHybrid) {')
+    print(r'    typedef void (WINAPI *PFNDIRECT3D9FORCEHYBRIDENUMERATION)(UINT);')
+    print(r'    PFNDIRECT3D9FORCEHYBRIDENUMERATION pfnDirect3D9ForceHybridEnumeration =')
+    print(r'        (PFNDIRECT3D9FORCEHYBRIDENUMERATION)g_modD3D9.getProcAddress(MAKEINTRESOURCEA(16));')
+    print(r'    if (pfnDirect3D9ForceHybridEnumeration) {')
+    print(r'        pfnDirect3D9ForceHybridEnumeration(uHybrid);')
+    print(r'    } else {')
+    print(r'        os::log("warning: ignoring call to unavailable function %s\n", __FUNCTION__);')
+    print(r'    }')
+    print(r'}')
+    print()

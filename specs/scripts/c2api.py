@@ -122,7 +122,7 @@ class DeclParser:
                     self.consume()
                     type = 'Pointer(%s)' % type
                 name = self.consume()
-                print '%s = Alias("%s", %s)' % (name, name, type)
+                print('%s = Alias("%s", %s)' % (name, name, type))
                 if self.match(','):
                     self.consume()
                 else:
@@ -136,7 +136,7 @@ class DeclParser:
         name = self.consume()
         self.consume('{')
 
-        print '%s = Enum("%s", [' % (name, name)
+        print('%s = Enum("%s", [' % (name, name))
 
         #value = 0
         while self.lookahead() != '}':
@@ -148,12 +148,12 @@ class DeclParser:
                 self.consume(',')
             tags = self.parse_tags()
             #print '    "%s",\t# %s' % (name, value) 
-            print '    "%s",' % (name,) 
+            print('    "%s",' % (name,)) 
             #value += 1
         self.consume('}')
 
-        print '])'
-        print
+        print('])')
+        print()
 
     def parse_value(self, ref_token, constructor):
         self.consume(ref_token)
@@ -161,14 +161,14 @@ class DeclParser:
         name = self.consume()
         self.consume('{')
 
-        print '%s = %s(%s, [' % (name, constructor, type)
+        print('%s = %s(%s, [' % (name, constructor, type))
 
         while self.lookahead() != '}':
             name, value = self.parse_define()
         self.consume('}')
 
-        print '])'
-        print
+        print('])')
+        print()
 
     def parse_define(self):
         self.consume('#')
@@ -176,18 +176,18 @@ class DeclParser:
         name = self.consume()
         value = self.consume()
         #print '    "%s",\t# %s' % (name, value) 
-        print '    "%s",' % (name,) 
+        print('    "%s",' % (name,)) 
         return name, value
 
     def parse_struct(self):
         self.consume('struct')
         name = self.consume()
 
-        print '%s = Struct("%s", [' % (name, name)
+        print('%s = Struct("%s", [' % (name, name))
         for type, name in self.parse_members():
-            print '    (%s, "%s"),' % (type, name)
-        print '])'
-        print
+            print('    (%s, "%s"),' % (type, name))
+        print('])')
+        print()
 
     def parse_union(self):
         self.consume('union')
@@ -226,8 +226,8 @@ class DeclParser:
         base = self.consume()
         self.consume('{')
 
-        print '%s = Interface("%s", %s)' % (name, name, base)
-        print '%s.methods += [' % (name,)
+        print('%s = Interface("%s", %s)' % (name, name, base))
+        print('%s.methods += [' % (name,))
 
         while self.lookahead() != '}':
             if self.lookahead() in ('public', 'private'):
@@ -238,8 +238,8 @@ class DeclParser:
                 self.consume(';')
         self.consume('}')
 
-        print ']'
-        print
+        print(']')
+        print()
 
     def parse_prototype(self, creator = 'Function'):
         if self.match('extern', 'virtual'):
@@ -275,7 +275,7 @@ class DeclParser:
             self.consume()
             self.consume('0')
         
-        print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
+        print('    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra))
 
     def parse_arg(self):
         tags = self.parse_tags()
@@ -404,8 +404,8 @@ class DeclParser:
                     type = 'S' + type
             elif short:
                 type = 'Short'
-            elif long:
-                type = 'Long' * long
+            elif int:
+                type = 'Long' * int
             else:
                 type = 'Int'
             if unsigned:

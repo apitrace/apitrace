@@ -28,7 +28,7 @@
 """EGL enum description"""
 
 
-from stdapi import *
+from .stdapi import *
 
 # Most of the following content was produced in a semi-automated fashion by
 # the scripts/eglenum.sed sed script.

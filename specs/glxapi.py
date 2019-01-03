@@ -26,8 +26,8 @@
 """GLX API description."""
 
 
-from stdapi import *
-from glapi import *
+from .stdapi import *
+from .glapi import *
 
 VisualID = Alias("VisualID", UInt32)
 Display = Opaque("Display *")

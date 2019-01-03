@@ -33,29 +33,29 @@ class DllDispatcher(Dispatcher):
 
     def dispatchModule(self, module):
         tag = module.name.upper()
-        print r'const char *g_sz%sDllName = NULL;' % (tag,)
-        print r'HMODULE g_h%sModule = NULL;' % (tag,)
-        print r''
-        print r'static PROC'
-        print r'_get%sProcAddress(LPCSTR lpProcName) {' % tag
-        print r'    if (!g_h%sModule) {' % tag
-        print r'        if (g_sz%sDllName) {' % tag
-        print r'            g_h%sModule = LoadLibraryA(g_sz%sDllName);' % (tag, tag)
-        print r'            if (!g_h%sModule) {' % tag
-        print r'                os::log("warning: failed to load %%s\n", g_sz%sDllName);' % tag 
-        print r'            }'
-        print r'        }'
-        print r'        if (!g_h%sModule) {' % tag
-        print r'            g_h%sModule = LoadLibraryA("%s.dll");' % (tag, module.name)
-        print r'        }'
-        print r'        if (!g_h%sModule) {' % tag
-        print r'            os::log("error: failed to load %s.dll\n");' % module.name
-        print r'            exit(1);'
-        print r'        }'
-        print r'    }'
-        print r'    return GetProcAddress(g_h%sModule, lpProcName);' % tag
-        print r'}'
-        print r''
+        print(r'const char *g_sz%sDllName = NULL;' % (tag,))
+        print(r'HMODULE g_h%sModule = NULL;' % (tag,))
+        print(r'')
+        print(r'static PROC')
+        print(r'_get%sProcAddress(LPCSTR lpProcName) {' % tag)
+        print(r'    if (!g_h%sModule) {' % tag)
+        print(r'        if (g_sz%sDllName) {' % tag)
+        print(r'            g_h%sModule = LoadLibraryA(g_sz%sDllName);' % (tag, tag))
+        print(r'            if (!g_h%sModule) {' % tag)
+        print(r'                os::log("warning: failed to load %%s\n", g_sz%sDllName);' % tag) 
+        print(r'            }')
+        print(r'        }')
+        print(r'        if (!g_h%sModule) {' % tag)
+        print(r'            g_h%sModule = LoadLibraryA("%s.dll");' % (tag, module.name))
+        print(r'        }')
+        print(r'        if (!g_h%sModule) {' % tag)
+        print(r'            os::log("error: failed to load %s.dll\n");' % module.name)
+        print(r'            exit(1);')
+        print(r'        }')
+        print(r'    }')
+        print(r'    return GetProcAddress(g_h%sModule, lpProcName);' % tag)
+        print(r'}')
+        print(r'')
 
         Dispatcher.dispatchModule(self, module)
 
