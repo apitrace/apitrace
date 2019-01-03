@@ -161,6 +161,15 @@ public:
     }
 
     void visit(Bitmask *bitmask) override {
+        const BitmaskSig *sig = bitmask->sig;
+        for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
+            if (it->value && (bitmask->value & it->value) == it->value &&
+                searchString.compare(it->name) == 0) {
+                bitmask->value &= ~it->value;
+                bitmask->value |= std::stoull(replaceString);
+                break;
+            }
+        }
     }
 
     void visit(Struct *s) override {
