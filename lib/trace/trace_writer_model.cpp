@@ -25,6 +25,7 @@
 
 
 #include "trace_writer.hpp"
+#include "trace_format.hpp"
 
 
 namespace trace {
@@ -113,6 +114,9 @@ public:
 
     void visit(Call *call) {
         unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+        if (call->flags & CALL_FLAG_FAKE) {
+            writer.writeFlags(FLAG_FAKE);
+        }
         if (call->backtrace != NULL) {
             writer.beginBacktrace(call->backtrace->size());
             for (auto & frame : *call->backtrace) {
