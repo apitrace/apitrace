@@ -125,17 +125,25 @@ static void
 takeSnapshot(unsigned call_no);
 
 
+/**
+ * Called when we are about to present.
+ *
+ * This is necessary presentation modes discard the presented contents, so we
+ * must take the snapshot before the actual present call.
+ */
 void
-frameComplete(trace::Call &call) {
+frameComplete(trace::Call &call)
+{
     ++frameNo;
 
-    if (!(call.flags & trace::CALL_FLAG_END_FRAME) &&
-        snapshotFrequency.contains(call)) {
-        // This call doesn't have the end of frame flag, so take any snapshot
-        // now.
+    if (snapshotFrequency.contains(call)) {
         takeSnapshot(call.no);
+        if (call.no >= snapshotFrequency.getLast()) {
+            exit(0);
+        }
     }
 }
+
 
 class DefaultDumper: public Dumper
 {
@@ -239,7 +247,14 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
 }
 
 static void
-takeSnapshot(unsigned call_no) {
+takeSnapshot(unsigned call_no)
+{
+    static signed long long last_call_no = -1;
+    if (call_no == last_call_no) {
+        return;
+    }
+    last_call_no = call_no;
+
     static unsigned snapshot_no = 0;
     int cnt = dumper->getSnapshotCount();
 
@@ -254,6 +269,7 @@ takeSnapshot(unsigned call_no) {
     snapshot_no++;
 }
 
+
 /**
  * Retrace one call.
  *
@@ -264,30 +280,10 @@ static void
 retraceCall(trace::Call *call) {
     callNo = call->no;
 
-    bool swapRenderTarget = call->flags &
-        trace::CALL_FLAG_SWAP_RENDERTARGET;
-    bool doSnapshot = snapshotFrequency.contains(*call);
-
-    // For calls which cause rendertargets to be swaped, we take the
-    // snapshot _before_ swapping the rendertargets.
-    if (doSnapshot && swapRenderTarget) {
-        if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            // For swapbuffers/presents we still use this
-            // call number, spite not have been executed yet.
-            takeSnapshot(call->no);
-        } else {
-            // Whereas for ordinate fbo/rendertarget changes we
-            // use the previous call's number.
-            takeSnapshot(call->no - 1);
-        }
-    }
-
     retracer.retrace(*call);
 
-    if (doSnapshot) {
-        if (!swapRenderTarget) {
-            takeSnapshot(call->no);
-        }
+    if (snapshotFrequency.contains(*call)) {
+        takeSnapshot(call->no);
         if (call->no >= snapshotFrequency.getLast()) {
             exit(0);
         }
