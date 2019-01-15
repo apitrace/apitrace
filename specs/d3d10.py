@@ -740,6 +740,10 @@ D3D10_RAISE_FLAG = Flags(UINT, [
     "D3D10_RAISE_FLAG_DRIVER_INTERNAL_ERROR",
 ])
 
+D3D10_SAMPLE_MASK = FakeEnum(UINT, [
+    "D3D10_DEFAULT_SAMPLE_MASK"
+])
+
 ID3D10DeviceChild = Interface("ID3D10DeviceChild", IUnknown)
 ID3D10Resource = Interface("ID3D10Resource", ID3D10DeviceChild)
 ID3D10Buffer = Interface("ID3D10Buffer", ID3D10Resource)
@@ -872,7 +876,7 @@ ID3D10Device.methods += [
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "OMSetRenderTargets", [(UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10RenderTargetView)), "NumViews"), "ppRenderTargetViews"), (ObjPointer(ID3D10DepthStencilView), "pDepthStencilView")]),
-    StdMethod(Void, "OMSetBlendState", [(ObjPointer(ID3D10BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (UINT, "SampleMask")]),
+    StdMethod(Void, "OMSetBlendState", [(ObjPointer(ID3D10BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (D3D10_SAMPLE_MASK, "SampleMask")]),
     StdMethod(Void, "OMSetDepthStencilState", [(ObjPointer(ID3D10DepthStencilState), "pDepthStencilState"), (UINT, "StencilRef")]),
     StdMethod(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppSOTargets"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
     StdMethod(Void, "DrawAuto", []),
@@ -904,7 +908,7 @@ ID3D10Device.methods += [
     StdMethod(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "OMGetRenderTargets", [(UINT, "NumViews"), Out(Array(ObjPointer(ID3D10RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),
-    StdMethod(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(UINT), "pSampleMask")]),
+    StdMethod(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(D3D10_SAMPLE_MASK), "pSampleMask")]),
     StdMethod(Void, "OMGetDepthStencilState", [Out(Pointer(ObjPointer(ID3D10DepthStencilState)), "ppDepthStencilState"), Out(Pointer(UINT), "pStencilRef")]),
     StdMethod(Void, "SOGetTargets", [(UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppSOTargets"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
     StdMethod(Void, "RSGetState", [Out(Pointer(ObjPointer(ID3D10RasterizerState)), "ppRasterizerState")]),
