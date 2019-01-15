@@ -256,11 +256,13 @@ command(int argc, char *argv[])
             return 1;
         }
 
-        const trace::Properties &properties = p.getProperties();
-        for (auto & kv : properties) {
-            std::cout << "// " << kv.first << " = ";
-            dumper->visitString(kv.second.c_str());
-            std::cout << std::endl;
+        if (!grep) {
+            const trace::Properties &properties = p.getProperties();
+            for (auto & kv : properties) {
+                std::cout << "// " << kv.first << " = ";
+                dumper->visitString(kv.second.c_str());
+                std::cout << std::endl;
+            }
         }
 
         trace::Call *call;
