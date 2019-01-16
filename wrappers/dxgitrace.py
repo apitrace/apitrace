@@ -215,13 +215,6 @@ class D3DCommonTracer(DllTracer):
             print r'        os::log("apitrace: warning: hiding IWarpPrivateAPI interface\n");'
             print r'    }'
 
-        # Ensure buffers are initialized, otherwise we can fail to detect
-        # changes when unititialized data matches what the app wrote.
-        if method.name == 'CreateBuffer':
-            print r'    if (SUCCEEDED(_result) && !pInitialData) {'
-            print r'        _initializeBuffer(_this, pDesc, *ppBuffer);'
-            print r'    }'
-
 
 if __name__ == '__main__':
     print r'#include "guids_defs.hpp"'

@@ -32,25 +32,22 @@
 #include <string.h>
 
 
-uint32_t
-hashBlock(const void *p);
-
-
 class MemoryShadow
 {
     size_t size = 0;
-    size_t nBlocks = 0;
     const uint8_t *realPtr = nullptr;
-    uint32_t *hashPtr = nullptr;
+
+    uintptr_t startPage = 0;
+    uintptr_t nPages = 0;
+    unsigned long flOldProtect = 0;
 
 public:
-    MemoryShadow()
+    inline MemoryShadow()
     {
     }
 
-    ~MemoryShadow()
+    inline ~MemoryShadow()
     {
-        free(hashPtr);
     }
 
     typedef void (*Callback)(const void *ptr, size_t size);

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2014-2016 VMware, Inc.
+ * Copyright 2014-2019 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,209 +29,186 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <inttypes.h>
 #include <algorithm>
 
-#include "crc32c.hpp"
+#include <windows.h>
+
+#include "os.hpp"
 
 
-#if \
-    (defined(__i386__) && defined(__SSE2__)) /* gcc */ || \
-    defined(_M_IX86) /* msvc */ || \
-    defined(__x86_64__) /* gcc */ || \
-    defined(_M_X64) /* msvc */ || \
-    defined(_M_AMD64) /* msvc */
+#define PAGE_SIZE 4096U
 
-#  define HAVE_SSE2
+#define NUM_PAGES (uintptr_t(2)*1024*1024*1024 / PAGE_SIZE - 1)
+#define NUM_PAGES_32 ((NUM_PAGES + 31)/32)
 
-// TODO: Detect and leverage SSE 4.1 and 4.2 at runtime
+template< typename T >
+inline uintptr_t pageFromAddr(T addr)
+{
+    return uintptr_t(addr) & ~uintptr_t(PAGE_SIZE - 1);
+}
 
+// http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
+static uint32_t
+_pageHash(uint64_t page)
+{
+    assert((page % PAGE_SIZE) == 0);
+    uint64_t key = page /* / PAGE_SIZE */;
+
+    key = (~key) + (key << 18); // key = (key << 18) - key - 1;
+    key = key ^ (key >> 31);
+    key = key * 21; // key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 11);
+    key = key + (key << 6);
+    key = key ^ (key >> 22);
+    return (key % NUM_PAGES);
+}
+
+static uintptr_t _pageHashTable[NUM_PAGES];
+static uint32_t
+addPage(uintptr_t page)
+{
+    uint32_t hash = _pageHash(page);
+    while (true) {
+        uintptr_t entry = _pageHashTable[hash];
+        if (entry == page) {
+            return hash;
+        }
+        if (entry == 0) {
+            _pageHashTable[hash] = page;
+            return hash;
+        }
+        hash = (hash + 1) % NUM_PAGES;
+    }
+}
+
+static bool
+getPage(uintptr_t page, uint32_t &hash)
+{
+    hash = _pageHash(page);
+    while (true) {
+        uintptr_t entry = _pageHashTable[hash];
+        if (entry == page) {
+            return true;
+        }
+        if (entry == 0) {
+            return false;
+        }
+        hash = (hash + 1) % NUM_PAGES;
+    }
+}
+
+
+uint32_t dirtyPages[NUM_PAGES_32];
+static inline void
+setPageDirty(uint32_t hash) {
+    assert(hash < NUM_PAGES);
+    dirtyPages[hash / 32] |= 1U << (hash % 32);
+}
+static inline void
+setPageClean(uint32_t hash) {
+    assert(hash < NUM_PAGES);
+    dirtyPages[hash / 32] &= ~(1U << (hash % 32));
+}
+static inline bool
+isPageDirty(uint32_t hash) {
+    assert(hash < NUM_PAGES);
+    return dirtyPages[hash / 32] & (1U << (hash % 32));
+}
+
+
+static bool handler = false;
+
+static LONG CALLBACK
+VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
+{
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+    DWORD ExceptionCode = pExceptionRecord->ExceptionCode;
+
+#if 0
+    os::log("VectoredHandler: Code=%lx, nparams=%lu, param0=0x%" PRIxPTR ", param1=0x%" PRIxPTR "\n",
+            ExceptionCode,
+            pExceptionRecord->NumberParameters,
+            pExceptionRecord->ExceptionInformation[0],
+            pExceptionRecord->ExceptionInformation[1]);
 #endif
 
-
-#if defined(HAVE_SSE42)
-#  include <nmmintrin.h>
-#elif defined(HAVE_SSE41)
-#  include <smmintrin.h>
-#elif defined(HAVE_SSE2)
-#  include <emmintrin.h>
-#endif
-
-
-#define BLOCK_SIZE 512
-
-
-template< class T >
-static inline T *
-lAlignPtr(T *p, uintptr_t alignment)
-{
-    return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(p) & ~(alignment - 1));
-}
-
-
-template< class T >
-static inline T *
-rAlignPtr(T *p, uintptr_t alignment)
-{
-    return reinterpret_cast<T *>((reinterpret_cast<uintptr_t>(p) + alignment - 1) & ~(alignment - 1));
-}
-
-
-#ifdef HAVE_SSE2
-
-#ifdef HAVE_SSE41
-    #define mm_stream_load_si128 _mm_stream_load_si128
-    #define mm_extract_epi32_0(x) _mm_extract_epi32(x, 0)
-    #define mm_extract_epi32_1(x) _mm_extract_epi32(x, 1)
-    #define mm_extract_epi32_2(x) _mm_extract_epi32(x, 2)
-    #define mm_extract_epi32_3(x) _mm_extract_epi32(x, 3)
-#else /* !HAVE_SSE41 */
-    #define mm_stream_load_si128 _mm_load_si128
-    #define mm_extract_epi32_0(x) _mm_cvtsi128_si32(x)
-    #define mm_extract_epi32_1(x) _mm_cvtsi128_si32(_mm_shuffle_epi32(x,_MM_SHUFFLE(1,1,1,1)))
-    #define mm_extract_epi32_2(x) _mm_cvtsi128_si32(_mm_shuffle_epi32(x,_MM_SHUFFLE(2,2,2,2)))
-    #define mm_extract_epi32_3(x) _mm_cvtsi128_si32(_mm_shuffle_epi32(x,_MM_SHUFFLE(3,3,3,3)))
-#endif /* !HAVE_SSE41 */
-
-#ifdef HAVE_SSE42
-
-#define mm_crc32_u32 _mm_crc32_u32
-
-#else /* !HAVE_SSE42 */
-
-static inline uint32_t
-mm_crc32_u32(uint32_t crc, uint32_t current)
-{
-    uint32_t one = current ^ crc;
-    crc  = crc32c_8x256_table[0][ one >> 24        ] ^
-           crc32c_8x256_table[1][(one >> 16) & 0xff] ^
-           crc32c_8x256_table[2][(one >>  8) & 0xff] ^
-           crc32c_8x256_table[3][ one        & 0xff];
-    return crc;
-}
-
-#endif /* !HAVE_SSE42 */
-
-#endif /* HAVE_SSE2 */
-
-
-uint32_t
-hashBlock(const void *p)
-{
-    assert((intptr_t)p % BLOCK_SIZE == 0);
-
-    uint32_t crc;
-
-#ifdef HAVE_SSE2
-    crc = 0;
-
-    __m128i *q = (__m128i *)(void *)p;
-
-    crc = ~crc;
-
-    for (unsigned c = BLOCK_SIZE / (4 * sizeof *q); c; --c) {
-        __m128i m0 = mm_stream_load_si128(q++);
-        __m128i m1 = mm_stream_load_si128(q++);
-        __m128i m2 = mm_stream_load_si128(q++);
-        __m128i m3 = mm_stream_load_si128(q++);
-
-        crc = mm_crc32_u32(crc, mm_extract_epi32_0(m0));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_1(m0));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_2(m0));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_3(m0));
-
-        crc = mm_crc32_u32(crc, mm_extract_epi32_0(m1));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_1(m1));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_2(m1));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_3(m1));
-
-        crc = mm_crc32_u32(crc, mm_extract_epi32_0(m2));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_1(m2));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_2(m2));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_3(m2));
-
-        crc = mm_crc32_u32(crc, mm_extract_epi32_0(m3));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_1(m3));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_2(m3));
-        crc = mm_crc32_u32(crc, mm_extract_epi32_3(m3));
+    if (ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
+        pExceptionRecord->NumberParameters >= 2 &&
+        pExceptionRecord->ExceptionInformation[0] == 1) { // writing
+        uintptr_t page = pageFromAddr(pExceptionRecord->ExceptionInformation[1]);
+        uint32_t hash ;
+        if (getPage(page, hash)) {
+            DWORD flOldProtect;
+            BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(page), PAGE_SIZE, PAGE_READWRITE, &flOldProtect);
+            assert(bRet);
+            setPageDirty(hash);
+            return EXCEPTION_CONTINUE_EXECUTION;
+        } else {
+            os::log("VectoredHandler: unknown page at 0x%" PRIxPTR "\n",
+                    page);
+        }
     }
 
-    crc = ~crc;
-
-#else /* !HAVE_SSE2 */
-
-    crc = crc32c_8bytes(p, BLOCK_SIZE);
-
-#endif
-
-    return crc;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 
-// We must reset the data on discard, otherwise the old data could match just
-// by chance.
-//
-// XXX: if the appplication writes 0xCDCDCDCD at the start or the end of the
-// buffer range, we'll fail to detect.  The only way to be 100% sure things
-// won't fall through would be to setup memory traps.
 void MemoryShadow::zero(void *_ptr, size_t _size)
 {
-    memset(_ptr, 0xCD, _size);
 }
-
 
 void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
 {
     assert(_ptr);
 
-    if (_size != size) {
-        nBlocks = ((intptr_t)_ptr + _size + BLOCK_SIZE - 1)/BLOCK_SIZE - (intptr_t)_ptr/BLOCK_SIZE;
-
-        hashPtr = (uint32_t *)realloc(hashPtr, nBlocks * sizeof *hashPtr);
-        size = _size;
-    }
-
+    size = _size;
     realPtr = (const uint8_t *)_ptr;
 
-    if (_discard) {
-        zero(_ptr, size);
+    if (!handler) {
+      AddVectoredExceptionHandler(1, VectoredHandler);
     }
 
-    const uint8_t *p = lAlignPtr((const uint8_t *)_ptr, BLOCK_SIZE);
-    if (_discard) {
-        hashPtr[0] = hashBlock(p);
-        for (size_t i = 1; i < nBlocks; ++i) {
-            hashPtr[i] = hashPtr[0];
-        }
-    } else {
-        for (size_t i = 0; i < nBlocks; ++i) {
-            hashPtr[i] = hashBlock(p);
-            p += BLOCK_SIZE;
-        }
+    startPage = pageFromAddr(_ptr);
+    nPages = ((uintptr_t)_ptr + _size + PAGE_SIZE - 1)/PAGE_SIZE - (uintptr_t)_ptr/PAGE_SIZE;
+    for (size_t i = 0; i < nPages; ++i) {
+        uintptr_t page = startPage + i*PAGE_SIZE;
+        addPage(page);
     }
+
+    BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(startPage), nPages * PAGE_SIZE, PAGE_READONLY, &flOldProtect);
+    assert(bRet);
 }
 
 
 void MemoryShadow::update(Callback callback) const
 {
-    const uint8_t *realStart   = realPtr   + size;
-    const uint8_t *realStop    = realPtr;
+    uintptr_t realStart = ~uintptr_t(0);
+    uintptr_t realStop  = 0;
 
-    const uint8_t *p = lAlignPtr(realPtr, BLOCK_SIZE);
-    for (size_t i = 0; i < nBlocks; ++i) {
-        uint32_t crc = hashBlock(p);
-        if (crc != hashPtr[i]) {
-            realStart = std::min(realStart, p);
-            realStop  = std::max(realStop,  p + BLOCK_SIZE);
+    for (size_t i = 0; i < nPages; ++i) {
+        uintptr_t page = startPage + i*PAGE_SIZE;
+        uint32_t hash;
+        if (getPage(page, hash)) {
+            if (isPageDirty(hash)) {
+                realStart = std::min(realStart, page);
+                realStop  = std::max(realStop,  page + PAGE_SIZE);
+                setPageClean(hash);
+            }
+        } else {
+            assert(0);
         }
-        p += BLOCK_SIZE;
     }
 
-    realStart = std::max(realStart, realPtr);
-    realStop  = std::min(realStop,  realPtr + size);
+    DWORD flPrevProtect;
+    BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(startPage), nPages * PAGE_SIZE, flOldProtect, &flPrevProtect);
+    assert(bRet);
+
+    realStart = std::max(realStart, uintptr_t(realPtr));
+    realStop  = std::min(realStop,  uintptr_t(realPtr + size));
 
     // Update the rest
     if (realStart < realStop) {
-        callback(realStart, realStop - realStart);
+        callback((const void *)realStart, realStop - realStart);
     }
 }

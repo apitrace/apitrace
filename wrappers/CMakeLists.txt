@@ -49,7 +49,6 @@ include_directories (
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/lib/guids
-    ${CMAKE_SOURCE_DIR}/thirdparty/crc32c
 )
 
 if (NOT WIN32 AND NOT APPLE)
@@ -78,7 +77,6 @@ add_convenience_library (trace
 target_link_libraries (trace
     common
     guids
-    crc32c
     ${SNAPPY_LIBRARIES}
 )
 
