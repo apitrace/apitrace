@@ -26,6 +26,8 @@
 
 #include "memtrace.hpp"
 
+#ifdef _WIN32
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -212,3 +214,6 @@ void MemoryShadow::update(Callback callback) const
         callback((const void *)realStart, realStop - realStart);
     }
 }
+
+
+#endif // _WIN32
