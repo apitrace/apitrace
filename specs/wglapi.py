@@ -221,6 +221,12 @@ WGLPixelFormatAttribsList = [
     # WGL_ARB_render_texture
     ('WGL_BIND_TO_TEXTURE_RGB_ARB', BOOL),
     ('WGL_BIND_TO_TEXTURE_RGBA_ARB', BOOL),
+    # WGL_NV_float_buffer
+    ('WGL_FLOAT_COMPONENTS_NV', Int),
+    ('WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_R_NV', BOOL),
+    ('WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RG_NV', BOOL),
+    ('WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGB_NV', BOOL),
+    ('WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV', BOOL),
     # WGL_NV_video_output
     ('WGL_BIND_TO_VIDEO_RGB_NV', BOOL),
     ('WGL_BIND_TO_VIDEO_RGBA_NV', BOOL),
@@ -326,8 +332,8 @@ wglapi.addFunctions([
     StdFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (WGLenum, "iAttribute"), Out(Pointer(Int), "piValue")], sideeffects=False),
 
     # WGL_ARB_render_texture
-    StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
-    StdFunction(BOOL, "wglReleaseTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
+    StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (WGLenum, "iBuffer")]),
+    StdFunction(BOOL, "wglReleaseTexImageARB", [(HPBUFFERARB, "hPbuffer"), (WGLenum, "iBuffer")]),
     StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (WGLSetPbufferARBAttribs, "piAttribList")]),
 
     # WGL_ARB_create_context
