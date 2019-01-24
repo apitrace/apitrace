@@ -162,12 +162,22 @@ public:
 
     void visit(Bitmask *bitmask) override {
         const BitmaskSig *sig = bitmask->sig;
-        for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
-            if (it->value && (bitmask->value & it->value) == it->value &&
-                searchString.compare(it->name) == 0) {
-                bitmask->value &= ~it->value;
+        for (const BitmaskFlag *searchIt = sig->flags; searchIt != sig->flags + sig->num_flags; ++searchIt) {
+            if (searchIt->value && (bitmask->value & searchIt->value) == searchIt->value &&
+                searchString.compare(searchIt->name) == 0) {
+                bitmask->value &= ~searchIt->value;
+                for (const BitmaskFlag *replaceIt = sig->flags; replaceIt != sig->flags + sig->num_flags; ++replaceIt) {
+                    if (replaceString.compare(replaceIt->name) == 0) {
+                        bitmask->value |= replaceIt->value;
+                        return;
+                    }
+                }
+                /*
+                 * Didn't match any of the flags, so presume replacement string
+                 * is an integer.
+                 */
                 bitmask->value |= std::stoull(replaceString);
-                break;
+                return;
             }
         }
     }
