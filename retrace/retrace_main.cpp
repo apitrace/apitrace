@@ -90,6 +90,9 @@ bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
 
+bool ignoreCalls = false;
+trace::CallSet callsToIgnore;
+
 bool resolveMSAA = true;
 
 Driver driver = DRIVER_DEFAULT;
@@ -280,6 +283,10 @@ takeSnapshot(unsigned call_no)
 static void
 retraceCall(trace::Call *call) {
     callNo = call->no;
+
+    if (ignoreCalls && callsToIgnore.contains(callNo)) {
+        return;
+    }
 
     retracer.retrace(*call);
 
@@ -679,6 +686,7 @@ usage(const char *argv0) {
         "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
+        "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
     ;
 }
 
@@ -711,6 +719,7 @@ enum {
     DUMP_FORMAT_OPT,
     MARKERS_OPT,
     MIN_CPU_TIME_OPT,
+    IGNORE_CALLS_OPT,
 };
 
 const static char *
@@ -756,6 +765,7 @@ longOptions[] = {
     {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
+    {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
     {0, 0, 0, 0}
 };
 
@@ -1171,6 +1181,13 @@ int main(int argc, char **argv)
             break;
         case MIN_CPU_TIME_OPT:
             retrace::minCpuTime = atol(optarg);
+        case IGNORE_CALLS_OPT:
+            retrace::ignoreCalls = true;
+            if (retrace::callsToIgnore.empty()) {
+                retrace::callsToIgnore = trace::CallSet(trace::FREQUENCY_ALL);
+            }
+
+            retrace::callsToIgnore.merge(optarg);
             break;
         default:
             std::cerr << "error: unknown option " << opt << "\n";

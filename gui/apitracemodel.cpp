@@ -9,7 +9,6 @@
 #include <QImage>
 #include <QVariant>
 
-
 ApiTraceModel::ApiTraceModel(QObject *parent)
     : QAbstractItemModel(parent),
       m_trace(0)
