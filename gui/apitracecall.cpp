@@ -608,7 +608,8 @@ ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
       m_binaryDataIndex(-1),
       m_state(0),
-      m_staticText(0)
+      m_staticText(0),
+      m_ignored(false)
 {
 }
 
@@ -616,7 +617,8 @@ ApiTraceEvent::ApiTraceEvent(Type t)
     : m_type(t),
       m_binaryDataIndex(-1),
       m_state(0),
-      m_staticText(0)
+      m_staticText(0),
+      m_ignored(false)
 {
     Q_ASSERT(m_type == t);
 }
@@ -645,6 +647,16 @@ void ApiTraceEvent::setThumbnail(const QImage & thumbnail)
 const QImage & ApiTraceEvent::thumbnail() const
 {
     return m_thumbnail;
+}
+
+void ApiTraceEvent::setIgnored(bool ignored)
+{
+    m_ignored = ignored;
+}
+
+bool ApiTraceEvent::ignored() const
+{
+    return m_ignored;
 }
 
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,

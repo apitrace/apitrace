@@ -256,6 +256,11 @@ qlonglong Retracer::captureAtCallNumber() const
     return m_captureCall;
 }
 
+void Retracer::setCallsToIgnore(const QList<RetracerCallRange>& callsToIgnore)
+{
+    m_callsToIgnore = callsToIgnore;
+}
+
 bool Retracer::captureState() const
 {
     return m_captureState;
@@ -394,6 +399,15 @@ void Retracer::run()
         if (m_benchmarking) {
             arguments << QLatin1String("-b");
         }
+    }
+
+    if (!m_callsToIgnore.empty()) {
+        arguments << QLatin1String("--ignore-calls");
+        QString callsStr("");
+        for (RetracerCallRange& callRange : m_callsToIgnore) {
+            callsStr += QString("%1-%2,").arg(callRange.m_callStartNo).arg(callRange.m_callEndNo);
+        }
+        arguments << callsStr;
     }
 
     arguments << m_fileName;

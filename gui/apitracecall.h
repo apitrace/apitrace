@@ -222,6 +222,9 @@ public:
     void setThumbnail(const QImage & thumbnail);
     const QImage & thumbnail() const;
 
+    void setIgnored(bool ignored);
+    bool ignored() const;
+
     virtual void missingThumbnail() = 0;
 
 protected:
@@ -232,6 +235,8 @@ protected:
     mutable QStaticText *m_staticText;
 
     QImage m_thumbnail;
+
+    bool m_ignored;
 };
 Q_DECLARE_METATYPE(ApiTraceEvent*);
 

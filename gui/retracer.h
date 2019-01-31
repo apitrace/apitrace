@@ -11,6 +11,12 @@ class ApiTraceState;
 
 namespace trace { struct Profile; }
 
+struct RetracerCallRange
+{
+    qlonglong m_callStartNo{0};
+    qlonglong m_callEndNo{0};
+};
+
 class Retracer : public QThread
 {
     Q_OBJECT
@@ -48,6 +54,8 @@ public:
 
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
+
+    void setCallsToIgnore(const QList<RetracerCallRange>& callsToIgnore);
 
     bool captureState() const;
     void setCaptureState(bool enable);
@@ -91,4 +99,6 @@ private:
     QProcessEnvironment m_processEnvironment;
 
     QList<qlonglong> m_thumbnailsToCapture;
+
+    QList<RetracerCallRange> m_callsToIgnore;
 };
