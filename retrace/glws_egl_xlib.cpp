@@ -107,14 +107,14 @@ public:
     EGLenum api;
 
     EglDrawable(const Visual *vis, int w, int h,
-                const glws::pbuffer_info *pbInfo) :
-        Drawable(vis, w, h, pbInfo),
+                const glws::pbuffer_info *pbInfo, bool borderless) :
+        Drawable(vis, w, h, pbInfo, borderless),
         api(EGL_OPENGL_ES_API)
     {
         XVisualInfo *visinfo = static_cast<const EglVisual *>(visual)->visinfo;
 
         const char *name = "eglretrace";
-        window = createWindow(visinfo, name, width, height);
+        window = createWindow(visinfo, name, width, height, borderless);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
@@ -409,9 +409,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
 Drawable *
 createDrawable(const Visual *visual, int width, int height,
-               const glws::pbuffer_info *pbInfo)
+               const glws::pbuffer_info *pbInfo, bool borderless)
 {
-    return new EglDrawable(visual, width, height, pbInfo);
+    return new EglDrawable(visual, width, height, pbInfo, borderless);
 }
 
 

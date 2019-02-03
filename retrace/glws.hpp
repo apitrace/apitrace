@@ -118,17 +118,19 @@ public:
     int width;
     int height;
     bool pbuffer;
+    bool borderless;
     bool visible;
 
     // For WGL_ARB_render_texture
     glws::pbuffer_info pbInfo;
     int mipmapLevel, cubeFace;
 
-    Drawable(const Visual *vis, int w, int h, bool pb) :
+    Drawable(const Visual *vis, int w, int h, bool pb, bool borderless) :
         visual(vis),
         width(w),
         height(h),
         pbuffer(pb),
+        borderless(borderless),
         visible(false),
         mipmapLevel(0),
         cubeFace(0)
@@ -204,6 +206,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile);
 Drawable *
 createDrawable(const Visual *visual, int width, int height,
                const glws::pbuffer_info *pbInfo = NULL);
+
+Drawable *
+createDrawable(const Visual *visual, int width, int height,
+               const glws::pbuffer_info *pbInfo, bool borderless = false);
 
 Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);

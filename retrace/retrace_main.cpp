@@ -80,7 +80,7 @@ namespace retrace {
 trace::AbstractParser *parser;
 trace::Profiler profiler;
 
-
+bool borderlessWindow = false;
 int verbosity = 0;
 int debug = 1;
 bool markers = false;
@@ -640,6 +640,7 @@ usage(const char *argv0) {
         "Replay TRACE.\n"
         "\n"
         "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
+        "  -B, --borderless        replay in borderless window\n"
         "  -d, --debug             increase debugging checks\n"
         "      --markers           insert call no markers in the command stream\n"
         "      --pcpu              cpu profiling (cpu times per call)\n"
@@ -709,11 +710,12 @@ enum {
 };
 
 const static char *
-shortOptions = "bdD:hms:S:vwt";
+shortOptions = "bBdD:hms:S:vwt";
 
 const static struct option
 longOptions[] = {
     {"benchmark", no_argument, 0, 'b'},
+    {"borderless", no_argument, 0, 'B'},
     {"debug", no_argument, 0, 'd'},
     {"markers", no_argument, 0, MARKERS_OPT},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT },
@@ -982,6 +984,9 @@ int main(int argc, char **argv)
             break;
         case MARKERS_OPT:
             retrace::markers = true;
+            break;
+        case 'B':
+            retrace::borderlessWindow = true;
             break;
         case 'd':
             ++retrace::debug;

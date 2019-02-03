@@ -71,8 +71,8 @@ public:
     GLXDrawable drawable = 0;
 
     GlxDrawable(const Visual *vis, int w, int h,
-                const glws::pbuffer_info *pbInfo) :
-        Drawable(vis, w, h, pbInfo ? true : false)
+                const glws::pbuffer_info *pbInfo, bool borderless) :
+        Drawable(vis, w, h, pbInfo ? true : false, borderless)
     {
         const GlxVisual *glxvisual = static_cast<const GlxVisual *>(visual);
         XVisualInfo *visinfo = glxvisual->visinfo;
@@ -82,7 +82,7 @@ public:
             drawable = createPbuffer(display, glxvisual, pbInfo, w, h);
         }
         else {
-            window = createWindow(visinfo, name, width, height);
+            window = createWindow(visinfo, name, width, height, borderless);
             drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
             if (has_GLX_EXT_swap_control) {
                 glXSwapIntervalEXT(display, drawable, 0);
@@ -310,7 +310,13 @@ Drawable *
 createDrawable(const Visual *visual, int width, int height,
                const glws::pbuffer_info *pbInfo)
 {
-    return new GlxDrawable(visual, width, height, pbInfo);
+    return new GlxDrawable(visual, width, height, pbInfo, false);
+}
+
+Drawable *
+createDrawable(const Visual *visual, int width, int height, const glws::pbuffer_info *pbInfo, bool borderless)
+{
+    return new GlxDrawable(visual, width, height, pbInfo, borderless);
 }
 
 Context *
