@@ -67,7 +67,8 @@ static void exceptionCallback(void)
 
 
 LocalWriter::LocalWriter() :
-    acquired(0)
+    acquired(0),
+    sharedPtrThis(std::make_shared<LocalWriter*>(this))
 {
     os::String process = os::getProcessName();
     os::log("apitrace: loaded into %s\n", process.str());
@@ -75,6 +76,21 @@ LocalWriter::LocalWriter() :
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
     os::setExceptionCallback(exceptionCallback);
+}
+
+static void FlushLocalWriterThread(const std::weak_ptr<LocalWriter*> writerWeakPtr,
+                                   const uint32_t intervalMs)
+{
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(intervalMs));
+
+        const auto locked = writerWeakPtr.lock();
+        if (!locked)
+            break;
+        const auto writer = *locked;
+
+        writer->flush();
+    }
 }
 
 LocalWriter::~LocalWriter()
@@ -145,6 +161,16 @@ LocalWriter::open(void) {
     }
 
     pid = os::getCurrentProcessId();
+
+    const auto flushIntervalStr = getenv("FLUSH_EVERY_MS");
+    if (flushIntervalStr) {
+        const auto intervalMs = atoi(flushIntervalStr);
+        if (intervalMs < 0) {
+            os::log("apitrace: error: invalid FLUSH_EVERY_MS: %s\n", flushIntervalStr);
+            os::abort();
+        }
+        std::thread(FlushLocalWriterThread, this->sharedPtrThis, uint32_t(intervalMs)).detach();
+    }
 
 #if 0
     // For debugging the exception handler

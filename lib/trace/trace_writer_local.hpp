@@ -31,6 +31,7 @@
 
 
 #include <stdint.h>
+#include <memory>
 
 #include "os_thread.hpp"
 #include "os_process.hpp"
@@ -69,6 +70,9 @@ namespace trace {
          */
         std::recursive_mutex mutex;
         int acquired;
+
+        /// For getenv("FLUSH_EVERY_MS")
+        const std::shared_ptr<LocalWriter*> sharedPtrThis;
 
         /**
          * ID of the processed that opened the trace file.
