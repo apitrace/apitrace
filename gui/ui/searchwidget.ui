@@ -89,6 +89,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="regexBox">
+     <property name="text">
+      <string>&amp;Regex</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="notFoundLabel">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">

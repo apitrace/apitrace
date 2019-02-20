@@ -308,15 +308,16 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
 void ApiTrace::findNext(ApiTraceFrame *frame,
                         ApiTraceCall *from,
                         const QString &str,
-                        Qt::CaseSensitivity sensitivity)
+                        Qt::CaseSensitivity sensitivity,
+                        bool useRegex)
 {
     ApiTraceCall *foundCall = 0;
     int frameIdx = m_frames.indexOf(frame);
     SearchRequest request(SearchRequest::Next,
-                          frame, from, str, sensitivity);
+                          frame, from, str, sensitivity, useRegex);
 
     if (frame->isLoaded()) {
-        foundCall = frame->findNextCall(from, str, sensitivity);
+        foundCall = frame->findNextCall(from, str, sensitivity, useRegex);
         if (foundCall) {
             emit findResult(request, SearchResult_Found, foundCall);
             return;
@@ -336,7 +337,7 @@ void ApiTrace::findNext(ApiTraceFrame *frame,
             emit loaderSearch(request);
             return;
         } else {
-            ApiTraceCall *call = frame->findNextCall(0, str, sensitivity);
+            ApiTraceCall *call = frame->findNextCall(0, str, sensitivity, useRegex);
             if (call) {
                 emit findResult(request, SearchResult_Found, call);
                 return;
@@ -349,15 +350,16 @@ void ApiTrace::findNext(ApiTraceFrame *frame,
 void ApiTrace::findPrev(ApiTraceFrame *frame,
                         ApiTraceCall *from,
                         const QString &str,
-                        Qt::CaseSensitivity sensitivity)
+                        Qt::CaseSensitivity sensitivity,
+                        bool useRegex)
 {
     ApiTraceCall *foundCall = 0;
     int frameIdx = m_frames.indexOf(frame);
     SearchRequest request(SearchRequest::Prev,
-                          frame, from, str, sensitivity);
+                          frame, from, str, sensitivity, useRegex);
 
     if (frame->isLoaded()) {
-        foundCall = frame->findPrevCall(from, str, sensitivity);
+        foundCall = frame->findPrevCall(from, str, sensitivity, useRegex);
         if (foundCall) {
             emit findResult(request, SearchResult_Found, foundCall);
             return;
@@ -376,7 +378,7 @@ void ApiTrace::findPrev(ApiTraceFrame *frame,
             emit loaderSearch(request);
             return;
         } else {
-            ApiTraceCall *call = frame->findPrevCall(0, str, sensitivity);
+            ApiTraceCall *call = frame->findPrevCall(0, str, sensitivity, useRegex);
             if (call) {
                 emit findResult(request, SearchResult_Found, call);
                 return;

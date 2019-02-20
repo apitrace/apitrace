@@ -196,7 +196,7 @@ void TraceLoader::searchNext(const ApiTrace::SearchRequest &request)
     trace::Call *call = 0;
     while ((call = m_parser.parse_call())) {
 
-        if (callContains(call, request.text, request.cs)) {
+        if (callContains(call, request.text, request.cs, request.useRegex)) {
             unsigned frameIdx = callInFrame(call->no);
             ApiTraceFrame *frame = m_createdFrames[frameIdx];
             const QVector<ApiTraceCall*> calls =
@@ -264,7 +264,7 @@ bool TraceLoader::searchCallsBackwards(const QList<trace::Call*> &calls,
 {
     for (int i = calls.count() - 1; i >= 0; --i) {
         trace::Call *call = calls[i];
-        if (callContains(call, request.text, request.cs)) {
+        if (callContains(call, request.text, request.cs, request.useRegex)) {
             ApiTraceFrame *frame = m_createdFrames[frameIdx];
             const QVector<ApiTraceCall*> apiCalls =
                     fetchFrameContents(frame);
@@ -301,14 +301,15 @@ int TraceLoader::callInFrame(int callIdx) const
 
 bool TraceLoader::callContains(trace::Call *call,
                                const QString &str,
-                               Qt::CaseSensitivity sensitivity)
+                               Qt::CaseSensitivity sensitivity,
+                               bool useRegex)
 {
     /*
      * FIXME: do string comparison directly on trace::Call
      */
     ApiTraceCall *apiCall = apiCallFromTraceCall(call, m_helpHash,
                                                  0, 0, this);
-    bool result = apiCall->contains(str, sensitivity);
+    bool result = apiCall->contains(str, sensitivity, useRegex);
     delete apiCall;
     return result;
 }

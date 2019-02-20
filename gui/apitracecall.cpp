@@ -1109,10 +1109,12 @@ int ApiTraceCall::numChildren() const
 }
 
 bool ApiTraceCall::contains(const QString &str,
-                            Qt::CaseSensitivity sensitivity) const
+                            Qt::CaseSensitivity sensitivity,
+                            bool useRegex) const
 {
     QString txt = searchText();
-    return txt.contains(str, sensitivity);
+    return useRegex ? txt.contains(QRegExp(str, sensitivity))
+                    : txt.contains(str, sensitivity);
 }
 
 void ApiTraceCall::missingThumbnail()
@@ -1265,7 +1267,8 @@ int ApiTraceFrame::numChildrenToLoad() const
 ApiTraceCall *
 ApiTraceFrame::findNextCall(ApiTraceCall *from,
                             const QString &str,
-                            Qt::CaseSensitivity sensitivity) const
+                            Qt::CaseSensitivity sensitivity,
+                            bool useRegex) const
 {
     Q_ASSERT(m_loaded);
 
@@ -1277,7 +1280,7 @@ ApiTraceFrame::findNextCall(ApiTraceCall *from,
 
     for (int i = callIndex; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
-        if (call->contains(str, sensitivity)) {
+        if (call->contains(str, sensitivity, useRegex)) {
             return call;
         }
     }
@@ -1287,7 +1290,8 @@ ApiTraceFrame::findNextCall(ApiTraceCall *from,
 ApiTraceCall *
 ApiTraceFrame::findPrevCall(ApiTraceCall *from,
                             const QString &str,
-                            Qt::CaseSensitivity sensitivity) const
+                            Qt::CaseSensitivity sensitivity,
+                            bool useRegex) const
 {
     Q_ASSERT(m_loaded);
 
@@ -1299,7 +1303,7 @@ ApiTraceFrame::findPrevCall(ApiTraceCall *from,
 
     for (int i = callIndex; i >= 0; --i) {
         ApiTraceCall *call = m_calls[i];
-        if (call->contains(str, sensitivity)) {
+        if (call->contains(str, sensitivity, useRegex)) {
             return call;
         }
     }

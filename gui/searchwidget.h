@@ -15,8 +15,8 @@ public:
     void setFound(bool f);
     void show();
 signals:
-    void searchNext(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive);
-    void searchPrev(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive);
+    void searchNext(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive, bool useRegex=false);
+    void searchPrev(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive, bool useRegex=false);
 
 private slots:
     void slotSearchNext();
@@ -29,6 +29,7 @@ protected:
 
 private:
     Qt::CaseSensitivity caseSensitivity() const;
+    bool regexEnabled() const;
 private:
     Ui_SearchWidget m_ui;
     QPalette m_origPalette;
