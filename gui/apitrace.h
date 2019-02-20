@@ -35,18 +35,21 @@ public:
                       ApiTraceFrame *f,
                       ApiTraceCall *call,
                       QString str,
-                      Qt::CaseSensitivity caseSens)
+                      Qt::CaseSensitivity caseSens,
+                      bool useRegex)
             : direction(dir),
               frame(f),
               from(call),
               text(str),
-              cs(caseSens)
+              cs(caseSens),
+              useRegex(useRegex)
         {}
         Direction direction;
         ApiTraceFrame *frame;
         ApiTraceCall *from;
         QString text;
         Qt::CaseSensitivity cs;
+        bool useRegex;
     };
 
 public:
@@ -95,11 +98,13 @@ public slots:
     void findNext(ApiTraceFrame *frame,
                   ApiTraceCall *call,
                   const QString &str,
-                  Qt::CaseSensitivity sensitivity);
+                  Qt::CaseSensitivity sensitivity,
+                  bool useRegex);
     void findPrev(ApiTraceFrame *frame,
                   ApiTraceCall *call,
                   const QString &str,
-                  Qt::CaseSensitivity sensitivity);
+                  Qt::CaseSensitivity sensitivity,
+                  bool useRegex);
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
     void findCallIndex(int index);

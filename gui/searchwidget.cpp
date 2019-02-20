@@ -33,14 +33,14 @@ void SearchWidget::slotSearchNext()
 {
     QString txt = m_ui.lineEdit->text();
     if (!txt.isEmpty())
-        emit searchNext(txt, caseSensitivity());
+        emit searchNext(txt, caseSensitivity(), regexEnabled());
 }
 
 void SearchWidget::slotSearchPrev()
 {
     QString txt = m_ui.lineEdit->text();
     if (!txt.isEmpty())
-        emit searchPrev(txt, caseSensitivity());
+        emit searchPrev(txt, caseSensitivity(), regexEnabled());
 }
 
 void SearchWidget::slotCancel()
@@ -59,6 +59,11 @@ Qt::CaseSensitivity SearchWidget::caseSensitivity() const
         return Qt::CaseSensitive;
     else
         return Qt::CaseInsensitive;
+}
+
+bool SearchWidget::regexEnabled() const
+{
+    return m_ui.regexBox->isChecked();
 }
 
 bool SearchWidget::eventFilter(QObject *object, QEvent* event)

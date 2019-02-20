@@ -100,7 +100,8 @@ private:
     int callInFrame(int callIdx) const;
     bool callContains(trace::Call *call,
                       const QString &str,
-                      Qt::CaseSensitivity sensitivity);
+                      Qt::CaseSensitivity sensitivity,
+                      bool useRegex);
      QVector<ApiTraceCall*> fetchFrameContents(ApiTraceFrame *frame);
      bool searchCallsBackwards(const QList<trace::Call*> &calls,
                                int frameIdx,

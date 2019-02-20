@@ -1145,11 +1145,11 @@ void MainWindow::initConnections()
             SLOT(slotJumpTo(int)));
 
     connect(m_searchWidget,
-            SIGNAL(searchNext(const QString&, Qt::CaseSensitivity)),
-            SLOT(slotSearchNext(const QString&, Qt::CaseSensitivity)));
+            SIGNAL(searchNext(const QString&, Qt::CaseSensitivity, bool)),
+            SLOT(slotSearchNext(const QString&, Qt::CaseSensitivity, bool)));
     connect(m_searchWidget,
-            SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity)),
-            SLOT(slotSearchPrev(const QString&, Qt::CaseSensitivity)));
+            SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity, bool)),
+            SLOT(slotSearchPrev(const QString&, Qt::CaseSensitivity, bool)));
 
     connect(m_traceProcess, SIGNAL(tracedFile(const QString&)),
             SLOT(createdTrace(const QString&)));
@@ -1310,7 +1310,8 @@ void MainWindow::slotSearch()
 }
 
 void MainWindow::slotSearchNext(const QString &str,
-                                Qt::CaseSensitivity sensitivity)
+                                Qt::CaseSensitivity sensitivity,
+                                bool useRegex)
 {
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
@@ -1324,11 +1325,12 @@ void MainWindow::slotSearchNext(const QString &str,
     }
     Q_ASSERT(frame);
 
-    m_trace->findNext(frame, call, str, sensitivity);
+    m_trace->findNext(frame, call, str, sensitivity, useRegex);
 }
 
 void MainWindow::slotSearchPrev(const QString &str,
-                                Qt::CaseSensitivity sensitivity)
+                                Qt::CaseSensitivity sensitivity,
+                                bool useRegex)
 {
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
@@ -1342,7 +1344,7 @@ void MainWindow::slotSearchPrev(const QString &str,
     }
     Q_ASSERT(frame);
 
-    m_trace->findPrev(frame, call, str, sensitivity);
+    m_trace->findPrev(frame, call, str, sensitivity, useRegex);
 }
 
 void MainWindow::fillState(bool nonDefaults)
@@ -1643,10 +1645,10 @@ void MainWindow::slotSearchResult(const ApiTrace::SearchRequest &request,
 
             if (request.direction == ApiTrace::SearchRequest::Next) {
                 m_trace->findNext(call->parentFrame(), call,
-                                  request.text, request.cs);
+                                  request.text, request.cs, request.useRegex);
             } else {
                 m_trace->findNext(call->parentFrame(), call,
-                                  request.text, request.cs);
+                                  request.text, request.cs, request.useRegex);
             }
         }
     }

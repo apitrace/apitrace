@@ -89,8 +89,8 @@ private slots:
     void createdTrim(const QString &path);
     void trimError(const QString &msg);
     void slotSearch();
-    void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
-    void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
+    void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity, bool useRegex);
+    void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity, bool useRegex);
     void fillState(bool nonDefaults);
     void customContextMenuRequested(QPoint pos);
     void editCall();

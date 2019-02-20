@@ -276,7 +276,8 @@ public:
     void revert();
 
     bool contains(const QString &str,
-                  Qt::CaseSensitivity sensitivity) const;
+                  Qt::CaseSensitivity sensitivity,
+                  bool useRegex) const;
 
     ApiTrace *parentTrace() const;
 
@@ -345,11 +346,13 @@ public:
 
     ApiTraceCall *findNextCall(ApiTraceCall *from,
                                const QString &str,
-                               Qt::CaseSensitivity sensitivity) const;
+                               Qt::CaseSensitivity sensitivity,
+                               bool useRegex) const;
 
     ApiTraceCall *findPrevCall(ApiTraceCall *from,
                                const QString &str,
-                               Qt::CaseSensitivity sensitivity) const;
+                               Qt::CaseSensitivity sensitivity,
+                               bool useRegex) const;
 
     int binaryDataSize() const;
 
