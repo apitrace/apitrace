@@ -1056,11 +1056,23 @@ getDrawableBounds(GLint *width, GLint *height) {
         return false;
     }
 
+    int major = 0, minor = 0;
+    if (!glXQueryVersion(display, &major, &minor)) {
+        return false;
+    }
+
     // XGetGeometry will fail for PBuffers, whereas glXQueryDrawable should not.
-    unsigned int w = 0;
-    unsigned int h = 0;
-    glXQueryDrawable(display, drawable, GLX_WIDTH, &w);
-    glXQueryDrawable(display, drawable, GLX_HEIGHT, &h);
+    unsigned w = 0;
+    unsigned h = 0;
+    if (major > 1 || (major == 1 && minor >= 3)) {
+        glXQueryDrawable(display, drawable, GLX_WIDTH, &w);
+        glXQueryDrawable(display, drawable, GLX_HEIGHT, &h);
+    } else {
+        Window root;
+        int x, y;
+        unsigned bw, depth;
+        XGetGeometry(display, drawable,  &root, &x, &y, &w, &h, &bw, &depth);
+    }
 
     *width = w;
     *height = h;

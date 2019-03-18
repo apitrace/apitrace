@@ -36,7 +36,7 @@
 namespace glws {
 
 
-static const char *extensions = 0;
+static bool has_GLX_VERSION_1_3 = false;
 static bool has_GLX_ARB_create_context = false;
 static bool has_GLX_ARB_create_context_profile = false;
 static bool has_GLX_EXT_create_context_es_profile = false;
@@ -83,9 +83,13 @@ public:
         }
         else {
             window = createWindow(visinfo, name, width, height);
-            drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
-            if (has_GLX_EXT_swap_control) {
-                glXSwapIntervalEXT(display, drawable, 0);
+            if (has_GLX_VERSION_1_3) {
+                drawable = glXCreateWindow(display, glxvisual->fbconfig, window, NULL);
+                if (has_GLX_EXT_swap_control) {
+                    glXSwapIntervalEXT(display, drawable, 0);
+                }
+            } else {
+                drawable = window;
             }
         }
 
@@ -96,7 +100,9 @@ public:
         if (pbuffer) {
             glXDestroyPbuffer(display, drawable);
         } else {
-            glXDestroyWindow(display, drawable);
+            if (has_GLX_VERSION_1_3) {
+                glXDestroyWindow(display, drawable);
+            }
             XDestroyWindow(display, window);
         }
     }
@@ -208,17 +214,19 @@ init(void) {
         std::cerr << "error: failed to obtain GLX version\n";
         exit(1);
     }
-    const int requiredMajor = 1, requiredMinor = 3;
+    const int requiredMajor = 1, requiredMinor = 2;
     if (major < requiredMajor ||
         (major == requiredMajor && minor < requiredMinor)) {
         std::cerr << "error: GLX version " << requiredMajor << "." << requiredMinor << " required, but got version " << major << "." << minor << "\n";
         exit(1);
     }
 
+    has_GLX_VERSION_1_3 = major > 1 || (major == 1 && minor >= 3);
+
     glXQueryExtension(display, &errorBase, &eventBase);
     oldErrorHandler = XSetErrorHandler(errorHandler);
 
-    extensions = glXQueryExtensionsString(display, screen);
+    const char *extensions = glXQueryExtensionsString(display, screen);
 
 #define CHECK_EXTENSION(name) \
     has_##name = checkExtension(#name, extensions)
