@@ -169,6 +169,7 @@ void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
 
     if (!handler) {
       AddVectoredExceptionHandler(1, VectoredHandler);
+      handler = true;
     }
 
     startPage = pageFromAddr(_ptr);
