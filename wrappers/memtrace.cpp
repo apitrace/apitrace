@@ -41,81 +41,48 @@
 
 #define PAGE_SIZE 4096U
 
-#define NUM_PAGES (uintptr_t(2)*1024*1024*1024 / PAGE_SIZE - 1)
-#define NUM_PAGES_32 ((NUM_PAGES + 31)/32)
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/gettingstarted/virtual-address-spaces
+#ifdef _WIN64
+#define NUM_PAGES 0x80000000U // 8TB
+#else
+#define NUM_PAGES 0xc0000U    // 3GB
+#endif
+
+#define NUM_PAGES_32 ((NUM_PAGES + 31U)/32U)
 
 template< typename T >
 inline uintptr_t pageFromAddr(T addr)
 {
-    return uintptr_t(addr) & ~uintptr_t(PAGE_SIZE - 1);
+    return uintptr_t(addr) / PAGE_SIZE;
 }
 
-// http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
-static uint32_t
-_pageHash(uint64_t page)
-{
-    assert((page % PAGE_SIZE) == 0);
-    uint64_t key = page /* / PAGE_SIZE */;
+volatile uint32_t *g_PageBitMap = nullptr;
 
-    key = (~key) + (key << 18); // key = (key << 18) - key - 1;
-    key = key ^ (key >> 31);
-    key = key * 21; // key = (key + (key << 2)) + (key << 4);
-    key = key ^ (key >> 11);
-    key = key + (key << 6);
-    key = key ^ (key >> 22);
-    return (key % NUM_PAGES);
-}
-
-static uintptr_t _pageHashTable[NUM_PAGES];
-static uint32_t
-addPage(uintptr_t page)
-{
-    uint32_t hash = _pageHash(page);
-    while (true) {
-        uintptr_t entry = _pageHashTable[hash];
-        if (entry == page) {
-            return hash;
-        }
-        if (entry == 0) {
-            _pageHashTable[hash] = page;
-            return hash;
-        }
-        hash = (hash + 1) % NUM_PAGES;
-    }
-}
-
-static bool
-getPage(uintptr_t page, uint32_t &hash)
-{
-    hash = _pageHash(page);
-    while (true) {
-        uintptr_t entry = _pageHashTable[hash];
-        if (entry == page) {
-            return true;
-        }
-        if (entry == 0) {
-            return false;
-        }
-        hash = (hash + 1) % NUM_PAGES;
-    }
-}
-
-
-uint32_t dirtyPages[NUM_PAGES_32];
 static inline void
-setPageDirty(uint32_t hash) {
-    assert(hash < NUM_PAGES);
-    dirtyPages[hash / 32] |= 1U << (hash % 32);
+setPageBit(uintptr_t page) {
+    assert(g_PageBitMap);
+    assert(page < NUM_PAGES);
+#if 0
+    g_PageBitMap[page / 32] |= 1U << (page % 32);
+#else
+    _InterlockedOr(reinterpret_cast<volatile long *>(&g_PageBitMap[page / 32]), 1U << (page % 32));
+#endif
 }
 static inline void
-setPageClean(uint32_t hash) {
-    assert(hash < NUM_PAGES);
-    dirtyPages[hash / 32] &= ~(1U << (hash % 32));
+unsetPageBit(uintptr_t page) {
+    assert(g_PageBitMap);
+    assert(page < NUM_PAGES);
+#if 0
+    g_PageBitMap[page / 32] &= ~(1U << (page % 32));
+#else
+    _InterlockedAnd(reinterpret_cast<volatile long *>(&g_PageBitMap[page / 32]), ~(1U << (page % 32)));
+#endif
 }
 static inline bool
-isPageDirty(uint32_t hash) {
-    assert(hash < NUM_PAGES);
-    return dirtyPages[hash / 32] & (1U << (hash % 32));
+getPageBit(uintptr_t page) {
+    assert(g_PageBitMap);
+    assert(page < NUM_PAGES);
+    return g_PageBitMap[page / 32] & (1U << (page % 32));
 }
 
 
@@ -139,16 +106,21 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
         pExceptionRecord->NumberParameters >= 2 &&
         pExceptionRecord->ExceptionInformation[0] == 1) { // writing
         uintptr_t page = pageFromAddr(pExceptionRecord->ExceptionInformation[1]);
-        uint32_t hash ;
-        if (getPage(page, hash)) {
+
+        if (page < NUM_PAGES &&
+            getPageBit(page)) {
             DWORD flOldProtect;
-            BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(page), PAGE_SIZE, PAGE_READWRITE, &flOldProtect);
+
+            BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(page * PAGE_SIZE),
+                                       PAGE_SIZE, PAGE_READWRITE, &flOldProtect);
             assert(bRet);
-            setPageDirty(hash);
+            os::log("memtrace: unprotect 0x%" PRIxPTR ", flOldProtect=0x%lx\n", page * PAGE_SIZE, flOldProtect);
+
+            unsetPageBit(page);
             return EXCEPTION_CONTINUE_EXECUTION;
         } else {
             os::log("VectoredHandler: unknown page at 0x%" PRIxPTR "\n",
-                    page);
+                    uintptr_t(pExceptionRecord->ExceptionInformation[1]));
         }
     }
 
@@ -167,20 +139,57 @@ void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
     size = _size;
     realPtr = (const uint8_t *)_ptr;
 
+    if (!g_PageBitMap) {
+        g_PageBitMap = static_cast<uint32_t *>(VirtualAlloc(nullptr, NUM_PAGES_32 * sizeof(uint32_t), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+        assert(g_PageBitMap != nullptr);
+    }
+
     if (!handler) {
       AddVectoredExceptionHandler(1, VectoredHandler);
       handler = true;
     }
 
+#if 1
+    os::log("memtrace: %p-%p\n", _ptr, (uint8_t *)_ptr + _size);
+#endif
+
     startPage = pageFromAddr(_ptr);
     nPages = ((uintptr_t)_ptr + _size + PAGE_SIZE - 1)/PAGE_SIZE - (uintptr_t)_ptr/PAGE_SIZE;
     for (size_t i = 0; i < nPages; ++i) {
-        uintptr_t page = startPage + i*PAGE_SIZE;
-        addPage(page);
+        uintptr_t page = startPage + i;
+        assert(page < NUM_PAGES);
+
+        // TODO: Write 32bits at a time.
+        setPageBit(page);
     }
 
-    BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(startPage), nPages * PAGE_SIZE, PAGE_READONLY, &flOldProtect);
-    assert(bRet);
+
+    LPVOID lpAddress = reinterpret_cast<LPVOID>(startPage * PAGE_SIZE);
+
+#if 1
+    MEMORY_BASIC_INFORMATION mbi;
+
+    if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != sizeof mbi) {
+        os::log("error: VirtualQuery failed\n");
+        return;
+    }
+
+#endif
+    DWORD flNewProtect = (mbi.Protect & (PAGE_GUARD | PAGE_NOCACHE | PAGE_WRITECOMBINE))
+                       | PAGE_READONLY;
+
+#if 1
+    os::log("memtrace: protect 0x%" PRIxPTR "-0x%" PRIxPTR ", mbiProtect=0x%lx\n",
+            startPage * PAGE_SIZE, (startPage + nPages)*PAGE_SIZE, mbi.Protect);
+#endif
+
+    BOOL bRet = VirtualProtect(lpAddress, nPages * PAGE_SIZE, flNewProtect, &flOldProtect);
+    if (!bRet) {
+        DWORD dwLastError = GetLastError();
+        os::log("error: VirtualProtect failed with error 0x%lx, mbiProtect=0x%lx\n",
+                dwLastError, mbi.Protect);
+        flOldProtect = mbi.Protect;
+    }
 }
 
 
@@ -190,21 +199,22 @@ void MemoryShadow::update(Callback callback) const
     uintptr_t realStop  = 0;
 
     for (size_t i = 0; i < nPages; ++i) {
-        uintptr_t page = startPage + i*PAGE_SIZE;
-        uint32_t hash;
-        if (getPage(page, hash)) {
-            if (isPageDirty(hash)) {
-                realStart = std::min(realStart, page);
-                realStop  = std::max(realStop,  page + PAGE_SIZE);
-                setPageClean(hash);
-            }
+        uintptr_t page = startPage + i;
+
+        assert(page < NUM_PAGES);
+        if (getPageBit(page)) {
+            unsetPageBit(page);
         } else {
-            assert(0);
+            realStart = std::min(realStart, page * PAGE_SIZE);
+            realStop  = std::max(realStop,  (page + 1) * PAGE_SIZE);
         }
     }
 
+    os::log("memtrace: unprotect 0x%" PRIxPTR "-0x%" PRIxPTR "\n",
+            startPage * PAGE_SIZE, (startPage + nPages)*PAGE_SIZE);
+
     DWORD flPrevProtect;
-    BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(startPage), nPages * PAGE_SIZE, flOldProtect, &flPrevProtect);
+    BOOL bRet = VirtualProtect(reinterpret_cast<LPVOID>(startPage * PAGE_SIZE), nPages * PAGE_SIZE, flOldProtect, &flPrevProtect);
     assert(bRet);
 
     realStart = std::max(realStart, uintptr_t(realPtr));
