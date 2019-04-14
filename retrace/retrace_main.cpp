@@ -676,6 +676,7 @@ usage(const char *argv0) {
         "      --singlethread      use a single thread to replay command stream\n"
         "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
+        "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
     ;
 }
 
