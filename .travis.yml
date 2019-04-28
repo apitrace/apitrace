@@ -43,7 +43,7 @@ matrix:
     - docker
     env:
     - LABEL="centos6"
-    - DOCKER_IMAGE=jrfonseca/centos6
+    - DOCKER_IMAGE=jrfonseca/centos6:python3
     - CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC_LIBGCC=ON -DENABLE_STATIC_LIBSTDCXX=ON -DENABLE_STATIC_EXE=ON -DENABLE_GUI=OFF"
   - os: osx
     osx_image: xcode10.1
