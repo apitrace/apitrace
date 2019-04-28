@@ -37,28 +37,28 @@ download: \
 	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
 
 glapi.py: xml2api.py gl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 glxapi.py: xml2api.py glx.xml
-	python $^ > $@
+	python3 $^ > $@
 
 wglapi.py: xml2api.py wgl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 eglapi.py: xml2api.py egl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 glparams.py: xml2glparams.py gl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 glxenum.py: xml2enum.py glx.xml
-	python $^ > $@
+	python3 $^ > $@
 
 wglenum.py: xml2enum.py wgl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 eglenum.py: xml2enum.py egl.xml
-	python $^ > $@
+	python3 $^ > $@
 
 clean:
 	rm -f \

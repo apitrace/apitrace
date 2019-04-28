@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##########################################################################
 #
 # Copyright 2010 VMware, Inc.
@@ -28,6 +28,7 @@
 """Parser for OpenGL .txt extensions specification."""
 
 
+import io
 import sys
 import re
 import optparse
@@ -233,12 +234,13 @@ def main():
 
     for arg in args:
         if arg.startswith('http://') or arg.startswith('https://'):
-            stream = urlopen(arg, 'rt')
+            stream = urlopen(arg)
+            stream = io.TextIOWrapper(stream, encoding='ascii')
         else:
             stream = open(arg, 'rt')
         parser = TxtParser(stream, prefix = options.prefix)
         parser.parse()
-    
+
 
 if __name__ == '__main__':
     main()

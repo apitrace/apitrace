@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##########################################################################
 #
 # Copyright 2011 Jose Fonseca
@@ -404,8 +404,8 @@ class DeclParser:
                     type = 'S' + type
             elif short:
                 type = 'Short'
-            elif int:
-                type = 'Long' * int
+            elif long:
+                type = 'Long' * long
             else:
                 type = 'Int'
             if unsigned:
