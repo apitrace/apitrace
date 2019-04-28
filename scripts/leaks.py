@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##########################################################################
 #
 # Copyright 2014-2016 VMware, Inc.
@@ -39,7 +39,7 @@ class LeakDetector(unpickle.Unpickler):
     def __init__(self, apitrace, trace):
 
         cmd = [apitrace, 'pickle', '--symbolic', trace]
-        p = subprocess.Popen(args = cmd, stdout = subprocess.PIPE)
+        p = subprocess.Popen(args = cmd, stdout=subprocess.PIPE)
 
         unpickle.Unpickler.__init__(self, p.stdout)
 

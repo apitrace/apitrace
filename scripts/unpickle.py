@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##########################################################################
 #
 # Copyright 2012 Jose Fonseca
@@ -34,6 +34,7 @@ Run as:
 
 
 import itertools
+import operator
 import optparse
 import sys
 import time
@@ -55,7 +56,7 @@ CALL_FLAG_MARKER_PUSH       = (1 << 9)
 CALL_FLAG_MARKER_POP        = (1 << 10)
 
 
-class Pointer(long):
+class Pointer(int):
 
     def __str__(self):
         if self == 0:
@@ -79,7 +80,7 @@ class Visitor:
         self.dispatch[tuple] = self.visitTuple
         self.dispatch[list] = self.visitList
         self.dispatch[dict] = self.visitDict
-        self.dispatch[bytearray] = self.visitByteArray
+        self.dispatch[bytes] = self.visitBytes
         self.dispatch[Pointer] = self.visitPointer
 
     def visit(self, obj):
@@ -119,7 +120,7 @@ class Visitor:
     def visitDict(self, obj):
         return self.visitIterable(obj)
 
-    def visitByteArray(self, obj):
+    def visitBytes(self, obj):
         raise NotImplementedError
 
     def visitPointer(self, obj):
@@ -153,7 +154,7 @@ class Dumper(Visitor):
     def visitDict(self, obj):
         return '{' + self.visitItems(iter(obj.items())) + '}'
 
-    def visitByteArray(self, obj):
+    def visitBytes(self, obj):
         return 'blob(%u)' % len(obj)
 
 
@@ -169,7 +170,7 @@ class Hasher(Visitor):
     def visitIterable(self, obj):
         return tuple(map(self.visit, obj))
 
-    def visitByteArray(self, obj):
+    def visitBytes(self, obj):
         return str(obj)
 
 
@@ -193,7 +194,7 @@ class Rebuilder(Visitor):
         else:
             return obj
 
-    def visitByteArray(self, obj):
+    def visitBytes(self, obj):
         return obj
 
 
@@ -280,7 +281,7 @@ class Counter(Unpickler):
         Unpickler.parse(self)
 
         functionFrequencies = list(self.functionFrequencies.items())
-        functionFrequencies.sort(lambda (name1, freq1), (name2, freq2): cmp(freq1, freq2))
+        functionFrequencies.sort(key=operator.itemgetter(1))
         for name, frequency in functionFrequencies:
             sys.stdout.write('%8u %s\n' % (frequency, name))
 
@@ -322,7 +323,7 @@ def main():
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
 
     startTime = time.time()
-    parser = Counter(sys.stdin, options.verbose)
+    parser = Counter(sys.stdin.buffer, options.verbose)
     parser.parse()
     stopTime = time.time()
     duration = stopTime - startTime

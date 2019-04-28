@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ##########################################################################
 #
 # Copyright 2011 Jose Fonseca
@@ -173,7 +173,7 @@ class ExternalDiffer(Differ):
             try:
                 less = subprocess.Popen(
                     args = ['less', '-FRXn'],
-                    stdin = subprocess.PIPE
+                    stdin = subprocess.PIPE,
                 )
             except OSError:
                 pass
@@ -214,7 +214,7 @@ ignoredFunctionNames = set([
 
 
 class Blob:
-    '''Data-less proxy for bytearrays, to save memory.'''
+    '''Data-less proxy for bytes, to save memory.'''
 
     def __init__(self, size, hash):
         self.size = size
@@ -233,7 +233,7 @@ class Blob:
 class BlobReplacer(Rebuilder):
     '''Replace blobs with proxys.'''
 
-    def visitByteArray(self, obj):
+    def visitBytes(self, obj):
         return Blob(len(obj), hash(str(obj)))
 
     def visitCall(self, call):
@@ -287,7 +287,7 @@ class PythonDiffer(Differ):
                 '--calls=' + calls,
                 trace
             ],
-            stdout = subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
 
         parser = Loader(p.stdout)
