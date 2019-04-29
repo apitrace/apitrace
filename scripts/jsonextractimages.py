@@ -34,7 +34,7 @@ import base64
 import sys
 
 
-pngSignature = "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+pngSignature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
 
 
 def dumpSurfaces(state, memberName):
@@ -46,13 +46,13 @@ def dumpSurfaces(state, memberName):
             extName = 'png'
         else:
             magic = data[:2]
-            if magic in ('P1', 'P4'):
+            if magic in (b'P1', b'P4'):
                 extName = 'pbm'
-            elif magic in ('P2', 'P5'):
+            elif magic in (b'P2', b'P5'):
                 extName = 'pgm'
-            elif magic in ('P3', 'P6'):
+            elif magic in (b'P3', b'P6'):
                 extName = 'ppm'
-            elif magic in ('Pf', 'PF'):
+            elif magic in (b'Pf', b'PF'):
                 extName = 'pfm'
             else:
                 sys.stderr.write('warning: unsupport Netpbm format %s\n' % magic)

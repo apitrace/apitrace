@@ -92,7 +92,7 @@ def process(stream, groupField):
         id = str(group[0]).rjust(maxGroupLen)
         draw = str(group[1]['draws']).rjust(12)
         dura = str(group[1]['duration']).rjust(18)
-        perCall = str(group[1]['duration'] / group[1]['draws']).rjust(12)
+        perCall = str(group[1]['duration'] // group[1]['draws']).rjust(12)
         longest = str(group[1]['longest']).rjust(11)
         print("| %s | %s | %s | %s | %s |" % (id, draw, dura, perCall, longest))
 
