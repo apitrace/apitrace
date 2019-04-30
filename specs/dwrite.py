@@ -24,8 +24,8 @@
 ##########################################################################/
 
 
-from winapi import *
-from dcommon import *
+from .winapi import *
+from .dcommon import *
 
 
 ID2D1SimplifiedGeometrySink = Interface("ID2D1SimplifiedGeometrySink", IUnknown)

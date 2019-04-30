@@ -34,9 +34,9 @@ corner cases correctly.
 """
 
 
-from stdapi import *
-from gltypes import *
-import glparams
+from .stdapi import *
+from .gltypes import *
+from . import glparams
 
 
 def GlFunction(*args, **kwargs):

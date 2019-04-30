@@ -29,7 +29,7 @@
 
 import platform
 
-from stdapi import *
+from .stdapi import *
 
 
 GLboolean = Enum("GLboolean", [

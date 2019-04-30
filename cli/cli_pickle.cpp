@@ -152,7 +152,7 @@ public:
     }
 
     void visit(Blob *node) override {
-        writer.writeByteArray(node->buf, node->size);
+        writer.writeBytes(node->buf, node->size);
     }
 
     void visit(Pointer *node) override {

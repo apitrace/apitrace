@@ -54,6 +54,8 @@ private:
         POP             = '0',
         POP_MARK        = '1',
         DUP             = '2',
+        BINBYTES        = 'B',
+        SHORT_BINBYTES  = 'C',
         FLOAT           = 'F',
         INT             = 'I',
         BININT          = 'J',
@@ -112,7 +114,7 @@ public:
 
     inline void begin() {
         os.put(PROTO);
-        os.put(2);
+        os.put(3);
     }
 
     inline void end() {
@@ -314,14 +316,23 @@ public:
         os.put(u.c[0]);
     }
 
-    inline void writeByteArray(const void *buf, size_t length) {
-        os.put(GLOBAL);
-        os << "__builtin__\nbytearray\n";
+    inline void writeBytes(const char *s, size_t length) {
+        if (!s) {
+            writeNone();
+            return;
+        }
+
+        if (length < 256) {
+            os.put(SHORT_BINBYTES);
+            os.put(length);
+        } else {
+            os.put(BINBYTES);
+            putInt32(length);
+        }
+        os.write(s, length);
+
         os.put(BINPUT);
         os.put(1);
-        writeString(static_cast<const char *>(buf), length);
-        os.put(TUPLE1);
-        os.put(REDUCE);
     }
 
     inline void writePointer(unsigned long long addr) {

@@ -28,7 +28,7 @@
 
 import sys
 
-import debug
+from . import debug
 
 
 class Type:
@@ -279,7 +279,7 @@ class Array(Type):
         self.type = type_
         self.length = length
         if not isinstance(length, int):
-            assert isinstance(length, basestring)
+            assert isinstance(length, str)
             # Check if length is actually a valid constant expression
             try:
                 eval(length, {}, {})
@@ -485,14 +485,12 @@ class Interface(Type):
                 yield method
         for method in self.methods:
             yield method
-        raise StopIteration
 
     def iterBases(self):
         iface = self
         while iface is not None:
             yield iface
             iface = iface.base
-        raise StopIteration
 
     def hasBase(self, *bases):
         for iface in self.iterBases():
@@ -506,7 +504,6 @@ class Interface(Type):
                 yield iface, method
         for method in self.methods:
             yield self, method
-        raise StopIteration
 
 
 class Method(Function):
@@ -598,7 +595,7 @@ class Polymorphic(Type):
             else:
                 cases[i].append(case)
 
-        return zip(cases, types)
+        return list(zip(cases, types))
 
 
 def EnumPolymorphic(enumName, switchExpr, switchTypes, defaultType, contextLess=True):
@@ -916,7 +913,7 @@ class ExpanderMixin:
 
     def expand(self, expr):
         # Expand a C expression, replacing certain variables
-        if not isinstance(expr, basestring):
+        if not isinstance(expr, str):
             return expr
         variables = {}
 

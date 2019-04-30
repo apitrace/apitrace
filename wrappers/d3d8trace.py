@@ -34,7 +34,7 @@ class D3D8Tracer(DllTracer):
     def serializeArgValue(self, function, arg):
         # Dump shaders as strings
         if arg.type is D3DSHADER8:
-            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
+            print('    DumpShader(trace::localWriter, %s);' % (arg.name))
             return
 
         DllTracer.serializeArgValue(self, function, arg)
@@ -55,32 +55,32 @@ class D3D8Tracer(DllTracer):
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (_MappedSize && m_pbData) {'
+            print('    if (_MappedSize && m_pbData) {')
             self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
-            print '    }'
+            print('    }')
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             # FIXME: handle recursive locks
-            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
-            print '    } else {'
-            print '        m_pbData = NULL;'
-            print '        _MappedSize = 0;'
-            print '    }'
+            print('    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {')
+            print('        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1]))
+            print('    } else {')
+            print('        m_pbData = NULL;')
+            print('        _MappedSize = 0;')
+            print('    }')
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include "d3d8imports.hpp"'
-    print '#include "d3d8size.hpp"'
-    print '#include "d3d9shader.hpp"'
-    print
+    print('#define INITGUID')
+    print()
+    print('#include "trace_writer_local.hpp"')
+    print('#include "os.hpp"')
+    print()
+    print('#include "d3d8imports.hpp"')
+    print('#include "d3d8size.hpp"')
+    print('#include "d3d9shader.hpp"')
+    print()
 
     api = API()
     api.addModule(d3d8)

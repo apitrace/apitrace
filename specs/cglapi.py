@@ -29,9 +29,9 @@ http://developer.apple.com/library/mac/#documentation/GraphicsImaging/Reference/
 """
 
 
-from stdapi import *
-from glapi import *
-from glapi import glapi
+from .stdapi import *
+from .glapi import *
+from .glapi import glapi
 
 IOSurfaceRef = Opaque("IOSurfaceRef")
 CGLContextObj = Opaque("CGLContextObj")

@@ -26,6 +26,7 @@ matrix:
   fast_finish: true
 
 before_build:
+- set Path=C:\Python36;%Path%
 - set Path=%QT5%\bin;%Path%
 - cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 

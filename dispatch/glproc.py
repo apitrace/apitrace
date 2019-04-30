@@ -504,19 +504,19 @@ class GlDispatcher(Dispatcher):
     def failFunction(self, function):
         # Fallback to EXT_debug_label on MacOSX, some enums need to be translated.
         if function.name in ('glObjectLabel', 'glObjectLabelKHR'):
-            print r'#ifdef __APPLE__'
-            print r'    if (translateDebugLabelIdentifier(identifier)) {'
-            print r'        _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);'
-            print r'        return;'
-            print r'    }'
-            print r'#endif'
+            print(r'#ifdef __APPLE__')
+            print(r'    if (translateDebugLabelIdentifier(identifier)) {')
+            print(r'        _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);')
+            print(r'        return;')
+            print(r'    }')
+            print(r'#endif')
         if function.name in ('glGetObjectLabel', 'glGetObjectLabelKHR'):
-            print r'#ifdef __APPLE__'
-            print r'    if (translateDebugLabelIdentifier(identifier)) {'
-            print r'        _glGetObjectLabelEXT(identifier, name, bufSize, length, label);'
-            print r'        return;'
-            print r'    }'
-            print r'#endif'
+            print(r'#ifdef __APPLE__')
+            print(r'    if (translateDebugLabelIdentifier(identifier)) {')
+            print(r'        _glGetObjectLabelEXT(identifier, name, bufSize, length, label);')
+            print(r'        return;')
+            print(r'    }')
+            print(r'#endif')
 
         # We fake these when they are not available
         if function.name in (
@@ -553,25 +553,25 @@ class GlDispatcher(Dispatcher):
         ):
             return
         if function.name.startswith('glGetObjectLabel'):
-            print r'    if (length != 0) *length = 0;'
-            print r'    if (label != 0 && bufSize > 0) *label = 0;'
+            print(r'    if (length != 0) *length = 0;')
+            print(r'    if (label != 0 && bufSize > 0) *label = 0;')
             return
         if function.name == 'glGetDebugMessageLogAMD':
-            print r'    if (categories != 0) *categories = 0;'
-            print r'    if (ids != 0) *ids = 0;'
-            print r'    if (severities != 0) *severities = 0;'
-            print r'    if (lengths != 0) *lengths = 0;'
-            print r'    if (message != 0 && bufsize > 0) *message = 0;'
-            print r'    return 0;'
+            print(r'    if (categories != 0) *categories = 0;')
+            print(r'    if (ids != 0) *ids = 0;')
+            print(r'    if (severities != 0) *severities = 0;')
+            print(r'    if (lengths != 0) *lengths = 0;')
+            print(r'    if (message != 0 && bufsize > 0) *message = 0;')
+            print(r'    return 0;')
             return
         if function.name.startswith('glGetDebugMessageLog'):
-            print r'    if (sources != 0) *sources = 0;'
-            print r'    if (types != 0) *types = 0;'
-            print r'    if (ids != 0) *ids = 0;'
-            print r'    if (severities != 0) *severities = 0;'
-            print r'    if (lengths != 0) *lengths = 0;'
-            print r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;'
-            print r'    return 0;'
+            print(r'    if (sources != 0) *sources = 0;')
+            print(r'    if (types != 0) *types = 0;')
+            print(r'    if (ids != 0) *ids = 0;')
+            print(r'    if (severities != 0) *severities = 0;')
+            print(r'    if (lengths != 0) *lengths = 0;')
+            print(r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;')
+            print(r'    return 0;')
             return
 
         Dispatcher.failFunction(self, function)
@@ -581,96 +581,96 @@ if __name__ == '__main__':
     decl, impl = sys.argv[1:]
 
     sys.stdout = open(decl, 'wt')
-    print
-    print '#pragma once'
-    print
-    print '#include "glimports.hpp"'
-    print
-    print '#if defined(_WIN32)'
-    print 'extern HMODULE _libGlHandle;'
-    print '#else'
-    print 'extern void * _libGlHandle;'
-    print '#endif'
-    print
-    print 'void * _getPublicProcAddress(const char *procName);'
-    print 'void * _getPrivateProcAddress(const char *procName);'
-    print
+    print()
+    print('#pragma once')
+    print()
+    print('#include "glimports.hpp"')
+    print()
+    print('#if defined(_WIN32)')
+    print('extern HMODULE _libGlHandle;')
+    print('#else')
+    print('extern void * _libGlHandle;')
+    print('#endif')
+    print()
+    print('void * _getPublicProcAddress(const char *procName);')
+    print('void * _getPrivateProcAddress(const char *procName);')
+    print()
     dispatcher = GlDispatcher()
-    print
+    print()
     dispatcher.dispatchModuleDecl(eglapi)
-    print
-    print '#if defined(_WIN32)'
-    print
+    print()
+    print('#if defined(_WIN32)')
+    print()
     dispatcher.dispatchModuleDecl(wglapi)
-    print
-    print '#elif defined(__APPLE__)'
-    print
+    print()
+    print('#elif defined(__APPLE__)')
+    print()
     dispatcher.dispatchModuleDecl(cglapi)
-    print
-    print '#elif defined(HAVE_X11)'
-    print
+    print()
+    print('#elif defined(HAVE_X11)')
+    print()
     dispatcher.dispatchModuleDecl(glxapi)
-    print
-    print '#endif'
-    print
+    print()
+    print('#endif')
+    print()
     dispatcher.dispatchModuleDecl(glapi)
-    print
+    print()
 
     sys.stdout = open(impl, 'wt')
-    print
-    print '#include "glproc.hpp"'
-    print '#include "os.hpp"'
-    print
+    print()
+    print('#include "glproc.hpp"')
+    print('#include "os.hpp"')
+    print()
     dispatcher = GlDispatcher()
-    print
+    print()
     dispatcher.dispatchModuleImpl(eglapi)
-    print
-    print '#if defined(_WIN32)'
-    print
+    print()
+    print('#if defined(_WIN32)')
+    print()
     dispatcher.dispatchModuleImpl(wglapi)
-    print
-    print '#elif defined(__APPLE__)'
-    print
-    print 'static inline bool'
-    print 'translateDebugLabelIdentifier(GLenum & identifier)'
-    print '{'
-    print '    switch (identifier) {'
-    print '    case GL_TEXTURE:'
-    print '    case GL_FRAMEBUFFER:'
-    print '    case GL_RENDERBUFFER:'
-    print '    case GL_SAMPLER:'
-    print '    case GL_TRANSFORM_FEEDBACK:'
-    print '       return true;'
-    print '    case GL_BUFFER:'
-    print '       identifier = GL_BUFFER_OBJECT_EXT;'
-    print '       return true;'
-    print '    case GL_SHADER:'
-    print '       identifier = GL_SHADER_OBJECT_EXT;'
-    print '       return true;'
-    print '    case GL_PROGRAM:'
-    print '       identifier = GL_PROGRAM_OBJECT_EXT;'
-    print '       return true;'
-    print '    case GL_VERTEX_ARRAY:'
-    print '       identifier = GL_VERTEX_ARRAY_OBJECT_EXT;'
-    print '       return true;'
-    print '    case GL_QUERY:'
-    print '       identifier = GL_QUERY_OBJECT_EXT;'
-    print '       return true;'
-    print '    case GL_PROGRAM_PIPELINE:'
-    print '       identifier = GL_PROGRAM_PIPELINE_OBJECT_EXT;'
-    print '       return true;'
-    print '    default:'
-    print '       return false;'
-    print '    }'
-    print '}'
-    print
+    print()
+    print('#elif defined(__APPLE__)')
+    print()
+    print('static inline bool')
+    print('translateDebugLabelIdentifier(GLenum & identifier)')
+    print('{')
+    print('    switch (identifier) {')
+    print('    case GL_TEXTURE:')
+    print('    case GL_FRAMEBUFFER:')
+    print('    case GL_RENDERBUFFER:')
+    print('    case GL_SAMPLER:')
+    print('    case GL_TRANSFORM_FEEDBACK:')
+    print('       return true;')
+    print('    case GL_BUFFER:')
+    print('       identifier = GL_BUFFER_OBJECT_EXT;')
+    print('       return true;')
+    print('    case GL_SHADER:')
+    print('       identifier = GL_SHADER_OBJECT_EXT;')
+    print('       return true;')
+    print('    case GL_PROGRAM:')
+    print('       identifier = GL_PROGRAM_OBJECT_EXT;')
+    print('       return true;')
+    print('    case GL_VERTEX_ARRAY:')
+    print('       identifier = GL_VERTEX_ARRAY_OBJECT_EXT;')
+    print('       return true;')
+    print('    case GL_QUERY:')
+    print('       identifier = GL_QUERY_OBJECT_EXT;')
+    print('       return true;')
+    print('    case GL_PROGRAM_PIPELINE:')
+    print('       identifier = GL_PROGRAM_PIPELINE_OBJECT_EXT;')
+    print('       return true;')
+    print('    default:')
+    print('       return false;')
+    print('    }')
+    print('}')
+    print()
     dispatcher.dispatchModuleImpl(cglapi)
-    print
-    print '#elif defined(HAVE_X11)'
-    print
+    print()
+    print('#elif defined(HAVE_X11)')
+    print()
     dispatcher.dispatchModuleImpl(glxapi)
-    print
-    print '#endif'
-    print
+    print()
+    print('#endif')
+    print()
     dispatcher.dispatchModuleImpl(glapi)
-    print
+    print()

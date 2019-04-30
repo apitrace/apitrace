@@ -48,9 +48,9 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
 
     def visitLiteral(self, literal, instance):
         if literal.kind in ('SInt', 'UInt'):
-            print '    writer.writeInt(%s);' % (instance)
+            print('    writer.writeInt(%s);' % (instance))
         elif literal.kind in ('Float',):
-            print '    writer.writeFloat(%s);' % (instance)
+            print('    writer.writeFloat(%s);' % (instance))
         else:
             raise NotImplementedError
 
@@ -66,36 +66,36 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
             # reinterpret_cast is necessary for GLubyte * <=> char *
             instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
         assert string.length is None
-        print '    writer.write%s(%s);' % (suffix, instance)
+        print('    writer.write%s(%s);' % (suffix, instance))
 
     def visitConst(self, const, instance):
         self.visit(const.type, instance)
 
     def visitStruct(self, struct, instance):
-        print '    writer.beginObject();'
+        print('    writer.beginObject();')
         for member in struct.members:
             memberType, memberName = member
             if memberName is not None:
-                print '    writer.beginMember("%s");' % memberName
+                print('    writer.beginMember("%s");' % memberName)
             self.visitMember(member, instance)
             if memberName is not None:
-                print '    writer.endMember(); // %s' % memberName
-        print '    writer.endObject();'
+                print('    writer.endMember(); // %s' % memberName)
+        print('    writer.endObject();')
 
     def visitArray(self, array, instance):
         length = '_c' + array.type.tag
         index = '_i' + array.type.tag
         array_length = self.expand(array.length)
-        print '    if (%s) {' % instance
-        print '        size_t %s = %s > 0 ? %s : 0;' % (length, array_length, array_length)
-        print '        writer.beginArray();'
-        print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
+        print('    if (%s) {' % instance)
+        print('        size_t %s = %s > 0 ? %s : 0;' % (length, array_length, array_length))
+        print('        writer.beginArray();')
+        print('        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index))
         self.visitElement(index, array.type, '(%s)[%s]' % (instance, index))
-        print '        }'
-        print '        writer.endArray();'
-        print '    } else {'
-        print '        writer.writeNull();'
-        print '    }'
+        print('        }')
+        print('        writer.endArray();')
+        print('    } else {')
+        print('        writer.writeNull();')
+        print('    }')
 
     def visitAttribArray(self, array, instance):
         raise NotImplementedError
@@ -104,37 +104,37 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         raise NotImplementedError
 
     def visitEnum(self, enum, instance):
-        print '    switch (%s) {' % instance
+        print('    switch (%s) {' % instance)
         for value in enum.values:
-            print '    case %s:' % value
-            print '        writer.writeString("%s");' % value
-            print '        break;'
-        print '    default:'
-        print '        writer.writeInt(%s);' % instance
-        print '        break;'
-        print '    }'
+            print('    case %s:' % value)
+            print('        writer.writeString("%s");' % value)
+            print('        break;')
+        print('    default:')
+        print('        writer.writeInt(%s);' % instance)
+        print('        break;')
+        print('    }')
 
     def visitBitmask(self, bitmask, instance):
         # TODO
         self.visit(bitmask.type, instance)
 
     def visitPointer(self, pointer, instance):
-        print '    if (%s) {' % instance
-        print '        writer.beginArray();'
+        print('    if (%s) {' % instance)
+        print('        writer.beginArray();')
         self.visit(pointer.type, "*" + instance)
-        print '        writer.endArray();'
-        print '    } else {'
-        print '        writer.writeNull();'
-        print '    }'
+        print('        writer.endArray();')
+        print('    } else {')
+        print('        writer.writeNull();')
+        print('    }')
 
     def visitIntPointer(self, pointer, instance):
-        print '    writer.writeInt((uintptr_t)%s);' % instance
+        print('    writer.writeInt((uintptr_t)%s);' % instance)
 
     def visitObjPointer(self, pointer, instance):
-        print '    writer.writeInt((uintptr_t)%s);' % instance
+        print('    writer.writeInt((uintptr_t)%s);' % instance)
 
     def visitLinearPointer(self, pointer, instance):
-        print '    writer.writeInt((uintptr_t)%s);' % instance
+        print('    writer.writeInt((uintptr_t)%s);' % instance)
 
     def visitReference(self, reference, instance):
         self.visit(reference.type, instance)
@@ -146,23 +146,23 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    writer.writeInt((uintptr_t)%s);' % instance
+        print('    writer.writeInt((uintptr_t)%s);' % instance)
 
     def visitInterface(self, interface, instance):
         assert False
 
     def visitPolymorphic(self, polymorphic, instance):
         switchExpr = self.expand(polymorphic.switchExpr)
-        print '    switch (static_cast<int>(%s)) {' % switchExpr
+        print('    switch (static_cast<int>(%s)) {' % switchExpr)
         for cases, type in polymorphic.iterSwitch():
             for case in cases:
-                print '    %s:' % case
+                print('    %s:' % case)
             caseInstance = instance
             if type.expr is not None:
                 caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
             self.visit(type, caseInstance)
-            print '        break;'
-        print '    }'
+            print('        break;')
+        print('    }')
 
 
 class Dumper:
@@ -187,8 +187,8 @@ class Dumper:
         # Includes
         for module in api.modules:
             for header in module.headers:
-                print header
-        print
+                print(header)
+        print()
 
         # Generate the dumper functions
         types = api.getAllTypes()
@@ -196,13 +196,13 @@ class Dumper:
             self.dumpType(type)
 
     def dumpType(self, type):
-        print r'void'
-        print r'dumpStateObject(StateWriter &writer, const %s & so)' % type
-        print r'{'
+        print(r'void')
+        print(r'dumpStateObject(StateWriter &writer, const %s & so)' % type)
+        print(r'{')
         visitor = self.dumperFactory()
         visitor.visit(type, 'so')
-        print r'}'
-        print
+        print(r'}')
+        print()
 
     def header(self):
         pass
@@ -212,10 +212,10 @@ class Dumper:
 
 
 if __name__ == '__main__':
-    print r'#include "dxgistate_so.hpp"'
-    print
-    print r'#include "state_writer.hpp"'
-    print
+    print(r'#include "dxgistate_so.hpp"')
+    print()
+    print(r'#include "state_writer.hpp"')
+    print()
 
     api = stdapi.API()
     api.addModule(dxgi.dxgi)

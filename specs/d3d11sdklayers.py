@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from dxgi import *
+from .dxgi import *
 
 
 ID3D11DeviceChild = Interface("ID3D11DeviceChild", IUnknown)

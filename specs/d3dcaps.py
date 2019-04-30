@@ -25,8 +25,8 @@
 
 """d3dcaps.h"""
 
-from winapi import *
-from d3dtypes import *
+from .winapi import *
+from .d3dtypes import *
 
 D3DTRANSFORMCAPS = Flags(DWORD, [
     "D3DTRANSFORMCAPS_CLIP",

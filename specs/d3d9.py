@@ -25,9 +25,9 @@
 
 """d3d9.h"""
 
-from winapi import *
-from d3d9types import *
-from d3d9caps import *
+from .winapi import *
+from .d3d9types import *
+from .d3d9caps import *
 
 
 D3DSHADER9 = Blob(Const(DWORD), "_shaderSize(pFunction)")

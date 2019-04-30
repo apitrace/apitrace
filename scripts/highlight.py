@@ -221,7 +221,8 @@ def LessHighlighter():
         try:
             less = subprocess.Popen(
                 args = ['less', '-FRXn'],
-                stdin = subprocess.PIPE
+                stdin = subprocess.PIPE,
+                universal_newlines = True
             )
         except OSError:
             return ColorHighlighter()
