@@ -18,12 +18,16 @@ add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
     snappy-sinksource.cc
     snappy-stubs-internal.cc
     snappy.cc
-    config.h
 
     snappy-c.h
     snappy-sinksource.h
     snappy.h
     snappy-stubs-public.h
+    config/config.h
+)
+
+target_include_directories (snappy_bundled PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/config
 )
 
 install (
