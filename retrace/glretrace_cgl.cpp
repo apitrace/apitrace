@@ -32,6 +32,9 @@
 #include "glretrace.hpp"
 
 
+#define CGL_PBUFFER_HEIGHT 0x8040
+#define CGL_PBUFFER_WIDTH 0x8041
+
 #define kCGLNoError 0
 
 #define kCGLPFAAllRenderers            1
@@ -91,6 +94,8 @@ typedef std::map<unsigned long long, Context *> ContextMap;
 // sid -> Drawable* map
 static DrawableMap drawable_map;
 
+static DrawableMap pbuffer_map;
+
 // ctx -> Context* map
 static ContextMap context_map;
 
@@ -122,6 +127,20 @@ getDrawable(unsigned long drawable_id, glfeatures::Profile profile) {
     return it->second;
 }
 
+static glws::Drawable *
+getDrawable(unsigned long long hdc) {
+    if (hdc == 0) {
+        return NULL;
+    }
+
+    DrawableMap::const_iterator it;
+    it = drawable_map.find(hdc);
+    if (it == drawable_map.end()) {
+        return (drawable_map[hdc] = glretrace::createDrawable());
+    }
+
+    return it->second;
+}
 
 static Context *
 getContext(unsigned long long ctx) {
@@ -308,6 +327,105 @@ static void retrace_CGLDestroyContext(trace::Call &call) {
     context_map.erase(it);
 }
 
+/*
+  CGLError CGLCreatePBuffer (long width,
+    long height,
+    unsigned long target,
+    unsigned long internalFormat,
+    long max_level,
+    CGLPBufferObj *pbuffer);
+*/
+static void retrace_CGLCreatePBuffer(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    int width = (call.arg(0)).toSInt();
+    int height = (call.arg(1)).toSInt();
+    int target = (call.arg(2)).toUInt();
+    int internalFormat = (call.arg(3)).toUInt();
+    int max_level = (call.arg(4)).toSInt();
+    unsigned long long pb = call.arg(5).toUIntPtr();
+
+    glws::pbuffer_info pbInfo = {0, 0, false};
+    pbInfo.texFormat = internalFormat;
+    pbInfo.texTarget = target;
+    
+    glws::Drawable *drawable = glretrace::createPbuffer(width, height, &pbInfo);
+    
+    drawable->cubeFace   = 0;
+    drawable->mipmapLevel = max_level;
+
+    pbuffer_map[pb]  = drawable;
+    drawable_map[pb] = drawable;
+}
+
+static void retrace_CGLDestroyPBuffer(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(0).toUInt());
+
+    if (!drawable) {
+        return;
+    }
+
+    delete drawable;
+}
+
+/*
+  CGLError CGLGetPBuffer(CGLContextObj ctx,
+    CGLPBufferObj *pbuffer,
+    unsigned long *face,
+    long *level,
+    long *screen);
+*/
+static void retrace_CGLGetPBuffer(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+    unsigned long long pbuffer = call.arg(1).toUIntPtr();
+
+    glws::Drawable *drawable = pbuffer_map[ctx];
+
+    if (!drawable) {
+        return;
+    }
+
+    drawable_map[pbuffer] = drawable;
+}
+
+/*
+CGLSetPBuffer
+Attaches a pixel buffer object to a rendering context.
+CGLError CGLSetPBuffer(CGLContextObj ctx,
+CGLPBufferObj pbuffer,
+unsigned long face,
+long level,
+long screen);
+*/
+static void retrace_CGLSetPBuffer(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+    unsigned long long pbuffer = call.arg(1).toUIntPtr();
+
+    glws::Drawable *drawable = pbuffer_map[ctx];
+
+    if (!drawable) {
+        glws::pbuffer_info pbInfo = {0, 0, false};
+
+        drawable = glretrace::createPbuffer(CGL_PBUFFER_WIDTH, CGL_PBUFFER_HEIGHT, &pbInfo);
+    }
+
+    drawable->cubeFace = (call.arg(2)).toUInt();
+    drawable->mipmapLevel = (call.arg(3)).toSInt();
+
+    pbuffer_map[ctx] = drawable;
+
+    drawable_map[pbuffer] = drawable;
+}
 
 static void retrace_CGLSetSurface(trace::Call &call) {
     if (call.ret->toUInt() != kCGLNoError) {
@@ -463,9 +581,11 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLChoosePixelFormat", &retrace_CGLChoosePixelFormat},
     {"CGLClearDrawable", &retrace_CGLClearDrawable},
     {"CGLCreateContext", &retrace_CGLCreateContext},
+    {"CGLCreatePBuffer", &retrace_CGLCreatePBuffer},
     {"CGLDescribePixelFormat", &retrace::ignore},
     {"CGLDescribeRenderer", &retrace::ignore},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
+    {"CGLDestroyPBuffer", &retrace_CGLDestroyPBuffer},
     {"CGLDestroyPixelFormat", &retrace_CGLDestroyPixelFormat},
     {"CGLDisable", &retrace::ignore},
     {"CGLEnable", &retrace::ignore},
@@ -475,6 +595,7 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLGetGlobalOption", &retrace::ignore},
     {"CGLGetOption", &retrace::ignore},
     {"CGLGetParameter", &retrace::ignore},
+    {"CGLGetPBuffer", &retrace_CGLGetPBuffer},
     {"CGLGetPixelFormat", &retrace::ignore},
     {"CGLGetSurface", &retrace::ignore},
     {"CGLGetVersion", &retrace::ignore},
@@ -484,8 +605,9 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
     {"CGLSetGlobalOption", &retrace::ignore},
     {"CGLSetOption", &retrace::ignore},
-    {"CGLSetSurface", &retrace_CGLSetSurface},
+    {"CGLSetPBuffer", &retrace_CGLSetPBuffer},
     {"CGLSetParameter", &retrace::ignore},
+    {"CGLSetSurface", &retrace_CGLSetSurface},
     {"CGLSetVirtualScreen", &retrace_CGLSetVirtualScreen},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {"CGLUnlockContext", &retrace::ignore},
