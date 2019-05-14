@@ -118,7 +118,7 @@ mm_crc32_u32(uint32_t crc, uint32_t current)
 uint32_t
 hashBlock(const void *p)
 {
-    assert((intptr_t)p % BLOCK_SIZE == 0);
+    assert((uintptr_t)p % BLOCK_SIZE == 0);
 
     uint32_t crc;
 
@@ -185,7 +185,7 @@ void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
     assert(_ptr);
 
     if (_size != size) {
-        nBlocks = ((intptr_t)_ptr + _size + BLOCK_SIZE - 1)/BLOCK_SIZE - (intptr_t)_ptr/BLOCK_SIZE;
+        nBlocks = ((uintptr_t)_ptr + _size + BLOCK_SIZE - 1)/BLOCK_SIZE - (uintptr_t)_ptr/BLOCK_SIZE;
 
         hashPtr = (uint32_t *)realloc(hashPtr, nBlocks * sizeof *hashPtr);
         size = _size;
