@@ -130,31 +130,31 @@ def read_pnm(stream):
     if not magic:
         return None, None
     magic = magic.rstrip()
-    if magic == 'P5':
+    if magic == b'P5':
         channels = 1
         bytesPerChannel = 1
         mode = 'L'
-    elif magic == 'P6':
+    elif magic == b'P6':
         channels = 3
         bytesPerChannel = 1
         mode = 'RGB'
-    elif magic == 'Pf':
+    elif magic == b'Pf':
         channels = 1
         bytesPerChannel = 4
         mode = 'R'
-    elif magic == 'PF':
+    elif magic == b'PF':
         channels = 3
         bytesPerChannel = 4
         mode = 'RGB'
-    elif magic == 'PX':
+    elif magic == b'PX':
         channels = 4
         bytesPerChannel = 4
         mode = 'RGB'
     else:
-        raise Exception('Unsupported magic `%s`' % magic)
-    comment = ''
+        raise Exception('Unsupported magic %r' % magic)
+    comment = b''
     line = stream.readline()
-    while line.startswith('#'):
+    while line.startswith(b'#'):
         comment += line[1:]
         line = stream.readline()
     width, height = list(map(int, line.strip().split()))
