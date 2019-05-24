@@ -79,51 +79,37 @@ _shouldShadowMap(ID3D11Resource *pResource)
  */
 
 inline void
-_initializeBuffer(ID3D10Device *pDevice, const D3D10_BUFFER_DESC *pDesc, ID3D10Buffer *pBuffer)
+_initialBufferAlloc(const D3D10_BUFFER_DESC *pDesc, D3D10_SUBRESOURCE_DATA *pInitialData)
 {
-    HRESULT hr;
+    void *data = malloc(pDesc->ByteWidth);
+    assert(data);
+    MemoryShadow::zero(data, pDesc->ByteWidth);
 
-    if (!(pDesc->CPUAccessFlags & D3D10_CPU_ACCESS_WRITE)) {
-        return;
-    }
-
-    assert(pBuffer);
-
-    D3D10_MAP MapType = pDesc->Usage == D3D10_USAGE_DYNAMIC ? D3D10_MAP_WRITE_DISCARD : D3D10_MAP_WRITE;
-    VOID *pData;
-    hr = pBuffer->Map(MapType, 0, &pData);
-    assert(SUCCEEDED(hr));
-    if (FAILED(hr)) {
-        return;
-    }
-
-    MemoryShadow::zero(pData, pDesc->ByteWidth);
-    pBuffer->Unmap();
+    pInitialData->SysMemPitch = 0;
+    pInitialData->SysMemSlicePitch = 0;
+    pInitialData->pSysMem = data;
 }
 
 inline void
-_initializeBuffer(ID3D11Device *pDevice, const D3D11_BUFFER_DESC *pDesc, ID3D11Buffer *pBuffer)
+_initialBufferFree(D3D10_SUBRESOURCE_DATA *pInitialData)
 {
-    HRESULT hr;
+    free(const_cast<void*>(pInitialData->pSysMem));
+}
 
-    if (!(pDesc->CPUAccessFlags & D3D11_CPU_ACCESS_WRITE)) {
-        return;
-    }
+inline void
+_initialBufferAlloc(const D3D11_BUFFER_DESC *pDesc, D3D11_SUBRESOURCE_DATA *pInitialData)
+{
+    void *data = malloc(pDesc->ByteWidth);
+    assert(data);
+    MemoryShadow::zero(data, pDesc->ByteWidth);
 
-    assert(pBuffer);
+    pInitialData->SysMemPitch = 0;
+    pInitialData->SysMemSlicePitch = 0;
+    pInitialData->pSysMem = data;
+}
 
-    com_ptr<ID3D11DeviceContext> pImmediateContext;
-    pDevice->GetImmediateContext(&pImmediateContext);
-    assert(pImmediateContext);
-
-    D3D11_MAP MapType = pDesc->Usage == D3D11_USAGE_DYNAMIC ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE;
-    D3D11_MAPPED_SUBRESOURCE MappedResource;
-    hr = pImmediateContext->Map(pBuffer, 0, MapType, 0, &MappedResource);
-    assert(SUCCEEDED(hr));
-    if (FAILED(hr)) {
-        return;
-    }
-
-    MemoryShadow::zero(MappedResource.pData, pDesc->ByteWidth);
-    pImmediateContext->Unmap(pBuffer, 0);
+inline void
+_initialBufferFree(D3D11_SUBRESOURCE_DATA *pInitialData)
+{
+    free(const_cast<void*>(pInitialData->pSysMem));
 }

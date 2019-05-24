@@ -197,6 +197,16 @@ class D3DCommonTracer(DllTracer):
             print('    }')
 
     def invokeMethod(self, interface, base, method):
+        if method.name == 'CreateBuffer':
+            if interface.name.upper().find("D3D11") >= 0:
+                print(r'    D3D11_SUBRESOURCE_DATA initialData;')
+            else:
+                print(r'    D3D10_SUBRESOURCE_DATA initialData;')
+            print(r'    if (!pInitialData) {')
+            print(r'        pInitialData = &initialData;')
+            print(r'        _initialBufferAlloc(pDesc, &initialData);')
+            print(r'    }')
+
         DllTracer.invokeMethod(self, interface, base, method)
 
         # When D2D is used on top of WARP software rasterizer it seems to do
@@ -218,8 +228,8 @@ class D3DCommonTracer(DllTracer):
         # Ensure buffers are initialized, otherwise we can fail to detect
         # changes when unititialized data matches what the app wrote.
         if method.name == 'CreateBuffer':
-            print(r'    if (SUCCEEDED(_result) && !pInitialData) {')
-            print(r'        _initializeBuffer(_this, pDesc, *ppBuffer);')
+            print(r'    if (pInitialData == &initialData) {')
+            print(r'        _initialBufferFree(&initialData);')
             print(r'    }')
 
 
