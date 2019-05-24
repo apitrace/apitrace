@@ -528,6 +528,10 @@ class Tracer:
         print('#endif')
         print()
         print()
+        print(r'/*')
+        print(r' * g_WrappedObjects is already protected by trace::LocalWriter::mutex')
+        print(r' * This lock is hold during the beginEnter/endEnter and beginLeave/endLeave sections')
+        print(r' */')
         print('static std::map<void *, void *> g_WrappedObjects;')
 
     def footer(self, api):
