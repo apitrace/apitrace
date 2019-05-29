@@ -184,7 +184,7 @@ void MemoryShadow::cover(void *_ptr, size_t _size, bool _discard)
 {
     assert(_ptr);
 
-    if (_size != size) {
+    if (_size != size || _ptr != realPtr) {
         nBlocks = ((uintptr_t)_ptr + _size + BLOCK_SIZE - 1)/BLOCK_SIZE - (uintptr_t)_ptr/BLOCK_SIZE;
 
         hashPtr = (uint32_t *)realloc(hashPtr, nBlocks * sizeof *hashPtr);
