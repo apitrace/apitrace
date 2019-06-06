@@ -62,7 +62,9 @@ class D3DRetracer(Retracer):
         if function.name in self.createDeviceFunctionNames:
             # create windows as neccessary
             if 'pSwapChainDesc' in function.argNames():
-                print(r'    d3dretrace::createWindowForSwapChain(pSwapChainDesc);')
+                print(r'    if (pSwapChainDesc) {')
+                print(r'        d3dretrace::createWindowForSwapChain(pSwapChainDesc);')
+                print(r'    }')
 
             # Compensate for the fact we don't trace DXGI object creation
             if function.name.startswith('D3D11CreateDevice'):
