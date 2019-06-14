@@ -4,11 +4,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#pragma pack(push,1)
 
 #include <windows.h>
 #include "misc.h"
 
+// Windows SDK assumes default alignment.
+#pragma pack(push,1)
+   
 ////////////////////////////////////////////////////////
 // System descriptors
 ////////////////////////////////////////////////////////
