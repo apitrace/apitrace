@@ -373,6 +373,8 @@ Features::load(const Profile & profile, const Extensions & ext)
 
         primitive_restart = profile.versionGreaterOrEqual(3, 1) ||
                             ext.has("GL_NV_primitive_restart");
+
+        unpack_subimage = 1;
     } else {
         texture_3d = 1;
 
@@ -394,6 +396,8 @@ Features::load(const Profile & profile, const Extensions & ext)
         query_buffer_object = 0;
 
         primitive_restart = 0;
+
+        unpack_subimage = ext.has("GL_EXT_unpack_subimage");
     }
 }
 

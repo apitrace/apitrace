@@ -163,6 +163,7 @@ struct Features
     unsigned read_framebuffer_object:1;
     unsigned query_buffer_object:1;
     unsigned primitive_restart:1;
+    unsigned unpack_subimage:1;
 
     Features(void);
 

@@ -237,7 +237,7 @@ class GlTracer(Tracer):
         print('static inline bool')
         print('can_unpack_subimage(void) {')
         print('    gltrace::Context *_ctx = gltrace::getContext();')
-        print('    return _ctx->profile.desktop();')
+        print('    return _ctx->features.unpack_subimage;')
         print('}')
         print()
 
