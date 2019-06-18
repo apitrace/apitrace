@@ -302,9 +302,12 @@ dumpAttrib(StateWriter &writer,
 
         for (GLint col = 0; col < desc.numCols; ++col) {
             union {
-                const GLbyte *rawvalue;
-                const GLfloat *fvalue;
+                const GLbyte *bvalue;
+                const GLubyte *ubvalue;
+                const GLshort *svalue;
+                const GLushort *usvalue;
                 const GLhalf *hvalue;
+                const GLfloat *fvalue;
                 const GLdouble *dvalue;
                 const GLint *ivalue;
                 const GLuint *uivalue;
@@ -312,9 +315,21 @@ dumpAttrib(StateWriter &writer,
                 const GLuint64 *ui64value;
             } u;
 
-            u.rawvalue = data + row*desc.rowStride + col*desc.colStride;
+            u.bvalue = data + row*desc.rowStride + col*desc.colStride;
 
             switch (desc.elemType) {
+            case GL_BYTE:
+                writer.writeInt(*u.bvalue);
+                break;
+            case GL_UNSIGNED_BYTE:
+                writer.writeInt(*u.ubvalue);
+                break;
+            case GL_SHORT:
+                writer.writeInt(*u.svalue);
+                break;
+            case GL_UNSIGNED_SHORT:
+                writer.writeInt(*u.usvalue);
+                break;
             case GL_HALF_FLOAT:
                 writer.writeFloat(util_half_to_float(*u.hvalue));
                 break;
