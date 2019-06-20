@@ -7,7 +7,7 @@ add_custom_command (
     OUTPUT
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.cpp
-    COMMAND ${PYTHON_EXECUTABLE}
+    COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.cpp

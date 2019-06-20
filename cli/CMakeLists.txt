@@ -11,7 +11,7 @@ add_definitions(
 if (WIN32)
     add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="python")
 else ()
-    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE}")
+    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
 endif ()
 
 include_directories (

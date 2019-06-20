@@ -17,7 +17,7 @@ add_definitions (-DRETRACE)
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
     DEPENDS
         glretrace.py
         retrace.py
@@ -28,7 +28,7 @@ add_custom_command (
 
 add_custom_command (
     OUTPUT glstate_params.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
     DEPENDS
         glstate_params.py
         ${CMAKE_SOURCE_DIR}/specs/glparams.py
@@ -203,7 +203,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3dretrace_ddraw.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
             DEPENDS
                 ddrawretrace.py
                 dllretrace.py
@@ -236,7 +236,7 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d8.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
@@ -257,7 +257,7 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
@@ -289,7 +289,7 @@ if (WIN32)
         )
         add_custom_command (
             OUTPUT dxgistate_so.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
             DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
@@ -303,7 +303,7 @@ if (WIN32)
         )
         add_custom_command (
             OUTPUT d3dretrace_dxgi.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
             DEPENDS
                 dxgiretrace.py
                 dllretrace.py

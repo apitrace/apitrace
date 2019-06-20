@@ -102,9 +102,14 @@ else ()
     endmacro()
 endif ()
 
-find_host_package (PythonInterp 3 REQUIRED)
-if (NOT PYTHON_VERSION_MAJOR EQUAL 3)
-    message (FATAL_ERROR "Python 3.x required and requested, but Python ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} found.")
+if (CMAKE_VERSION VERSION_LESS 3.12)
+    find_host_package (PythonInterp 3 REQUIRED)
+    if (NOT PYTHON_VERSION_MAJOR EQUAL 3)
+        message (FATAL_ERROR "Python 3.x required and requested, but Python ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} found.")
+    endif ()
+    set (Python3_EXECUTABLE "${PYTHON_EXECUTABLE}")
+else ()
+    find_host_package (Python3 REQUIRED)
 endif ()
 
 find_package (Threads)
@@ -635,7 +640,7 @@ set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 
 execute_process (
-    COMMAND ${PYTHON_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
+    COMMAND ${Python3_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
     OUTPUT_VARIABLE CPACK_PACKAGE_VERSION_PATCH
 )
 
