@@ -381,6 +381,9 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             print(r'    return;')
 
+        if method.name in ('CreateTexture1D', 'CreateTexture2D', 'CreateTexture3D', 'CreateBuffer'):
+            print(r'    pDesc->MiscFlags &= ~D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;')
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name in ('AcquireSync', 'ReleaseSync'):

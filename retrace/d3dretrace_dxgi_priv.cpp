@@ -267,10 +267,15 @@ overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *
         IDXGIFactory *pFactory = NULL;
         hr = pUnknown->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);
         if (SUCCEEDED(hr)) {
-            *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);
+            *ppvObj = new CDXGIFactoryDWM(pFactory);
             *pResult = S_OK;
             return TRUE;
         }
+    }
+
+    if (riid == IID_IDXGIKeyedMutex) {
+        *pResult = pUnknown->QueryInterface(IID_IDXGIDeviceSubObject, ppvObj);
+        return TRUE;
     }
 
     return FALSE;
