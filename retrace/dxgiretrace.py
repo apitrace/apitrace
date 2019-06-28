@@ -382,7 +382,11 @@ class D3DRetracer(Retracer):
             print(r'    return;')
 
         if method.name in ('CreateTexture1D', 'CreateTexture2D', 'CreateTexture3D', 'CreateBuffer'):
-            print(r'    pDesc->MiscFlags &= ~D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;')
+            # We don't capture multiple processes, so ignore keyed mutexes to avoid deadlocks
+            print(r'    if (pDesc->MiscFlags & D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) {')
+            print(r'        pDesc->MiscFlags &= ~D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;')
+            print(r'        pDesc->MiscFlags |= D3D11_RESOURCE_MISC_SHARED;')
+            print(r'    }')
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
