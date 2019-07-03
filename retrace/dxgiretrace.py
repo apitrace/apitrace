@@ -310,7 +310,9 @@ class D3DRetracer(Retracer):
                 print(r'    }')
             else:
                 print(r'    dxgiDumper.bindDevice(_this);')
-            print(r'    retrace::frameComplete(call);')
+            print(r'    if ((Flags & DXGI_PRESENT_TEST) == 0) {')
+            print(r'        retrace::frameComplete(call);')
+            print(r'    }')
 
         if 'pSharedResource' in method.argNames():
             print(r'    if (pSharedResource) {')
