@@ -88,6 +88,8 @@ add_convenience_library (gltrace_common
     config.cpp
     gltrace_arrays.cpp
     gltrace_state.cpp
+    glmemshadow.hpp
+    glmemshadow.cpp
 )
 add_dependencies (gltrace_common glproc)
 target_link_libraries (gltrace_common
