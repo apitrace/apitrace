@@ -99,6 +99,22 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeFunction(self, function)
 
+        if function.name.startswith('D3D11CreateDevice'):
+            print(r'''
+    if (retrace::driver != retrace::DRIVER_DEFAULT) {
+        com_ptr<IDXGIDevice> pDXGIDevice;
+        HRESULT hr = (*ppDevice)->QueryInterface(IID_IDXGIDevice, (void **)&pDXGIDevice);
+        assert(SUCCEEDED(hr));
+        com_ptr<IDXGIAdapter> pDXGIAdapter;
+        hr = pDXGIDevice->GetAdapter(&pDXGIAdapter);
+        assert(SUCCEEDED(hr));
+        DXGI_ADAPTER_DESC AdapterDesc;
+        hr = pDXGIAdapter->GetDesc(&AdapterDesc);
+        assert(SUCCEEDED(hr));
+        std::wcerr << L"info: using " << AdapterDesc.Description << std::endl;
+    }
+''')
+
     def doInvokeFunction(self, function):
         Retracer.doInvokeFunction(self, function)
 
