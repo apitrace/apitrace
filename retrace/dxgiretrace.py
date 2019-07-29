@@ -406,12 +406,27 @@ class D3DRetracer(Retracer):
             print(r'        pDesc->MiscFlags |= D3D11_RESOURCE_MISC_SHARED;')
             print(r'    }')
 
-        Retracer.invokeInterfaceMethod(self, interface, method)
+        if method.name == 'ReleaseSync':
+            # We must flush the device that used this surface, as per
+            # https://docs.microsoft.com/en-us/windows/win32/api/d3d10/nf-d3d10-id3d10device-opensharedresource
+            print(r'''
+    com_ptr<ID3D11DeviceChild> pDeviceChild;
+    com_ptr<ID3D11Device> pDevice;
+    com_ptr<ID3D11DeviceContext> pDeviceContext;
+    HRESULT hr = _this->QueryInterface(IID_ID3D11DeviceChild, (void **)&pDeviceChild);
+    if (SUCCEEDED(hr)) {
+        pDeviceChild->GetDevice(&pDevice);
+        pDevice->GetImmediateContext(&pDeviceContext);
+        pDeviceContext->Flush();
+    } else {
+        retrace::warning(call) << "ReleaseSync without D3D11 device\n";
+    }
+    (void)Key;
+    (void)_result;
+''')
+            return
 
-        if method.name in ('AcquireSync', 'ReleaseSync'):
-            print(r'    if (SUCCEEDED(_result) && _result != S_OK) {')
-            print(r'        retrace::warning(call) << " returned " << _result << "\n";')
-            print(r'    }')
+        Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
