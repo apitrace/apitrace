@@ -343,22 +343,26 @@ void GLMemoryShadow::commitWrites(Callback callback)
         }
     }
 
-    if (isPageDirty(mappedStartPage)) {
-        const size_t shadowOffset = mappedStart % sPageSize;
-        const size_t size = std::min(sPageSize - glStartOffset, mappedSize);
-
-        memcpy(glMemory, shadowSlice + shadowOffset, size);
-        callback(shadowSlice + shadowOffset, size);
-    }
-
-    for (size_t i = mappedStartPage + 1; i < mappedEndPage; i++) {
+    for (size_t i = mappedStartPage; i < mappedEndPage; i++) {
         if (isPageDirty(i)) {
-            const size_t shadowOffset = (i - mappedStartPage) * sPageSize;
-            const size_t glOffset = shadowOffset - glStartOffset;
-            const size_t size = std::min(glStartOffset + mappedSize - shadowOffset, sPageSize);
+            // We coalesce consecutive writes into one
+            size_t firstDirty = i;
+            while (++i < mappedEndPage && isPageDirty(i)) { }
 
-            memcpy(glMemory + glOffset, shadowSlice + shadowOffset, size);
-            callback(shadowSlice + shadowOffset, size);
+            const size_t pages = i - firstDirty;
+            if (firstDirty != mappedStartPage) {
+                const size_t shadowOffset = (firstDirty - mappedStartPage) * sPageSize;
+                const size_t glOffset = shadowOffset - glStartOffset;
+                const size_t size = std::min(glStartOffset + mappedSize - shadowOffset, sPageSize * pages);
+
+                memcpy(glMemory + glOffset, shadowSlice + shadowOffset, size);
+                callback(shadowSlice + shadowOffset, size);
+            } else {
+                const size_t size = std::min(sPageSize * pages - glStartOffset, mappedSize);
+
+                memcpy(glMemory, shadowSlice + glStartOffset, size);
+                callback(shadowSlice + glStartOffset, size);
+            }
         }
     }
 
