@@ -924,8 +924,6 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
             continue;
         }
 
-
-
         GLint size = 0;
         glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_SIZE, &size);
         GLint type = 0;
@@ -1003,6 +1001,9 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
     if (count == 0 || count == ~0U || attribs.empty()) {
         return;
     }
+
+    // limit vertex count
+    count = std::min(count, 4096U);
 
     writer.beginMember("vertices");
     writer.beginArray();
