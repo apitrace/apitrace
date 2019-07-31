@@ -1,6 +1,7 @@
 #include "apisurface.h"
 #include "thumbnail.h"
 
+#include <algorithm>
 #include <sstream>
 #include <memory>
 
@@ -162,8 +163,8 @@ ApiSurface::qimageFromRawImage(const image::Image *image,
                                bool alpha)
 {
     QImage img;
-    int width = image->width;
-    int height = image->height;
+    int width = std::min(image->width, 32767U);
+    int height = std::min(image->height, 32767U);
 
     img = QImage(width, height, QImage::Format_ARGB32);
 
