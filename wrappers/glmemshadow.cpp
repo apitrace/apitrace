@@ -379,7 +379,7 @@ void GLMemoryShadow::updateForReads()
 
     memProtect(protectStart, protectSize, MemProtection::READ_WRITE);
 
-    memcpy(shadowMemory + mappedStart, glMemory + mappedStart, mappedSize);
+    memcpy(shadowMemory + mappedStart, glMemory, mappedSize);
 
     memProtect(protectStart, protectSize, MemProtection::READ_ONLY);
 }
