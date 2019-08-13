@@ -95,23 +95,14 @@ _indexDataSize(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, D3DFORMAT In
  */
 static inline size_t
 _shaderSize(const DWORD *pFunction)
-{
+{    
     DWORD dwLength = 0;
-
     while (true) {
         DWORD dwToken = pFunction[dwLength++];
 
-        switch (dwToken & D3DSI_OPCODE_MASK) {
-        case D3DSIO_COMMENT:
-            dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
-            break;
-
-        case D3DSIO_END:
-            if (dwToken == D3DSIO_END) {
-                return dwLength * sizeof *pFunction;
-            }
-            break;
-        }
+        if (dwToken == D3DSIO_END) {
+            return dwLength * sizeof *pFunction;
+        }        
     }
 }
 
