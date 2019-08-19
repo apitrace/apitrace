@@ -97,12 +97,47 @@ static inline size_t
 _shaderSize(const DWORD *pFunction)
 {    
     DWORD dwLength = 0;
+    DWORD smMajVer = D3DSHADER_VERSION_MAJOR(pFunction[0]);
+    
+    //skip version token
+    ++dwLength;
+
     while (true) {
         DWORD dwToken = pFunction[dwLength++];
 
-        if (dwToken == D3DSIO_END) {
-            return dwLength * sizeof *pFunction;
-        }        
+        switch (dwToken & D3DSI_OPCODE_MASK) {
+        case D3DSIO_COMMENT:
+            dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+            break;
+
+        case D3DSIO_END:
+            if (dwToken == D3DSIO_END) {
+                return dwLength * sizeof *pFunction;
+            }
+            break;
+        default:
+		    //[27:24] For pixel and vertex shader versions earlier than 2_0, bits 24 through 27 are reserved and set to 0x0.
+		    //For pixel and vertex shader versions 2_0 and later, bits 24 through 27 specify the size in DWORDs of the instruction 
+		    //excluding the instruction token itself(that is, the number of tokens that comprise the instruction excluding the instruction token).               
+                
+            if (smMajVer > 1)
+            {
+                dwLength += (dwToken & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT;
+            } else {
+                
+                //megai2: this table need some testing on sm1_x shaders
+                static const UINT SM_1_X_SIO_SIZE[] = {
+	                0, 	2,	3,	0,	4,	3,	2,	2,	3,	3,	3,	3,	3,	3,	2,	2,	0,	0,	4,	2,	0,	0,
+	                0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	3,	0,	0,	2,	2,	2,	1,	0,	0,	2,	0,	0,
+	                0,	2,	2,	0,	5,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,
+	                3,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	5,	0,	0,	0,	0,	0,	0,
+	                4,	0,	4,	0,	0,	0,	0,	3,	0
+                };                
+                
+                dwLength += SM_1_X_SIO_SIZE[dwToken & D3DSI_OPCODE_MASK];
+            }    
+            break;
+        }      
     }
 }
 
