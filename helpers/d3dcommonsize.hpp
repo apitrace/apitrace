@@ -134,7 +134,32 @@ _shaderSize(const DWORD *pFunction)
             if (dwToken & 0x80000000U) {
                 continue;
             }
-
+            
+            // FIXME: 
+            // Code that should advance over comment tokens and raw data tokens for sm 1_x is not fail safe
+            // keeping chances of false D3DSIO_END is better then crashing
+            
+            /*            
+            D3DSHADER_INSTRUCTION_OPCODE_TYPE opcode = D3DSHADER_INSTRUCTION_OPCODE_TYPE(dwToken & D3DSI_OPCODE_MASK);
+            
+            switch (opcode) {
+            case D3DSIO_COMMENT:
+                dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+                break;
+            
+            //this opcodes contain raw data, so they can't be processed with bit 31 test
+            case D3DSIO_DEFB:
+                dwLength +=2;
+                break;
+            case D3DSIO_DEFI;
+            case D3DSIO_DEF;
+                dwLength +=5;
+                break;
+            default:               
+                break;
+            }								
+            */
+            
             // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/end-token
             if (dwToken == D3DSIO_END) {
                 return dwLength * sizeof *pFunction;
