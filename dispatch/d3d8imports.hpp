@@ -35,3 +35,11 @@
 
 #include <d3d8.h>
 
+
+#ifndef D3DSI_INSTLENGTH_MASK
+#define D3DSI_INSTLENGTH_MASK 0x0F000000
+#endif
+
+#ifndef D3DSI_INSTLENGTH_SHIFT
+#define D3DSI_INSTLENGTH_SHIFT 24
+#endif
