@@ -149,11 +149,11 @@ _shaderSize(const DWORD *pFunction)
             
             //this opcodes contain raw data, so they can't be processed with bit 31 test
             case D3DSIO_DEFB:
-                dwLength +=2;
+                dwLength += 2;
                 break;
-            case D3DSIO_DEFI;
-            case D3DSIO_DEF;
-                dwLength +=5;
+            case D3DSIO_DEFI:
+            case D3DSIO_DEF:
+                dwLength += 5;
                 break;
             default:               
                 break;
