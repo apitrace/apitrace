@@ -168,7 +168,7 @@ class GlRetracer(Retracer):
         # When no pack buffer object is bound, the pack functions are no-ops.
         if self.pack_function_regex.match(function.name):
             print(r'    GLint _pack_buffer = 0;')
-            print(r'    if (currentContext->features().pixel_buffer_object) {')
+            print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
             print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
             print(r'    }')
             print(r'    if (!_pack_buffer) {')
@@ -178,7 +178,7 @@ class GlRetracer(Retracer):
         # When no query buffer object is bound, glGetQueryObject is a no-op.
         if function.name.startswith('glGetQueryObject'):
             print(r'    GLint _query_buffer = 0;')
-            print(r'    if (currentContext->features().query_buffer_object) {')
+            print(r'    if (currentContext && currentContext->features().query_buffer_object) {')
             print(r'        glGetIntegerv(GL_QUERY_BUFFER_BINDING, &_query_buffer);')
             print(r'    }')
             print(r'    if (!_query_buffer) {')
@@ -270,7 +270,7 @@ class GlRetracer(Retracer):
         # TODO: handle BufferData variants
         # TODO: don't rely on GL_ARB_direct_state_access
         if function.name in ('glDeleteBuffers', 'glDeleteBuffersARB'):
-            print(r'    if (currentContext->features().ARB_direct_state_access) {')
+            print(r'    if (currentContext && currentContext->features().ARB_direct_state_access) {')
             print(r'        for (GLsizei i = 0; i < n; ++i) {')
             print(r'            GLvoid *ptr = nullptr;')
             print(r'            glGetNamedBufferPointerv(buffers[i], GL_BUFFER_MAP_POINTER, &ptr);')
