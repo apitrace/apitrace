@@ -24,6 +24,7 @@
  *
  **************************************************************************/
 
+#include <set>
 #include <sstream>
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
@@ -49,7 +50,7 @@ usage(void)
         "    -h, --help               Show detailed help for trim options and exit\n"
         "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
         "        --frames=FRAMESET    Include specified frames in the trimmed output.\n"
-        "        --thread=THREAD_ID   Only retain calls from specified thread\n"
+        "        --thread=THREAD_ID   Only retain calls from specified thread (can be passed multiple times.)\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
     ;
 }
@@ -89,8 +90,8 @@ struct trim_options {
     /* Output filename */
     std::string output;
 
-    /* Emit only calls from this thread (-1 == all threads) */
-    int thread;
+    /* Emit only calls from this thread (empty == all threads) */
+    std::set<unsigned> threadIds;
 };
 
 static int
@@ -133,7 +134,8 @@ trim_trace(const char *filename, struct trim_options *options)
         }
 
         /* If requested, ignore all calls not belonging to the specified thread. */
-        if (options->thread != -1 && call->thread_id != options->thread) {
+        if (!options->threadIds.empty() &&
+            options->threadIds.find(call->thread_id) == options->threadIds.end()) {
             goto NEXT;
         }
 
@@ -166,8 +168,6 @@ command(int argc, char *argv[])
 
     options.calls = trace::CallSet(trace::FREQUENCY_NONE);
     options.frames = trace::CallSet(trace::FREQUENCY_NONE);
-    options.output = "";
-    options.thread = -1;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -182,7 +182,7 @@ command(int argc, char *argv[])
             options.frames.merge(optarg);
             break;
         case THREAD_OPT:
-            options.thread = atoi(optarg);
+            options.threadIds.insert(atoi(optarg));
             break;
         case 'o':
             options.output = optarg;
