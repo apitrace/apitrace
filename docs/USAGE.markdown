@@ -195,7 +195,7 @@ Then run the application as usual.
 You can specify the written trace filename by setting the `TRACE_FILE`
 environment variable before running.
 
-For D3D10 and higher you really must use `apitrace trace -a DXGI ...`. This is
+For D3D10 and higher you really must use `apitrace trace -a dxgi ...`. This is
 because D3D10-11 API span many DLLs which depend on each other, and once a DLL
 with a given name is loaded Windows will reuse it for LoadLibrary calls of the
 same name, causing internal calls to be traced erroneously. `apitrace trace`
