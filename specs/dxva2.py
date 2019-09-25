@@ -415,7 +415,7 @@ IDirectXVideoProcessorService.methods += [
 
 IDirectXVideoDecoder.methods += [
     StdMethod(HRESULT, "GetVideoDecoderService", [Out(Pointer(ObjPointer(IDirectXVideoDecoderService)), "ppService")]),
-    StdMethod(HRESULT, "GetCreationParameters", [Out(Pointer(GUID), "pDeviceGuid"), Out(Pointer(DXVA2_VideoDesc), "pVideoDesc"), Out(Pointer(DXVA2_ConfigPictureDecode), "pConfig"), Out(Pointer(Pointer(ObjPointer(IDirect3DSurface9))), "pDecoderRenderTargets"), Out(Pointer(UINT), "pNumSurfaces")]),
+    StdMethod(HRESULT, "GetCreationParameters", [Out(Pointer(GUID), "pDeviceGuid"), Out(Pointer(DXVA2_VideoDesc), "pVideoDesc"), Out(Pointer(DXVA2_ConfigPictureDecode), "pConfig"), Out(Pointer(Array(ObjPointer(IDirect3DSurface9), '*pNumSurfaces')), "pDecoderRenderTargets"), Out(Pointer(UINT), "pNumSurfaces")]),
     StdMethod(HRESULT, "GetBuffer", [(DXVA2_BufferType, "BufferType"), Out(Pointer(LinearPointer(Void, "*pBufferSize")), "ppBuffer"), Out(Pointer(UINT), "pBufferSize")]),
     StdMethod(HRESULT, "ReleaseBuffer", [(DXVA2_BufferType, "BufferType")]),
     StdMethod(HRESULT, "BeginFrame", [(ObjPointer(IDirect3DSurface9), "pRenderTarget"), (Blob(Void, 16), "pvPVPData")]),
