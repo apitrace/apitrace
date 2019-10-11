@@ -193,7 +193,7 @@ endif ()
 
 if (ENABLE_EGL AND ENABLE_WAFFLE)
     # Use Waffle for eglretrace
-    find_package (Waffle REQUIRED)
+    find_package (Waffle 1.6 REQUIRED)
 endif ()
 
 
