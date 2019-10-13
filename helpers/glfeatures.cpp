@@ -378,7 +378,7 @@ Features::load(const Profile & profile, const Extensions & ext)
     } else {
         texture_3d = 1;
 
-        pixel_buffer_object = profile.versionGreaterOrEqual(3, 1) ||
+        pixel_buffer_object = profile.versionGreaterOrEqual(3, 0) ||
                               ext.has("GL_NV_pixel_buffer_object");
 
         // GL_EXT_multiview_draw_buffers requires different entry points
