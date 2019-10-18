@@ -101,7 +101,8 @@ class D3DRetracer(Retracer):
 
         if function.name.startswith('D3D11CreateDevice'):
             print(r'''
-    if (retrace::driver != retrace::DRIVER_DEFAULT) {
+    if (retrace::driver != retrace::DRIVER_DEFAULT &&
+        ppDevice && *ppDevice) {
         com_ptr<IDXGIDevice> pDXGIDevice;
         HRESULT hr = (*ppDevice)->QueryInterface(IID_IDXGIDevice, (void **)&pDXGIDevice);
         assert(SUCCEEDED(hr));
