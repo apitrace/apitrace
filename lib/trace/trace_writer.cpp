@@ -102,7 +102,7 @@ Writer::_writeByte(char c) {
 
 void inline
 Writer::_writeUInt(unsigned long long value) {
-    char buf[2 * sizeof value];
+    unsigned char buf[2 * sizeof value];
     unsigned len;
 
     len = 0;
