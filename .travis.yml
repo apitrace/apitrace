@@ -17,26 +17,26 @@ matrix:
     env:
     - LABEL="ubuntu64"
     - APT_PACKAGES="gcc-5 g++-5 libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DENABLE_GUI=1"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DENABLE_GUI=1"
   - os: linux
     dist: xenial
     env:
     - LABEL="ubuntu32"
     - APT_PACKAGES="linux-libc-dev gcc-multilib gcc-5-multilib g++-5-multilib"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - os: linux
     dist: xenial
     env:
     - LABEL="ubuntu64-clang"
     - APT_PACKAGES="build-essential clang-4.0 libc++-dev libc++abi-dev libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DCMAKE_C_COMPILER=clang-4.0 -DCMAKE_CXX_COMPILER=clang++-4.0 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=clang-4.0 -DCMAKE_CXX_COMPILER=clang++-4.0 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
   - os: linux
     dist: xenial
     env:
     - LABEL="mingw32"
     - APT_PACKAGES="g++-mingw-w64-i686"
     - MINGW_PREFIX=i686-w64-mingw32
-    - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
   - os: linux
     dist: xenial
     services:
