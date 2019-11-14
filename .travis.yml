@@ -13,32 +13,32 @@ env:
 matrix:
   include:
   - os: linux
-    dist: xenial
+    dist: bionic
     env:
     - LABEL="ubuntu64"
-    - APT_PACKAGES="gcc-5 g++-5 libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DENABLE_GUI=1"
+    - APT_PACKAGES="gcc g++ libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DENABLE_GUI=1"
   - os: linux
-    dist: xenial
+    dist: bionic
     env:
     - LABEL="ubuntu32"
-    - APT_PACKAGES="linux-libc-dev gcc-multilib gcc-5-multilib g++-5-multilib"
-    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
+    - APT_PACKAGES="linux-libc-dev gcc-multilib gcc-multilib g++-multilib"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0"
   - os: linux
-    dist: xenial
+    dist: bionic
     env:
     - LABEL="ubuntu64-clang"
-    - APT_PACKAGES="build-essential clang-4.0 libc++-dev libc++abi-dev libdwarf-dev libprocps4-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=clang-4.0 -DCMAKE_CXX_COMPILER=clang++-4.0 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
+    - APT_PACKAGES="build-essential clang libc++-dev libc++abi-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
   - os: linux
-    dist: xenial
+    dist: bionic
     env:
     - LABEL="mingw32"
     - APT_PACKAGES="g++-mingw-w64-i686"
     - MINGW_PREFIX=i686-w64-mingw32
     - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
   - os: linux
-    dist: xenial
+    dist: bionic
     services:
     - docker
     env:
@@ -58,7 +58,6 @@ before_install:
       sudo apt-get update -qq
       sudo apt-get install -qq -y $APT_PACKAGES
     fi
-- if [ "$LABEL" = "ubuntu64-clang" ]; then sudo ln -s /usr/include/libcxxabi/__cxxabi_config.h /usr/include/c++/v1/__cxxabi_config.h; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install qt5; export CMAKE_PREFIX_PATH=$(brew --prefix qt5); fi
 - cmake --version
 - |
