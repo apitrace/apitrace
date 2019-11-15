@@ -196,6 +196,10 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
     find_package (Waffle REQUIRED)
 endif ()
 
+if (ENABLE_EGL AND NOT ENABLE_X11)
+    add_definitions(-DEGL_NO_X11)
+endif ()
+
 
 ##############################################################################
 # Set global build options
