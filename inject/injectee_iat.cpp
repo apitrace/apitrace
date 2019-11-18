@@ -1171,21 +1171,28 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         /*
          * Hook kernel32.dll functions, and its respective Windows API Set.
          *
-         * http://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
-         * http://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+         * https://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
+         * https://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+         * https://docs.microsoft.com/en-us/uwp/win32-and-com/win32-apis
          */
 
         registerLibraryLoaderHooks("kernel32.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-1.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-1.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-2.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l2-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-1.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-2.dll");
 
         registerProcessThreadsHooks("kernel32.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-0.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-1.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-2.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-2.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-3.dll");
 
         szNewDllBaseName = getBaseName(szNewDllName);
         if (stricmp(szNewDllBaseName, "dxgitrace.dll") == 0) {
