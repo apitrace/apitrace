@@ -888,7 +888,11 @@ MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     }
 
     // Hook all new modules (and not just this one, to pick up any dependencies)
-    patchAllModules(ACTION_HOOK);
+    if ((dwFlags & (DONT_RESOLVE_DLL_REFERENCES |
+                    LOAD_LIBRARY_AS_DATAFILE |
+                    LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE)) == 0) {
+        patchAllModules(ACTION_HOOK);
+    }
 
     SetLastError(dwLastError);
     return hModule;
@@ -906,7 +910,11 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     }
 
     // Hook all new modules (and not just this one, to pick up any dependencies)
-    patchAllModules(ACTION_HOOK);
+    if ((dwFlags & (DONT_RESOLVE_DLL_REFERENCES |
+                    LOAD_LIBRARY_AS_DATAFILE |
+                    LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE)) == 0) {
+        patchAllModules(ACTION_HOOK);
+    }
 
     SetLastError(dwLastError);
     return hModule;
