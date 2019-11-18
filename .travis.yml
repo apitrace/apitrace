@@ -29,7 +29,7 @@ matrix:
     env:
     - LABEL="ubuntu64-clang"
     - APT_PACKAGES="build-essential clang libc++-dev libc++abi-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev"
-    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DENABLE_GUI=1"
+    - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DENABLE_GUI=1"
   - os: linux
     dist: bionic
     env:
