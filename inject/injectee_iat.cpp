@@ -318,6 +318,29 @@ getOptionalHeader(HMODULE hModule,
                     szModule, pNtHeaders->Signature);
         return NULL;
     }
+
+    /*
+     * Handle gracefully DLL might have been loaded for resources,
+     * LOAD_LIBRARY_AS_DATAFILE.
+     */
+    const WORD Machine =
+#ifdef _WIN64
+        IMAGE_FILE_MACHINE_AMD64
+#else
+        IMAGE_FILE_MACHINE_I386
+#endif
+    ;
+    if (pNtHeaders->FileHeader.Machine != Machine) {
+        debugPrintf("inject: warning: %s: ignoring different machine (0x%02x)\n",
+                    szModule, pNtHeaders->FileHeader.Machine);
+        return nullptr;
+    }
+    if (pNtHeaders->FileHeader.SizeOfOptionalHeader < sizeof pNtHeaders->OptionalHeader) {
+        debugPrintf("inject: warning: %s: SizeOfOptionalHeader too small (%u)\n",
+                    szModule, pNtHeaders->FileHeader.SizeOfOptionalHeader);
+        return nullptr;
+    }
+
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     return pOptionalHeader;
 }
