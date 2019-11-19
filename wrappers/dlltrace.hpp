@@ -28,6 +28,8 @@
 
 #include <windows.h>
 #include <string>
+#include <cstdlib>
+#include <cstring>
 
 
 class Module
@@ -52,7 +54,12 @@ public:
     {
         if (!m_hModule) {
             char szSystemDir[MAX_PATH] = {0};
-            if (!GetSystemDirectoryA(szSystemDir, MAX_PATH)) {
+
+            const char* pathOverride = std::getenv("APITRACE_FORCE_MODULE_PATH");
+            if (pathOverride && *pathOverride) {
+                std::strncpy(szSystemDir, pathOverride, MAX_PATH);
+            }
+            else if (!GetSystemDirectoryA(szSystemDir, MAX_PATH)) {
                 return nullptr;
             }
             std::string sDllPath = szSystemDir;
