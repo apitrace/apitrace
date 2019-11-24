@@ -1287,8 +1287,8 @@ glapi.addFunctions([
     GlFunction(Void, "glProgramUniform4ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*4"), "value")]),
 
     # GL_ARB_indirect_parameters
-    GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
 
     # GL_ARB_instanced_arrays
     GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),

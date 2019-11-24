@@ -30,9 +30,9 @@ EGL/eglplatform.h: EGL/eglplatform.patch FORCE
 GLES/gl.h GLES/glplatform.h: FORCE
 	wget -nv -O $@ "https://www.khronos.org/registry/gles/api/$@"
 
-GLES/glext.h: GLES/glext.patch FORCE
+GLES/glext.h: FORCE
 	wget -nv -O $@ "https://www.khronos.org/registry/gles/api/$@"
-	patch $@ $<
+	sed -i.bak -e 's/__glext_h_/__gles_glext_h_/g' $@
 
 GLES2/gl2.h GLES2/gl2ext.h GLES2/gl2platform.h: FORCE
 	wget -nv -O $@ "https://www.khronos.org/registry/gles/api/$@"

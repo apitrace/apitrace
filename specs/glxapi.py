@@ -229,7 +229,6 @@ GLXEnum = FakeEnum(Int, [
     "GLX_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION_MESA",		# 0x818B
     "GLX_RENDERER_OPENGL_ES_PROFILE_VERSION_MESA",		# 0x818C
     "GLX_RENDERER_OPENGL_ES2_PROFILE_VERSION_MESA",		# 0x818D
-    "GLX_RENDERER_ID_MESA",		# 0x818E
     "GLX_LOSE_CONTEXT_ON_RESET_ARB",		# 0x8252
     "GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB",		# 0x8256
     "GLX_NO_RESET_NOTIFICATION_ARB",		# 0x8261
@@ -493,7 +492,7 @@ glxapi.addFunctions([
     Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),
 
     # GLX_MESA_set_3dfx_mode
-    Function(Bool, "glXSet3DfxModeMESA", [(Int, "mode")]),
+    Function(GLboolean, "glXSet3DfxModeMESA", [(GLint, "mode")]),
 
     # GLX_MESA_swap_control
     Function(Int, "glXSwapIntervalMESA", [(UInt, "interval")]),
@@ -578,7 +577,7 @@ glxapi.addFunctions([
     # GLX_SGIX_pbuffer
     Function(GLXPbufferSGIX, "glXCreateGLXPbufferSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (UInt, "width"), (UInt, "height"), (GLXPbufferSGIXAttribs, "attrib_list")]),
     Function(Void, "glXDestroyGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf")]),
-    Function(Int, "glXQueryGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf"), (Int, "attribute"), Out(Pointer(UInt), "value")]),
+    Function(Void, "glXQueryGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf"), (Int, "attribute"), Out(Pointer(UInt), "value")]),
     Function(Void, "glXSelectEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (ULong, "mask")]),
     Function(Void, "glXGetSelectedEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), Out(Pointer(ULong), "mask")]),
 
