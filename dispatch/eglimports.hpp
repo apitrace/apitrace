@@ -31,6 +31,7 @@
 #pragma once
 
 
+#include <stdint.h>
 #include <KHR/khrplatform.h>
 
 #ifdef _GDI32_
