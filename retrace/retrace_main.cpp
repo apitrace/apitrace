@@ -433,7 +433,8 @@ public:
             assert(call->thread_id == leg);
 
             retraceCall(call);
-            delete call;
+            if (!call->reuse_call)
+                delete call;
             call = parser->parse_call();
 
         } while (call && call->thread_id == leg);
@@ -605,7 +606,8 @@ mainLoop() {
         trace::Call *call;
         while ((call = parser->parse_call())) {
             retraceCall(call);
-            delete call;
+            if (!call->reuse_call)
+                delete call;
         }
     } else {
         RelayRace race;
