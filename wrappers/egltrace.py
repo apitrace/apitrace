@@ -53,7 +53,7 @@ class EglTracer(GlTracer):
 
         if function.name == 'eglCreateContext':
             print('    if (_result != EGL_NO_CONTEXT)')
-            print('        gltrace::createContext((uintptr_t)_result);')
+            print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)share_context);')
 
         if function.name == 'eglMakeCurrent':
             print(r'    if (_result) {')

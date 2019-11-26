@@ -234,9 +234,12 @@ class WglTracer(GlTracer):
 
         GlTracer.traceFunctionImplBody(self, function)
 
-        if function.name in self.createContextFunctionNames:
+        if function.name == 'wglCreateContextAttribsARB':
             print('    if (_result)')
-            print('        gltrace::createContext((uintptr_t)_result);')
+            print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)hShareContext);')
+        elif function.name in self.createContextFunctionNames:
+            print('    if (_result)')
+            print('        gltrace::createContext((uintptr_t)_result, NULL);')
 
         if function.name in self.makeCurrentFunctionNames:
             print('    if (_result) {')
