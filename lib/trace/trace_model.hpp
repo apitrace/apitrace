@@ -561,6 +561,7 @@ public:
 
     CallFlags flags;
     Backtrace* backtrace;
+    bool reuse_call;
 
     Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
@@ -568,7 +569,8 @@ public:
         args(_sig->num_args), 
         ret(0),
         flags(_flags),
-        backtrace(0) {
+        backtrace(0),
+        reuse_call(false) {
     }
 
     ~Call();
