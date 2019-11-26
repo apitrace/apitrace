@@ -63,7 +63,7 @@ class CglTracer(GlTracer):
 
         if function.name == 'CGLCreateContext':
             print('    if (_result == kCGLNoError) {')
-            print('        gltrace::createContext((uintptr_t)*ctx);')
+            print('        gltrace::createContext((uintptr_t)*ctx, (uintptr_t)share);')
             print('    }')
 
         if function.name == 'CGLSetCurrentContext':

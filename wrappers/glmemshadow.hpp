@@ -28,17 +28,22 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <memory>
 #include <vector>
 
 namespace gltrace
 {
 class Context;
+class ShareableContextResources;
 }
 
 class GLMemoryShadow
 {
 private:
-    gltrace::Context *ctx = nullptr;
+    typedef std::weak_ptr<gltrace::ShareableContextResources>  shared_context_res_wptr_t;
+    typedef std::shared_ptr<gltrace::ShareableContextResources>  shared_context_res_ptr_t;
+
+    shared_context_res_wptr_t sharedRes;
 
     GLbitfield flags = 0;
 

@@ -226,7 +226,7 @@ bool GLMemoryShadow::init(const void *data, size_t size)
 
 void *GLMemoryShadow::map(gltrace::Context *_ctx, void *_glMemory, GLbitfield _flags, size_t start, size_t size)
 {
-    ctx = _ctx;
+    sharedRes = _ctx->sharedRes;
     glMemory = reinterpret_cast<uint8_t*>(_glMemory);
     flags = _flags;
     mappedStart = start;
@@ -260,15 +260,20 @@ void GLMemoryShadow::unmap(Callback callback)
     {
         os::unique_lock<os::mutex> lock(mutex);
 
-        auto it = std::find(ctx->dirtyShadows.begin(), ctx->dirtyShadows.end(), this);
-        if (it != ctx->dirtyShadows.end()) {
-            ctx->dirtyShadows.erase(it);
+        shared_context_res_ptr_t res = sharedRes.lock();
+        if (res) {
+            auto it = std::find(res->dirtyShadows.begin(), res->dirtyShadows.end(), this);
+            if (it != res->dirtyShadows.end()) {
+                res->dirtyShadows.erase(it);
+            }
+        } else {
+            os::log("apitrace: error: %s: context(s) are destroyed!\n", __FUNCTION__);
         }
     }
 
     memProtect(shadowMemory, nPages * sPageSize, MemProtection::NO_ACCESS);
 
-    ctx = nullptr;
+    sharedRes.reset();
     glMemory = nullptr;
     flags = 0;
     mappedStart = 0;
@@ -315,8 +320,13 @@ void GLMemoryShadow::setPageDirty(size_t relativePage)
     dirtyPages[relativePage / 32] |= 1U << (relativePage % 32);
 
     if (!isDirty) {
-        ctx->dirtyShadows.push_back(this);
-        isDirty = true;
+        shared_context_res_ptr_t res = sharedRes.lock();
+        if (res) {
+            res->dirtyShadows.push_back(this);
+            isDirty = true;
+        } else {
+            os::log("apitrace: error: %s: context(s) are destroyed!\n", __FUNCTION__);
+        }
     }
 }
 
@@ -386,23 +396,23 @@ void GLMemoryShadow::updateForReads()
 
 void GLMemoryShadow::commitAllWrites(gltrace::Context *_ctx, Callback callback)
 {
-    if (!_ctx->dirtyShadows.empty()) {
+    if (!_ctx->sharedRes->dirtyShadows.empty()) {
         os::unique_lock<os::mutex> lock(mutex);
 
-        for (GLMemoryShadow *memoryShadow : _ctx->dirtyShadows) {
+        for (GLMemoryShadow *memoryShadow : _ctx->sharedRes->dirtyShadows) {
             memoryShadow->commitWrites(callback);
         }
 
-        _ctx->dirtyShadows.clear();
+        _ctx->sharedRes->dirtyShadows.clear();
     }
 }
 
 void GLMemoryShadow::syncAllForReads(gltrace::Context *_ctx)
 {
-    if (!_ctx->bufferToShadowMemory.empty()) {
+    if (!_ctx->sharedRes->bufferToShadowMemory.empty()) {
         os::unique_lock<os::mutex> lock(mutex);
 
-        for (auto& it : _ctx->bufferToShadowMemory) {
+        for (auto& it : _ctx->sharedRes->bufferToShadowMemory) {
             GLMemoryShadow* memoryShadow = it.second.get();
             if (memoryShadow->getMapFlags() & GL_MAP_READ_BIT) {
                 memoryShadow->updateForReads();

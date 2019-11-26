@@ -41,6 +41,12 @@ void APIENTRY _fake_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 namespace gltrace {
 
+class ShareableContextResources {
+public:
+    std::map<GLint, std::unique_ptr<GLMemoryShadow>> bufferToShadowMemory;
+
+    std::vector<GLMemoryShadow*> dirtyShadows;
+};
 
 class Context {
 public:
@@ -60,17 +66,17 @@ public:
     // whether glLockArraysEXT() has ever been called
     GLuint lockedArrayCount = 0;
 
-    std::map<GLint, std::unique_ptr<GLMemoryShadow>> bufferToShadowMemory;
-
-    std::vector<GLMemoryShadow*> dirtyShadows;
+    // the data which can be shared between shared contexts
+    std::shared_ptr<ShareableContextResources> sharedRes;
 
     Context(void) :
-        profile(glfeatures::API_GL, 1, 0)
+        profile(glfeatures::API_GL, 1, 0),
+        sharedRes(std::make_shared<ShareableContextResources>())
     { }
 };
 
 void
-createContext(uintptr_t context_id);
+createContext(uintptr_t context_id, uintptr_t shared_context_id);
 
 void
 retainContext(uintptr_t context_id);
