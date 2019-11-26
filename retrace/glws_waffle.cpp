@@ -143,9 +143,11 @@ init(void)
             waffle_platform = WAFFLE_PLATFORM_WAYLAND;
         } else if (strcmp(waffle_platform_name, "x11_egl") == 0) {
             waffle_platform = WAFFLE_PLATFORM_X11_EGL;
+#if WAFFLE_MAJOR_VERSION > 1 || (WAFFLE_MAJOR_VERSION == 1 && WAFFLE_MINOR_VERSION >= 6)
         } else if ((strcmp(waffle_platform_name, "surfaceless_egl") == 0) ||
                    (strcmp(waffle_platform_name, "sl") == 0)) {
             waffle_platform = WAFFLE_PLATFORM_SURFACELESS_EGL;
+#endif
         } else {
             std::cerr << "error: unsupported WAFFLE_PLATFORM \"" << waffle_platform_name << "\"\n";
             exit(1);
