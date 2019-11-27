@@ -958,7 +958,7 @@ __glPathGetCodePointUTF8(const void *&utf_string,
                                  ((c1 & 0x3F) << 12) | 
                                  ((c2 & 0x3F) << 6) |
                                   (c3 & 0x3F);
-                    if (code_point < 65536 && code_point > 1114111) {
+                    if (code_point < 65536 || code_point > 1114111) {
                         return false;
                     }
                     assert(code_point >= 65536 && code_point <= 1114111);
