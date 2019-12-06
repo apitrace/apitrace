@@ -34,7 +34,7 @@
 #include "os.hpp"
 
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) && !defined(__UCLIBC__)
 
 
 #include <dlfcn.h>
