@@ -148,6 +148,9 @@ _getPrivateProcAddress(const char *procName)
 
 #else
 
+#ifndef RTLD_DEEPBIND
+#define RTLD_DEEPBIND 0
+#endif
 
 static inline void
 logSymbol(const char *name, void *ptr) {
