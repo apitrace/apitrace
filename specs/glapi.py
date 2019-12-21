@@ -1389,8 +1389,8 @@ glapi.addFunctions([
     # GL_ARB_program_interface_query
     GlFunction(Void, "glGetProgramInterfaceiv", [(GLprogram, "program"), (GLenum, "programInterface"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(GLuint, "glGetProgramResourceIndex", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")], sideeffects=False),
-    GlFunction(Void, "glGetProgramResourceName", [(GLprogram, "program"), (GLenum, "programInterface"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")], sideeffects=False),
-    GlFunction(Void, "glGetProgramResourceiv", [(GLprogram, "program"), (GLenum, "programInterface"), (GLuint, "index"), (GLsizei, "propCount"), (Array(Const(GLenum), "propCount"), "props"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramResourceName", [(GLprogram, "program"), (GLenum, "programInterface"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")]),
+    GlFunction(Void, "glGetProgramResourceiv", [(GLprogram, "program"), (GLenum, "programInterface"), (GLuint, "index"), (GLsizei, "propCount"), (Array(Const(GLenum), "propCount"), "props"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "bufSize"), "params")]),
     GlFunction(GLlocation, "glGetProgramResourceLocation", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")]),
     GlFunction(GLint, "glGetProgramResourceLocationIndex", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")], sideeffects=False),
 

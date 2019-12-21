@@ -30,6 +30,7 @@
 #include "metric_backend.hpp"
 
 #include "os_thread.hpp"
+#include "retrace_swizzle.hpp"
 
 
 class MetricWriter;
@@ -164,6 +165,15 @@ checkGlError(trace::Call &call);
 void
 insertCallMarker(trace::Call &call, Context *currentContext);
 
+void
+mapResourceLocation(GLuint program, GLenum programInterface,
+                    GLint index,
+                    const trace::Array *props,
+                    const trace::Array *params,
+                    std::map<GLhandleARB, retrace::map<GLint>> &location_map);
+void
+trackResourceName(GLuint program,  GLenum programInterface,
+                  GLint index, const std::string &traced_name);
 
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
