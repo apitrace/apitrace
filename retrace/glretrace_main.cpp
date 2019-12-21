@@ -920,3 +920,79 @@ void
 retrace::cleanUp(void) {
     glws::cleanup();
 }
+
+static GLint
+getLocationForUniform(GLuint program, const std::string &name) {
+    // iterate the program resources to find the desired name
+    GLint active_resources;
+    glGetProgramInterfaceiv(program,
+                            GL_UNIFORM,
+                            GL_ACTIVE_RESOURCES,
+                            &active_resources);
+    for (int i = 0; i < active_resources; ++i) {
+        static const int kNameBufSize = 512;
+        GLchar retraced_name[kNameBufSize] = "";
+        GLint retraced_name_len;
+        glGetProgramResourceName(program, GL_UNIFORM, i, kNameBufSize,
+                                 &retraced_name_len, retraced_name);
+        retraced_name[retraced_name_len] = '\0';
+        if (name != retraced_name)
+          continue;
+
+        // found the resource for the desired name
+        const GLenum prop = GL_LOCATION;
+        GLsizei prop_len;
+        GLint location;
+        glGetProgramResourceiv(program,
+                               GL_UNIFORM,
+                               i,  // resource index
+                               1,  // propCount
+                               &prop,
+                               1, // bufSize,
+                               &prop_len,
+                               &location); // params
+        assert(prop_len == 1);
+        return location;
+    }
+    assert(false);
+    return -1;
+}
+
+static std::map<GLhandleARB, std::vector<std::string>> _traced_resource_names;
+
+void
+glretrace::mapResourceLocation(GLuint program,
+                               GLenum programInterface,
+                               GLint index,
+                               const trace::Array *props,
+                               const trace::Array *params,
+                               std::map<GLhandleARB, retrace::map<GLint>> &location_map) {
+    if (programInterface != GL_UNIFORM)
+        return;
+    for (int i = 0; i < props->size(); ++i) {
+        auto prop = props->values[i];
+        if (prop->toSInt() != GL_LOCATION)
+            continue;
+        const auto location = params->values[i]->toSInt();
+        // we can associated the retraced location with the actual location.
+        assert(_traced_resource_names[program].size() > index);
+        const auto &name = _traced_resource_names[program][index];
+        GLint retraced_location = getLocationForUniform(program, name);
+        if (retraced_location < 0)
+            // location not found. use the traced location
+            retraced_location = location;
+        location_map[program][location] = retraced_location;
+        break;
+    }
+}
+
+void
+glretrace::trackResourceName(GLuint program, GLenum programInterface,
+                             GLint index, const std::string &traced_name) {
+    if (programInterface != GL_UNIFORM)
+        return;
+    auto &uniform_vec = _traced_resource_names[program];
+    if (index >= uniform_vec.size())
+        uniform_vec.resize(index + 1);
+    uniform_vec[index] = traced_name;
+}

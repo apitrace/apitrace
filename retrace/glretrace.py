@@ -206,6 +206,13 @@ class GlRetracer(Retracer):
 
 
     def invokeFunction(self, function):
+        if function.name == "glGetProgramResourceName":
+            print('    std::vector<GLchar> name_buf(bufSize);')
+            print('    name = name_buf.data();')
+            print('    const auto traced_name = (const GLchar *)((call.arg(5)).toString());')
+            print('    glretrace::trackResourceName(program, programInterface, index, traced_name);')
+        if function.name == "glGetProgramResourceiv":
+            print('    glretrace::mapResourceLocation(program, programInterface, index, call.arg(4).toArray(), call.arg(7).toArray(), _location_map);')
         # Infer the drawable size from GL calls
         if function.name == "glViewport":
             print('    glretrace::updateDrawable(x + width, y + height);')
