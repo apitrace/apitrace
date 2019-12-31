@@ -654,18 +654,23 @@ static void addSurfaceItem(const ApiSurface &surface,
 
     int width = surface.size().width();
     int height = surface.size().height();
+    int depth = surface.depth();
     QString descr =
         QString::fromUtf8(u8"%1, %2, %3 \u00d7 %4")
         .arg(label)
         .arg(surface.formatName())
         .arg(width)
         .arg(height);
+    if (depth > 1) {
+        descr += QString::fromUtf8(u8" \u00d7 %1").arg(depth);
+    }
 
     QString toolTip;
     toolTip += QString::fromLatin1("label = %1\n").arg(label);
     toolTip += QString::fromLatin1("format = %1\n").arg(surface.formatName());
     toolTip += QString::fromLatin1("width = %1\n").arg(width);
     toolTip += QString::fromLatin1("height = %1\n").arg(height);
+    toolTip += QString::fromLatin1("depth = %1\n").arg(depth);
     item->setToolTip(0, toolTip);
     item->setToolTip(1, toolTip);
 
