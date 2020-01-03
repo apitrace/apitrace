@@ -206,6 +206,11 @@ class GlRetracer(Retracer):
 
 
     def invokeFunction(self, function):
+        if function.name == "glGetActiveUniformBlockName":
+            print('    std::vector<GLchar> name_buf(bufSize);')
+            print('    uniformBlockName = name_buf.data();')
+            print('    const auto traced_name = (const GLchar *)((call.arg(4)).toString());')
+            print('    glretrace::mapUniformBlockName(program, (call.arg(1)).toSInt(), traced_name, _uniformBlock_map);')
         if function.name == "glGetProgramResourceName":
             print('    std::vector<GLchar> name_buf(bufSize);')
             print('    name = name_buf.data();')
