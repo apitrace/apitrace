@@ -175,6 +175,12 @@ void
 trackResourceName(GLuint program,  GLenum programInterface,
                   GLint index, const std::string &traced_name);
 
+void
+mapUniformBlockName(GLuint program, 
+                    GLint index,
+                    const std::string &traced_name,
+                    std::map<GLuint, retrace::map<GLuint>> &uniformBlock_map);
+
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];

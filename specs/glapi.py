@@ -1667,7 +1667,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetActiveUniformName", [(GLprogram, "program"), (GLuint, "uniformIndex"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "uniformName")], sideeffects=False),
     GlFunction(GLuniformBlock, "glGetUniformBlockIndex", [(GLprogram, "program"), (GLstringConst, "uniformBlockName")]),
     GlFunction(Void, "glGetActiveUniformBlockiv", [(GLprogram, "program"), (GLuniformBlock, "uniformBlockIndex"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetActiveUniformBlockiv_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetActiveUniformBlockName", [(GLprogram, "program"), (GLuniformBlock, "uniformBlockIndex"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "uniformBlockName")], sideeffects=False),
+    GlFunction(Void, "glGetActiveUniformBlockName", [(GLprogram, "program"), (GLuniformBlock, "uniformBlockIndex"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "uniformBlockName")]),
     GlFunction(Void, "glUniformBlockBinding", [(GLprogram, "program"), (GLuniformBlock, "uniformBlockIndex"), (GLuint, "uniformBlockBinding")]),
 
     # GL_ARB_vertex_array_object

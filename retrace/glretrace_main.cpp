@@ -996,3 +996,24 @@ glretrace::trackResourceName(GLuint program, GLenum programInterface,
         uniform_vec.resize(index + 1);
     uniform_vec[index] = traced_name;
 }
+
+void
+glretrace::mapUniformBlockName(GLuint program,
+                               GLint index,
+                               const std::string &traced_name,
+                               std::map<GLuint, retrace::map<GLuint>> &uniformBlock_map) {
+    GLint num_blocks=0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &num_blocks);
+    for (int i = 0; i < num_blocks; ++i) {
+        GLint buf_len;
+        glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_NAME_LENGTH, &buf_len);
+        std::vector<char> name_buf(buf_len+1);
+        GLint length;
+        glGetActiveUniformBlockName(program, i, name_buf.size(), &length, name_buf.data());
+        name_buf[length] = '\0';
+        if (traced_name == name_buf.data()) {
+            uniformBlock_map[program][index] = i;
+            return;
+        }
+    }
+}
