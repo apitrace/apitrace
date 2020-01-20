@@ -850,11 +850,7 @@ void MainWindow::fillStateForFrame()
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
     QMap<QString, QString> shaderSources = state.shaderSources();
-    if (shaderSources.isEmpty()) {
-        m_sourcesWidget->setShaders(shaderSources);
-    } else {
-        m_sourcesWidget->setShaders(shaderSources);
-    }
+    m_sourcesWidget->setShaders(shaderSources);
 
     m_ui.uniformsTreeWidget->clear();
     QList<QTreeWidgetItem *> uniformsItems;
@@ -1652,7 +1648,8 @@ void MainWindow::slotSearchResult(const ApiTrace::SearchRequest &request,
                 m_trace->findNext(call->parentFrame(), call,
                                   request.text, request.cs, request.useRegex);
             } else {
-                m_trace->findNext(call->parentFrame(), call,
+                assert(request.direction == ApiTrace::SearchRequest::Prev);
+                m_trace->findPrev(call->parentFrame(), call,
                                   request.text, request.cs, request.useRegex);
             }
         }
