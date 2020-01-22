@@ -150,7 +150,6 @@ public:
     }
 
     void swapBuffers(void) override {
-        assert(!pbuffer);
         if (window &&
             !has_GLX_EXT_swap_control &&
             has_GLX_MESA_swap_control) {
