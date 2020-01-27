@@ -99,7 +99,7 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeFunction(self, function)
 
-        if function.name.startswith('D3D11CreateDevice'):
+        if function.name in self.createDeviceFunctionNames:
             print(r'''
     if (retrace::driver != retrace::DRIVER_DEFAULT &&
         ppDevice && *ppDevice) {
