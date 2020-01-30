@@ -149,6 +149,7 @@ class GlTracer(Tracer):
         print('#include "gltrace.hpp"')
         print('#include "gltrace_arrays.hpp"')
         print('#include "glmemshadow.hpp"')
+        print('#include "gltrace_unpack_compressed.hpp"')
         print()
 
         # Whether we need user arrays
@@ -975,6 +976,8 @@ class GlTracer(Tracer):
         r'(Compressed)?(Multi)?Tex(ture)?(Sub)?Image[1-4]D',
     ]) + r')[0-9A-Z]*$')
 
+    compressed_image_function_regex = re.compile(r'^glCompressedTex(ture)?(Sub)?Image[1-4]D[0-9A-Z]*$')
+
     def serializeArgValue(self, function, arg):
         # Recognize offsets instead of blobs when a PBO is bound
         if self.unpack_function_regex.match(function.name) \
@@ -989,7 +992,10 @@ class GlTracer(Tracer):
             print('        if (_unpack_buffer) {')
             print('            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name)
             print('        } else {')
-            Tracer.serializeArgValue(self, function, arg)
+            if self.compressed_image_function_regex.match(function.name):
+                print('            %s;' % arg.type.size.format('[](const void* data, GLsizei size){ trace::localWriter.writeBlob(data, size); }'))
+            else:
+                Tracer.serializeArgValue(self, function, arg)
             print('        }')
             print('    }')
             return
