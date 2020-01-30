@@ -8,7 +8,7 @@ Requirements common for all platforms:
 
 * C++ compiler
 
-* Python version 2.7
+* Python version 3.6
 
   * Python Image Library
 
