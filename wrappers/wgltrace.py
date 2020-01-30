@@ -239,7 +239,7 @@ class WglTracer(GlTracer):
             print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)hShareContext);')
         elif function.name in self.createContextFunctionNames:
             print('    if (_result)')
-            print('        gltrace::createContext((uintptr_t)_result, NULL);')
+            print('        gltrace::createContext((uintptr_t)_result, 0);')
 
         if function.name in self.makeCurrentFunctionNames:
             print('    if (_result) {')
