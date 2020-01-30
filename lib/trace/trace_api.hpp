@@ -49,6 +49,19 @@ enum API {
     API_D3D9,
     API_DXGI, // D3D10.x, D3D11.x
     API_D2D1, // Direct2D
+    API_MAX,
+};
+
+const char* const API_NAMES[API_MAX] = {
+    "Unknown API",
+    "OpenGL + GLX/WGL/CGL",
+    "OpenGL/GLES1/GLES2/VG + EGL",
+    "DirectX",
+    "Direct3D 7",
+    "Direct3D 8",
+    "Direct3D 9",
+    "Direct3D 10.x/11.x",
+    "Direct2D"
 };
 
 
