@@ -34,6 +34,7 @@ add_executable (apitrace
     cli_sed.cpp
     cli_trace.cpp
     cli_trim.cpp
+    cli_info.cpp
     cli_resources.cpp
 )
 
