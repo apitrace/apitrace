@@ -923,17 +923,20 @@ class GlTracer(Tracer):
         # GPU are done and buffers are updated.
         if function.name == 'glWaitSync':
             print(r'    gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'    GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
             print(r'    GLMemoryShadow::syncAllForReads(_ctx);')
 
         if function.name == 'glClientWaitSync':
             print(r'    if (_result == GL_ALREADY_SIGNALED || _result == GL_CONDITION_SATISFIED) {')
             print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'        GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
             print(r'        GLMemoryShadow::syncAllForReads(_ctx);')
             print(r'    }')
 
         if function.name == 'glGetSynciv':
             print(r'    if (pname == GL_SYNC_STATUS && bufSize > 0 && values[0] == GL_SIGNALED) {')
             print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'        GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
             print(r'        GLMemoryShadow::syncAllForReads(_ctx);')
             print(r'    }')
 
