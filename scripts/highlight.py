@@ -103,7 +103,7 @@ class AnsiHighlighter(PlainHighlighter):
         if enable:
             self._escape('1m')
         else:
-            self._escape('21m')
+            self._escape('22m')
 
     def strike(self):
         self._escape('9m')
