@@ -648,7 +648,7 @@ IDXGIDevice2 = Interface("IDXGIDevice2", IDXGIDevice1)
 IDXGIDevice2.methods += [
     StdMethod(HRESULT, "OfferResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), (DXGI_OFFER_RESOURCE_PRIORITY, "Priority")]),
     StdMethod(HRESULT, "ReclaimResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), Out(Pointer(BOOL), "pDiscarded")]),
-    StdMethod(HRESULT, "EnqueueSetEvent", [(HANDLE, "hEvent")]),
+    StdMethod(HRESULT, "EnqueueSetEvent", [(HANDLE, "hEvent")], sideeffects=False),
 ]
 
 DXGI_MODE_DESC1 = Struct("DXGI_MODE_DESC1", [
