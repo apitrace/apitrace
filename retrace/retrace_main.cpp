@@ -121,6 +121,9 @@ int64_t minCpuTime = 1000;
 unsigned frameNo = 0;
 unsigned callNo = 0;
 
+long long lastFrameTime = 0;
+long long perFrameDelayUsec = 0;
+long long minFrameDurationUsec = 0;
 
 static void
 takeSnapshot(unsigned call_no);
@@ -136,12 +139,36 @@ void
 frameComplete(trace::Call &call)
 {
     ++frameNo;
+    bool bNeedFrameDelay = perFrameDelayUsec || minFrameDurationUsec;
+    if (bNeedFrameDelay) {
+        long long startTime = os::getTime();
+        long long delayUsec = perFrameDelayUsec;
+        if (lastFrameTime > 0) {
+            long long actualFrameTime = startTime - lastFrameTime;
+            if (actualFrameTime < 0) {
+                actualFrameTime = 0;
+                std::cerr << "warning: os::getTime() returned a negative interval.\n";
+            }
+            long long actualFrameTimeUsec = actualFrameTime *
+                1000 * 1000 / os::timeFrequency;
+            if (actualFrameTimeUsec < minFrameDurationUsec) {
+                delayUsec += minFrameDurationUsec - actualFrameTimeUsec;
+            }
+        }
+        if (delayUsec > 0) {
+            os::sleep(delayUsec);
+        }
+    }
 
     if (snapshotFrequency.contains(call)) {
         takeSnapshot(call.no);
         if (call.no >= snapshotFrequency.getLast()) {
             exit(0);
         }
+    }
+
+    if (bNeedFrameDelay) {
+        lastFrameTime = os::getTime();
     }
 }
 
@@ -673,6 +700,8 @@ usage(const char *argv0) {
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
+        "      --min-frame-duration=MICROSECONDS   specify minimum frame rendering duration\n"
+        "      --per-frame-delay=MICROSECONDS   add extra delay after each frame (in addition to min-frame-duration)\n"
         "  -w, --wait              waitOnFinish on final frame\n"
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n"
@@ -701,6 +730,8 @@ enum {
     GENPASS_OPT,
     MSAA_NO_RESOLVE_OPT,
     SB_OPT,
+    MIN_FRAME_DURATION_OPT,
+    PER_FRAME_DELAY_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
     IGNORE_RETVALS_OPT,
@@ -751,6 +782,8 @@ longOptions[] = {
     {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
+    {"min-frame-duration", required_argument, 0, MIN_FRAME_DURATION_OPT},
+    {"per-frame-delay", required_argument, 0, PER_FRAME_DELAY_OPT},
     {"loop", optional_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
@@ -1102,6 +1135,12 @@ int main(int argc, char **argv)
             break;
         case 'w':
             waitOnFinish = true;
+            break;
+        case MIN_FRAME_DURATION_OPT:
+            minFrameDurationUsec = trace::intOption(optarg, 0);
+            break;
+        case PER_FRAME_DELAY_OPT:
+            perFrameDelayUsec = trace::intOption(optarg, 0);
             break;
         case LOOP_OPT:
             loopCount = trace::intOption(optarg, -1);
