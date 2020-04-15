@@ -256,7 +256,79 @@ MyCreateProcessAsUserW(HANDLE hToken,
                                    lpProcessAttributes,
                                    lpThreadAttributes,
                                    bInheritHandles,
-                                   dwCreationFlags,
+                                   dwCreationFlags | CREATE_SUSPENDED,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessWithTokenW(HANDLE                hToken,
+                          DWORD                 dwLogonFlags,
+                          LPCWSTR               lpApplicationName,
+                          LPWSTR                lpCommandLine,
+                          DWORD                 dwCreationFlags,
+                          LPVOID                lpEnvironment,
+                          LPCWSTR               lpCurrentDirectory,
+                          LPSTARTUPINFOW        lpStartupInfo,
+                          LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessWithTokenW(hToken,
+                                   dwLogonFlags,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   dwCreationFlags | CREATE_SUSPENDED,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessWithLogonW(LPCWSTR               lpUsername,
+                          LPCWSTR               lpDomain,
+                          LPCWSTR               lpPassword,
+                          DWORD                 dwLogonFlags,
+                          LPCWSTR               lpApplicationName,
+                          LPWSTR                lpCommandLine,
+                          DWORD                 dwCreationFlags,
+                          LPVOID                lpEnvironment,
+                          LPCWSTR               lpCurrentDirectory,
+                          LPSTARTUPINFOW        lpStartupInfo,
+                          LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessWithLogonW(lpUsername,
+                                   lpDomain,
+                                   lpPassword,
+                                   dwLogonFlags,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   dwCreationFlags | CREATE_SUSPENDED,
                                    lpEnvironment,
                                    lpCurrentDirectory,
                                    lpStartupInfo,
@@ -1061,7 +1133,8 @@ registerProcessThreadsHooks(const char *szMatchModule)
     functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
     // NOTE: CreateProcessAsUserA is implemented by advapi32.dll
     functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
-    // TODO: CreateProcessWithTokenW
+    functionMap["CreateProcessWithTokenW"] = (LPVOID)MyCreateProcessWithTokenW;
+    functionMap["CreateProcessWithLogonW"] = (LPVOID)MyCreateProcessWithLogonW;
 }
 
 static void
