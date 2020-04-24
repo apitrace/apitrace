@@ -276,6 +276,21 @@ class D3DRetracer(Retracer):
                 if flag.endswith('_DONOTWAIT'):
                     print(r'    Flags &= ~%s;' % flag)
 
+        # SetClipPlane methods were broken until cf519352c
+        if method.name == 'SetClipPlane':
+            print(r'    if (retrace::parser->getVersion() < 6) {')
+            print(r'        const trace::Array *_pPlane = call.arg(2).toArray();')
+            print(r'        if (_pPlane && _pPlane->values.size() < 4) {')
+            print(r'            static bool _warned = false;')
+            print(r'            if (!_warned) {')
+            print(r'                retrace::warning(call) << "ignoring incomplete SetClipPlane plane\n";')
+            print(r'                _warned = true;')
+            print(r'            }')
+            print(r'            static float _zeroPlane[4] = { 0.0f, 0.0f, 0.0f, 0.0f };')
+            print(r'            pPlane = _zeroPlane;')
+            print(r'        }')
+            print(r'    }')
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
