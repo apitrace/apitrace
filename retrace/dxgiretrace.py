@@ -202,6 +202,12 @@ class D3DRetracer(Retracer):
         print(r'    }')
 
     def doInvokeInterfaceMethod(self, interface, method):
+        if interface.name.startswith('IDXGIAdapter') and method.name == 'EnumOutputs':
+            print(r'    if (Output != 0) {')
+            print(r'        retrace::warning(call) << "ignoring output " << Output << "\n";')
+            print(r'        Output = 0;')
+            print(r'    }')
+
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
         # Force driver
