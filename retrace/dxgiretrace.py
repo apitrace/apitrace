@@ -208,6 +208,22 @@ class D3DRetracer(Retracer):
             print(r'        Output = 0;')
             print(r'    }')
 
+        # GPU counters are vendor specific and likely to fail, so use a
+        # timestamp query instead, which is guaranteed to succeed
+        if method.name == 'CreateCounter':
+            if interface.name.startswith('ID3D10'):
+                print(r'    D3D10_QUERY_DESC _queryDesc;')
+                print(r'    _queryDesc.Query = D3D10_QUERY_TIMESTAMP;')
+                print(r'    _queryDesc.MiscFlags = 0;')
+                print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D10Query **>(ppCounter));')
+                return
+            if interface.name.startswith('ID3D11'):
+                print(r'    D3D11_QUERY_DESC _queryDesc;')
+                print(r'    _queryDesc.Query = D3D11_QUERY_TIMESTAMP;')
+                print(r'    _queryDesc.MiscFlags = 0;')
+                print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D11Query **>(ppCounter));')
+                return
+
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
         # Force driver
