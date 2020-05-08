@@ -12,15 +12,17 @@ init:
 shallow_clone: true
 
 # https://www.appveyor.com/docs/windows-images-software/
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
-  - CMAKE_GENERATOR: "Visual Studio 15 2017"
-    QT5: C:\Qt\5.12\msvc2017
-  - CMAKE_GENERATOR: "Visual Studio 15 2017 Win64"
-    QT5: C:\Qt\5.12\msvc2017_64
+  - CMAKE_GENERATOR: "Visual Studio 16 2019"
+    CMAKE_TOOLSET: "Win32"
+    QT5: C:\Qt\5.14\msvc2017
+  - CMAKE_GENERATOR: "Visual Studio 16 2019"
+    CMAKE_TOOLSET: "x64"
+    QT5: C:\Qt\5.14\msvc2017_64
 
 matrix:
   fast_finish: true
@@ -28,7 +30,7 @@ matrix:
 before_build:
 - set Path=C:\Python36;%Path%
 - set Path=%QT5%\bin;%Path%
-- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
+- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" -A "%CMAKE_TOOLSET%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 
 build_script:
 - if "%APPVEYOR_REPO_TAG%"=="true" (set CONFIGURATION=RelWithDebInfo) else (set CONFIGURATION=Debug)
