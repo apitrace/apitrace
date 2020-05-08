@@ -8,7 +8,7 @@ Requirements common for all platforms:
 
 * C++ compiler
 
-* Python version 3.6
+* Python version 3.6 or newer
 
   * Python Image Library
 
@@ -97,7 +97,7 @@ Additional requirements:
 
 * CMake 3.7 or later
 
-* Microsoft Visual Studio 2017 or later
+* Microsoft Visual Studio 2017 or later (tested with 2019)
 
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.
@@ -108,7 +108,7 @@ To build with Visual Studio first open a Command Prompt window (*not* Visual
 Studio Command Prompt window), change into the Apitrace source, and invoke
 CMake GUI as:
 
-    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
 
 and press the _Configure_ button.
 
@@ -131,11 +131,11 @@ generators are available on your system:
 
 At the end of the output, choose a generator and start configuring the project:
 
-    cmake -H. -Bbuild -G "Visual Studio 15 2017" -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+    cmake -H. -Bbuild -G "Visual Studio 16 2019" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
 
-Note as off Qt version 5.9.1 there's no `msvc2017` directory, only `msvc2015`
-and `msvc2017_64`, but `msvc2015` should work as MSVC 2017 is binary backwards
-compatible with MSVC 2015.
+Note as off Qt version 5.9.1 there's no `msvc2019` directory, only `msvc2017`
+and `msvc2017_64`, but `msvc2017` should work as MSVC 2019 is binary backwards
+compatible with MSVC 2017.
 
 After you've successfully configured, you can start the build by invoking CMake as:
 
@@ -147,19 +147,18 @@ To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the 
 [Qt's Windows deployment tool](http://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
-    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2015\bin;%Path%
+    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2017\bin;%Path%
     windeployqt build\qapitrace.exe
 
 ### 64-bits ###
 
-The steps to build 64-bits version are similar, but choosing _Visual Studio xx
-Win64_ instead of _Visual Studio xx_, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2017_64`
-for Qt path.
+The steps to build 64-bits version are similar, but choosing `-A x64` instead
+of `-A Win32`, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2017_64` for Qt path.
 
 ### Windows XP ###
 
 Windows XP is no longer supported.  If you need Windows XP support, your best
-bet is to try an old release (search for windows-xp branch upstream.)
+bet is to user an [older version of the code](https://github.com/apitrace/apitrace/tree/windows-xp).
 
 ## MinGW ##
 
