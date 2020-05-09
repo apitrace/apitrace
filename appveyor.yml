@@ -17,10 +17,12 @@ image: Visual Studio 2019
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
-  - CMAKE_GENERATOR: "Visual Studio 16 2019"
+  - job_name: msvc32
+    CMAKE_GENERATOR: "Visual Studio 16 2019"
     CMAKE_TOOLSET: "Win32"
     QT5: C:\Qt\5.14\msvc2017
-  - CMAKE_GENERATOR: "Visual Studio 16 2019"
+  - job_name: msvc64
+    CMAKE_GENERATOR: "Visual Studio 16 2019"
     CMAKE_TOOLSET: "x64"
     QT5: C:\Qt\5.14\msvc2017_64
 
