@@ -17,8 +17,10 @@ image: Visual Studio 2015
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   matrix:
-  - CMAKE_GENERATOR: "Visual Studio 14 2015"
-  - CMAKE_GENERATOR: "Visual Studio 14 2015 Win64"
+  - job_name: msvc32
+    CMAKE_GENERATOR: "Visual Studio 14 2015"
+  - job_name: msvc64
+    CMAKE_GENERATOR: "Visual Studio 14 2015 Win64"
 
 matrix:
   fast_finish: true
