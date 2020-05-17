@@ -291,12 +291,16 @@ retraceCall(trace::Call *call) {
     }
 
     // dumpStateCallNo is 0 when fetching default state
-    if ((call->no == dumpStateCallNo || dumpStateCallNo == 0) &&
-        dumper->canDump()) {
-        StateWriter *writer = stateWriterFactory(std::cout);
-        dumper->dumpState(*writer);
-        delete writer;
-        exit(0);
+    if (call->no == dumpStateCallNo || dumpStateCallNo == 0) {
+        if (dumper->canDump()) {
+            StateWriter *writer = stateWriterFactory(std::cout);
+            dumper->dumpState(*writer);
+            delete writer;
+            exit(0);
+        } else if (dumpStateCallNo != 0) {
+            std::cerr << call->no << ": error: failed to dump state\n";
+            exit(1);
+        }
     }
 }
 
