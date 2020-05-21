@@ -1071,3 +1071,71 @@ dxgi.addInterfaces([
     IDXGIDevice4,
     IDXGIFactory5,
 ])
+
+
+#
+# DXGI 1.6
+#
+
+DXGI_ADAPTER_FLAG3 = Enum('DXGI_ADAPTER_FLAG3', [
+    'DXGI_ADAPTER_FLAG3_NONE',
+    'DXGI_ADAPTER_FLAG3_REMOTE',
+    'DXGI_ADAPTER_FLAG3_SOFTWARE',
+    'DXGI_ADAPTER_FLAG3_ACG_COMPATIBLE',
+    'DXGI_ADAPTER_FLAG3_FORCE_DWORD',
+])
+
+DXGI_ADAPTER_DESC3 = Struct('DXGI_ADAPTER_DESC3', [
+    (WString, 'Description'),
+    (UINT, 'VendorId'),
+    (UINT, 'DeviceId'),
+    (UINT, 'SubSysId'),
+    (UINT, 'Revision'),
+    (SIZE_T, 'DedicatedVideoMemory'),
+    (SIZE_T, 'DedicatedSystemMemory'),
+    (SIZE_T, 'SharedSystemMemory'),
+    (LUID, 'AdapterLuid'),
+    (DXGI_ADAPTER_FLAG3, 'Flags'),
+    (DXGI_GRAPHICS_PREEMPTION_GRANULARITY, 'GraphicsPreemptionGranularity'),
+    (DXGI_COMPUTE_PREEMPTION_GRANULARITY, 'ComputePreemptionGranularity'),
+])
+
+DXGI_OUTPUT_DESC1 = Struct('DXGI_OUTPUT_DESC1', [
+    (WString, 'DeviceName'),
+    (RECT, 'DesktopCoordinates'),
+    (BOOL, 'AttachedToDesktop'),
+    (DXGI_MODE_ROTATION, 'Rotation'),
+    (HMONITOR, 'Monitor'),
+    (UINT, 'BitsPerColor'),
+    (DXGI_COLOR_SPACE_TYPE, 'ColorSpace'),
+    (Array(FLOAT, 2), 'RedPrimary'),
+    (Array(FLOAT, 2), 'GreenPrimary'),
+    (Array(FLOAT, 2), 'BluePrimary'),
+    (Array(FLOAT, 2), 'WhitePoint'),
+    (FLOAT, 'MinLuminance'),
+    (FLOAT, 'MaxLuminance'),
+    (FLOAT, 'MaxFullFrameLuminance'),
+])
+
+DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS = Flags(UINT, [
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_FULLSCREEN',
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_WINDOWED',
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_CURSOR_STRETCHED',
+])
+
+IDXGIAdapter4 = Interface('IDXGIAdapter4', IDXGIAdapter3)
+IDXGIOutput6 = Interface('IDXGIOutput6', IDXGIOutput5)
+
+IDXGIAdapter4.methods += [
+    StdMethod(HRESULT, 'GetDesc3', [Out(Pointer(DXGI_ADAPTER_DESC3), 'pDesc')], sideeffects=False),
+]
+
+IDXGIOutput6.methods += [
+    StdMethod(HRESULT, 'GetDesc1', [Out(Pointer(DXGI_OUTPUT_DESC1), 'pDesc')], sideeffects=False),
+    StdMethod(HRESULT, 'CheckHardwareCompositionSupport', [Out(Pointer(DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS), 'pFlags')], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGIAdapter4,
+    IDXGIOutput6,
+])
