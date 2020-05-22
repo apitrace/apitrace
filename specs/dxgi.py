@@ -520,7 +520,7 @@ DXGI_DISPLAY_COLOR_SPACE = Struct("DXGI_DISPLAY_COLOR_SPACE", [
 
 IDXGIFactory1.methods += [
     StdMethod(HRESULT, "EnumAdapters1", [(UINT, "Adapter"), Out(Pointer(ObjPointer(IDXGIAdapter1)), "ppAdapter")]),
-    StdMethod(BOOL, "IsCurrent", []),
+    StdMethod(BOOL, "IsCurrent", [], sideeffects=False),
 ]
 
 IDXGIAdapter1.methods += [
@@ -1083,6 +1083,9 @@ DXGI_ADAPTER_FLAG3 = Enum('DXGI_ADAPTER_FLAG3', [
     'DXGI_ADAPTER_FLAG3_SOFTWARE',
     'DXGI_ADAPTER_FLAG3_ACG_COMPATIBLE',
     'DXGI_ADAPTER_FLAG3_FORCE_DWORD',
+    'DXGI_ADAPTER_FLAG3_SUPPORT_MONITORED_FENCES',
+    'DXGI_ADAPTER_FLAG3_SUPPORT_NON_MONITORED_FENCES',
+    'DXGI_ADAPTER_FLAG3_KEYED_MUTEX_CONFORMANCE',
 ])
 
 DXGI_ADAPTER_DESC3 = Struct('DXGI_ADAPTER_DESC3', [
@@ -1123,6 +1126,13 @@ DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS = Flags(UINT, [
     'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_CURSOR_STRETCHED',
 ])
 
+DXGI_GPU_PREFERENCE = Enum('DXGI_GPU_PREFERENCE', [
+    'DXGI_GPU_PREFERENCE_UNSPECIFIED',
+    'DXGI_GPU_PREFERENCE_MINIMUM_POWER',
+    'DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE',
+])
+
+IDXGIFactory6 = Interface('IDXGIFactory6', IDXGIFactory5)
 IDXGIAdapter4 = Interface('IDXGIAdapter4', IDXGIAdapter3)
 IDXGIOutput6 = Interface('IDXGIOutput6', IDXGIOutput5)
 
@@ -1135,7 +1145,16 @@ IDXGIOutput6.methods += [
     StdMethod(HRESULT, 'CheckHardwareCompositionSupport', [Out(Pointer(DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS), 'pFlags')], sideeffects=False),
 ]
 
+IDXGIFactory6.methods += [
+    StdMethod(HRESULT, 'EnumAdapterByGpuPreference', [(UINT, 'Adapter'), (DXGI_GPU_PREFERENCE, 'GpuPreference'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvAdapter')]),
+]
+
 dxgi.addInterfaces([
+    IDXGIFactory6,
     IDXGIAdapter4,
     IDXGIOutput6,
+])
+
+dxgi.addFunctions([
+    StdFunction(HRESULT, "DXGIDeclareAdapterRemovalSupport", [], sideeffects=False),
 ])

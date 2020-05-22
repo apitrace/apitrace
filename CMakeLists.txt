@@ -158,7 +158,7 @@ if (WIN32)
         endif ()
 
         # https://developer.microsoft.com/en-us/windows/projects/campaigns/windows-dev-essentials-how-windows-10-sdks-ship
-        set (REQUIRED_WINDOWS_SDK 10.0.14393.0)
+        set (REQUIRED_WINDOWS_SDK 10.0.18362)
         if (NOT DirectX_D3D11_4_INCLUDE_FOUND)
             if (CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
                 message (SEND_ERROR
