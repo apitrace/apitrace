@@ -15,6 +15,7 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
       m_image(0)
 {
     setupUi(this);
+    setWindowFlags(Qt::Window);
     opaqueCheckBox->setChecked(opaque);
     alphaCheckBox->setChecked(alpha);
 
