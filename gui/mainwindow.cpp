@@ -50,6 +50,7 @@ MainWindow::MainWindow()
       m_nonDefaultsLookupEvent(0)
 {
     m_ui.setupUi(this);
+    initWindowState();
     updateActionsState(false);
     initObjects();
     initConnections();
@@ -968,6 +969,20 @@ void MainWindow::showSelectedSurface()
     viewer->activateWindow();
 }
 
+void MainWindow::initWindowState()
+{
+    QSettings settings;
+    restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
+    restoreState(settings.value("mainWindowState").toByteArray());
+}
+
+void MainWindow::saveWindowState()
+{
+    QSettings settings;
+    settings.setValue("mainWindowGeometry", saveGeometry());
+    settings.setValue("mainWindowState", saveState());
+}
+
 void MainWindow::initObjects()
 {
     m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
@@ -1233,6 +1248,7 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
 void MainWindow::closeEvent(QCloseEvent * event)
 {
     m_profileDialog->close();
+    saveWindowState();
     QMainWindow::closeEvent(event);
 }
 

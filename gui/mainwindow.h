@@ -110,6 +110,8 @@ private slots:
     void updateSurfacesView();
 
 private:
+    void initWindowState();
+    void saveWindowState();
     void initObjects();
     void initConnections();
     void updateActionsState(bool traceLoaded, bool stopped = true);
