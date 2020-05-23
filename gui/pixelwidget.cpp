@@ -207,6 +207,9 @@ void PixelWidget::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Control:
         grabKeyboard();
         break;
+    default:
+        QWidget::keyPressEvent(e);
+        break;
     }
 }
 
