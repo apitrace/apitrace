@@ -65,6 +65,7 @@ PixelWidget::PixelWidget(QWidget *parent)
 {
     setWindowTitle(QLatin1String("PixelTool"));
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setFocusPolicy(Qt::StrongFocus);
 
     m_gridSize = 1;
     m_gridActive = 0;
