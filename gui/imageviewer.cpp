@@ -57,6 +57,8 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
             this, SLOT(showPixel(int, int)));
     connect(m_pixelWidget, SIGNAL(gridGeometry(const QRect &)),
             this, SLOT(showGrid(const QRect &)));
+
+    m_pixelWidget->setFocus();
 }
 
 ImageViewer::~ImageViewer()
