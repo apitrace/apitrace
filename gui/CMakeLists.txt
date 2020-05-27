@@ -17,6 +17,7 @@ add_gtest (qubjson_test qubjson_test.cpp)
 target_link_libraries (qubjson_test qubjson)
 
 set(qapitrace_SRCS
+   adaptivedoublespinbox.cpp
    apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
