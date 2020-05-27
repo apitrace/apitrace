@@ -43,6 +43,7 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     scrollAreaWidgetContents->setPalette(pal);
 
     m_pixelWidget = new PixelWidget(scrollAreaWidgetContents);
+    verticalLayout_2->setAlignment(Qt::AlignCenter);
     verticalLayout_2->addWidget(m_pixelWidget);
 
     rectLabel->hide();
