@@ -49,14 +49,18 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     rectLabel->hide();
     pixelLabel->hide();
 
-    connect(m_pixelWidget, SIGNAL(zoomChanged(int)),
-            zoomSpinBox, SLOT(setValue(int)));
-    connect(zoomSpinBox, SIGNAL(valueChanged(int)),
-            m_pixelWidget, SLOT(setZoom(int)));
+    connect(m_pixelWidget, SIGNAL(zoomChanged(double)),
+            zoomSpinBox, SLOT(setValue(double)));
+    connect(zoomSpinBox, SIGNAL(valueChanged(double)),
+            m_pixelWidget, SLOT(setZoom(double)));
     connect(m_pixelWidget, SIGNAL(mousePosition(int, int)),
             this, SLOT(showPixel(int, int)));
     connect(m_pixelWidget, SIGNAL(gridGeometry(const QRect &)),
             this, SLOT(showGrid(const QRect &)));
+    connect(m_pixelWidget, SIGNAL(zoomStepUp()),
+            zoomSpinBox, SLOT(stepUp()));
+    connect(m_pixelWidget, SIGNAL(zoomStepDown()),
+            zoomSpinBox, SLOT(stepDown()));
 
     m_pixelWidget->setFocus();
 }

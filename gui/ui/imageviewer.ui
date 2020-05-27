@@ -220,27 +220,30 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="zoomSpinBox">
+      <widget class="AdaptiveDoubleSpinBox" name="zoomSpinBox">
        <property name="specialValueText">
+        <string/>
+       </property>
+       <property name="prefix">
         <string/>
        </property>
        <property name="suffix">
         <string>x</string>
        </property>
-       <property name="prefix">
-        <string/>
+       <property name="decimals">
+        <number>3</number>
        </property>
        <property name="minimum">
-        <number>1</number>
+        <double>0.001000000000000</double>
        </property>
        <property name="maximum">
-        <number>15</number>
+        <double>1024.000000000000000</double>
        </property>
        <property name="singleStep">
-        <number>1</number>
+        <double>1.000000000000000</double>
        </property>
        <property name="value">
-        <number>1</number>
+        <double>1.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -248,6 +251,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AdaptiveDoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>adaptivedoublespinbox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
