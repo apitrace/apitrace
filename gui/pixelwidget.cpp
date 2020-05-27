@@ -352,7 +352,7 @@ void PixelWidget::startGridSizeVisibleTimer()
     }
 }
 
-void PixelWidget::setZoom(double zoom)
+void PixelWidget::setZoom(double zoom, bool forceGrid)
 {
     if (zoom > 0 && zoom != m_zoom) {
         QPoint pos = m_lastMousePos;
@@ -363,7 +363,7 @@ void PixelWidget::setZoom(double zoom)
 
         if (m_zoom <= 1)
             m_gridActive = 0;
-        else if (!m_gridActive)
+        else if (forceGrid)
             m_gridActive = 1;
 
         zoomChanged(m_zoom);

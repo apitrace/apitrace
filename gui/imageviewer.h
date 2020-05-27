@@ -28,9 +28,15 @@ private slots:
     void slotUpdate();
     void showPixel(int, int);
     void showGrid(const QRect &rect);
+    void zoomChangedDirectly();
+    void zoomChangedIndirectly(double zoom);
+    void zoomToFitChanged(int state);
 
 private:
+    void zoomToFit();
+
     image::Image *m_image;
     QImage m_convertedImage;
     PixelWidget *m_pixelWidget;
+    bool m_zoomtoFit;
 };

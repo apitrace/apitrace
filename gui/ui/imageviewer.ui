@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
+    <width>865</width>
     <height>629</height>
    </rect>
   </property>
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>811</width>
-        <height>561</height>
+        <width>845</width>
+        <height>543</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -244,6 +244,16 @@
        </property>
        <property name="value">
         <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="zoomToFitCheckBox">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
