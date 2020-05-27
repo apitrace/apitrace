@@ -61,7 +61,9 @@ public:
     QColor colorAtCurrentPosition() const;
 
 signals:
-    void zoomChanged(int);
+    void zoomChanged(double);
+    void zoomStepUp();
+    void zoomStepDown();
     void mousePosition(int x, int y);
     void gridGeometry(const QRect &rect);
 
@@ -79,15 +81,13 @@ public:
     QSize sizeHint() const override;
 
 public slots:
-    void setZoom(int zoom);
+    void setZoom(double zoom);
     void setGridSize(int gridSize);
     void toggleGrid();
     void copyToClipboard();
     void saveToFile();
     void increaseGridSize() { setGridSize(m_gridSize + 1); }
     void decreaseGridSize() { setGridSize(m_gridSize - 1); }
-    void increaseZoom() { setZoom(m_zoom + 1); }
-    void decreaseZoom() { setZoom(m_zoom - 1); }
 
 private:
     void startGridSizeVisibleTimer();
@@ -97,7 +97,7 @@ private:
     bool m_mouseDown;
 
     int m_gridActive;
-    int m_zoom;
+    double m_zoom;
     int m_gridSize;
 
     int m_displayGridSizeId;
