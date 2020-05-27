@@ -19,6 +19,7 @@ if (BUILD_TESTING)
 endif ()
 
 set(qapitrace_SRCS
+   adaptivedoublespinbox.cpp
    apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
