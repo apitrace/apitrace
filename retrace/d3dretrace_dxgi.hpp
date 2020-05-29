@@ -47,6 +47,8 @@ struct ID3D11Device;
 
 namespace d3dretrace {
 
+HRESULT
+createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter);
 
 static inline void
 createWindowForSwapChain(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
