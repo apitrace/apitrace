@@ -1228,6 +1228,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetTextureSubImage", [(GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(GLpointer, "pixels")]),
     GlFunction(Void, "glGetCompressedTextureSubImage", [(GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "bufSize"), Out(GLpointer, "pixels")]),
 
+    # GL_ARB_gl_spirv
+    GlFunction(Void, "glSpecializeShaderARB", [(GLuint, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
+
     # GL_ARB_gpu_shader_fp64
     GlFunction(Void, "glUniform1d", [(GLlocation, "location"), (GLdouble, "x")]),
     GlFunction(Void, "glUniform2d", [(GLlocation, "location"), (GLdouble, "x"), (GLdouble, "y")]),
