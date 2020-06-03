@@ -118,9 +118,6 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
             GLMemoryShadow *shadow = it->second;
             shadow->onAddressWrite(addr, page);
             return EXCEPTION_CONTINUE_EXECUTION;
-        } else {
-            os::log("apitrace: error: %s: access violation at non-tracked page\n", __FUNCTION__);
-            os::abort();
         }
     }
 
@@ -129,7 +126,9 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
 #else
 
-void PageGuardExceptionHandler(int sig, siginfo_t *si, void *unused) {
+static struct sigaction sPrevSigAction;
+
+void PageGuardExceptionHandler(int sig, siginfo_t *si, void *context) {
     if (sig == SIGSEGV && si->si_code == SEGV_ACCERR) {
         const uintptr_t addr = reinterpret_cast<uintptr_t>(si->si_addr);
         const size_t page = addr / sPageSize;
@@ -140,9 +139,20 @@ void PageGuardExceptionHandler(int sig, siginfo_t *si, void *unused) {
         if (it != sPages.end()) {
             GLMemoryShadow *shadow = it->second;
             shadow->onAddressWrite(addr, page);
+            return;
+        }
+    }
+
+    if (sPrevSigAction.sa_flags & SA_SIGINFO) {
+        sPrevSigAction.sa_sigaction(sig, si, context);
+    } else {
+        if (sPrevSigAction.sa_handler == SIG_DFL) {
+            signal(sig, SIG_DFL);
+            raise(sig);
+        } else if (sPrevSigAction.sa_handler == SIG_IGN) {
+            // Ignore
         } else {
-            os::log("apitrace: error: %s: access violation at non-tracked page\n", __FUNCTION__);
-            os::abort();
+            sPrevSigAction.sa_handler(sig);
         }
     }
 }
@@ -157,11 +167,11 @@ void initializeGlobals()
         os::log("apitrace: error: %s: add vectored exception handler failed\n", __FUNCTION__);
     }
 #else
-    struct sigaction sa, oldSa;
+    struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = PageGuardExceptionHandler;
-    if (sigaction(SIGSEGV, &sa, &oldSa) == -1) {
+    if (sigaction(SIGSEGV, &sa, &sPrevSigAction) == -1) {
         os::log("apitrace: error: %s: set page guard exception handler failed\n", __FUNCTION__);
     }
 #endif
