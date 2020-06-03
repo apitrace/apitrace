@@ -994,7 +994,7 @@ glapi.addFunctions([
     GlFunction(Void, "glClearDepthf", [(GLfloat, "d")]),
 
     # GL_ARB_ES3_1_compatibility
-    GlFunction(Void, "glMemoryBarrierByRegion", [(GLbitfield, "barriers")]),
+    GlFunction(Void, "glMemoryBarrierByRegion", [(GLbitfield_barrier, "barriers")]),
 
     # GL_ARB_ES3_2_compatibility
     GlFunction(Void, "glPrimitiveBoundingBoxARB", [(GLfloat, "minX"), (GLfloat, "minY"), (GLfloat, "minZ"), (GLfloat, "minW"), (GLfloat, "maxX"), (GLfloat, "maxY"), (GLfloat, "maxZ"), (GLfloat, "maxW")]),
