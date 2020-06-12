@@ -65,6 +65,9 @@ createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
         break;
     }
 
+    IDXGIAdapter *pAdapter = nullptr;
+    HRESULT hr;
+
     if (szSoftware) {
         HMODULE hSoftware = nullptr;
         hSoftware = LoadLibraryA(szSoftware);
@@ -72,19 +75,28 @@ createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
             std::cerr << "error: failed to load " << szSoftware << "\n";
             _exit(EXIT_FAILURE);
         }
-        return pFactory->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppvAdapter));
-    }
-
-    if (GpuPreference != DXGI_GPU_PREFERENCE_UNSPECIFIED) {
+        hr = pFactory->CreateSoftwareAdapter(hSoftware, &pAdapter);
+    } else if (GpuPreference != DXGI_GPU_PREFERENCE_UNSPECIFIED) {
         com_ptr<IDXGIFactory6> pFactory6;
         if (SUCCEEDED(pFactory->QueryInterface(IID_IDXGIFactory6, (void **)&pFactory6))) {
-            return pFactory6->EnumAdapterByGpuPreference(0, GpuPreference, IID_IDXGIAdapter1, ppvAdapter);
+            hr = pFactory6->EnumAdapterByGpuPreference(0, GpuPreference, IID_IDXGIAdapter1, (void **)&pAdapter);
         } else {
-            return DXGI_ERROR_NOT_FOUND;
+            hr = DXGI_ERROR_NOT_FOUND;
+        }
+    } else {
+        hr = pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter **>(ppvAdapter));
+    }
+
+    if (SUCCEEDED(hr)) {
+        DXGI_ADAPTER_DESC AdapterDesc;
+        if (SUCCEEDED(pAdapter->GetDesc(&AdapterDesc))) {
+            std::wcerr << L"info: using " << AdapterDesc.Description << std::endl;
         }
     }
 
-    return pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter **>(ppvAdapter));
+    *ppvAdapter = pAdapter;
+
+    return hr;
 }
 
 
