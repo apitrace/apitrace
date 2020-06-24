@@ -51,14 +51,20 @@ protected:
     virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
     virtual bool rawSkip(size_t length) override;
-    virtual int  rawPercentRead(void) override;
+
+    size_t containerSizeInBytes(void) const override;
+    size_t containerBytesRead(void) const override;
+    size_t dataBytesRead(void) const override;
+    const char *containerType(void) const override;
 private:
     BrotliDecoderState *state;
-    std::ifstream m_stream;
+    mutable std::ifstream m_stream;
     static const size_t kFileBufferSize = 65536;
     uint8_t input[kFileBufferSize];
     const uint8_t* next_in;
     size_t available_in;
+    std::streampos m_endPos = 0;
+    size_t m_dataBytesRead = 0;
 };
 
 BrotliFile::BrotliFile(void)
@@ -80,6 +86,14 @@ bool BrotliFile::rawOpen(const char *filename)
                                   | std::fstream::in;
 
     m_stream.open(filename, fmode);
+
+    if (m_stream.is_open()) {
+        m_stream.seekg(0, std::ios::end);
+        m_endPos = m_stream.tellg();
+        m_stream.seekg(0, std::ios::beg);
+        m_dataBytesRead = 0;
+    }
+
     return m_stream.is_open();
 }
 
@@ -117,6 +131,8 @@ size_t BrotliFile::rawRead(void *buffer, size_t length)
 
     assert(next_out - output <= length);
 
+    m_dataBytesRead += static_cast<size_t>(next_out - output);
+
     return next_out - output;
 }
 
@@ -139,11 +155,21 @@ bool BrotliFile::rawSkip(size_t)
     return false;
 }
 
-int BrotliFile::rawPercentRead(void)
-{
-    return 0;
+size_t BrotliFile::containerSizeInBytes(void) const {
+    return static_cast<size_t>(m_endPos);
 }
 
+size_t BrotliFile::containerBytesRead(void) const {
+    return static_cast<size_t>(m_stream.tellg());
+}
+
+size_t BrotliFile::dataBytesRead(void) const {
+    return m_dataBytesRead;
+}
+
+const char *BrotliFile::containerType(void) const {
+    return "Brotli";
+}
 
 File * File::createBrotli(void) {
     return new BrotliFile;

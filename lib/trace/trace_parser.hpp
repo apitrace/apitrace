@@ -151,9 +151,25 @@ public:
         return properties;
     }
 
-    int percentRead()
-    {
+
+    int percentRead() const {
         return file->percentRead();
+    }
+
+    size_t containerSizeInBytes() const {
+        return file->containerSizeInBytes();
+    }
+
+    size_t containerBytesRead() const {
+        return file->containerBytesRead();
+    }
+
+    size_t dataBytesRead() const {
+        return file->dataBytesRead();
+    }
+
+    const char *containerType() const {
+        return file->containerType();
     }
 
     Call *scan_call() {

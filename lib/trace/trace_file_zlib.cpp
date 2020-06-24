@@ -59,11 +59,16 @@ protected:
     virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
     virtual bool rawSkip(size_t length) override;
-    virtual int  rawPercentRead(void) override;
+
+    size_t containerSizeInBytes(void) const override;
+    size_t containerBytesRead(void) const override;
+    size_t dataBytesRead(void) const override;
+    const char *containerType(void) const override;
 private:
     int fd = 0;
     gzFile m_gzFile = nullptr;
     off_t m_endOffset = 0;
+    size_t m_dataBytesRead = 0;
 };
 
 ZLibFile::ZLibFile(void)
@@ -104,6 +109,7 @@ bool ZLibFile::rawOpen(const char *filename)
         off_t loc = lseek(fd, 0, SEEK_CUR);
         m_endOffset = lseek(fd, 0, SEEK_END);
         lseek(fd, loc, SEEK_SET);
+        m_dataBytesRead = 0;
     }
 
     return m_gzFile != NULL;
@@ -112,6 +118,9 @@ bool ZLibFile::rawOpen(const char *filename)
 size_t ZLibFile::rawRead(void *buffer, size_t length)
 {
     int ret = gzread(m_gzFile, buffer, unsigned(length));
+    if (ret > 0) {
+        m_dataBytesRead += static_cast<size_t>(ret);
+    }
     return ret < 0 ? 0 : ret;
 }
 
@@ -133,9 +142,20 @@ bool ZLibFile::rawSkip(size_t)
     return false;
 }
 
-int ZLibFile::rawPercentRead(void)
-{
-    return int(100 * (lseek(fd, 0, SEEK_CUR) / m_endOffset));
+size_t ZLibFile::containerSizeInBytes(void) const {
+    return static_cast<size_t>(m_endOffset);
+}
+
+size_t ZLibFile::containerBytesRead(void) const {
+    return static_cast<size_t>(lseek(fd, 0, SEEK_CUR));
+}
+
+size_t ZLibFile::dataBytesRead(void) const {
+    return m_dataBytesRead;
+}
+
+const char *ZLibFile::containerType(void) const {
+    return "ZLib";
 }
 
 

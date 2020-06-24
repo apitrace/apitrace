@@ -45,7 +45,7 @@
 #include "trace_parser.hpp"
 #include "trace_option.hpp"
 
-static const char *synopsis = "Print given trace file(s) information.";
+static const char *synopsis = "Print given trace file(s) information in JSON format";
 
 static void
 usage(void)
@@ -55,13 +55,13 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -h, --help        show this help message and exit\n"
-        "    --json            output trace file information in JSON format\n"
+        "    --dump-frames     dump per frame information\n"
         "\n"
     ;
 }
 
 enum {
-    JSON_OPT = CHAR_MAX + 1,
+    DUMP_FRAMES_OPT = CHAR_MAX + 1,
 };
 
 const static char *
@@ -70,7 +70,7 @@ shortOptions = "h";
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
-    {"json", no_argument, 0, JSON_OPT},
+    {"frames", no_argument, 0, DUMP_FRAMES_OPT},
     {0, 0, 0, 0}
 };
 
@@ -81,18 +81,24 @@ getApiName(int api) {
   return trace::API_NAMES[api];
 }
 
+struct FrameEntry {
+    size_t firstCallId, lastCallId;
+    size_t totalCalls;
+    size_t sizeInBytes;
+};
+
 static int
 command(int argc, char *argv[])
 {
-    bool json = false;
+    bool flagDumpFrames = false;
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
             usage();
             return 0;
-        case JSON_OPT:
-            json = true;
+        case DUMP_FRAMES_OPT:
+            flagDumpFrames = true;
             break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
@@ -100,6 +106,9 @@ command(int argc, char *argv[])
             return 1;
         }
     }
+
+    typedef std::vector<FrameEntry> FrameEntries;
+    FrameEntries frames;
 
     for (int i = optind; i < argc; ++i) {
         unsigned long framesCount = 0;
@@ -111,31 +120,61 @@ command(int argc, char *argv[])
         }
 
         trace::Call *call;
+        size_t callsInFrame = 0;
+        size_t firstCallId = 0;
+        size_t frameBytesOffset = 0;
+        bool endFrame = true;
         while ((call = p.parse_call())) {
+            if (flagDumpFrames) {
+                ++callsInFrame;
+                if (endFrame) {
+                    firstCallId = call->no;
+                    endFrame = false;
+                }
+            }
             if (api == trace::API_UNKNOWN && p.api != trace::API_UNKNOWN)
-              api = p.api;
-            if (call->flags & trace::CALL_FLAG_END_FRAME)
-              ++framesCount;
+                api = p.api;
+            if (call->flags & trace::CALL_FLAG_END_FRAME) {
+                ++framesCount;
+                if (flagDumpFrames) {
+                    size_t curBytesOffset = p.dataBytesRead();
+                    frames.push_back(FrameEntry{firstCallId, call->no, callsInFrame, curBytesOffset-frameBytesOffset});
+                    frameBytesOffset = curBytesOffset;
+                    endFrame = true;
+                    callsInFrame = 0;
+                }
+            }
             delete call;
         }
 
-        if (json) {
+        std::cout <<
+            "{" << std::endl <<
+            "  \"FileName\": \"" << argv[i] << "\"," << std::endl <<
+            "  \"ContainerVersion\": " << p.getVersion() << "," << std::endl <<
+            "  \"ContainerType\": \"" << p.containerType() << "\"," << std::endl <<
+            "  \"API\": \"" << getApiName(api) << "\"," << std::endl <<
+            "  \"FramesCount\": " << framesCount << "," << std::endl <<
+            "  \"ActualDataSize\": " << p.dataBytesRead() << "," << std::endl <<
+            "  \"ContainerSize\": " << p.containerSizeInBytes();
+        if (flagDumpFrames) {
+            std::cout << "," << std::endl;
             std::cout <<
-                "{" <<
-                    "\"FileName\":\"" << argv[i] << "\"," <<
-                    "\"ContainerVersion\":" << p.getVersion() << "," <<
-                    "\"API\":\"" << getApiName(api) << "\"," <<
-                    "\"FramesCount\":" << framesCount << "" <<
-                "}" << std::endl;
+                "  \"Frames\": [{" << std::endl;
+            for (auto it = frames.begin(); it != frames.end(); ++it) {
+                std::cout <<
+                    "    \"FirstCallId\": " << it->firstCallId << "," << std::endl <<
+                    "    \"LastCallId\": " << it->lastCallId << "," << std::endl <<
+                    "    \"TotalCalls\": " << it->totalCalls << "," << std::endl <<
+                    "    \"SizeInBytes\": " << it->sizeInBytes << std::endl;
+                if (it != std::prev(frames.end())) {
+                    std::cout << "  }, {" << std::endl;
+                }
+            }
+            std::cout << "  }]" << std::endl;
         } else {
-            std::cout <<
-                std::endl <<
-                "FileName: " << argv[i] << std::endl <<
-                "ContainerVersion: " << p.getVersion() << std::endl <<
-                "API: " << getApiName(api) << std::endl <<
-                "FramesCount: " << framesCount << std::endl <<
-                std::endl;
+            std::cout << std::endl;
         }
+        std::cout << "}" << std::endl;
     }
 
     return 0;
