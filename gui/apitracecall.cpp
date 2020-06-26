@@ -1138,6 +1138,27 @@ ApiTraceFrame::~ApiTraceFrame()
     qDeleteAll(m_calls);
 }
 
+static QString formatDataSize(const quint64 size)
+{
+    const auto formatSmallNumber=[](const double x)
+    {
+        if (x < 100) {
+            return QString::number(x, 'f', 1);
+        } else {
+            return QString::number(x, 'f', 0);
+        }
+    };
+    if (size < 1024) {
+        return QString(u8"%1\u202fB").arg(size);
+    } else if (size < 1ull<<20) {
+        return QString(u8"%1\u202fKiB").arg(formatSmallNumber(size/1024.));
+    } else if (size < 1ull<<30) {
+        return QString(u8"%1\u202fMiB").arg(formatSmallNumber(size/double(1ull<<20)));
+    } else {
+        return QString(u8"%1\u202fGiB").arg(formatSmallNumber(size/double(1ull<<30)));
+    }
+}
+
 QStaticText ApiTraceFrame::staticText() const
 {
     if (m_staticText && !m_staticText->text().isEmpty())
@@ -1157,9 +1178,9 @@ QStaticText ApiTraceFrame::staticText() const
             QObject::tr(
                 "%1"
                 "<span style=\"font-style:italic;\">"
-                "&nbsp;&nbsp;&nbsp;&nbsp;(%2MB)</span>")
+                "&nbsp;&nbsp;&nbsp;&nbsp;(%2)</span>")
             .arg(richText)
-            .arg(double(m_binaryDataSize / (1024.*1024.)), 0, 'g', 2);
+            .arg(formatDataSize(m_binaryDataSize));
     }
 
     if (!m_staticText)
