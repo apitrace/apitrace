@@ -85,7 +85,11 @@ protected:
     virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
     virtual bool rawSkip(size_t length) override;
-    virtual int rawPercentRead(void) override;
+
+    size_t containerSizeInBytes(void) const override;
+    size_t containerBytesRead(void) const override;
+    size_t dataBytesRead(void) const override;
+    const char* containerType() const override;
 
 private:
     inline size_t usedCacheSize(void) const
@@ -111,7 +115,7 @@ private:
     void createCache(size_t size);
     size_t readCompressedLength();
 private:
-    std::ifstream m_stream;
+    mutable std::ifstream m_stream;
     size_t m_cacheMaxSize;
     size_t m_cacheSize;
     char *m_cache;
@@ -119,8 +123,9 @@ private:
 
     char *m_compressedCache;
 
-    uint64_t m_currentChunkOffset;
-    std::streampos m_endPos;
+    uint64_t m_currentChunkOffset = 0;
+    std::streampos m_endPos = 0;
+    size_t m_dataBytesRead = 0;
 };
 
 SnappyFile::SnappyFile(void)
@@ -155,6 +160,8 @@ bool SnappyFile::rawOpen(const char *filename)
         m_endPos = m_stream.tellg();
         m_stream.seekg(0, std::ios::beg);
 
+        m_dataBytesRead = 0;
+
         // read the snappy file identifier
         unsigned char byte1, byte2;
         m_stream >> byte1;
@@ -175,6 +182,7 @@ size_t SnappyFile::rawRead(void *buffer, size_t length)
     if (freeCacheSize() >= length) {
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
+        m_dataBytesRead += length;
     } else {
         size_t sizeToRead = length;
         size_t offset = 0;
@@ -183,6 +191,7 @@ size_t SnappyFile::rawRead(void *buffer, size_t length)
             offset = length - sizeToRead;
             memcpy((char*)buffer + offset, m_cachePtr, chunkSize);
             m_cachePtr += chunkSize;
+            m_dataBytesRead += chunkSize;
             sizeToRead -= chunkSize;
             if (sizeToRead > 0) {
                 flushReadCache();
@@ -324,11 +333,13 @@ bool SnappyFile::rawSkip(size_t length)
 
     if (freeCacheSize() >= length) {
         m_cachePtr += length;
+        m_dataBytesRead += length;
     } else {
         size_t sizeToRead = length;
         while (sizeToRead) {
             size_t chunkSize = std::min(freeCacheSize(), sizeToRead);
             m_cachePtr += chunkSize;
+            m_dataBytesRead += chunkSize;
             sizeToRead -= chunkSize;
             if (sizeToRead > 0) {
                 flushReadCache(sizeToRead);
@@ -342,11 +353,21 @@ bool SnappyFile::rawSkip(size_t length)
     return true;
 }
 
-int SnappyFile::rawPercentRead(void)
-{
-    return int(100 * (double(m_stream.tellg()) / double(m_endPos)));
+size_t SnappyFile::containerSizeInBytes(void) const {
+    return static_cast<size_t>(m_endPos);
 }
 
+size_t SnappyFile::containerBytesRead(void) const {
+    return  m_currentChunkOffset;
+}
+
+size_t SnappyFile::dataBytesRead(void) const {
+    return static_cast<size_t>(m_dataBytesRead);
+}
+
+const char *SnappyFile::containerType(void) const {
+    return "Snappy";
+}
 
 File* File::createSnappy(void) {
     return new SnappyFile;

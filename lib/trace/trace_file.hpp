@@ -59,7 +59,16 @@ public:
     void close(void);
     int getc(void);
     bool skip(size_t length);
-    int percentRead(void);
+    int percentRead(void) const;
+
+    // returns the size of (compressed/serialized) data in the container in bytes
+    virtual size_t containerSizeInBytes(void) const = 0;
+    // returns the amount of bytes read from the container
+    virtual size_t containerBytesRead(void) const = 0;
+    // returns the size of uncompressed data read in bytes
+    virtual size_t dataBytesRead(void) const = 0;
+    // returns the name of the continer type as a user friendly string
+    virtual const char* containerType() const = 0;
 
     virtual bool supportsOffsets(void) const;
     virtual File::Offset currentOffset(void) const;
@@ -70,7 +79,6 @@ protected:
     virtual int rawGetc(void) = 0;
     virtual void rawClose(void) = 0;
     virtual bool rawSkip(size_t length) = 0;
-    virtual int rawPercentRead(void) = 0;
 
 protected:
     bool m_isOpened = false;
@@ -99,12 +107,14 @@ inline size_t File::read(void *buffer, size_t length)
     return rawRead(buffer, length);
 }
 
-inline int File::percentRead(void)
+inline int File::percentRead(void) const
 {
-    if (!m_isOpened) {
-        return 0;
+    size_t size = containerSizeInBytes();
+    size_t read = containerBytesRead();
+    if (size) {
+        return static_cast<int>((100*read)/size);
     }
-    return rawPercentRead();
+    return 0;
 }
 
 inline void File::close(void)
