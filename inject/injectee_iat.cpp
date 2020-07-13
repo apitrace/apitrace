@@ -996,9 +996,9 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 static void
 logGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
     if (HIWORD(lpProcName) == 0) {
-        debugPrintf("inject: intercepting %s(%u)\n", "GetProcAddress", LOWORD(lpProcName));
+        debugPrintf("inject: intercepting %s(0x%p, %u)\n", "GetProcAddress", hModule, LOWORD(lpProcName));
     } else {
-        debugPrintf("inject: intercepting %s(\"%s\")\n", "GetProcAddress", lpProcName);
+        debugPrintf("inject: intercepting %s(0x%p, \"%s\")\n", "GetProcAddress", hModule, lpProcName);
     }
 }
 
