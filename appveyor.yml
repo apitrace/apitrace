@@ -16,6 +16,7 @@ image: Visual Studio 2019
 
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
+  CONFIGURATION: RelWithDebInfo
   matrix:
   - job_name: msvc32
     CMAKE_GENERATOR: "Visual Studio 16 2019"
@@ -35,7 +36,6 @@ before_build:
 - cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" -A "%CMAKE_TOOLSET%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 
 build_script:
-- if "%APPVEYOR_REPO_TAG%"=="true" (set CONFIGURATION=RelWithDebInfo) else (set CONFIGURATION=Debug)
 - cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
 
 after_build:
