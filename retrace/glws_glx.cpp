@@ -446,21 +446,29 @@ GlxDrawable::createPbuffer(Display *dpy, const GlxVisual *visinfo,
 {
     int samples = 0;
     int doubleBuffer = 0;
+    int red_size = 0, green_size = 0, blue_size = 0, alpha_size = 0;
+    int depth_size = 0, stencil_size = 0;
 
-    // XXX ideally, we'd populate these attributes according to the Visual info
+    GLXFBConfig fbconfig = visinfo->fbconfig;
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_RED_SIZE, &red_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_GREEN_SIZE, &green_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_BLUE_SIZE, &blue_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_ALPHA_SIZE, &alpha_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_DEPTH_SIZE, &depth_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_STENCIL_SIZE, &stencil_size);
+    glXGetFBConfigAttrib(dpy, fbconfig, GLX_DOUBLEBUFFER, &doubleBuffer);
+
     Attributes<int> attribs;
     attribs.add(GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT);
     attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
-    attribs.add(GLX_RED_SIZE, 1);
-    attribs.add(GLX_GREEN_SIZE, 1);
-    attribs.add(GLX_BLUE_SIZE, 1);
-    attribs.add(GLX_ALPHA_SIZE, 1);
+    attribs.add(GLX_RED_SIZE, red_size);
+    attribs.add(GLX_GREEN_SIZE, green_size);
+    attribs.add(GLX_BLUE_SIZE, blue_size);
+    attribs.add(GLX_ALPHA_SIZE, alpha_size);
 
-    glXGetFBConfigAttrib(dpy, visinfo->fbconfig, GLX_DOUBLEBUFFER,
-                         &doubleBuffer);
     attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
-    attribs.add(GLX_DEPTH_SIZE, 1);
-    attribs.add(GLX_STENCIL_SIZE, 1);
+    attribs.add(GLX_DEPTH_SIZE, depth_size);
+    attribs.add(GLX_STENCIL_SIZE, stencil_size);
     if (samples > 1) {
         attribs.add(GLX_SAMPLE_BUFFERS, 1);
         attribs.add(GLX_SAMPLES_ARB, samples);
