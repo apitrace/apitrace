@@ -17,7 +17,7 @@ matrix:
     dist: bionic
     env:
     - LABEL="ubuntu64"
-    - APT_PACKAGES="gcc g++ libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev"
+    - APT_PACKAGES="gcc g++ libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev xvfb"
     - CMAKE_OPTIONS="-DPython3_EXECUTABLE=/usr/bin/python3 -DENABLE_GUI=1"
   - os: linux
     dist: bionic
