@@ -59,7 +59,42 @@ public:
     virtual void visit(Double *node) override;
 
     template< typename C >
-    void visitString(const C *value);
+    void visitString(const C *value) {
+        os << literal << "\"";
+        for (const C *it = value; *it; ++it) {
+            unsigned c = (unsigned) *it;
+            if (c == '\"')
+                os << "\\\"";
+            else if (c == '\\')
+                os << "\\\\";
+            else if (c >= 0x20 && c <= 0x7e)
+                os << (char)c;
+            else if (c == '\t') {
+                os << "\t";
+            } else if (c == '\r') {
+                // Ignore carriage-return
+            } else if (c == '\n') {
+                if (dumpFlags & DUMP_FLAG_NO_MULTILINE) {
+                    os << "\\n";
+                } else {
+                    // Reset formatting so that it looks correct with 'less -R'
+                    os << normal << '\n' << literal;
+                }
+            } else {
+                // FIXME: handle wchar_t octals properly
+                unsigned octal0 = c & 0x7;
+                unsigned octal1 = (c >> 3) & 0x7;
+                unsigned octal2 = (c >> 3) & 0x7;
+                os << "\\";
+                if (octal2)
+                    os << octal2;
+                if (octal1)
+                    os << octal1;
+                os << octal0;
+            }
+        }
+        os << "\"" << normal;
+    }
     virtual void visit(String *node) override;
     virtual void visit(WString *node) override;
     virtual void visit(Enum *node) override;
