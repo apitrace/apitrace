@@ -384,7 +384,17 @@ if (WIN32)
     if (MSVC)
         add_linker_flags (/NXCOMPAT /DYNAMICBASE)
     else ()
-        add_linker_flags (-Wl,--nxcompat -Wl,--dynamicbase)
+        add_linker_flags (-Wl,--nxcompat)
+
+        # `--dynamicbase` causes ld segmentation fault with Ubuntu 20.04 MinGW
+        # cross compilation toolchain, unless it's paired with
+        # `--export-all-symbols`
+        set (CMAKE_REQUIRED_LINK_OPTIONS "-Wl,--dynamicbase")
+        check_cxx_source_compiles("int main() { return 0; }" HAVE_DYNAMICBASE)
+        unset (CMAKE_REQUIRED_LINK_OPTIONS)
+        if (HAVE_DYNAMICBASE)
+            add_linker_flags (-Wl,--dynamicbase)
+        endif ()
     endif ()
 
     # Use more than 2GB virtual memory address space for 32-bits processes
