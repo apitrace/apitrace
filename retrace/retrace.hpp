@@ -158,6 +158,7 @@ extern bool profilingListMetrics;
 extern bool profilingNumPasses;
 
 extern bool profiling;
+extern bool profilingFrameTimes;
 extern bool profilingCpuTimes;
 extern bool profilingGpuTimes;
 extern bool profilingPixelsDrawn;

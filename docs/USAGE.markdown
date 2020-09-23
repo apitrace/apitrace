@@ -394,6 +394,8 @@ section above.
 
 You can perform gpu and cpu profiling with the command line options:
 
+ * `--pframe-times` record frames times, waiting for presentation to finish before starting next frame.
+
  * `--pgpu` record gpu times for frames and draw calls.
 
  * `--pcpu` record cpu times for frames and draw calls.

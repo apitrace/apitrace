@@ -280,6 +280,12 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
     } else {
         glFlush();
     }
+
+    if (retrace::profilingFrameTimes) {
+        // Wait for presentation to finish
+        glFinish();
+        std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
 }
 
 const retrace::Entry glretrace::egl_callbacks[] = {
