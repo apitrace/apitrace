@@ -165,6 +165,9 @@ checkGlError(trace::Call &call);
 void
 insertCallMarker(trace::Call &call, Context *currentContext);
 
+int64_t
+getCurrentTime(void);
+
 void
 mapResourceLocation(GLuint program, GLenum programInterface,
                     GLint index,
