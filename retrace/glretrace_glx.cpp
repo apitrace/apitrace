@@ -149,6 +149,12 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
     } else {
         glFlush();
     }
+
+    if (retrace::profilingFrameTimes) {
+        // Wait for presentation to finish
+        glFinish();
+        std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
 }
 
 static void retrace_glXSwapBuffersMscOML(trace::Call &call) {

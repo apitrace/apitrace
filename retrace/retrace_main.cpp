@@ -108,6 +108,7 @@ bool profilingListMetrics = false;
 bool profilingNumPasses = false;
 
 bool profiling = false;
+bool profilingFrameTimes = false;
 bool profilingGpuTimes = false;
 bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
@@ -650,6 +651,7 @@ usage(const char *argv0) {
         "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
         "  -d, --debug             increase debugging checks\n"
         "      --markers           insert call no markers in the command stream\n"
+        "      --pframe-times      frame times profiling (cpu times per frame)\n"
         "      --pcpu              cpu profiling (cpu times per call)\n"
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
@@ -695,6 +697,7 @@ enum {
     DRIVER_OPT,
     FULLSCREEN_OPT,
     HEADLESS_OPT,
+    PFRAMETIMES_OPT,
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
@@ -738,6 +741,7 @@ longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"mrt", no_argument, 0, 'm'},
     {"msaa-no-resolve", no_argument, 0, MSAA_NO_RESOLVE_OPT},
+    {"pframe-times", no_argument, 0, PFRAMETIMES_OPT},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
     {"ppd", no_argument, 0, PPD_OPT},
@@ -1110,6 +1114,13 @@ int main(int argc, char **argv)
             break;
         case LOOP_OPT:
             loopCount = trace::intOption(optarg, -1);
+            break;
+        case PFRAMETIMES_OPT:
+            retrace::debug = 0;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            retrace::profilingFrameTimes = true;
             break;
         case PGPU_OPT:
             retrace::debug = 0;
