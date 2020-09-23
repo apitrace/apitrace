@@ -182,7 +182,7 @@ insertCallMarker(trace::Call &call, Context *currentContext)
 }
 
 
-static inline int64_t
+int64_t
 getCurrentTime(void) {
     if (retrace::profilingGpuTimes && supportsTimestamp) {
         /* Get the current GL time without stalling */
