@@ -906,6 +906,9 @@ class Tracer:
         print()
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        self.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, '_result')
+
+    def implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_override):
         assert not method.internal
 
         sigName = interface.name + '::' + method.sigName()
@@ -928,7 +931,8 @@ class Tracer:
                 self.serializeArg(method, arg)
         print('    trace::localWriter.endEnter();')
         
-        self.invokeMethod(interface, base, method)
+        if result_override == '_result':
+            self.invokeMethod(interface, base, method)
 
         print('    trace::localWriter.beginLeave(_call);')
 
@@ -940,9 +944,9 @@ class Tracer:
         print('    }')
 
         if method.type is not stdapi.Void:
-            self.serializeRet(method, '_result')
+            self.serializeRet(method, result_override)
         if method.type is not stdapi.Void:
-            self.wrapRet(method, '_result')
+            self.wrapRet(method, result_override)
 
         if method.name == 'Release':
             assert method.type is not stdapi.Void
