@@ -131,6 +131,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print('    if (%s) {' % (tmp,))
 
         length = '%s->values.size()' % (tmp,)
+        lvalue_tmp = lvalue
         if self.insideStruct:
             if isinstance(array.length, int):
                 # Member is an array
@@ -140,32 +141,41 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 print(r'    assert( %s->size() == %s );' % (tmp, array.length))
                 length = str(array.length)
             else:
+                lvalue_tmp = '_a_' + array.tag + '_' + str(self.seq)
+                self.seq += 1
                 # Member is a pointer to an array, hence must be allocated
                 print(r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue)
-                print(r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue))
+                print(r'    std::remove_const< %s >::type * %s = _allocator.allocArray< std::remove_const< %s >::type >(&%s);' % (array.type, lvalue_tmp, array.type, rvalue))
 
         index = '_j' + array.tag
         print('        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length))
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
+            self.visit(array.type, '%s[%s]' % (lvalue_tmp, index), '*%s->values[%s]' % (tmp, index))
         finally:
             print('        }')
+            if lvalue_tmp != lvalue:
+                print(r'%s = %s;' % (lvalue, lvalue_tmp))
             print('    }')
     
     def visitPointer(self, pointer, lvalue, rvalue):
         tmp = '_a_' + pointer.tag + '_' + str(self.seq)
         self.seq += 1
 
+        lvalue_tmp = lvalue
         if self.insideStruct:
+            lvalue_tmp = '_a_' + pointer.tag + '_' + str(self.seq)
+            self.seq += 1
             # Member is a pointer to an object, hence must be allocated
             print(r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue)
-            print(r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue))
+            print(r'    std::remove_const< %s >::type * %s = _allocator.allocArray<std::remove_const< std::remove_const< %s >::type >::type>(&%s);' % (pointer.type, lvalue_tmp, pointer.type, rvalue))
 
-        print('    if (%s) {' % (lvalue,))
+        print('    if (%s) {' % (lvalue_tmp,))
         print('        const trace::Array *%s = (%s).toArray();' % (tmp, rvalue))
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*%s->values[0]' % (tmp,))
+            self.visit(pointer.type, '%s[0]' % (lvalue_tmp,), '*%s->values[0]' % (tmp,))
         finally:
+            if lvalue_tmp != lvalue:
+                print(r'%s = %s;' % (lvalue, lvalue_tmp))
             print('    }')
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
