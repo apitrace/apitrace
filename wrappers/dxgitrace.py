@@ -1,6 +1,7 @@
 ##########################################################################
 #
 # Copyright 2008-2009 VMware, Inc.
+# Copyright 2020 Joshua Ashton for Valve Software
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,6 +33,7 @@ from specs.stdapi import API
 from specs import dxgi
 from specs import d3d10
 from specs import d3d11
+from specs import d3d12
 from specs import dcomp
 from specs import d3d9
 
@@ -127,6 +129,10 @@ class D3DCommonTracer(DllTracer):
             variables += [
                 ('std::map<UINT, std::pair<void *, UINT> >', 'm_MapDesc', None),
             ]
+        if interface.hasBase(d3d12.ID3D12DescriptorHeap):
+            variables += [
+                ('_HEAP_VA_DESC', 'm_FakeVADesc', None),
+            ]
 
         return variables
 
@@ -136,7 +142,7 @@ class D3DCommonTracer(DllTracer):
             if pDesc1 is not None:
                 print(r'    %s pDesc = pDesc1;' % (pDesc1.type,))
 
-        if method.name in ('Map', 'Unmap'):
+        if method.name in ('Map', 'Unmap') and not interface.name.startswith('ID3D12'):
             # On D3D11 Map/Unmap is not a resource method, but a context method instead.
             resourceArg = method.getArgByName('pResource')
             if resourceArg is None:
@@ -154,13 +160,16 @@ class D3DCommonTracer(DllTracer):
                 print('    Wrap%spResourceInstance = static_cast<Wrap%s>(%s);' % (resourceArg.type, resourceArg.type, resourceArg.name))
 
         if method.name == 'Unmap':
-            print('    if (_MapDesc.Size && _MapDesc.pData) {')
-            print('        if (_shouldShadowMap(pResourceInstance)) {')
-            print('            _MapShadow.update(trace::fakeMemcpy);')
-            print('        } else {')
-            self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
-            print('        }')
-            print('    }')
+            if interface.name.startswith('ID3D12'):
+                print('    _unmap_resource(this);')
+            else:
+                print('    if (_MapDesc.Size && _MapDesc.pData) {')
+                print('        if (_shouldShadowMap(pResourceInstance)) {')
+                print('            _MapShadow.update(trace::fakeMemcpy);')
+                print('        } else {')
+                self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
+                print('        }')
+                print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'ReleaseDecoderBuffer':
@@ -170,23 +179,55 @@ class D3DCommonTracer(DllTracer):
             print('        m_MapDesc.erase(it);')
             print('    }')
 
-        DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
+        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_FakeVADesc.FakeVABase };')
+
+        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+            result_name = '_fake_result'
+        else:
+            result_name = '_result'
+
+        if method.name == 'ExecuteCommandLists':
+            print('    _flush_mappings();')
+
+        DllTracer.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_name)
+
+        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+            print('    return _fake_result;')
 
         if method.name == 'Map':
-            # NOTE: recursive locks are explicitely forbidden
-            print('    if (SUCCEEDED(_result)) {')
-            print('        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
-            print('        if (_MapDesc.pData && _shouldShadowMap(pResourceInstance)) {')
-            if interface.name.startswith('IDXGI'):
-                print('            (void)_MapShadow;')
+            if interface.name.startswith('ID3D12'):
+                print('    if (SUCCEEDED(_result) && ppData && *ppData) {')
+                print('        SIZE_T key = reinterpret_cast<SIZE_T>(this);')
+                print('        if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end()) {')
+                print('            MEMORY_BASIC_INFORMATION _memory_info;')
+                print('            VirtualQuery(*ppData, &_memory_info, sizeof(_memory_info));')
+                # TODO(Josh): Is this assertion true for placed resources...?
+                # I'm not sure, review me if this ever triggers.'
+                print('            assert(*ppData == _memory_info.BaseAddress);')
+                print('            _D3D12_MAP_DESC _map_desc;')
+                print('            _map_desc.pData = _memory_info.BaseAddress;')
+                print('            _map_desc.Size = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(_memory_info.BaseAddress) - reinterpret_cast<uintptr_t>(*ppData)) + _getMapSize(this);')
+                print('            if (_guard_mapped_memory(_map_desc, &_map_desc.OldProtect))')
+                print('                g_D3D12AddressMappings.insert(std::make_pair(key, _map_desc));')
+                print('        }')
+                print('    }')
             else:
-                print('            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;')
-                print('            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);')
-            print('        }')
-            print('    } else {')
-            print('        _MapDesc.pData = NULL;')
-            print('        _MapDesc.Size = 0;')
-            print('    }')
+                # NOTE: recursive locks are explicitely forbidden
+                print('    if (SUCCEEDED(_result)) {')
+                print('        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
+                print('        if (_MapDesc.pData && _shouldShadowMap(pResourceInstance)) {')
+                if interface.name.startswith('IDXGI') or \
+                method.getArgByName('MapType') is None:
+                    print('            (void)_MapShadow;')
+                else:
+                    print('            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;')
+                    print('            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);')
+                print('        }')
+                print('    } else {')
+                print('        _MapDesc.pData = NULL;')
+                print('        _MapDesc.Size = 0;')
+                print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'GetDecoderBuffer':
@@ -195,6 +236,34 @@ class D3DCommonTracer(DllTracer):
             print('    } else {')
             print('        m_MapDesc[Type] = std::make_pair(nullptr, 0);')
             print('    }')
+
+        if method.name.startswith('CreateDescriptorHeap'):
+            # Allocate 8GB of CPU VA, find a 4GB aligned chunk wherever we get it and return that for the CPU VAs for heaps.
+            # Then when we get CPU VAs passed in, shift out the offset, look up the real heap address and add the offset into that.
+            print('    if (SUCCEEDED(_result)) {')
+            print('        constexpr SIZE_T _fake_size      = 1ull << 32;')
+            print('        constexpr SIZE_T _fake_alignment = _fake_size;')
+            print('        WrapID3D12DescriptorHeap* _descriptor_heap_wrap = (*reinterpret_cast<WrapID3D12DescriptorHeap**>(ppvHeap));')
+            print('        _descriptor_heap_wrap->m_FakeVADesc = _allocateFakeVA(_fake_size, _fake_alignment);')
+            print('        SIZE_T _real_va = _descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart().ptr;')
+            print('        g_D3D12HeapMappings.insert(std::make_pair(_descriptor_heap_wrap->m_FakeVADesc.FakeVABase, _real_va));')
+            print('    }')
+
+    def lookup_heap_desc(self, input_name, output_name):
+        # Map our fake VA to a real VA when actually calling...
+        print(r'    {')
+        print(r'        constexpr SIZE_T _fake_alignment = 1ull << 32;')
+        print(r'        const SIZE_T _fake_va_id = %s.ptr & ~(_fake_alignment - 1);' % input_name)
+        print(r'        const SIZE_T _offset = %s.ptr & _fake_alignment - 1;' % input_name)
+        print(r'        %s.ptr = g_D3D12HeapMappings[_fake_va_id] + _offset;' % output_name)
+        print(r'    }')
+
+    def invokeFunction(self, function):
+        if function.name.startswith('D3D12CreateDevice'):
+            # Setup SEH to handle persistent mapping
+            print(r'    _setup_seh();')
+
+        DllTracer.invokeFunction(self, function)
 
     def invokeMethod(self, interface, base, method):
         if method.name == 'CreateBuffer':
@@ -206,6 +275,38 @@ class D3DCommonTracer(DllTracer):
             print(r'        pInitialData = &initialData;')
             print(r'        _initialBufferAlloc(pDesc, &initialData);')
             print(r'    }')
+
+        for arg in method.args:
+            if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
+                self.lookup_heap_desc(arg.name, arg.name)
+            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
+               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
+                real_name = r'_real_%s' % arg.name
+                print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
+                self.lookup_heap_desc(r'%s[0]' % arg.name, real_name)
+                print(r'    %s = &%s;' % (arg.name, real_name))
+
+        if interface.name.startswith('ID3D12'):
+            if method.name == 'OMSetRenderTargets':
+                print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
+                print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
+                print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
+                self.lookup_heap_desc('pRenderTargetDescriptors[i]', '_real_render_target_descriptors[i]')
+                print('    }')
+                print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
+
+        if method.name == 'CreateCommittedResource':
+            # Disable WRITE_COMBINE for upload heap so we can use PAGE_GUARD
+            # to handle persistently mapped resources.
+            print('    D3D12_HEAP_PROPERTIES _heap_properties = *pHeapProperties;')
+            print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD) {')
+            print('        _heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;')
+            print('        _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;')
+            print('        _heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;')
+            print('        _heap_properties.CreationNodeMask = 0;')
+            print('        _heap_properties.VisibleNodeMask = 0;')
+            print('        pHeapProperties = &_heap_properties;')
+            print('    }')
 
         DllTracer.invokeMethod(self, interface, base, method)
 
@@ -258,12 +359,15 @@ if __name__ == '__main__':
 
     # TODO: Expose this via a runtime option
     print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
+    print('std::map<SIZE_T, SIZE_T>          g_D3D12HeapMappings;')
+    print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')
 
     api = API()
     api.addModule(dxgi.dxgi)
     api.addModule(d3d10.d3d10)
     api.addModule(d3d10.d3d10_1)
     api.addModule(d3d11.d3d11)
+    api.addModule(d3d12.d3d12)
     api.addModule(dcomp.dcomp)
     api.addModule(d3d9.d3dperf)
 

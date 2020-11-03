@@ -30,11 +30,13 @@
 import sys
 from dllretrace import DllRetracer as Retracer
 import specs.dxgi
+from specs import stdapi
 from specs.stdapi import API
 from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10, d3d10_1
 from specs.d3d11 import d3d11
+from specs import d3d12
 from specs.dcomp import dcomp
 
 
@@ -44,6 +46,7 @@ class D3DRetracer(Retracer):
         print('// Swizzling mapping for lock addresses, mapping a (pDeviceContext, pResource, Subresource) -> void *')
         print('typedef std::pair< IUnknown *, UINT > SubresourceKey;')
         print('static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;')
+        print('std::map<SIZE_T, SIZE_T> g_D3D12HeapMappings;')
         print()
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -56,6 +59,7 @@ class D3DRetracer(Retracer):
         "D3D10CreateDeviceAndSwapChain1",
         "D3D11CreateDevice",
         "D3D11CreateDeviceAndSwapChain",
+        "D3D12CreateDevice",
     ]
 
     def invokeFunction(self, function):
@@ -96,6 +100,16 @@ class D3DRetracer(Retracer):
 
                 # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE_UNKNOWN')
+
+            if function.name.startswith('D3D12CreateDevice'):
+                # Toggle debugging
+                print(r'    if (retrace::debug >= 2) {')
+                print(r'        ID3D12Debug* debugController;')
+                print(r'        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))')
+                print(r'            debugController->EnableDebugLayer();')
+                print(r'        else')
+                print(r'            retrace::warning(call) << "Direct3D 12.x SDK Debug Layer (d3d12*sdklayers.dll) not available, continuing without debug output\n";')
+                print(r'    }')
 
         Retracer.invokeFunction(self, function)
 
@@ -151,6 +165,15 @@ class D3DRetracer(Retracer):
         print(r'        Software = NULL;')
         print(r'    }')
 
+    def lookup_heap_desc(self, input_name, output_name):
+        # Map our fake VA to a real VA when actually calling...
+        print(r'    {')
+        print(r'        constexpr SIZE_T _fake_alignment = 1ull << 32;')
+        print(r'        const SIZE_T _fake_va_id = %s.ptr & ~(_fake_alignment - 1);' % input_name)
+        print(r'        const SIZE_T _offset = %s.ptr & _fake_alignment - 1;' % input_name)
+        print(r'        %s.ptr = g_D3D12HeapMappings[_fake_va_id] + _offset;' % output_name)
+        print(r'    }')
+
     def doInvokeInterfaceMethod(self, interface, method):
         if interface.name.startswith('IDXGIAdapter') and method.name == 'EnumOutputs':
             print(r'    if (Output != 0) {')
@@ -173,6 +196,7 @@ class D3DRetracer(Retracer):
                 print(r'    _queryDesc.MiscFlags = 0;')
                 print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D11Query **>(ppCounter));')
                 return
+            # TODO(Josh): We need to do something for d3d12 counters here but this gets a lil more complex
 
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
@@ -215,6 +239,7 @@ class D3DRetracer(Retracer):
             print(r'        Sleep(1);')
             Retracer.doInvokeInterfaceMethod(self, interface, method)
             print(r'    }')
+        # TODO(Josh): D3D12 Video
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
@@ -232,6 +257,7 @@ class D3DRetracer(Retracer):
                 print(r'    }')
             else:
                 print(r'    d3d11Dumper.bindDevice(_this);')
+        # TODO(Josh): d3d12 command queue???
 
         # intercept private interfaces
         if method.name == 'QueryInterface':
@@ -317,7 +343,7 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             return
 
-        if method.name == 'Map':
+        if method.name == 'Map' and not interface.name.startswith('ID3D12Resource'):
             # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
             # way to cope with it (other than retry).
             mapFlagsArg = method.getArgByName('MapFlags')
@@ -378,7 +404,31 @@ class D3DRetracer(Retracer):
 ''')
             return
 
+        for arg in method.args:
+            if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
+                self.lookup_heap_desc(arg.name, arg.name)
+            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
+               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
+                real_name = r'_real_%s' % arg.name
+                print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
+                self.lookup_heap_desc(r'%s[0]' % arg.name, real_name)
+                print(r'    %s = &%s;' % (arg.name, real_name))
+
+        if interface.name.startswith('ID3D12'):
+            if method.name == 'OMSetRenderTargets':
+                print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
+                print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
+                print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
+                self.lookup_heap_desc('pRenderTargetDescriptors[i]', '_real_render_target_descriptors[i]')
+                print('    }')
+                print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
+
         Retracer.invokeInterfaceMethod(self, interface, method)
+
+        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+            print('    SIZE_T _fake_va = SIZE_T(call.ret->toStruct()->members[0]->toUInt());')
+            print('    if (g_D3D12HeapMappings.find(_fake_va) == g_D3D12HeapMappings.end())')
+            print('        g_D3D12HeapMappings.insert(std::make_pair(_fake_va, _result.ptr));')
 
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
@@ -448,7 +498,8 @@ class D3DRetracer(Retracer):
         Retracer.retraceInterfaceMethodBody(self, interface, method)
 
         # Add pitch swizzling information to the region
-        if method.name == 'Map' and interface.name not in ('ID3D10Buffer', 'ID3D10Texture1D'):
+        # TODO(Josh): Any way we can fudge this to make pitches device agnostic on D3D12?
+        if method.name == 'Map' and interface.name not in ('ID3D10Buffer', 'ID3D10Texture1D', 'ID3D12Resource'):
             if interface.name.startswith('ID3D11DeviceContext'):
                 outArg = method.getArgByName('pMappedResource')
                 memberNames = ('pData', 'RowPitch', 'DepthPitch')
@@ -526,6 +577,8 @@ def main():
     print(r'#include "d3d10state.hpp"')
     print(r'#include "d3d11imports.hpp"')
     print(r'#include "d3d11size.hpp"')
+    print(r'#include "d3d12imports.hpp"')
+    print(r'#include "d3d12size.hpp"')
     print(r'#include "dcompimports.hpp"')
     print(r'#include "d3dstate.hpp"')
     print(r'#include "d3d9imports.hpp" // D3DERR_WASSTILLDRAWING')
@@ -540,6 +593,7 @@ def main():
     api.addModule(d3d10)
     api.addModule(d3d10_1)
     api.addModule(d3d11)
+    api.addModule(d3d12.d3d12)
     api.addModule(dcomp)
 
     retracer = D3DRetracer()

@@ -1285,6 +1285,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             registerModuleHooks("d3d10.dll",   g_hHookModule);
             registerModuleHooks("d3d10_1.dll", g_hHookModule);
             registerModuleHooks("d3d11.dll",   g_hHookModule);
+            registerModuleHooks("d3d12.dll",   g_hHookModule);
             registerModuleHooks("d3d9.dll",    g_hHookModule); // for D3DPERF_*
             registerModuleHooks("dcomp.dll",   g_hHookModule);
         } else if (stricmp(szNewDllBaseName, "d3d9.dll") == 0) {
