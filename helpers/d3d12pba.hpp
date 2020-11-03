@@ -129,8 +129,12 @@ _flush_mapping_memcpys(_D3D12_MAP_DESC& mapping)
     {
         constexpr DWORD page_size = 4096;
 
-        void* start = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(mapping.pData) + mapping.DirtyPages[i].PageStart * page_size);
+        uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
+        uintptr_t page_start     = resource_start + mapping.DirtyPages[i].PageStart * page_size;
+        void* start = reinterpret_cast<void*>(page_start);
         size_t size = (mapping.DirtyPages[i].PageEnd - mapping.DirtyPages[i].PageStart) * page_size;
+        size = std::min(page_start + size, resource_start + mapping.Size) - page_start;
+
         trace::fakeMemcpy(start, size);
     }
 }
