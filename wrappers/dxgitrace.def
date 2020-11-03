@@ -21,3 +21,12 @@ EXPORTS
 	DXGID3D10CreateLayeredDevice
 	DXGID3D10GetLayeredDeviceSize
 	DXGID3D10RegisterLayers
+
+    D3D12CreateDevice
+    D3D12GetDebugInterface
+    D3D12CreateRootSignatureDeserializer
+    D3D12CreateVersionedRootSignatureDeserializer
+
+    D3D12EnableExperimentalFeatures
+    D3D12SerializeRootSignature
+    D3D12SerializeVersionedRootSignature

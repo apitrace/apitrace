@@ -40,6 +40,8 @@
 #include "d3d10size.hpp"
 #include "d3d11imports.hpp"
 #include "d3d11size.hpp"
+#include "d3d12imports.hpp"
+#include "d3d12size.hpp"
 #include "dcompimports.hpp"
 #include "d2dimports.hpp" // WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT
 #include "d3d9imports.hpp" // D3DPERF_*
