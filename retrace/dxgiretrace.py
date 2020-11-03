@@ -430,7 +430,7 @@ class D3DRetracer(Retracer):
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print(r'    d3dretrace::processEvents();')
 
-        if method.name in ('Map', 'Unmap'):
+        if method.name in ('Map', 'Unmap') and not interface.name.startswith('ID3D12'):
             if interface.name.startswith('ID3D11DeviceContext'):
                 print('    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];')
             else:
@@ -440,22 +440,25 @@ class D3DRetracer(Retracer):
                 print('    void * & _pbData = g_Maps[0][SubresourceKey(_this, Subresource)];')
 
         if method.name == 'Map':
-            print('    _MAP_DESC _MapDesc;')
-            print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
-            print('    size_t _MappedSize = _MapDesc.Size;')
-            print('    if (_MapDesc.Size) {')
-            print('        _pbData = _MapDesc.pData;')
-            if interface.name.startswith('ID3D11DeviceContext'):
-                # Prevent false warnings on 1D and 2D resources, since the
-                # pitches are often junk there...
-                print('        _normalizeMap(pResource, pMappedResource);')
+            if interface.name.startswith('ID3D12'):
+                print('    size_t _MappedSize = size_t(_getMapSize(_this));')
             else:
+                print('    _MAP_DESC _MapDesc;')
+                print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
+                print('    size_t _MappedSize = _MapDesc.Size;')
+                print('    if (_MapDesc.Size) {')
                 print('        _pbData = _MapDesc.pData;')
-            print('    } else {')
-            print('        return;')
-            print('    }')
+                if interface.name.startswith('ID3D11DeviceContext'):
+                    # Prevent false warnings on 1D and 2D resources, since the
+                    # pitches are often junk there...
+                    print('        _normalizeMap(pResource, pMappedResource);')
+                else:
+                    print('        _pbData = _MapDesc.pData;')
+                print('    } else {')
+                print('        return;')
+                print('    }')
 
-        if method.name == 'Unmap':
+        if method.name == 'Unmap' and not interface.name.startswith('ID3D12'):
             print('    if (_pbData) {')
             print('        retrace::delRegionByPointer(_pbData);')
             print('        _pbData = 0;')
