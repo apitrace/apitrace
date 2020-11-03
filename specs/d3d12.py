@@ -1840,7 +1840,7 @@ ID3D12PipelineLibrary1.methods += [
 ]
 
 ID3D12Device.methods += [
-    StdMethod(UINT, 'GetNodeCount', []),
+    StdMethod(UINT, 'GetNodeCount', [], sideeffects=False),
     StdMethod(HRESULT, 'CreateCommandQueue', [(Pointer(Const(D3D12_COMMAND_QUEUE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
     StdMethod(HRESULT, 'CreateCommandAllocator', [(D3D12_COMMAND_LIST_TYPE, 'type'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandAllocator')]),
     StdMethod(HRESULT, 'CreateGraphicsPipelineState', [(Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
@@ -1870,13 +1870,13 @@ ID3D12Device.methods += [
     StdMethod(HRESULT, 'MakeResident', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects')]),
     StdMethod(HRESULT, 'Evict', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects')]),
     StdMethod(HRESULT, 'CreateFence', [(UINT64, 'InitialValue'), (D3D12_FENCE_FLAGS, 'Flags'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
-    StdMethod(HRESULT, 'GetDeviceRemovedReason', []),
-    StdMethod(Void, 'GetCopyableFootprints', [(Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDesc'), (UINT, 'FirstSubresource'), (UINT, 'NumSubresources'), (UINT64, 'BaseOffset'), Out(Array(D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 'NumSubresources'), 'pLayouts'), Out(Array(UINT, 'NumSubresources'), 'pNumRows'), Out(Array(UINT64, 'NumSubresources'), 'pRowSizeInBytes'), Out(Pointer(UINT64), 'pTotalBytes')]),
+    StdMethod(HRESULT, 'GetDeviceRemovedReason', [], sideeffects=False),
+    StdMethod(Void, 'GetCopyableFootprints', [(Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDesc'), (UINT, 'FirstSubresource'), (UINT, 'NumSubresources'), (UINT64, 'BaseOffset'), Out(Array(D3D12_PLACED_SUBRESOURCE_FOOTPRINT, 'NumSubresources'), 'pLayouts'), Out(Array(UINT, 'NumSubresources'), 'pNumRows'), Out(Array(UINT64, 'NumSubresources'), 'pRowSizeInBytes'), Out(Pointer(UINT64), 'pTotalBytes')], sideeffects=False),
     StdMethod(HRESULT, 'CreateQueryHeap', [(Pointer(Const(D3D12_QUERY_HEAP_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'SetStablePowerState', [(BOOL, 'Enable')]),
     StdMethod(HRESULT, 'CreateCommandSignature', [(Pointer(Const(D3D12_COMMAND_SIGNATURE_DESC)), 'pDesc'), (ObjPointer(ID3D12RootSignature), 'pRootSignature'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvCommandSignature')]),
     StdMethod(Void, 'GetResourceTiling', [(ObjPointer(ID3D12Resource), 'pTiledResource'), Out(Pointer(UINT), 'pNumTilesForEntireResource'), Out(Pointer(D3D12_PACKED_MIP_INFO), 'pPackedMipDesc'), Out(Pointer(D3D12_TILE_SHAPE), 'pStandardTileShapeForNonPackedMips'), Out(Pointer(UINT), 'pNumSubresourceTilings'), (UINT, 'FirstSubresourceTilingToGet'), Out(Pointer(D3D12_SUBRESOURCE_TILING), 'pSubresourceTilingsForNonPackedMips')]),
-    StdMethod(LUID, 'GetAdapterLuid', []),
+    StdMethod(LUID, 'GetAdapterLuid', [], sideeffects=False),
 ]
 
 ID3D12Device1.methods += [
