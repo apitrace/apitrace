@@ -39,16 +39,25 @@ ID3DBlob.methods += [
 
 ID3D12RootSignature = Interface('ID3D12RootSignature', ID3D12DeviceChild)
 ID3D12RootSignatureDeserializer = Interface('ID3D12RootSignatureDeserializer', IUnknown)
+ID3D12VersionedRootSignatureDeserializer = Interface('ID3D12VersionedRootSignatureDeserializer', IUnknown)
 ID3D12CommandAllocator = Interface('ID3D12CommandAllocator', ID3D12Pageable)
 ID3D12Fence = Interface('ID3D12Fence', ID3D12Pageable)
+ID3D12Fence1 = Interface('ID3D12Fence1', ID3D12Fence)
 ID3D12PipelineState = Interface('ID3D12PipelineState', ID3D12Pageable)
 ID3D12DescriptorHeap = Interface('ID3D12DescriptorHeap', ID3D12Pageable)
 ID3D12QueryHeap = Interface('ID3D12QueryHeap', ID3D12Pageable)
 ID3D12CommandSignature = Interface('ID3D12CommandSignature', ID3D12Pageable)
 ID3D12CommandList = Interface('ID3D12CommandList', ID3D12DeviceChild)
 ID3D12GraphicsCommandList = Interface('ID3D12GraphicsCommandList', ID3D12CommandList)
+ID3D12GraphicsCommandList1 = Interface('ID3D12GraphicsCommandList1', ID3D12GraphicsCommandList)
+ID3D12GraphicsCommandList2 = Interface('ID3D12GraphicsCommandList2', ID3D12GraphicsCommandList1)
 ID3D12CommandQueue = Interface('ID3D12CommandQueue', ID3D12Pageable)
+ID3D12PipelineLibrary = Interface('ID3D12PipelineLibrary', ID3D12DeviceChild)
+ID3D12PipelineLibrary1 = Interface('ID3D12PipelineLibrary1', ID3D12PipelineLibrary)
 ID3D12Device = Interface('ID3D12Device', ID3D12Object)
+ID3D12Device1 = Interface('ID3D12Device1', ID3D12Device)
+ID3D12Device2 = Interface('ID3D12Device2', ID3D12Device1)
+ID3D12Device3 = Interface('ID3D12Device3', ID3D12Device2)
 
 
 D3D12_GPU_VIRTUAL_ADDRESS = Alias('D3D12_GPU_VIRTUAL_ADDRESS', UINT64)
@@ -58,6 +67,9 @@ D3D12_COMMAND_LIST_TYPE = Enum('D3D12_COMMAND_LIST_TYPE', [
     'D3D12_COMMAND_LIST_TYPE_BUNDLE',
     'D3D12_COMMAND_LIST_TYPE_COMPUTE',
     'D3D12_COMMAND_LIST_TYPE_COPY',
+    'D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE',
+    'D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS',
+    'D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE',
 ])
 
 D3D12_COMMAND_QUEUE_FLAGS = EnumFlags('D3D12_COMMAND_QUEUE_FLAGS', [
@@ -68,6 +80,7 @@ D3D12_COMMAND_QUEUE_FLAGS = EnumFlags('D3D12_COMMAND_QUEUE_FLAGS', [
 D3D12_COMMAND_QUEUE_PRIORITY = Enum('D3D12_COMMAND_QUEUE_PRIORITY', [
     'D3D12_COMMAND_QUEUE_PRIORITY_NORMAL',
     'D3D12_COMMAND_QUEUE_PRIORITY_HIGH',
+    'D3D12_COMMAND_QUEUE_PRIORITY_GLOBAL_REALTIME',
 ])
 
 D3D12_COMMAND_QUEUE_DESC = Struct('D3D12_COMMAND_QUEUE_DESC', [
@@ -438,6 +451,22 @@ D3D12_FEATURE = Enum('D3D12_FEATURE', [
     'D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS',
     'D3D12_FEATURE_FORMAT_INFO',
     'D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT',
+    'D3D12_FEATURE_SHADER_MODEL',
+    'D3D12_FEATURE_D3D12_OPTIONS1',
+    'D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_SUPPORT',
+    'D3D12_FEATURE_ROOT_SIGNATURE',
+    'D3D12_FEATURE_ARCHITECTURE1',
+    'D3D12_FEATURE_D3D12_OPTIONS2',
+    'D3D12_FEATURE_SHADER_CACHE',
+    'D3D12_FEATURE_COMMAND_QUEUE_PRIORITY',
+    'D3D12_FEATURE_D3D12_OPTIONS3',
+    'D3D12_FEATURE_EXISTING_HEAPS',
+    'D3D12_FEATURE_D3D12_OPTIONS4',
+    'D3D12_FEATURE_SERIALIZATION',
+    'D3D12_FEATURE_CROSS_NODE',
+    'D3D12_FEATURE_D3D12_OPTIONS5',
+    'D3D12_FEATURE_D3D12_OPTIONS6',
+    'D3D12_FEATURE_QUERY_META_COMMAND',
 ])
 
 D3D12_SHADER_MIN_PRECISION_SUPPORT = EnumFlags('D3D12_SHADER_MIN_PRECISION_SUPPORT', [
@@ -451,6 +480,7 @@ D3D12_TILED_RESOURCES_TIER = Enum('D3D12_TILED_RESOURCES_TIER', [
     'D3D12_TILED_RESOURCES_TIER_1',
     'D3D12_TILED_RESOURCES_TIER_2',
     'D3D12_TILED_RESOURCES_TIER_3',
+    'D3D12_TILED_RESOURCES_TIER_4',
 ])
 
 D3D12_RESOURCE_BINDING_TIER = Enum('D3D12_RESOURCE_BINDING_TIER', [
@@ -524,6 +554,7 @@ D3D12_CROSS_NODE_SHARING_TIER = Enum('D3D12_CROSS_NODE_SHARING_TIER', [
     'D3D12_CROSS_NODE_SHARING_TIER_1_EMULATED',
     'D3D12_CROSS_NODE_SHARING_TIER_1',
     'D3D12_CROSS_NODE_SHARING_TIER_2',
+    'D3D12_CROSS_NODE_SHARING_TIER_3',
 ])
 
 D3D12_RESOURCE_HEAP_TIER = Enum('D3D12_RESOURCE_HEAP_TIER', [
@@ -619,7 +650,7 @@ D3D12_HEAP_PROPERTIES = Struct('D3D12_HEAP_PROPERTIES', [
 ])
 
 D3D12_HEAP_FLAGS = EnumFlags('D3D12_HEAP_FLAGS', [
-    'D3D12_HEAP_FLAG_NONE',
+    #'D3D12_HEAP_FLAG_NONE',
     'D3D12_HEAP_FLAG_SHARED',
     'D3D12_HEAP_FLAG_DENY_BUFFERS',
     'D3D12_HEAP_FLAG_ALLOW_DISPLAY',
@@ -662,6 +693,7 @@ D3D12_RESOURCE_FLAGS = EnumFlags('D3D12_RESOURCE_FLAGS', [
     'D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE',
     'D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER',
     'D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS',
+    'D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY',
 ])
 
 D3D12_RESOURCE_DESC = Struct('D3D12_RESOURCE_DESC', [
@@ -694,6 +726,16 @@ D3D12_CLEAR_VALUE = Struct('D3D12_CLEAR_VALUE', [
 D3D12_RANGE = Struct('D3D12_RANGE', [
     (SIZE_T, 'Begin'),
     (SIZE_T, 'End'),
+])
+
+D3D12_RANGE_UINT64 = Struct('D3D12_RANGE_UINT64', [
+    (UINT64, 'Begin'),
+    (UINT64, 'End'),
+])
+
+D3D12_SUBRESOURCE_RANGE_UINT64 = Struct('D3D12_SUBRESOURCE_RANGE_UINT64', [
+    (UINT, 'Subresource'),
+    (D3D12_RANGE_UINT64, 'Range'),
 ])
 
 D3D12_SUBRESOURCE_INFO = Struct('D3D12_SUBRESOURCE_INFO', [
@@ -772,9 +814,17 @@ D3D12_RESOURCE_STATES = EnumFlags('D3D12_RESOURCE_STATES', [
     'D3D12_RESOURCE_STATE_COPY_SOURCE',
     'D3D12_RESOURCE_STATE_RESOLVE_DEST',
     'D3D12_RESOURCE_STATE_RESOLVE_SOURCE',
+    'D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE',
+    'D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE',
     'D3D12_RESOURCE_STATE_GENERIC_READ',
-    'D3D12_RESOURCE_STATE_PRESENT',
+    #'D3D12_RESOURCE_STATE_PRESENT',
     'D3D12_RESOURCE_STATE_PREDICATION',
+    'D3D12_RESOURCE_STATE_VIDEO_DECODE_READ',
+    'D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE',
+    'D3D12_RESOURCE_STATE_VIDEO_PROCESS_READ',
+    'D3D12_RESOURCE_STATE_VIDEO_PROCESS_WRITE',
+    'D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ',
+    'D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE',
 ])
 
 D3D12_RESOURCE_BARRIER_TYPE = Enum('D3D12_RESOURCE_BARRIER_TYPE', [
@@ -934,6 +984,7 @@ D3D12_SRV_DIMENSION = Enum('D3D12_SRV_DIMENSION', [
     'D3D12_SRV_DIMENSION_TEXTURE3D',
     'D3D12_SRV_DIMENSION_TEXTURECUBE',
     'D3D12_SRV_DIMENSION_TEXTURECUBEARRAY',
+    'D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE',
 ])
 
 D3D12_SHADER_RESOURCE_VIEW_DESC = Struct('D3D12_SHADER_RESOURCE_VIEW_DESC', [
@@ -1232,6 +1283,7 @@ D3D12_FENCE_FLAGS = EnumFlags('D3D12_FENCE_FLAGS', [
     'D3D12_FENCE_FLAG_NONE',
     'D3D12_FENCE_FLAG_SHARED',
     'D3D12_FENCE_FLAG_SHARED_CROSS_ADAPTER',
+    'D3D12_FENCE_FLAG_NON_MONITORED',
 ])
 
 D3D12_DESCRIPTOR_HEAP_TYPE = Enum('D3D12_DESCRIPTOR_HEAP_TYPE', [
@@ -1269,9 +1321,32 @@ D3D12_DESCRIPTOR_RANGE = Struct('D3D12_DESCRIPTOR_RANGE', [
     (UINT, 'OffsetInDescriptorsFromTableStart'),
 ])
 
+D3D12_DESCRIPTOR_RANGE_FLAGS = EnumFlags('D3D12_DESCRIPTOR_RANGE_FLAGS', [
+    'D3D12_DESCRIPTOR_RANGE_FLAG_NONE',
+    'D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE',
+    'D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE',
+    'D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE',
+    'D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC',
+    'D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_STATIC_KEEPING_BUFFER_BOUNDS_CHECKS',
+])
+
+D3D12_DESCRIPTOR_RANGE1 = Struct('D3D12_DESCRIPTOR_RANGE1', [
+    (D3D12_DESCRIPTOR_RANGE_TYPE, 'RangeType'),
+    (UINT, 'NumDescriptors'),
+    (UINT, 'BaseShaderRegister'),
+    (UINT, 'RegisterSpace'),
+    (D3D12_DESCRIPTOR_RANGE_FLAGS, 'Flags'),
+    (UINT, 'OffsetInDescriptorsFromTableStart'),
+])
+
 D3D12_ROOT_DESCRIPTOR_TABLE = Struct('D3D12_ROOT_DESCRIPTOR_TABLE', [
     (UINT, 'NumDescriptorRanges'),
     (Array(Const(D3D12_DESCRIPTOR_RANGE), '{self}.NumDescriptorRanges'), 'pDescriptorRanges'),
+])
+
+D3D12_ROOT_DESCRIPTOR_TABLE1 = Struct('D3D12_ROOT_DESCRIPTOR_TABLE1', [
+    (UINT, 'NumDescriptorRanges'),
+    (Array(Const(D3D12_DESCRIPTOR_RANGE1), '{self}.NumDescriptorRanges'), 'pDescriptorRanges'),
 ])
 
 D3D12_ROOT_CONSTANTS = Struct('D3D12_ROOT_CONSTANTS', [
@@ -1283,6 +1358,19 @@ D3D12_ROOT_CONSTANTS = Struct('D3D12_ROOT_CONSTANTS', [
 D3D12_ROOT_DESCRIPTOR = Struct('D3D12_ROOT_DESCRIPTOR', [
     (UINT, 'ShaderRegister'),
     (UINT, 'RegisterSpace'),
+])
+
+D3D12_ROOT_DESCRIPTOR_FLAGS = EnumFlags('D3D12_ROOT_DESCRIPTOR_FLAGS', [
+    'D3D12_ROOT_DESCRIPTOR_FLAG_NONE',
+    'D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE',
+    'D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE',
+    'D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC',
+])
+
+D3D12_ROOT_DESCRIPTOR1 = Struct('D3D12_ROOT_DESCRIPTOR1', [
+    (UINT, 'ShaderRegister'),
+    (UINT, 'RegisterSpace'),
+    (D3D12_ROOT_DESCRIPTOR_FLAGS, 'Flags'),
 ])
 
 D3D12_SHADER_VISIBILITY = Enum('D3D12_SHADER_VISIBILITY', [
@@ -1314,6 +1402,18 @@ D3D12_ROOT_PARAMETER = Struct('D3D12_ROOT_PARAMETER', [
     (D3D12_SHADER_VISIBILITY, 'ShaderVisibility'),
 ])
 
+D3D12_ROOT_PARAMETER1 = Struct('D3D12_ROOT_PARAMETER1', [
+    (D3D12_ROOT_PARAMETER_TYPE, 'ParameterType'),
+    (Union('{self}.ParameterType', [
+        ('D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE', D3D12_ROOT_DESCRIPTOR_TABLE1, 'DescriptorTable'),
+        ('D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS',  D3D12_ROOT_CONSTANTS, 'Constants'),
+        ('D3D12_ROOT_PARAMETER_TYPE_CBV',              D3D12_ROOT_DESCRIPTOR1, 'Descriptor'),
+        ('D3D12_ROOT_PARAMETER_TYPE_SRV',              D3D12_ROOT_DESCRIPTOR1, 'Descriptor'),
+        ('D3D12_ROOT_PARAMETER_TYPE_UAV',              D3D12_ROOT_DESCRIPTOR1, 'Descriptor'),
+    ]), None),
+    (D3D12_SHADER_VISIBILITY, 'ShaderVisibility'),
+])
+
 D3D12_ROOT_SIGNATURE_FLAGS = Enum('D3D12_ROOT_SIGNATURE_FLAGS', [
     'D3D12_ROOT_SIGNATURE_FLAG_NONE',
     'D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT',
@@ -1323,6 +1423,7 @@ D3D12_ROOT_SIGNATURE_FLAGS = Enum('D3D12_ROOT_SIGNATURE_FLAGS', [
     'D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS',
     'D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS',
     'D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT',
+    'D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE',
 ])
 
 D3D12_STATIC_BORDER_COLOR = Enum('D3D12_STATIC_BORDER_COLOR', [
@@ -1355,9 +1456,27 @@ D3D12_ROOT_SIGNATURE_DESC = Struct('D3D12_ROOT_SIGNATURE_DESC', [
     (D3D12_ROOT_SIGNATURE_FLAGS, 'Flags'),
 ])
 
-D3D_ROOT_SIGNATURE_VERSION = Enum('D3D_ROOT_SIGNATURE_VERSION', [
-    'D3D_ROOT_SIGNATURE_VERSION_1',
+D3D12_ROOT_SIGNATURE_DESC1 = Struct('D3D12_ROOT_SIGNATURE_DESC1', [
+    (UINT, 'NumParameters'),
+    (Array(Const(D3D12_ROOT_PARAMETER1), '{self}.NumParameters'), 'pParameters'),
+    (UINT, 'NumStaticSamplers'),
+    (Array(Const(D3D12_STATIC_SAMPLER_DESC), '{self}.NumStaticSamplers'), 'pStaticSamplers'),
+    (D3D12_ROOT_SIGNATURE_FLAGS, 'Flags'),
 ])
+
+D3D_ROOT_SIGNATURE_VERSION = Enum('D3D_ROOT_SIGNATURE_VERSION', [
+    'D3D_ROOT_SIGNATURE_VERSION_1_0',
+    'D3D_ROOT_SIGNATURE_VERSION_1_1',
+])
+
+D3D12_VERSIONED_ROOT_SIGNATURE_DESC = Struct('D3D12_VERSIONED_ROOT_SIGNATURE_DESC', [
+    (D3D_ROOT_SIGNATURE_VERSION, 'Version'),
+    (Union('{self}.Version', [
+        ('D3D_ROOT_SIGNATURE_VERSION_1_0', D3D12_ROOT_SIGNATURE_DESC, 'Desc_1_0'),
+        ('D3D_ROOT_SIGNATURE_VERSION_1_1', D3D12_ROOT_SIGNATURE_DESC1, 'Desc_1_1'),
+    ]), None),
+])
+
 
 D3D12_CPU_DESCRIPTOR_HANDLE = Struct('D3D12_CPU_DESCRIPTOR_HANDLE', [
     (SIZE_T, 'ptr'),
@@ -1379,6 +1498,8 @@ D3D12_QUERY_HEAP_TYPE = Enum('D3D12_QUERY_HEAP_TYPE', [
     'D3D12_QUERY_HEAP_TYPE_TIMESTAMP',
     'D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS',
     'D3D12_QUERY_HEAP_TYPE_SO_STATISTICS',
+    'D3D12_QUERY_HEAP_TYPE_VIDEO_DECODE_STATISTICS',
+    'D3D12_QUERY_HEAP_TYPE_COPY_QUEUE_TIMESTAMP'
 ])
 
 D3D12_QUERY_HEAP_DESC = Struct('D3D12_QUERY_HEAP_DESC', [
@@ -1396,6 +1517,7 @@ D3D12_QUERY_TYPE = Enum('D3D12_QUERY_TYPE', [
     'D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1',
     'D3D12_QUERY_TYPE_SO_STATISTICS_STREAM2',
     'D3D12_QUERY_TYPE_SO_STATISTICS_STREAM3',
+    'D3D12_QUERY_TYPE_VIDEO_DECODE_STATISTICS',
 ])
 
 D3D12_PREDICATION_OP = Enum('D3D12_PREDICATION_OP', [
@@ -1503,11 +1625,58 @@ D3D12_COMMAND_SIGNATURE_DESC = Struct('D3D12_COMMAND_SIGNATURE_DESC', [
     (UINT, 'NodeMask'),
 ])
 
+D3D12_MULTIPLE_FENCE_WAIT_FLAGS =  EnumFlags('D3D12_MULTIPLE_FENCE_WAIT_FLAGS', [
+    'D3D12_MULTIPLE_FENCE_WAIT_FLAG_ANY',
+    'D3D12_MULTIPLE_FENCE_WAIT_FLAG_ALL',
+])
+
+D3D12_RESIDENCY_PRIORITY = Enum('D3D12_RESIDENCY_PRIORITY', [
+    'D3D12_RESIDENCY_PRIORITY_MINIMUM',
+    'D3D12_RESIDENCY_PRIORITY_LOW',
+    'D3D12_RESIDENCY_PRIORITY_NORMAL',
+    'D3D12_RESIDENCY_PRIORITY_HIGH',
+    'D3D12_RESIDENCY_PRIORITY_MAXIMUM',
+])
+
+D3D12_RESOLVE_MODE = Enum('D3D12_RESOLVE_MODE', [
+    'D3D12_RESOLVE_MODE_DECOMPRESS',
+    'D3D12_RESOLVE_MODE_MIN',
+    'D3D12_RESOLVE_MODE_MAX',
+    'D3D12_RESOLVE_MODE_AVERAGE',
+])
+
+D3D12_SAMPLE_POSITION = Struct('D3D12_SAMPLE_POSITION', [
+    (INT8, 'X'),
+    (INT8, 'Y'),
+])
+
+D3D12_WRITEBUFFERIMMEDIATE_PARAMETER = Struct('D3D12_WRITEBUFFERIMMEDIATE_PARAMETER', [
+    (D3D12_GPU_VIRTUAL_ADDRESS, 'Dest'),
+    (UINT32, 'Value'),
+])
+
+D3D12_WRITEBUFFERIMMEDIATE_MODE = Enum('D3D12_WRITEBUFFERIMMEDIATE_MODE', [
+    'D3D12_WRITEBUFFERIMMEDIATE_MODE_DEFAULT',
+    'D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_IN',
+    'D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_OUT',
+])
+
+D3D12_PIPELINE_STATE_STREAM_DESC = Struct('D3D12_PIPELINE_STATE_STREAM_DESC', [
+    (SIZE_T, 'SizeInBytes'),
+    (OpaqueBlob(Void, 'SizeInBytes'), 'pPipelineStateSubobjectStream'),
+])
+
+D3D12_RESIDENCY_FLAGS = EnumFlags('D3D12_RESIDENCY_FLAGS', [
+    'D3D12_RESIDENCY_FLAG_NONE',
+    'D3D12_RESIDENCY_FLAG_DENY_OVERBUDGET',
+])
+
 ID3D12Object.methods += [
     StdMethod(HRESULT, 'GetPrivateData', [(REFGUID, 'guid'), InOut(Pointer(UINT), 'pDataSize'), Out(OpaquePointer(Void), 'pData')], sideeffects=False),
     StdMethod(HRESULT, 'SetPrivateData', [(REFGUID, 'guid'), (UINT, 'DataSize'), (OpaqueBlob(Const(Void), 'DataSize'), 'pData')]),
     StdMethod(HRESULT, 'SetPrivateDataInterface', [(REFGUID, 'guid'), (OpaquePointer(Const(IUnknown)), 'pData')], sideeffects=False),
-    StdMethod(HRESULT, 'SetName', [(LPCWSTR, 'Name')]),
+    # TODO(Josh): Do we want to re-enable this? Would be useful for markers.
+    StdMethod(HRESULT, 'SetName', [(LPCWSTR, 'Name')], sideeffects=False),
 ]
 
 ID3D12DeviceChild.methods += [
@@ -1519,6 +1688,11 @@ ID3D12RootSignature.methods += [
 
 ID3D12RootSignatureDeserializer.methods += [
     StdMethod(Pointer(Const(D3D12_ROOT_SIGNATURE_DESC)), 'GetRootSignatureDesc', []),
+]
+
+ID3D12VersionedRootSignatureDeserializer.methods += [
+    StdMethod(HRESULT, 'GetRootSignatureDesc', [(D3D_ROOT_SIGNATURE_VERSION, 'convertToVersion'), Out(Const(Pointer(Pointer(D3D12_VERSIONED_ROOT_SIGNATURE_DESC))), 'ppDesc')]),
+    StdMethod(Pointer(Const(D3D12_VERSIONED_ROOT_SIGNATURE_DESC)), 'GetUnconvertedRootSignatureDesc', []),
 ]
 
 ID3D12Pageable.methods += [
@@ -1546,6 +1720,10 @@ ID3D12Fence.methods += [
     StdMethod(UINT64, 'GetCompletedValue', []),
     StdMethod(HRESULT, 'SetEventOnCompletion', [(UINT64, 'Value'), (HANDLE, 'hEvent')]),
     StdMethod(HRESULT, 'Signal', [(UINT64, 'Value')]),
+]
+
+ID3D12Fence1.methods += [
+    StdMethod(D3D12_FENCE_FLAGS, 'GetCreationFlags', []),
 ]
 
 ID3D12PipelineState.methods += [
@@ -1622,6 +1800,19 @@ ID3D12GraphicsCommandList.methods += [
     StdMethod(Void, 'ExecuteIndirect', [(ObjPointer(ID3D12CommandSignature), 'pCommandSignature'), (UINT, 'MaxCommandCount'), (ObjPointer(ID3D12Resource), 'pArgumentBuffer'), (UINT64, 'ArgumentBufferOffset'), (ObjPointer(ID3D12Resource), 'pCountBuffer'), (UINT64, 'CountBufferOffset')]),
 ]
 
+ID3D12GraphicsCommandList1.methods += [
+    StdMethod(Void, 'AtomicCopyBufferUINT', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Array(Const(ObjPointer(ID3D12Resource)), 'Dependencies'), 'ppDependentResources'), (Array(Const(D3D12_SUBRESOURCE_RANGE_UINT64), 'Dependencies'), 'pDependentSubresourceRanges')]),
+    StdMethod(Void, 'AtomicCopyBufferUINT64', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Array(Const(ObjPointer(ID3D12Resource)), 'Dependencies'), 'ppDependentResources'), (Array(Const(D3D12_SUBRESOURCE_RANGE_UINT64), 'Dependencies'), 'pDependentSubresourceRanges')]),
+    StdMethod(Void, 'OMSetDepthBounds', [(FLOAT, 'Min'), (FLOAT, 'Max')]),
+    StdMethod(Void, 'SetSamplePositions', [(UINT, 'NumSamplesPerPixel'), (UINT, 'NumPixels'), (Array(D3D12_SAMPLE_POSITION, 'NumSamplesPerPixel*NumPixels'), 'pSamplePositions')]),
+    StdMethod(Void, 'ResolveSubresourceRegion', [(ObjPointer(ID3D12Resource), 'pDstResource'), (UINT, 'DstSubresource'), (UINT, 'DstX'), (UINT, 'DstY'), (ObjPointer(ID3D12Resource), 'pSrcResource'), (UINT, 'SrcSubresource'), (Pointer(D3D12_RECT), 'pSrcRect'), (DXGI_FORMAT, 'Format'), (D3D12_RESOLVE_MODE, 'ResolveMode')]),
+    StdMethod(Void, 'SetViewInstanceMask', [(UINT, 'Mask')]),
+]
+
+ID3D12GraphicsCommandList2.methods += [
+    StdMethod(Void, 'WriteBufferImmediate', [(UINT, 'Count'), (Array(Const(D3D12_WRITEBUFFERIMMEDIATE_PARAMETER), 'Count'), 'pParams'), (Array(Const(D3D12_WRITEBUFFERIMMEDIATE_MODE), 'Count'), 'pModes')]),
+]
+
 ID3D12CommandQueue.methods += [
     StdMethod(Void, 'UpdateTileMappings', [(ObjPointer(ID3D12Resource), 'pResource'), (UINT, 'NumResourceRegions'), (Array(Const(D3D12_TILED_RESOURCE_COORDINATE), 'NumResourceRegions'), 'pResourceRegionStartCoordinates'), (Array(Const(D3D12_TILE_REGION_SIZE), 'NumResourceRegions'), 'pResourceRegionSizes'), (ObjPointer(ID3D12Heap), 'pHeap'), (UINT, 'NumRanges'), (Array(Const(D3D12_TILE_RANGE_FLAGS), 'NumRanges'), 'pRangeFlags'), (Array(Const(UINT), 'NumRanges'), 'pHeapRangeStartOffsets'), (Array(Const(UINT), 'NumRanges'), 'pRangeTileCounts'), (D3D12_TILE_MAPPING_FLAGS, 'Flags')]),
     StdMethod(Void, 'CopyTileMappings', [(ObjPointer(ID3D12Resource), 'pDstResource'), (Pointer(Const(D3D12_TILED_RESOURCE_COORDINATE)), 'pDstRegionStartCoordinate'), (ObjPointer(ID3D12Resource), 'pSrcResource'), (Pointer(Const(D3D12_TILED_RESOURCE_COORDINATE)), 'pSrcRegionStartCoordinate'), (Pointer(Const(D3D12_TILE_REGION_SIZE)), 'pRegionSize'), (D3D12_TILE_MAPPING_FLAGS, 'Flags')]),
@@ -1636,6 +1827,18 @@ ID3D12CommandQueue.methods += [
     StdMethod(D3D12_COMMAND_QUEUE_DESC, 'GetDesc', []),
 ]
 
+ID3D12PipelineLibrary.methods += [
+    StdMethod(HRESULT, 'StorePipeline', [(LPCWSTR, 'pName'), (ObjPointer(ID3D12PipelineState), 'pPipeline')]),
+    StdMethod(HRESULT, 'LoadGraphicsPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
+    StdMethod(HRESULT, 'LoadComputePipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
+    StdMethod(SIZE_T, 'GetSerializedSize', []),
+    StdMethod(HRESULT, 'Serialize', [(OpaqueBlob(Const(Void), 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')]),
+]
+
+ID3D12PipelineLibrary1.methods += [
+    StdMethod(HRESULT, 'LoadPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_PIPELINE_STATE_STREAM_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
+]
+
 ID3D12Device.methods += [
     StdMethod(UINT, 'GetNodeCount', []),
     StdMethod(HRESULT, 'CreateCommandQueue', [(Pointer(Const(D3D12_COMMAND_QUEUE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
@@ -1643,7 +1846,7 @@ ID3D12Device.methods += [
     StdMethod(HRESULT, 'CreateGraphicsPipelineState', [(Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
     StdMethod(HRESULT, 'CreateComputePipelineState', [(Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
     StdMethod(HRESULT, 'CreateCommandList', [(UINT, 'nodeMask'), (D3D12_COMMAND_LIST_TYPE, 'type'), (ObjPointer(ID3D12CommandAllocator), 'pCommandAllocator'), (ObjPointer(ID3D12PipelineState), 'pInitialState'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandList')]),
-    StdMethod(HRESULT, 'CheckFeatureSupport', [(D3D12_FEATURE, 'Feature'), Out(Blob(Void, 'FeatureSupportDataSize'), 'pFeatureSupportData'), (UINT, 'FeatureSupportDataSize')]),
+    StdMethod(HRESULT, 'CheckFeatureSupport', [(D3D12_FEATURE, 'Feature'), Out(Blob(Void, 'FeatureSupportDataSize'), 'pFeatureSupportData'), (UINT, 'FeatureSupportDataSize')], sideeffects=False),
     StdMethod(HRESULT, 'CreateDescriptorHeap', [(Pointer(Const(D3D12_DESCRIPTOR_HEAP_DESC)), 'pDescriptorHeapDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(UINT, 'GetDescriptorHandleIncrementSize', [(D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapType')]),
     StdMethod(HRESULT, 'CreateRootSignature', [(UINT, 'nodeMask'), (Blob(Const(Void), 'blobLengthInBytes'), 'pBlobWithRootSignature'), (SIZE_T, 'blobLengthInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvRootSignature')]),
@@ -1676,13 +1879,36 @@ ID3D12Device.methods += [
     StdMethod(LUID, 'GetAdapterLuid', []),
 ]
 
+ID3D12Device1.methods += [
+    StdMethod(HRESULT, 'CreatePipelineLibrary', [(OpaqueBlob(Const(Void), 'BlobLength'), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
+    StdMethod(HRESULT, 'SetEventOnMultipleFenceCompletion', [(Array(Const(ObjPointer(ID3D12Fence)), 'NumFences'), 'ppFences'), (Array(Const(UINT64), 'NumFences'), 'pFenceValues'), (UINT, 'NumFences'), (D3D12_MULTIPLE_FENCE_WAIT_FLAGS, 'Flags'), (HANDLE, 'hEvent')]),
+    StdMethod(HRESULT, 'SetResidencyPriority', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (Array(Const(D3D12_RESIDENCY_PRIORITY), 'NumObjects'), 'pPriorities')]),
+]
+
+ID3D12Device2.methods += [
+    StdMethod(HRESULT, 'CreatePipelineState', [(Pointer(Const(D3D12_PIPELINE_STATE_STREAM_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
+]
+
+ID3D12Device3.methods += [
+    # TODO(Josh): Implement OpenExistingHeapFromAddress, etc properly
+    # Mark all dirty then VirtualProtect their stuff. Yuck.
+    StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
+    StdMethod(HRESULT, 'OpenExistingHeapFromFileMapping', [(HANDLE, 'hFileMapping'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
+    StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'),(ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
+]
+
 d3d12 = Module('d3d12')
 d3d12.addInterfaces([
     ID3D12Debug,
     ID3D12GraphicsCommandList,
+    ID3D12GraphicsCommandList1,
+    ID3D12GraphicsCommandList2,
     ID3D12CommandQueue,
-    ID3D12Device,
+    ID3D12Device1,
+    ID3D12Device2,
+    ID3D12Device3,
 ])
+
 d3d12.addFunctions([
     StdFunction(HRESULT, 'D3D12CreateDevice', [(ObjPointer(IUnknown), 'pAdapter'), (D3D_FEATURE_LEVEL, 'MinimumFeatureLevel'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDevice')]),
     StdFunction(HRESULT, 'D3D12GetDebugInterface', [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvDebug')]),
@@ -1693,4 +1919,3 @@ d3d12.addFunctions([
     StdFunction(HRESULT, 'D3D12SerializeRootSignature', [(Pointer(Const(D3D12_ROOT_SIGNATURE_DESC)), 'pRootSignature'), (D3D_ROOT_SIGNATURE_VERSION, 'Version'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppBlob'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppErrorBlob')]),
     StdFunction(HRESULT, 'D3D12SerializeVersionedRootSignature', [(Pointer(Const(D3D12_VERSIONED_ROOT_SIGNATURE_DESC)), 'pRootSignature'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppBlob'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppErrorBlob')]),
 ])
-
