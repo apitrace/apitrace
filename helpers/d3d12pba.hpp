@@ -139,23 +139,20 @@ static inline void
 _setup_seh()
 {
     PVOID OPTHandler = AddVectoredExceptionHandler(1, [](EXCEPTION_POINTERS* pException) -> LONG {
-        static thread_local bool      s_LastWasWrite;
-        static thread_local uintptr_t s_LastAddress;
-
         if (pException->ExceptionRecord->ExceptionCode == STATUS_GUARD_PAGE_VIOLATION)
         {
-            s_LastWasWrite = static_cast<bool>     (pException->ExceptionRecord->ExceptionInformation[0]);
-            s_LastAddress  = static_cast<uintptr_t>(pException->ExceptionRecord->ExceptionInformation[1]);
+            bool wasWrite     = static_cast<bool>     (pException->ExceptionRecord->ExceptionInformation[0]);
+            uintptr_t address = static_cast<uintptr_t>(pException->ExceptionRecord->ExceptionInformation[1]);
 
             auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
 
             for (auto& mapping : g_D3D12AddressMappings) {
                 uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.second.pData);
                 uintptr_t mapping_end = mapping_base + mapping.second.Size;
-                if (s_LastAddress >= mapping_base && s_LastAddress < mapping_end) {
+                if (address >= mapping_base && address < mapping_end) {
                     constexpr DWORD page_size = 4096;
 
-                    uintptr_t offset = s_LastAddress - mapping_base;
+                    uintptr_t offset = address - mapping_base;
                     DWORD page_start = DWORD(offset / page_size);
                     DWORD page_end = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
 
