@@ -231,7 +231,8 @@ def ConstPointer(type):
 
 class Enum(Type):
 
-    __id = 0
+    # IDs 0 and 1 are reserved for milliseconds/bool for WaitForObjects
+    __id = 2
 
     def __init__(self, name, values):
         Type.__init__(self, name)

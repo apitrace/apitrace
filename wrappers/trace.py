@@ -486,7 +486,8 @@ class Tracer:
     '''Base class to orchestrate the code generation of API tracing.'''
 
     # 0-3 are reserved to memcpy, malloc, free, and realloc
-    __id = 4
+    # 4-7 are reserved for WaitForMultipleObjects
+    __id = 8
 
     def __init__(self):
         self.api = None
