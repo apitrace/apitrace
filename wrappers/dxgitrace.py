@@ -365,8 +365,12 @@ class D3DCommonTracer(DllTracer):
             print('        _heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;')
             print('        _heap_properties.CreationNodeMask = 0;')
             print('        _heap_properties.VisibleNodeMask = 0;')
-            print('        pHeapProperties = &_heap_properties;')
             print('    }')
+            print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_CUSTOM) {')
+            print('        if (pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE)')
+            print('            _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;')
+            print('    }')
+            print('    pHeapProperties = &_heap_properties;')
 
         DllTracer.invokeMethod(self, interface, base, method)
 
