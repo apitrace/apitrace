@@ -1,6 +1,7 @@
 ##########################################################################
 #
 # Copyright 2011 Jose Fonseca
+# Copyright 2020 Joshua Ashton for Valve Software
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,7 +47,7 @@ class D3DRetracer(Retracer):
         print('// Swizzling mapping for lock addresses, mapping a (pDeviceContext, pResource, Subresource) -> void *')
         print('typedef std::pair< IUnknown *, UINT > SubresourceKey;')
         print('static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;')
-        print('std::map<SIZE_T, SIZE_T> g_D3D12HeapMappings;')
+        print('static std::map< IUnknown *, void * > g_MapsD3D12;')
         print()
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -165,15 +166,6 @@ class D3DRetracer(Retracer):
         print(r'    if (Software) {')
         print(r'        Software = LoadLibraryA("d3d10warp.dll");')
         print(r'        assert(Software != nullptr);')
-        print(r'    }')
-
-    def lookup_heap_desc(self, input_name, output_name):
-        # Map our fake VA to a real VA when actually calling...
-        print(r'    {')
-        print(r'        constexpr SIZE_T _fake_alignment = 1ull << 32;')
-        print(r'        const SIZE_T _fake_va_id = %s.ptr & ~(_fake_alignment - 1);' % input_name)
-        print(r'        const SIZE_T _offset = %s.ptr & _fake_alignment - 1;' % input_name)
-        print(r'        %s.ptr = g_D3D12HeapMappings[_fake_va_id] + _offset;' % output_name)
         print(r'    }')
 
     def doInvokeInterfaceMethod(self, interface, method):
@@ -402,36 +394,103 @@ class D3DRetracer(Retracer):
 
         for arg in method.args:
             if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
-                self.lookup_heap_desc(arg.name, arg.name)
+                print(r'    %s = g_D3D12CPUDescriptorSlabResolver.LookupSlab(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
-                self.lookup_heap_desc(r'%s[0]' % arg.name, real_name)
-                print(r'    %s = &%s;' % (arg.name, real_name))
+                print(r'    if (%s != nullptr) {' % arg.name)
+                print(r'        %s = g_D3D12CPUDescriptorSlabResolver.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = &%s;' % (arg.name, real_name))
+                print(r'    }')
+
+            if arg.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE:
+                print(r'    %s = g_D3D12GPUDescriptorSlabResolver.LookupSlab(%s);' % (arg.name, arg.name))
+            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE) or \
+               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE):
+                real_name = r'_real_%s' % arg.name
+                print(r'    D3D12_GPU_DESCRIPTOR_HANDLE %s;' % real_name)
+                print(r'    if (%s != nullptr) {' % arg.name)
+                print(r'        %s = g_D3D12GPUDescriptorSlabResolver.LookupSlab(%s[0]);' % (real_name, arg.name))
+                print(r'        %s = &%s;' % (arg.name, real_name))
+                print(r'    }')
+
+            if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
+                print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
 
         if interface.name.startswith('ID3D12'):
             if method.name == 'OMSetRenderTargets':
                 print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
                 print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
-                self.lookup_heap_desc('pRenderTargetDescriptors[i]', '_real_render_target_descriptors[i]')
+                print('        _real_render_target_descriptors[i] = g_D3D12CPUDescriptorSlabResolver.LookupSlab(pRenderTargetDescriptors[i]);')
                 print('    }')
                 print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
+
+            if method.name == 'SetEventOnCompletion':
+                print('     {')
+                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
+                print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
+                print('         if (_fence_event_iter == g_D3D12FenceEventMap.end()) {')
+                print('             HANDLE event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')
+                print('             g_D3D12FenceEventMap.insert(std::make_pair(hEvent, event));')
+                print('             hEvent = event;')
+                print('         } else {')
+                print('             hEvent = _fence_event_iter->second;')
+                print('         }')
+                print('     }')
+
+            if method.name == 'IASetVertexBuffers':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
+                print('    for (UINT i = 0; i < NumViews; i++) {')
+                print('        _real_views[i] = pViews[i];')
+                print('        _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('    }')
+                print('    pViews = _real_views;')
+
+            if method.name == 'IASetIndexBuffer':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_INDEX_BUFFER_VIEW _real_view;')
+                print('    if (pView) {')
+                print('        _real_view = *pView;')
+                print('        _real_view.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_view.BufferLocation);')
+                print('        pView = &_real_view;')
+                print('    }')
+
+            if method.name == 'CreateConstantBufferView':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_CONSTANT_BUFFER_VIEW_DESC _real_desc;')
+                print('    if (pDesc) {')
+                print('        _real_desc = *pDesc;')
+                print('        _real_desc.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_desc.BufferLocation);')
+                print('        pDesc = &_real_desc;')
+                print('    }')
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
-            print('    SIZE_T _fake_va = SIZE_T(call.ret->toStruct()->members[0]->toUInt());')
-            print('    if (g_D3D12HeapMappings.find(_fake_va) == g_D3D12HeapMappings.end())')
-            print('        g_D3D12HeapMappings.insert(std::make_pair(_fake_va, _result.ptr));')
+            print('    SIZE_T _fake_descriptor_ptr = static_cast<SIZE_T>(call.ret->toStruct()->members[0]->toUInt());')
+            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_descriptor_handle = D3D12_CPU_DESCRIPTOR_HANDLE { _fake_descriptor_ptr };')
+            print('    g_D3D12CPUDescriptorSlabResolver.RegisterSlab(_fake_descriptor_handle, _result);')
+
+        if method.name == 'GetGPUDescriptorHandleForHeapStart':
+            print('    UINT64 _fake_descriptor_ptr = static_cast<UINT64>(call.ret->toStruct()->members[0]->toUInt());')
+            print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_descriptor_handle = D3D12_GPU_DESCRIPTOR_HANDLE { _fake_descriptor_ptr };')
+            print('    g_D3D12GPUDescriptorSlabResolver.RegisterSlab(_fake_descriptor_handle, _result);')
+
+        if method.name == 'GetGPUVirtualAddress':
+            print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_va = call.ret->toUInt();')
+            print('    g_D3D12AddressSlabs.RegisterSlab(_fake_va, _result);')
 
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print(r'    d3dretrace::processEvents();')
 
-        if method.name in ('Map', 'Unmap') and not interface.name.startswith('ID3D12'):
-            if interface.name.startswith('ID3D11DeviceContext'):
+        if method.name in ('Map', 'Unmap'):
+            if interface.name.startswith('ID3D12'):
+                print('    void * & _pbData = g_MapsD3D12[_this];')
+            elif interface.name.startswith('ID3D11DeviceContext'):
                 print('    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];')
             else:
                 subresourceArg = method.getArgByName('Subresource')
@@ -442,6 +501,7 @@ class D3DRetracer(Retracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    size_t _MappedSize = size_t(_getMapSize(_this));')
+                print('    _pbData = *ppData;')
             else:
                 print('    _MAP_DESC _MapDesc;')
                 print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
@@ -458,7 +518,7 @@ class D3DRetracer(Retracer):
                 print('        return;')
                 print('    }')
 
-        if method.name == 'Unmap' and not interface.name.startswith('ID3D12'):
+        if method.name == 'Unmap':
             print('    if (_pbData) {')
             print('        retrace::delRegionByPointer(_pbData);')
             print('        _pbData = 0;')
@@ -575,6 +635,7 @@ def main():
     print(r'#include <string.h>')
     print()
     print(r'#include <iostream>')
+    print(r'#include <mutex>')
     print()
     print(r'#include "d3dretrace.hpp"')
     print(r'#include "os_version.hpp"')
@@ -587,6 +648,8 @@ def main():
     print(r'#include "d3d11size.hpp"')
     print(r'#include "d3d12imports.hpp"')
     print(r'#include "d3d12size.hpp"')
+    print(r'#include "d3d12slab.hpp"')
+    print(r'#include "d3d12va.hpp"')
     print(r'#include "dcompimports.hpp"')
     print(r'#include "d3dstate.hpp"')
     print(r'#include "d3d9imports.hpp" // D3DERR_WASSTILLDRAWING')
@@ -594,6 +657,12 @@ def main():
     print('''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;''')
     print('''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;''')
     print('''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;''')
+    print()
+    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_CPU_DESCRIPTOR_HANDLE, SIZE_T> g_D3D12CPUDescriptorSlabResolver;''')
+    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_DESCRIPTOR_HANDLE, UINT64> g_D3D12GPUDescriptorSlabResolver;''')
+    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_VIRTUAL_ADDRESS,   UINT64> g_D3D12AddressSlabs;''')
+    print('''std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;''')
+    print('''std::mutex g_D3D12FenceEventMapMutex;''')
     print()
 
     api = API()
