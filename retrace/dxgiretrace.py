@@ -394,24 +394,24 @@ class D3DRetracer(Retracer):
 
         for arg in method.args:
             if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12CPUDescriptorSlabResolver.LookupSlab(%s);' % (arg.name, arg.name))
+                print(r'    %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
                 print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12CPUDescriptorSlabResolver.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(*%s);' % (real_name, arg.name))
                 print(r'        %s = &%s;' % (arg.name, real_name))
                 print(r'    }')
 
             if arg.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12GPUDescriptorSlabResolver.LookupSlab(%s);' % (arg.name, arg.name))
+                print(r'    %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_GPU_DESCRIPTOR_HANDLE %s;' % real_name)
                 print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12GPUDescriptorSlabResolver.LookupSlab(%s[0]);' % (real_name, arg.name))
+                print(r'        %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(%s[0]);' % (real_name, arg.name))
                 print(r'        %s = &%s;' % (arg.name, real_name))
                 print(r'    }')
 
@@ -423,7 +423,7 @@ class D3DRetracer(Retracer):
                 print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
                 print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
-                print('        _real_render_target_descriptors[i] = g_D3D12CPUDescriptorSlabResolver.LookupSlab(pRenderTargetDescriptors[i]);')
+                print('        _real_render_target_descriptors[i] = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(pRenderTargetDescriptors[i]);')
                 print('    }')
                 print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
 
@@ -470,14 +470,18 @@ class D3DRetracer(Retracer):
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
-            print('    SIZE_T _fake_descriptor_ptr = static_cast<SIZE_T>(call.ret->toStruct()->members[0]->toUInt());')
-            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_descriptor_handle = D3D12_CPU_DESCRIPTOR_HANDLE { _fake_descriptor_ptr };')
-            print('    g_D3D12CPUDescriptorSlabResolver.RegisterSlab(_fake_descriptor_handle, _result);')
+            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialCPU(_fake_descriptor_ptr, _result);')
 
         if method.name == 'GetGPUDescriptorHandleForHeapStart':
-            print('    UINT64 _fake_descriptor_ptr = static_cast<UINT64>(call.ret->toStruct()->members[0]->toUInt());')
-            print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_descriptor_handle = D3D12_GPU_DESCRIPTOR_HANDLE { _fake_descriptor_ptr };')
-            print('    g_D3D12GPUDescriptorSlabResolver.RegisterSlab(_fake_descriptor_handle, _result);')
+            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialGPU(_fake_descriptor_ptr, _result);')
+
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart'):
+            print('    D3D12_DESCRIPTOR_HEAP_DESC _desc = _this->GetDesc();')
+            print('    com_ptr<ID3D12Device> _device = nullptr;')
+            print('    _this->GetDevice(__uuidof(ID3D12Device), reinterpret_cast<void**>(&_device));')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialIncrement(_fake_descriptor_ptr, _device->GetDescriptorHandleIncrementSize(_desc.Type));')
 
         if method.name == 'GetGPUVirtualAddress':
             print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_va = call.ret->toUInt();')
@@ -658,11 +662,10 @@ def main():
     print('''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;''')
     print('''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;''')
     print()
-    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_CPU_DESCRIPTOR_HANDLE, SIZE_T> g_D3D12CPUDescriptorSlabResolver;''')
-    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_DESCRIPTOR_HANDLE, UINT64> g_D3D12GPUDescriptorSlabResolver;''')
-    print('''_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_VIRTUAL_ADDRESS,   UINT64> g_D3D12AddressSlabs;''')
-    print('''std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;''')
-    print('''std::mutex g_D3D12FenceEventMapMutex;''')
+    print('_D3D12_DESCRIPTOR_RESOLVER g_D3D12DescriptorSlabs;')
+    print('_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
+    print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
+    print('std::mutex g_D3D12FenceEventMapMutex;')
     print()
 
     api = API()

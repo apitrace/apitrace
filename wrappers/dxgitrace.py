@@ -131,8 +131,7 @@ class D3DCommonTracer(DllTracer):
             ]
         if interface.hasBase(d3d12.ID3D12DescriptorHeap):
             variables += [
-                ('D3D12_CPU_DESCRIPTOR_HANDLE', 'm_DescriptorCPUSlab', None),
-                ('D3D12_GPU_DESCRIPTOR_HANDLE', 'm_DescriptorGPUSlab', None),
+                ('UINT64', 'm_DescriptorSlab', None),
             ]
         if interface.hasBase(d3d12.ID3D12Resource):
             variables += [
@@ -185,15 +184,18 @@ class D3DCommonTracer(DllTracer):
             print('    }')
 
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
-            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = m_DescriptorCPUSlab;')
+            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
 
         if method.name == 'GetGPUDescriptorHandleForHeapStart':
-            print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = m_DescriptorGPUSlab;')
+            print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = D3D12_GPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
 
         if method.name == 'GetGPUVirtualAddress':
             print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_result = m_FakeAddress;')
 
-        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress'):
+        if method.name == 'GetDescriptorHandleIncrementSize':
+            print('    UINT _fake_result = _DescriptorIncrementSize;')
+
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
             result_name = '_fake_result'
         else:
             result_name = '_result'
@@ -203,7 +205,7 @@ class D3DCommonTracer(DllTracer):
 
         DllTracer.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_name)
 
-        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress'):
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
             print('    return _fake_result;')
 
         if method.name == 'Map':
@@ -252,8 +254,7 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'CreateDescriptorHeap':
             print('    if (SUCCEEDED(_result)) {')
             print('        WrapID3D12DescriptorHeap* _descriptor_heap_wrap = (*reinterpret_cast<WrapID3D12DescriptorHeap**>(ppvHeap));')
-            print('        _descriptor_heap_wrap->m_DescriptorCPUSlab = g_D3D12DescriptorCPUSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart());')
-            print('        _descriptor_heap_wrap->m_DescriptorGPUSlab = g_D3D12DescriptorGPUSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetGPUDescriptorHandleForHeapStart());')
+            print('        _descriptor_heap_wrap->m_DescriptorSlab = g_D3D12DescriptorSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart(), _descriptor_heap_wrap->m_pInstance->GetGPUDescriptorHandleForHeapStart(), m_pInstance->GetDescriptorHandleIncrementSize(pDescriptorHeapDesc->Type));')
             print('    }')
 
         if method.name == 'CreateCommittedResource':
@@ -285,24 +286,24 @@ class D3DCommonTracer(DllTracer):
         for arg in method.args:
             # TODO(Josh): Clean me!!!!!!!!
             if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12DescriptorCPUSlabs.LookupSlab(%s);' % (arg.name, arg.name))
+                print(r'    %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
                 print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12DescriptorCPUSlabs.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(*%s);' % (real_name, arg.name))
                 print(r'        %s = &%s;' % (arg.name, real_name))
                 print(r'    }')
 
             if arg.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12DescriptorGPUSlabs.LookupSlab(%s);' % (arg.name, arg.name))
+                print(r'    %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_GPU_DESCRIPTOR_HANDLE %s;' % real_name)
                 print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12DescriptorGPUSlabs.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(*%s);' % (real_name, arg.name))
                 print(r'        %s = &%s;' % (arg.name, real_name))
                 print(r'    }')
 
@@ -315,7 +316,7 @@ class D3DCommonTracer(DllTracer):
                 print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
                 print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
-                print('        _real_render_target_descriptors[i] = g_D3D12DescriptorCPUSlabs.LookupSlab(pRenderTargetDescriptors[i]);')
+                print('        _real_render_target_descriptors[i] = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(pRenderTargetDescriptors[i]);')
                 print('    }')
                 print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
 
@@ -418,9 +419,9 @@ if __name__ == '__main__':
 
     # TODO: Expose this via a runtime option
     print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
-    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_CPU_DESCRIPTOR_HANDLE, SIZE_T> g_D3D12DescriptorCPUSlabs;')
-    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_DESCRIPTOR_HANDLE, UINT64> g_D3D12DescriptorGPUSlabs;')
-    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_VIRTUAL_ADDRESS,   UINT64> g_D3D12AddressSlabs;')
+
+    print('_D3D12_DESCRIPTOR_TRACER g_D3D12DescriptorSlabs;')
+    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
 
     print('std::mutex g_D3D12AddressMappingsMutex;')
     print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')
