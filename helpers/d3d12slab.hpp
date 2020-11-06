@@ -132,6 +132,7 @@ public:
         _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
         UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
         offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
+        assert(info.CPUHandle.ptr);
         return D3D12_CPU_DESCRIPTOR_HANDLE { info.CPUHandle.ptr + offset };
     }
 
@@ -143,6 +144,7 @@ public:
         _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
         UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
         offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
+        assert(info.GPUHandle.ptr);
         return D3D12_GPU_DESCRIPTOR_HANDLE{ info.GPUHandle.ptr + offset };
     }
 
