@@ -135,7 +135,7 @@ class D3DCommonTracer(DllTracer):
             ]
         if interface.hasBase(d3d12.ID3D12Resource):
             variables += [
-                ('D3D12_GPU_VIRTUAL_ADDRESS', 'm_FakeAddress', None),
+                ('D3D12_GPU_VIRTUAL_ADDRESS', 'm_FakeAddress', '0'),
             ]
 
         return variables
@@ -191,6 +191,7 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'GetGPUVirtualAddress':
             print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_result = m_FakeAddress;')
+            print('    assert(_fake_result != 0);')
 
         if method.name == 'GetDescriptorHandleIncrementSize':
             print('    UINT _fake_result = _DescriptorIncrementSize;')
@@ -260,6 +261,13 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'CreateCommittedResource':
             # Create a fake GPU VA for buffers.
             print('    if (SUCCEEDED(_result) && pResourceDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
+            print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
+            print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
+            print('    }')
+
+        if method.name == 'CreatePlacedResource':
+            # Create a fake GPU VA for buffers.
+            print('    if (SUCCEEDED(_result) && pDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
             print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
             print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
             print('    }')
