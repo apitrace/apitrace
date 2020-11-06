@@ -29,14 +29,7 @@
 #include <array>
 #include <atomic>
 
-template<typename T, typename J>
-T _bitcast(const J& src) {
-    T dst;
-    std::memcpy(&dst, &src, sizeof(T));
-    return dst;
-}
-
-template <typename T, typename I>
+template <typename T>
 class _D3D12_ADDRESS_SLAB_RESOLVER
 {
 public:
@@ -53,19 +46,19 @@ public:
 
     T LookupSlab(const T& value)
     {
-        if (_bitcast<I>(value) == 0)
-            return { 0 };
+        if (value == 0)
+            return 0;
 
-        return { _bitcast<I>(m_slabs[GetIdx(value)]) + (_bitcast<I>(value) & 0xFFFFFFFFull) };
+        return m_slabs[GetIdx(value)] + (value & 0xFFFFFFFFull);
     }
 
-    inline size_t GetIdx(const T& value) { return (_bitcast<I>(value) >> 32ull) - 1ull; }
+    inline size_t GetIdx(const T& value) { return (value >> 32ull) - 1ull; }
 
 private:
     std::array<T, SlabCount> m_slabs;
 };
 
-template <typename T, typename I>
+template <typename T>
 class _D3D12_ADDRESS_SLAB_TRACER
 {
 public:
@@ -76,12 +69,11 @@ public:
 
     T RegisterSlab(const T& value)
     {
-        uint32_t idx = ++m_count;
+        const uint32_t idx = ++m_count;
         
-        auto ptr = static_cast<I>(idx) << 32ull;
-        m_resolver.RegisterSlab(T{ ptr }, value);
-
-        return T{ ptr };
+        const T ptr = static_cast<T>(idx) << 32ull;
+        m_resolver.RegisterSlab(ptr, value);
+        return ptr;
     }
 
     T LookupSlab(const T& ptr)
@@ -89,6 +81,107 @@ public:
         return m_resolver.LookupSlab(ptr);
     }
 private:
-    _D3D12_ADDRESS_SLAB_RESOLVER<T, I> m_resolver;
+    _D3D12_ADDRESS_SLAB_RESOLVER<T> m_resolver;
+    std::atomic<uint32_t> m_count;
+};
+
+constexpr UINT _DescriptorIncrementSize = 64;
+
+struct _D3D12_DESCRIPTOR_INFO
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
+
+    UINT                        IncrementSize;
+};
+
+class _D3D12_DESCRIPTOR_RESOLVER
+{
+public:
+    static constexpr size_t SlabCount = 64 * 1024;
+
+    _D3D12_DESCRIPTOR_RESOLVER()
+        : m_slabs()
+    {}
+
+    inline void RegisterSlab(UINT64 Base, _D3D12_DESCRIPTOR_INFO Info)
+    {
+        m_slabs[GetIdx(Base)] = Info;
+    }
+
+    inline void RegisterSlabPartialCPU(UINT64 Base, D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle)
+    {
+        m_slabs[GetIdx(Base)].CPUHandle = CPUHandle;
+    }
+
+    inline void RegisterSlabPartialGPU(UINT64 Base, D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle)
+    {
+        m_slabs[GetIdx(Base)].GPUHandle = GPUHandle;
+    }
+
+    inline void RegisterSlabPartialIncrement(UINT64 Base, UINT IncrementSize)
+    {
+        m_slabs[GetIdx(Base)].IncrementSize = IncrementSize;
+    }
+
+    inline D3D12_CPU_DESCRIPTOR_HANDLE LookupCPUDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
+    {
+        if (Handle.ptr == 0)
+            return D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
+
+        _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
+        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
+        offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
+        return D3D12_CPU_DESCRIPTOR_HANDLE { info.CPUHandle.ptr + offset };
+    }
+
+    inline D3D12_GPU_DESCRIPTOR_HANDLE LookupGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE Handle)
+    {
+        if (Handle.ptr == 0)
+            return D3D12_GPU_DESCRIPTOR_HANDLE{ 0 };
+
+        _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
+        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
+        offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
+        return D3D12_GPU_DESCRIPTOR_HANDLE{ info.GPUHandle.ptr + offset };
+    }
+
+    inline size_t GetIdx(UINT64 value) { return (value >> 32ull) - 1ull; }
+
+private:
+    std::array<_D3D12_DESCRIPTOR_INFO, SlabCount> m_slabs;
+};
+
+class _D3D12_DESCRIPTOR_TRACER
+{
+public:
+    _D3D12_DESCRIPTOR_TRACER()
+        : m_resolver()
+        , m_count({ 0 })
+    {}
+
+    inline UINT64 RegisterSlab(D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle, D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle, UINT IncrementSize)
+    {
+        const _D3D12_DESCRIPTOR_INFO info = { CPUHandle, GPUHandle, IncrementSize };
+
+        const uint32_t idx = ++m_count;
+        const UINT64 ptr = static_cast<UINT64>(idx) << 32ull;
+
+        m_resolver.RegisterSlab(ptr, info);
+        return ptr;
+    }
+
+    inline D3D12_CPU_DESCRIPTOR_HANDLE LookupCPUDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
+    {
+        return m_resolver.LookupCPUDescriptorHandle(Handle);
+    }
+
+    inline D3D12_GPU_DESCRIPTOR_HANDLE LookupGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE Handle)
+    {
+        return m_resolver.LookupGPUDescriptorHandle(Handle);
+    }
+
+private:
+    _D3D12_DESCRIPTOR_RESOLVER m_resolver;
     std::atomic<uint32_t> m_count;
 };
