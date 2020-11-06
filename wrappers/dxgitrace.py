@@ -131,7 +131,12 @@ class D3DCommonTracer(DllTracer):
             ]
         if interface.hasBase(d3d12.ID3D12DescriptorHeap):
             variables += [
-                ('_HEAP_VA_DESC', 'm_FakeVADesc', None),
+                ('D3D12_CPU_DESCRIPTOR_HANDLE', 'm_DescriptorCPUSlab', None),
+                ('D3D12_GPU_DESCRIPTOR_HANDLE', 'm_DescriptorGPUSlab', None),
+            ]
+        if interface.hasBase(d3d12.ID3D12Resource):
+            variables += [
+                ('D3D12_GPU_VIRTUAL_ADDRESS', 'm_FakeAddress', None),
             ]
 
         return variables
@@ -180,9 +185,15 @@ class D3DCommonTracer(DllTracer):
             print('    }')
 
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
-            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_FakeVADesc.FakeVABase };')
+            print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = m_DescriptorCPUSlab;')
 
-        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+        if method.name == 'GetGPUDescriptorHandleForHeapStart':
+            print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = m_DescriptorGPUSlab;')
+
+        if method.name == 'GetGPUVirtualAddress':
+            print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_result = m_FakeAddress;')
+
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress'):
             result_name = '_fake_result'
         else:
             result_name = '_result'
@@ -192,18 +203,19 @@ class D3DCommonTracer(DllTracer):
 
         DllTracer.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_name)
 
-        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress'):
             print('    return _fake_result;')
 
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    if (SUCCEEDED(_result) && ppData && *ppData) {')
                 print('        SIZE_T key = reinterpret_cast<SIZE_T>(this);')
+                print('        auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
                 print('        if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end()) {')
                 print('            MEMORY_BASIC_INFORMATION _memory_info;')
                 print('            VirtualQuery(*ppData, &_memory_info, sizeof(_memory_info));')
                 # TODO(Josh): Is this assertion true for placed resources...?
-                # I'm not sure, review me if this ever triggers.'
+                # I'm not sure, review me if this ever triggers.
                 print('            assert(*ppData == _memory_info.BaseAddress);')
                 print('            _D3D12_MAP_DESC _map_desc;')
                 print('            _map_desc.pData = _memory_info.BaseAddress;')
@@ -237,31 +249,25 @@ class D3DCommonTracer(DllTracer):
             print('        m_MapDesc[Type] = std::make_pair(nullptr, 0);')
             print('    }')
 
-        if method.name.startswith('CreateDescriptorHeap'):
-            # Allocate 8GB of CPU VA, find a 4GB aligned chunk wherever we get it and return that for the CPU VAs for heaps.
-            # Then when we get CPU VAs passed in, shift out the offset, look up the real heap address and add the offset into that.
+        if method.name == 'CreateDescriptorHeap':
             print('    if (SUCCEEDED(_result)) {')
-            print('        constexpr SIZE_T _fake_size      = 1ull << 32;')
-            print('        constexpr SIZE_T _fake_alignment = _fake_size;')
             print('        WrapID3D12DescriptorHeap* _descriptor_heap_wrap = (*reinterpret_cast<WrapID3D12DescriptorHeap**>(ppvHeap));')
-            print('        _descriptor_heap_wrap->m_FakeVADesc = _allocateFakeVA(_fake_size, _fake_alignment);')
-            print('        SIZE_T _real_va = _descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart().ptr;')
-            print('        g_D3D12HeapMappings.insert(std::make_pair(_descriptor_heap_wrap->m_FakeVADesc.FakeVABase, _real_va));')
+            print('        _descriptor_heap_wrap->m_DescriptorCPUSlab = g_D3D12DescriptorCPUSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart());')
+            print('        _descriptor_heap_wrap->m_DescriptorGPUSlab = g_D3D12DescriptorGPUSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetGPUDescriptorHandleForHeapStart());')
             print('    }')
 
-    def lookup_heap_desc(self, input_name, output_name):
-        # Map our fake VA to a real VA when actually calling...
-        print(r'    {')
-        print(r'        constexpr SIZE_T _fake_alignment = 1ull << 32;')
-        print(r'        const SIZE_T _fake_va_id = %s.ptr & ~(_fake_alignment - 1);' % input_name)
-        print(r'        const SIZE_T _offset = %s.ptr & _fake_alignment - 1;' % input_name)
-        print(r'        %s.ptr = g_D3D12HeapMappings[_fake_va_id] + _offset;' % output_name)
-        print(r'    }')
+        if method.name == 'CreateCommittedResource':
+            # Create a fake GPU VA for buffers.
+            print('    if (SUCCEEDED(_result) && pResourceDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
+            print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
+            print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
+            print('    }')
 
     def invokeFunction(self, function):
         if function.name.startswith('D3D12CreateDevice'):
             # Setup SEH to handle persistent mapping
             print(r'    _setup_seh();')
+            print(r'    _setup_event_hooking();')
 
         DllTracer.invokeFunction(self, function)
 
@@ -277,23 +283,76 @@ class D3DCommonTracer(DllTracer):
             print(r'    }')
 
         for arg in method.args:
+            # TODO(Josh): Clean me!!!!!!!!
             if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
-                self.lookup_heap_desc(arg.name, arg.name)
+                print(r'    %s = g_D3D12DescriptorCPUSlabs.LookupSlab(%s);' % (arg.name, arg.name))
             if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
                (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
                 real_name = r'_real_%s' % arg.name
                 print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
-                self.lookup_heap_desc(r'%s[0]' % arg.name, real_name)
-                print(r'    %s = &%s;' % (arg.name, real_name))
+                print(r'    if (%s != nullptr) {' % arg.name)
+                print(r'        %s = g_D3D12DescriptorCPUSlabs.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = &%s;' % (arg.name, real_name))
+                print(r'    }')
+
+            if arg.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE:
+                print(r'    %s = g_D3D12DescriptorGPUSlabs.LookupSlab(%s);' % (arg.name, arg.name))
+            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE) or \
+               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE):
+                real_name = r'_real_%s' % arg.name
+                print(r'    D3D12_GPU_DESCRIPTOR_HANDLE %s;' % real_name)
+                print(r'    if (%s != nullptr) {' % arg.name)
+                print(r'        %s = g_D3D12DescriptorGPUSlabs.LookupSlab(*%s);' % (real_name, arg.name))
+                print(r'        %s = &%s;' % (arg.name, real_name))
+                print(r'    }')
+
+            if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
+                print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
 
         if interface.name.startswith('ID3D12'):
             if method.name == 'OMSetRenderTargets':
+                # TODO(Josh): MAKE THIS AUTOGEN
                 print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
                 print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
-                self.lookup_heap_desc('pRenderTargetDescriptors[i]', '_real_render_target_descriptors[i]')
+                print('        _real_render_target_descriptors[i] = g_D3D12DescriptorCPUSlabs.LookupSlab(pRenderTargetDescriptors[i]);')
                 print('    }')
                 print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
+
+            if method.name == 'SetEventOnCompletion':
+                print('     {')
+                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
+                print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
+                print('         if (_fence_event_iter == g_D3D12FenceEventMap.end())')
+                print('             g_D3D12FenceEventMap.insert(std::make_pair(hEvent, hEvent));')
+                print('     }')
+
+            if method.name == 'IASetVertexBuffers':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
+                print('    for (UINT i = 0; i < NumViews; i++) {')
+                print('        _real_views[i] = pViews[i];')
+                print('        _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('    }')
+                print('    pViews = _real_views;')
+
+            if method.name == 'IASetIndexBuffer':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_INDEX_BUFFER_VIEW _real_view;')
+                print('    if (pView) {')
+                print('        _real_view = *pView;')
+                print('        _real_view.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_view.BufferLocation);')
+                print('        pView = &_real_view;')
+                print('    }')
+
+            if method.name == 'CreateConstantBufferView':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_CONSTANT_BUFFER_VIEW_DESC _real_desc;')
+                print('    if (pDesc) {')
+                print('        _real_desc = *pDesc;')
+                print('        _real_desc.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_desc.BufferLocation);')
+                print('        pDesc = &_real_desc;')
+                print('    }')
 
         if method.name == 'CreateCommittedResource':
             # Disable WRITE_COMBINE for upload heap so we can use PAGE_GUARD
@@ -359,8 +418,15 @@ if __name__ == '__main__':
 
     # TODO: Expose this via a runtime option
     print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
-    print('std::map<SIZE_T, SIZE_T>          g_D3D12HeapMappings;')
+    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_CPU_DESCRIPTOR_HANDLE, SIZE_T> g_D3D12DescriptorCPUSlabs;')
+    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_DESCRIPTOR_HANDLE, UINT64> g_D3D12DescriptorGPUSlabs;')
+    print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_VIRTUAL_ADDRESS,   UINT64> g_D3D12AddressSlabs;')
+
+    print('std::mutex g_D3D12AddressMappingsMutex;')
     print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')
+
+    print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
+    print('std::mutex g_D3D12FenceEventMapMutex;')
 
     api = API()
     api.addModule(dxgi.dxgi)

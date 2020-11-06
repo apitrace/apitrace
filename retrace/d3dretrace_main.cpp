@@ -32,6 +32,37 @@
 #include "retrace.hpp"
 #include "d3dretrace.hpp"
 
+#ifdef HAVE_DXGI
+extern std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;
+
+namespace d3dretrace {
+
+    static void retrace_WaitForSingleObject(trace::Call& call) {
+        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
+        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
+
+        auto iter = g_D3D12FenceEventMap.find(hHandle);
+        WaitForSingleObject(iter->second, dwMilliseconds);
+        g_D3D12FenceEventMap.erase(iter);
+    }
+
+    static void retrace_WaitForSingleObjectEx(trace::Call &call) {
+        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
+        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
+        BOOL   bAlertable     = static_cast     <BOOL>  (call.arg(2).toUInt());
+
+        auto iter = g_D3D12FenceEventMap.find(hHandle);
+        WaitForSingleObjectEx(iter->second, dwMilliseconds, bAlertable);
+        g_D3D12FenceEventMap.erase(iter);
+    }
+
+    const retrace::Entry event_callbacks[] = {
+        {"WaitForSingleObject",   &retrace_WaitForSingleObject},
+        {"WaitForSingleObjectEx", &retrace_WaitForSingleObjectEx},
+        {NULL, NULL}
+    };
+}
+#endif
 
 void
 retrace::setFeatureLevel(const char *featureLevel) {
@@ -52,6 +83,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
     retracer.addCallbacks(d3dretrace::d3d9_callbacks);
 #ifdef HAVE_DXGI
     retracer.addCallbacks(d3dretrace::dxgi_callbacks);
+    retracer.addCallbacks(d3dretrace::event_callbacks);
 #endif
 }
 

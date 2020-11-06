@@ -24,30 +24,12 @@
  *
  **************************************************************************/
 
-
-/*
- * Auxiliary functions to compute the size of array/blob arguments.
- */
-
 #pragma once
 
 #include <assert.h>
 
 #include <algorithm>
-
-/**
- * Information about a faked VA
- */
-struct _HEAP_VA_DESC
-{
-    void*  pAllocatedVABase;
-    SIZE_T FakeVABase;
-
-    _HEAP_VA_DESC() :
-        pAllocatedVABase(nullptr),
-        FakeVABase(0)
-    {}
-};
+#include <mutex>
 
 struct _D3D12_PAGE_RANGE
 {
@@ -61,8 +43,8 @@ struct _D3D12_MAP_DESC
     SIZE_T Size;
     std::vector<_D3D12_PAGE_RANGE> DirtyPages;
     DWORD OldProtect;
-
-    _D3D12_MAP_DESC() :
+    
+        _D3D12_MAP_DESC() :
         pData(nullptr),
         OldProtect(0),
         Size(Size)
@@ -70,24 +52,8 @@ struct _D3D12_MAP_DESC
 
 };
 
-template<typename T, typename U = T>
-constexpr T align(T what, U to) {
-    return (what + to - 1) & ~(to - 1);
-}
-
-static inline _HEAP_VA_DESC
-_allocateFakeVA(const SIZE_T FakeSize, const SIZE_T FakeAlignment)
-{
-    _HEAP_VA_DESC Desc;
-
-    Desc.pAllocatedVABase = VirtualAlloc(nullptr, FakeSize << 1ull, MEM_RESERVE, PAGE_NOACCESS);
-    SIZE_T FakeVARegion = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(Desc.pAllocatedVABase));
-    Desc.FakeVABase = align(FakeVARegion, FakeAlignment);
-
-    return Desc;
-}
-
 extern std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;
+extern std::mutex g_D3D12AddressMappingsMutex;
 
 static inline bool
 _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
@@ -142,6 +108,7 @@ _flush_mapping_memcpys(_D3D12_MAP_DESC& mapping)
 static inline void
 _unmap_resource(ID3D12Resource* pResource)
 {
+    auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
     auto& mapping = g_D3D12AddressMappings[key];
     
@@ -155,6 +122,7 @@ _unmap_resource(ID3D12Resource* pResource)
 static inline void
 _flush_mappings()
 {
+    auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     for (auto& mapping : g_D3D12AddressMappings)
     {
         _flush_mapping_memcpys(mapping.second);
@@ -179,28 +147,25 @@ _setup_seh()
             s_LastWasWrite = static_cast<bool>     (pException->ExceptionRecord->ExceptionInformation[0]);
             s_LastAddress  = static_cast<uintptr_t>(pException->ExceptionRecord->ExceptionInformation[1]);
 
-            // Set trap flag to raise EXCEPTION_SINGLE_STEP (run exactly ONE instruction, this one!)
-            pException->ContextRecord->EFlags |= 0x100;
+            auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
 
-            return EXCEPTION_CONTINUE_EXECUTION;
-        }
-        else if (pException->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP)
-        {
             for (auto& mapping : g_D3D12AddressMappings) {
                 uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.second.pData);
-                uintptr_t mapping_end  = mapping_base + mapping.second.Size;
+                uintptr_t mapping_end = mapping_base + mapping.second.Size;
                 if (s_LastAddress >= mapping_base && s_LastAddress < mapping_end) {
                     constexpr DWORD page_size = 4096;
 
                     uintptr_t offset = s_LastAddress - mapping_base;
                     DWORD page_start = DWORD(offset / page_size);
-                    DWORD page_end   = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
+                    DWORD page_end = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
 
                     mapping.second.DirtyPages.push_back({ page_start, page_end });
 
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
             }
+
+            return EXCEPTION_CONTINUE_SEARCH;
         }
 
         return EXCEPTION_CONTINUE_SEARCH;

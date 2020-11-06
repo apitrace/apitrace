@@ -43,6 +43,9 @@
 #include "d3d12imports.hpp"
 #include "d3d12size.hpp"
 #include "d3d12pba.hpp"
+#include "d3d12slab.hpp"
+#include "d3d12va.hpp"
+#include "d3d12event.hpp"
 #include "dcompimports.hpp"
 #include "d2dimports.hpp" // WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT
 #include "d3d9imports.hpp" // D3DPERF_*
