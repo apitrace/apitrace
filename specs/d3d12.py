@@ -650,14 +650,14 @@ D3D12_HEAP_PROPERTIES = Struct('D3D12_HEAP_PROPERTIES', [
 ])
 
 D3D12_HEAP_FLAGS = EnumFlags('D3D12_HEAP_FLAGS', [
-    #'D3D12_HEAP_FLAG_NONE',
+    'D3D12_HEAP_FLAG_NONE',
     'D3D12_HEAP_FLAG_SHARED',
     'D3D12_HEAP_FLAG_DENY_BUFFERS',
     'D3D12_HEAP_FLAG_ALLOW_DISPLAY',
     'D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER',
     'D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES',
     'D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES',
-    'D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES',
+    #'D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES',
     'D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS',
     'D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES',
     'D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES',
@@ -1708,7 +1708,7 @@ ID3D12Resource.methods += [
     StdMethod(D3D12_RESOURCE_DESC, 'GetDesc', []),
     StdMethod(D3D12_GPU_VIRTUAL_ADDRESS, 'GetGPUVirtualAddress', []),
     StdMethod(HRESULT, 'WriteToSubresource', [(UINT, 'DstSubresource'), (Pointer(Const(D3D12_BOX)), 'pDstBox'), (Blob(Const(Void), '_calcSubresourceSize12(_this, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)'), 'pSrcData'), (UINT, 'SrcRowPitch'), (UINT, 'SrcDepthPitch')]),
-    StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaqueBlob(Void, '0'), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')]),
+    StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaqueBlob(Void, '0'), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')], sideeffects=False),
     StdMethod(HRESULT, 'GetHeapProperties', [Out(Pointer(D3D12_HEAP_PROPERTIES), 'pHeapProperties'), Out(Pointer(D3D12_HEAP_FLAGS), 'pHeapFlags')]),
 ]
 
@@ -1717,13 +1717,13 @@ ID3D12CommandAllocator.methods += [
 ]
 
 ID3D12Fence.methods += [
-    StdMethod(UINT64, 'GetCompletedValue', []),
+    StdMethod(UINT64, 'GetCompletedValue', [], sideeffects=False),
     StdMethod(HRESULT, 'SetEventOnCompletion', [(UINT64, 'Value'), (HANDLE, 'hEvent')]),
     StdMethod(HRESULT, 'Signal', [(UINT64, 'Value')]),
 ]
 
 ID3D12Fence1.methods += [
-    StdMethod(D3D12_FENCE_FLAGS, 'GetCreationFlags', []),
+    StdMethod(D3D12_FENCE_FLAGS, 'GetCreationFlags', [], sideeffects=False),
 ]
 
 ID3D12PipelineState.methods += [
@@ -1786,9 +1786,9 @@ ID3D12GraphicsCommandList.methods += [
     StdMethod(Void, 'SOSetTargets', [(UINT, 'StartSlot'), (UINT, 'NumViews'), (Array(Const(D3D12_STREAM_OUTPUT_BUFFER_VIEW), 'NumViews'), 'pViews')]),
     StdMethod(Void, 'OMSetRenderTargets', [(UINT, 'NumRenderTargetDescriptors'), (Array(Const(D3D12_CPU_DESCRIPTOR_HANDLE), 'NumRenderTargetDescriptors'), 'pRenderTargetDescriptors'), (BOOL, 'RTsSingleHandleToDescriptorRange'), (Pointer(Const(D3D12_CPU_DESCRIPTOR_HANDLE)), 'pDepthStencilDescriptor')]),
     StdMethod(Void, 'ClearDepthStencilView', [(D3D12_CPU_DESCRIPTOR_HANDLE, 'DepthStencilView'), (D3D12_CLEAR_FLAGS, 'ClearFlags'), (FLOAT, 'Depth'), (UINT8, 'Stencil'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
-    StdMethod(Void, 'ClearRenderTargetView', [(D3D12_CPU_DESCRIPTOR_HANDLE, 'RenderTargetView'), (Pointer(Const(FLOAT)), 'ColorRGBA'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
-    StdMethod(Void, 'ClearUnorderedAccessViewUint', [(D3D12_GPU_DESCRIPTOR_HANDLE, 'ViewGPUHandleInCurrentHeap'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'ViewCPUHandle'), (ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(UINT)), 'Values'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
-    StdMethod(Void, 'ClearUnorderedAccessViewFloat', [(D3D12_GPU_DESCRIPTOR_HANDLE, 'ViewGPUHandleInCurrentHeap'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'ViewCPUHandle'), (ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(FLOAT)), 'Values'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
+    StdMethod(Void, 'ClearRenderTargetView', [(D3D12_CPU_DESCRIPTOR_HANDLE, 'RenderTargetView'), (Array(Const(FLOAT), 4), 'ColorRGBA'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
+    StdMethod(Void, 'ClearUnorderedAccessViewUint', [(D3D12_GPU_DESCRIPTOR_HANDLE, 'ViewGPUHandleInCurrentHeap'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'ViewCPUHandle'), (ObjPointer(ID3D12Resource), 'pResource'), (Array(Const(UINT), 4), 'Values'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
+    StdMethod(Void, 'ClearUnorderedAccessViewFloat', [(D3D12_GPU_DESCRIPTOR_HANDLE, 'ViewGPUHandleInCurrentHeap'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'ViewCPUHandle'), (ObjPointer(ID3D12Resource), 'pResource'), (Array(Const(FLOAT), 4), 'Values'), (UINT, 'NumRects'), (Array(Const(D3D12_RECT), 'NumRects'), 'pRects')]),
     StdMethod(Void, 'DiscardResource', [(ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(D3D12_DISCARD_REGION)), 'pRegion')]),
     StdMethod(Void, 'BeginQuery', [(ObjPointer(ID3D12QueryHeap), 'pQueryHeap'), (D3D12_QUERY_TYPE, 'Type'), (UINT, 'Index')]),
     StdMethod(Void, 'EndQuery', [(ObjPointer(ID3D12QueryHeap), 'pQueryHeap'), (D3D12_QUERY_TYPE, 'Type'), (UINT, 'Index')]),
