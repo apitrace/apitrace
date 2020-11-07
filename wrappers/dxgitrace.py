@@ -244,14 +244,14 @@ class D3DCommonTracer(DllTracer):
             print('        _descriptor_heap_wrap->m_DescriptorSlab = g_D3D12DescriptorSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart(), _descriptor_heap_wrap->m_pInstance->GetGPUDescriptorHandleForHeapStart(), m_pInstance->GetDescriptorHandleIncrementSize(pDescriptorHeapDesc->Type));')
             print('    }')
 
-        if method.name == 'CreateCommittedResource':
+        if method.name in ('CreateCommittedResource', 'CreateCommittedResource1'):
             # Create a fake GPU VA for buffers.
             print('    if (SUCCEEDED(_result) && pResourceDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
             print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
             print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
             print('    }')
 
-        if method.name == 'CreatePlacedResource':
+        if method.name in ('CreatePlacedResource', 'CreatePlacedResource1'):
             # Create a fake GPU VA for buffers.
             print('    if (SUCCEEDED(_result) && pDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
             print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
@@ -349,7 +349,7 @@ class D3DCommonTracer(DllTracer):
                 print('        pDesc = &_real_desc;')
                 print('    }')
 
-        if method.name == 'CreateCommittedResource':
+        if method.name in ('CreateCommittedResource', 'CreateCommittedResource1'):
             print('    D3D12_HEAP_PROPERTIES _heap_properties = *pHeapProperties;')
             print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD)')
             print('        HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
@@ -360,7 +360,7 @@ class D3DCommonTracer(DllTracer):
             print('    }')
             print('    pHeapProperties = &_heap_properties;')
 
-        if method.name == 'CreateHeap':
+        if method.name in ('CreateHeap', 'CreateHeap1'):
             print('    D3D12_HEAP_DESC _heap_desc = *pDesc;')
             print('    if (_heap_desc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD)')
             print('        _heap_desc.Flags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
