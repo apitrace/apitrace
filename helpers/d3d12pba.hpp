@@ -199,6 +199,7 @@ _map_resource(ID3D12Resource* pResource, void* pData)
     D3D12_HEAP_FLAGS flags;
     if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
     {
+        os::log("apitrace: Failed to query heap properties\n");
         assert(false);
     }
 
@@ -220,6 +221,7 @@ _unmap_resource(ID3D12Resource* pResource)
     D3D12_HEAP_FLAGS flags;
     if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
     {
+        os::log("apitrace: Failed to query heap properties\n");
         assert(false);
     }
 
