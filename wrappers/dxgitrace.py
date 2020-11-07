@@ -321,7 +321,7 @@ class D3DCommonTracer(DllTracer):
         if interface.name.startswith('ID3D12'):
             if method.name == 'OMSetRenderTargets':
                 # TODO(Josh): MAKE THIS AUTOGEN
-                print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
+                print('    assert(NumRenderTargetDescriptors < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
                 print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
                 print('        _real_render_target_descriptors[i] = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(pRenderTargetDescriptors[i]);')
