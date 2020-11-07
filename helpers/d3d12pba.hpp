@@ -91,7 +91,7 @@ constexpr T align(T what, U to) {
 static inline void
 _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 {
-    static thread_local std::vector<uintptr_t> s_addresses;
+    static std::vector<uintptr_t> s_addresses;
 
     constexpr size_t PageSize = 4096;
     size_t watch_size = align(mapping.Size, PageSize);
@@ -105,6 +105,11 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
     // Don't reset yet so we can handle aliased resources!
     if (GetWriteWatch(0, mapping.pData, watch_size, reinterpret_cast<void**>(s_addresses.data()), &count, &granularity) != 0)
     {
+#ifndef NDEBUG
+        MEMORY_BASIC_INFORMATION info;
+        VirtualQuery(mapping.pData, &info, sizeof(info));
+#endif
+        os::log("apitrace: error: Failed to write watch - %u\n", GetLastError());
         assert(false);
         return;
     }
@@ -115,7 +120,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 
         // Combine contiguous pages into a single memcpy!
         ULONG_PTR contiguous_pages = 1;
-        while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + granularity)
+        while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + PageSize)
         {
             contiguous_pages++;
             i++;
@@ -138,6 +143,7 @@ _reset_writewatch(_D3D12_MAP_DESC& mapping)
 
     if (ResetWriteWatch(mapping.pData, watch_size) != 0)
     {
+        os::log("apitrace: Failed to reset write watch\n");
         assert(false);
         return;
     }
@@ -221,6 +227,7 @@ _unmap_resource(ID3D12Resource* pResource)
     }
     else
     {
+        os::log("apitrace: Unhandled mapping type\n");
         assert(false);
     }
 
@@ -249,10 +256,12 @@ _flush_mappings()
             [[maybe_unused]] DWORD old_protection;
             // Re-apply page guard given we came from ExecuteCommandLists
             bool result = _guard_mapped_memory(mapping, &old_protection);
+            os::log("apitrace: Failed to guard memory\n");
             assert(result);
         }
         else
         {
+            os::log("apitrace: Unhandled mapping type\n");
             assert(false);
         }
     }
