@@ -98,7 +98,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
     size_t address_count = watch_size / PageSize;
     s_addresses.resize(address_count);
 
-    DWORD granularity = 0;
+    DWORD granularity = DWORD(PageSize);
     ULONG_PTR count = ULONG_PTR(address_count);
 
     // Find out addresses that have changed
@@ -194,8 +194,38 @@ _flush_mapping_exception_memcpys(_D3D12_MAP_DESC& mapping)
 }
 
 static inline void
+_map_resource(ID3D12Resource* pResource, void* pData)
+{
+    D3D12_HEAP_FLAGS flags;
+    if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
+    {
+        assert(false);
+    }
+
+    if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
+        return;
+
+    SIZE_T key = reinterpret_cast<SIZE_T>(pResource);
+    // Assert we're page aligned... If we aren't we need to do more work here.
+    // TODO(Josh) : Placed resources.
+    assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
+    auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
+    if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end())
+        g_D3D12AddressMappings.insert(std::make_pair(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource))));
+}
+
+static inline void
 _unmap_resource(ID3D12Resource* pResource)
 {
+    D3D12_HEAP_FLAGS flags;
+    if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
+    {
+        assert(false);
+    }
+
+    if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
+        return;
+
     auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
     auto& mapping = g_D3D12AddressMappings[key];
