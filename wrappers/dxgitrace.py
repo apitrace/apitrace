@@ -358,21 +358,25 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'CreateCommittedResource':
             print('    D3D12_HEAP_PROPERTIES _heap_properties = *pHeapProperties;')
-            print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD) {')
-            print('        _heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;')
-
-            print('        _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;')
-            print('        _heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;')
-            print('        _heap_properties.CreationNodeMask = 0;')
-            print('        _heap_properties.VisibleNodeMask = 0;')
-            print('         HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
-            print('    }')
+            print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD)')
+            print('        HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
             print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_CUSTOM) {')
             # Enable WRITE_WATCH for the resource
             print('        if (pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE || pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_BACK)')
             print('            HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
             print('    }')
             print('    pHeapProperties = &_heap_properties;')
+
+        if method.name == 'CreateHeap':
+            print('    D3D12_HEAP_DESC _heap_desc = *pDesc;')
+            print('    if (_heap_desc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD)')
+            print('        _heap_desc.Flags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
+            print('    if (_heap_desc.Properties.Type == D3D12_HEAP_TYPE_CUSTOM) {')
+            # Enable WRITE_WATCH for the resource
+            print('        if (_heap_desc.Properties.CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE || _heap_desc.Properties.CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_BACK)')
+            print('            _heap_desc.Flags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
+            print('    }')
+            print('    pDesc = &_heap_desc;')
 
         DllTracer.invokeMethod(self, interface, base, method)
 
