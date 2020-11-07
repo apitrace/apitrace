@@ -326,14 +326,14 @@ namespace D3D12EventHooks
 
     DWORD D3D12WaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds)
     {
-        //return WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
+        return WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
         assert(false);
         return 0;
     }
 
     DWORD D3D12WaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable)
     {
-        //return WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
+        return WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
         assert(false);
         return 0;
     }
