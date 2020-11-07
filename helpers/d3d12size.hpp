@@ -88,3 +88,10 @@ _getMapSize(ID3D12Resource* pResource)
 
     return TotalBytes;
 }
+
+static inline size_t
+_getSubobjectSize(D3D12_STATE_SUBOBJECT_TYPE Type)
+{
+    assert(false);
+    return 0;
+}
