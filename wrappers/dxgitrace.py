@@ -211,15 +211,8 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
-                print('    if (SUCCEEDED(_result) && ppData && *ppData) {')
-                print('        SIZE_T key = reinterpret_cast<SIZE_T>(this);')
-                # Assert we're page aligned... If we aren't we need to do more work here.
-                # TODO(Josh): Placed resources.
-                print('        assert(reinterpret_cast<uintptr_t>(*ppData) % 4096 == 0);')
-                print('        auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
-                print('        if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end())')
-                print('            g_D3D12AddressMappings.insert(std::make_pair(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, *ppData, _getMapSize(this))));')
-                print('    }')
+                print('    if (SUCCEEDED(_result) && ppData && *ppData)')
+                print('        _map_resource(this, *ppData);')
             else:
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')
