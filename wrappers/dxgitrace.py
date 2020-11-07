@@ -213,19 +213,12 @@ class D3DCommonTracer(DllTracer):
             if interface.name.startswith('ID3D12'):
                 print('    if (SUCCEEDED(_result) && ppData && *ppData) {')
                 print('        SIZE_T key = reinterpret_cast<SIZE_T>(this);')
+                # Assert we're page aligned... If we aren't we need to do more work here.
+                # TODO(Josh): Placed resources.
+                print('        assert(reinterpret_cast<uintptr_t>(*ppData) % 4096 == 0);')
                 print('        auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
-                print('        if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end()) {')
-                print('            MEMORY_BASIC_INFORMATION _memory_info;')
-                print('            VirtualQuery(*ppData, &_memory_info, sizeof(_memory_info));')
-                # TODO(Josh): Is this assertion true for placed resources...?
-                # I'm not sure, review me if this ever triggers.
-                print('            assert(*ppData == _memory_info.BaseAddress);')
-                print('            _D3D12_MAP_DESC _map_desc;')
-                print('            _map_desc.pData = _memory_info.BaseAddress;')
-                print('            _map_desc.Size = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(_memory_info.BaseAddress) - reinterpret_cast<uintptr_t>(*ppData)) + _getMapSize(this);')
-                print('            if (_guard_mapped_memory(_map_desc, &_map_desc.OldProtect))')
-                print('                g_D3D12AddressMappings.insert(std::make_pair(key, _map_desc));')
-                print('        }')
+                print('        if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end())')
+                print('            g_D3D12AddressMappings.insert(std::make_pair(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, *ppData, _getMapSize(this))));')
                 print('    }')
             else:
                 # NOTE: recursive locks are explicitely forbidden
@@ -364,19 +357,20 @@ class D3DCommonTracer(DllTracer):
                 print('    }')
 
         if method.name == 'CreateCommittedResource':
-            # Disable WRITE_COMBINE for upload heap so we can use PAGE_GUARD
-            # to handle persistently mapped resources.
             print('    D3D12_HEAP_PROPERTIES _heap_properties = *pHeapProperties;')
             print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD) {')
             print('        _heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;')
-            print('        _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;')
+
+            print('        _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;')
             print('        _heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;')
             print('        _heap_properties.CreationNodeMask = 0;')
             print('        _heap_properties.VisibleNodeMask = 0;')
+            print('         HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
             print('    }')
             print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_CUSTOM) {')
-            print('        if (pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE)')
-            print('            _heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;')
+            # Enable WRITE_WATCH for the resource
+            print('        if (pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE || pHeapProperties->CPUPageProperty == D3D12_CPU_PAGE_PROPERTY_WRITE_BACK)')
+            print('            HeapFlags |= D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
             print('    }')
             print('    pHeapProperties = &_heap_properties;')
 

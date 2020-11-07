@@ -31,6 +31,13 @@
 #include <algorithm>
 #include <mutex>
 
+enum _D3D12_MAPPING_TYPE
+{
+    _D3D12_MAPPING_INVALID,
+    _D3D12_MAPPING_WRITE_WATCH, // For normal resources, heaps - the fast path
+    _D3D12_MAPPING_EXCEPTION,   // For imported user heaps from pointer/files - the slow path
+};
+
 struct _D3D12_PAGE_RANGE
 {
     DWORD PageStart;
@@ -41,15 +48,28 @@ struct _D3D12_MAP_DESC
 {
     void* pData;
     SIZE_T Size;
-    std::vector<_D3D12_PAGE_RANGE> DirtyPages;
-    DWORD OldProtect;
-    
-        _D3D12_MAP_DESC() :
-        pData(nullptr),
-        OldProtect(0),
-        Size(Size)
+    _D3D12_MAPPING_TYPE MappingType;
+ 
+    struct
+    {
+        // Dirty pages for exception tracking.
+        std::vector<_D3D12_PAGE_RANGE> DirtyPages;
+        DWORD OldProtect;
+    } ExceptionPath;
+
+    _D3D12_MAP_DESC(_D3D12_MAPPING_TYPE Type, void* pData, SIZE_T Size, DWORD OldProtect = 0) :
+        pData(pData),
+        Size(Size),
+        MappingType(Type),
+        ExceptionPath({ {}, OldProtect })
     {}
 
+    _D3D12_MAP_DESC() :
+        pData(nullptr),
+        Size(0),
+        MappingType(_D3D12_MAPPING_INVALID),
+        ExceptionPath({ {}, 0 })
+    {}
 };
 
 extern std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;
@@ -63,31 +83,93 @@ _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
     return vp_result;
 }
 
+template<typename T, typename U = T>
+constexpr T align(T what, U to) {
+    return (what + to - 1) & ~(to - 1);
+}
+
 static inline void
-_flush_mapping_memcpys(_D3D12_MAP_DESC& mapping)
+_flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 {
-    if (mapping.DirtyPages.empty())
+    static thread_local std::vector<uintptr_t> s_addresses;
+
+    constexpr size_t PageSize = 4096;
+    size_t watch_size = align(mapping.Size, PageSize);
+    size_t address_count = watch_size / PageSize;
+    s_addresses.resize(address_count);
+
+    DWORD granularity = 0;
+    ULONG_PTR count = ULONG_PTR(address_count);
+
+    // Find out addresses that have changed
+    // Don't reset yet so we can handle aliased resources!
+    if (GetWriteWatch(0, mapping.pData, watch_size, reinterpret_cast<void**>(s_addresses.data()), &count, &granularity) != 0)
+    {
+        assert(false);
+        return;
+    }
+
+    for (ULONG_PTR i = 0; i < count; i++)
+    {
+        uintptr_t base_address = s_addresses[i];
+
+        // Combine contiguous pages into a single memcpy!
+        ULONG_PTR contiguous_pages = 1;
+        while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + granularity)
+        {
+            contiguous_pages++;
+            i++;
+        }
+
+        // Clip to this resource's region
+        uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
+        size_t size = contiguous_pages * PageSize;
+        size = std::min(base_address + size, resource_start + mapping.Size) - base_address;
+
+        trace::fakeMemcpy(reinterpret_cast<void*>(base_address), size);
+    }
+}
+
+static inline void
+_reset_writewatch(_D3D12_MAP_DESC& mapping)
+{
+    constexpr size_t PageSize = 4096;
+    size_t watch_size = align(mapping.Size, PageSize);
+
+    if (ResetWriteWatch(mapping.pData, watch_size) != 0)
+    {
+        assert(false);
+        return;
+    }
+}
+
+static inline void
+_flush_mapping_exception_memcpys(_D3D12_MAP_DESC& mapping)
+{
+    auto& dirtyPages = mapping.ExceptionPath.DirtyPages;
+
+    if (dirtyPages.empty())
         return;
 
-    std::sort(mapping.DirtyPages.begin(), mapping.DirtyPages.end(),
+    std::sort(dirtyPages.begin(), dirtyPages.end(),
         [](_D3D12_PAGE_RANGE a, _D3D12_PAGE_RANGE b) {
             return a.PageStart < b.PageStart;
         });
 
     size_t index = 0;
-    for (size_t i = 1; i < mapping.DirtyPages.size(); i++)
+    for (size_t i = 1; i < dirtyPages.size(); i++)
     {
         // If this is not first Interval and overlaps  
         // with the previous one  
-        if (mapping.DirtyPages[index].PageEnd >= mapping.DirtyPages[i].PageStart)
+        if (dirtyPages[index].PageEnd >= dirtyPages[i].PageStart)
         {
             // Merge previous and current Intervals  
-            mapping.DirtyPages[index].PageEnd   = std::max(mapping.DirtyPages[index].PageEnd,   mapping.DirtyPages[i].PageEnd);
-            mapping.DirtyPages[index].PageStart = std::min(mapping.DirtyPages[index].PageStart, mapping.DirtyPages[i].PageStart);
+            dirtyPages[index].PageEnd   = std::max(dirtyPages[index].PageEnd,   dirtyPages[i].PageEnd);
+            dirtyPages[index].PageStart = std::min(dirtyPages[index].PageStart, dirtyPages[i].PageStart);
         }
         else {
             index++;
-            mapping.DirtyPages[index] = mapping.DirtyPages[i];
+            dirtyPages[index] = dirtyPages[i];
         }
     }
 
@@ -96,9 +178,9 @@ _flush_mapping_memcpys(_D3D12_MAP_DESC& mapping)
         constexpr DWORD page_size = 4096;
 
         uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
-        uintptr_t page_start     = resource_start + mapping.DirtyPages[i].PageStart * page_size;
+        uintptr_t page_start     = resource_start + dirtyPages[i].PageStart * page_size;
         void* start = reinterpret_cast<void*>(page_start);
-        size_t size = (mapping.DirtyPages[i].PageEnd - mapping.DirtyPages[i].PageStart) * page_size;
+        size_t size = (dirtyPages[i].PageEnd - dirtyPages[i].PageStart) * page_size;
         size = std::min(page_start + size, resource_start + mapping.Size) - page_start;
 
         trace::fakeMemcpy(start, size);
@@ -112,26 +194,79 @@ _unmap_resource(ID3D12Resource* pResource)
     SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
     auto& mapping = g_D3D12AddressMappings[key];
     
-    _flush_mapping_memcpys(mapping);
+    if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+    {
+        // WriteWatch mappings.
+        _flush_mapping_watch_memcpys(mapping);
+
+        // TODO(Josh): Is this the right thing to do for aliased resources??? :<<<<<<
+        // I think this won't work for buffers
+        // Not enabling this for now... It'll probably work everywhere
+        // But what about the funny edge case with
+        // [buffer1       ]
+        // [buffer2       XXXXXX]
+        // and buffer 1 gets unmapped
+        // but XXXXX is in buffer 1's page boundaries but
+        // then it's unmapped after that watch will be destroyed
+        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        // THIS API SUCKS!!!!!!!!!!!!!!!!!!!!!!
+        //_reset_writewatch(mapping);
+    }
+    else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
+    {
+        // Exception mappings.
+        _flush_mapping_exception_memcpys(mapping);
+
+        // No need to re-apply the guard as we are unmapping now.
+    }
+    else
+    {
+        assert(false);
+    }
 
     g_D3D12AddressMappings.erase(key);
-
-    // No need to re-apply page guard given we are now unmapping...
 }
 
 static inline void
 _flush_mappings()
 {
     auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
-    for (auto& mapping : g_D3D12AddressMappings)
+    for (auto& element : g_D3D12AddressMappings)
     {
-        _flush_mapping_memcpys(mapping.second);
-        mapping.second.DirtyPages.clear();
+        auto& mapping = element.second;
 
-        [[maybe_unused]] DWORD old_protection;
-        // Re-apply page guard given we came from ExecuteCommandLists
-        bool result = _guard_mapped_memory(mapping.second, &old_protection);
-        assert(result);
+        if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+        {
+            // WriteWatch mappings.
+            _flush_mapping_watch_memcpys(mapping);
+        }
+        else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
+        {
+            // Exception mappings.
+            _flush_mapping_exception_memcpys(mapping);
+            mapping.ExceptionPath.DirtyPages.clear();
+
+            [[maybe_unused]] DWORD old_protection;
+            // Re-apply page guard given we came from ExecuteCommandLists
+            bool result = _guard_mapped_memory(mapping, &old_protection);
+            assert(result);
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+
+    // Reset writewatches after to deal with aliased resources
+    // (and placed resources that may not be aligned to pages?)
+    for (auto& element : g_D3D12AddressMappings)
+    {
+        auto& mapping = element.second;
+
+        if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+        {
+            _reset_writewatch(mapping);
+        }
     }
 }
 
@@ -146,9 +281,10 @@ _setup_seh()
 
             auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
 
-            for (auto& mapping : g_D3D12AddressMappings) {
-                uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.second.pData);
-                uintptr_t mapping_end = mapping_base + mapping.second.Size;
+            for (auto& element : g_D3D12AddressMappings) {
+                auto& mapping = element.second;
+                uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.pData);
+                uintptr_t mapping_end = mapping_base + mapping.Size;
                 if (address >= mapping_base && address < mapping_end) {
                     constexpr DWORD page_size = 4096;
 
@@ -156,7 +292,7 @@ _setup_seh()
                     DWORD page_start = DWORD(offset / page_size);
                     DWORD page_end = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
 
-                    mapping.second.DirtyPages.push_back({ page_start, page_end });
+                    mapping.ExceptionPath.DirtyPages.push_back({ page_start, page_end });
 
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
