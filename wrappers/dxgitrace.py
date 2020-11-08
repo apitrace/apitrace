@@ -183,6 +183,19 @@ class D3DCommonTracer(DllTracer):
             print('        m_MapDesc.erase(it);')
             print('    }')
 
+        # Ensure ordering for functions that interact with fences
+        # Otherwise we can have races if we have eg.
+        # GetCompletedValue and then Signal
+        has_fence = False
+        if method.sideeffects:
+            if interface in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
+                has_fence = True
+            for arg in method.args:
+                if isinstance(arg.type, stdapi.ObjPointer) and arg.type.type in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
+                    has_fence = True
+        if has_fence:
+            print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12FenceOrderingMutex);')
+
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
             print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
 
@@ -431,6 +444,8 @@ if __name__ == '__main__':
 
     print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
     print('std::mutex g_D3D12FenceEventMapMutex;')
+
+    print('std::mutex g_D3D12FenceOrderingMutex;')
 
     api = API()
     api.addModule(dxgi.dxgi)
