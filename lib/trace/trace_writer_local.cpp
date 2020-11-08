@@ -360,18 +360,86 @@ DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAler
     return _result;
 }
 
-DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds)
+DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD nCountReal, const HANDLE* lpHandlesReal)
 {
-    // TODO(Josh): FIX ME
-    assert(false);
-    return 0;
+    unsigned _call = localWriter.beginEnter(&WaitForMultipleObjects_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(nCount);
+    localWriter.endArg();
+
+    localWriter.beginArg(1);
+    localWriter.beginArray(nCount);
+    for (DWORD i = 0; i < nCount; i++)
+    {
+        localWriter.beginElement();
+        localWriter.writePointer((uintptr_t)lpHandles[i]);
+        localWriter.endElement();
+    }
+    localWriter.endArray();
+    localWriter.endArg();
+
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bWaitAll);
+    localWriter.endArg();
+
+    localWriter.beginArg(3);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+
+    localWriter.endEnter();
+
+    DWORD _result = WaitForMultipleObjects(nCountReal, lpHandlesReal, bWaitAll, dwMilliseconds);
+
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
 }
 
-DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable)
+DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable, DWORD nCountReal, const HANDLE* lpHandlesReal)
 {
-    // TODO(Josh): FIX ME
-    assert(false);
-    return 0;
+    unsigned _call = localWriter.beginEnter(&WaitForMultipleObjectsEx_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(nCount);
+    localWriter.endArg();
+
+    localWriter.beginArg(1);
+    localWriter.beginArray(nCount);
+    for (DWORD i = 0; i < nCount; i++)
+    {
+        localWriter.beginElement();
+        localWriter.writePointer((uintptr_t)lpHandles[i]);
+        localWriter.endElement();
+    }
+    localWriter.endArray();
+    localWriter.endArg();
+
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bWaitAll);
+    localWriter.endArg();
+
+    localWriter.beginArg(3);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+
+    localWriter.beginArg(4);
+    localWriter.writeEnum(&_bool_sig, bAlertable);
+    localWriter.endArg();
+
+    localWriter.endEnter();
+
+    DWORD _result = WaitForMultipleObjectsEx(nCountReal, lpHandlesReal, bWaitAll, dwMilliseconds, bAlertable);
+
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
 }
 
 } /* namespace trace */
