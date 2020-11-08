@@ -542,6 +542,7 @@ dxgi.addInterfaces([
     IDXGIResource,
 ])
 dxgi.addFunctions([
+    StdFunction(BOOL, "CompatValue", [(LPCSTR, 'pValueName'), Out(Pointer(UINT64), 'pValue')], sideeffects=False),
     StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
     StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
     StdFunction(HRESULT, "DXGID3D10CreateDevice", [(HMODULE, "hModule"), (ObjPointer(IDXGIFactory), "pFactory"), (ObjPointer(IDXGIAdapter), "pAdapter"), (UINT, "Flags"), (OpaquePointer(Const(IUnknown)), "pUnknown"), Out(Pointer(ObjPointer(Void)), "ppDevice")], internal=True),
