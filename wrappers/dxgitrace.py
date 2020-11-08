@@ -388,7 +388,8 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'GetHeapProperties':
             # Hide write watch from the application
-            print('    *pHeapFlags &= ~D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
+            print('    if (pHeapFlags)')
+            print('        *pHeapFlags &= ~D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
 
         # When D2D is used on top of WARP software rasterizer it seems to do
         # most of its rendering via the undocumented and opaque IWarpPrivateAPI
