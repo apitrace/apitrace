@@ -497,6 +497,15 @@ class D3DRetracer(Retracer):
             print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_va = call.ret->toUInt();')
             print('    g_D3D12AddressSlabs.RegisterSlab(_fake_va, _result);')
 
+        if method.name == 'GetCompletedValue':
+            print('    UINT64 _traced_result = call.ret->toUInt();')
+            print('    if (_result < _traced_result)')
+            print('    {')
+            print('        HANDLE _wait_event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')
+            print('        _this->SetEventOnCompletion(_traced_result, _wait_event);')
+            print('        WaitForSingleObject(_wait_event, INFINITE);')
+            print('    }')
+
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print(r'    d3dretrace::processEvents();')
