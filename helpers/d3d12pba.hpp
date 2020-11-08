@@ -102,8 +102,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
     ULONG_PTR count = ULONG_PTR(address_count);
 
     // Find out addresses that have changed
-    // Don't reset yet so we can handle aliased resources!
-    if (GetWriteWatch(0, mapping.pData, watch_size, reinterpret_cast<void**>(s_addresses.data()), &count, &granularity) != 0)
+    if (GetWriteWatch(WRITE_WATCH_FLAG_RESET, mapping.pData, watch_size, reinterpret_cast<void**>(s_addresses.data()), &count, &granularity) != 0)
     {
 #ifndef NDEBUG
         MEMORY_BASIC_INFORMATION info;
@@ -300,7 +299,7 @@ _flush_mappings()
 
     // Reset writewatches after to deal with aliased resources
     // (and placed resources that may not be aligned to pages?)
-    for (auto& element : g_D3D12AddressMappings)
+    /*for (auto& element : g_D3D12AddressMappings)
     {
         auto& mapping = element.second;
 
@@ -308,7 +307,7 @@ _flush_mappings()
         {
             _reset_writewatch(mapping);
         }
-    }
+    }*/
 }
 
 static inline void
