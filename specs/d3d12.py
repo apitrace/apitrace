@@ -1685,7 +1685,7 @@ D3D12_WRITEBUFFERIMMEDIATE_MODE = Enum('D3D12_WRITEBUFFERIMMEDIATE_MODE', [
 
 D3D12_PIPELINE_STATE_STREAM_DESC = Struct('D3D12_PIPELINE_STATE_STREAM_DESC', [
     (SIZE_T, 'SizeInBytes'),
-    (OpaqueBlob(Void, 'SizeInBytes'), 'pPipelineStateSubobjectStream'),
+    (Blob(Void, '{self}.SizeInBytes'), 'pPipelineStateSubobjectStream'),
 ])
 
 D3D12_RESIDENCY_FLAGS = EnumFlags('D3D12_RESIDENCY_FLAGS', [
@@ -1914,7 +1914,7 @@ D3D12_STATE_SUBOBJECT_TYPE = Enum('D3D12_STATE_SUBOBJECT_TYPE', [
 D3D12_STATE_SUBOBJECT = Struct('D3D12_STATE_SUBOBJECT', [
     (D3D12_STATE_SUBOBJECT_TYPE, 'Type'),
     # TODO(Josh): Replace this with union at some point so it can be introspected.
-    (OpaqueBlob(Const(Void), '_getSubobjectSize(Type)'), 'pDesc'),
+    (Blob(Const(Void), '_getSubobjectSize({self}.Type)'), 'pDesc'),
 ])
 
 D3D12_STATE_OBJECT_DESC = Struct('D3D12_STATE_OBJECT_DESC', [
@@ -2410,8 +2410,8 @@ ID3D12GraphicsCommandList3.methods += [
 ID3D12GraphicsCommandList4.methods += [
     StdMethod(Void, 'BeginRenderPass', [(UINT, 'NumRenderTargets'), (Array(Const(D3D12_RENDER_PASS_RENDER_TARGET_DESC), 'NumRenderTargets'), 'pRenderTargets'), (Pointer(Const(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC)), 'pDepthStencil'), (D3D12_RENDER_PASS_FLAGS, 'Flags')]),
     StdMethod(Void, 'EndRenderPass', []),
-    StdMethod(Void, 'InitializeMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (OpaqueBlob(Const(Void), 'InitializationParametersDataSizeInBytes'), 'pInitializationParametersData'), (SIZE_T, 'InitializationParametersDataSizeInBytes')]),
-    StdMethod(Void, 'ExecuteMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (OpaqueBlob(Const(Void), 'ExecutionParametersDataSizeInBytes'), 'pExecutionParametersData'), (SIZE_T, 'ExecutionParametersDataSizeInBytes')]),
+    StdMethod(Void, 'InitializeMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (Blob(Const(Void), 'InitializationParametersDataSizeInBytes'), 'pInitializationParametersData'), (SIZE_T, 'InitializationParametersDataSizeInBytes')]),
+    StdMethod(Void, 'ExecuteMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (Blob(Const(Void), 'ExecutionParametersDataSizeInBytes'), 'pExecutionParametersData'), (SIZE_T, 'ExecutionParametersDataSizeInBytes')]),
     StdMethod(Void, 'BuildRaytracingAccelerationStructure', [(Pointer(Const(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC)), 'pDesc'), (UINT, 'NumPostbuildInfoDescs'), (Array(Const(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_DESC), 'NumPostbuildInfoDescs'), 'pPostbuildInfoDescs')]),
     StdMethod(Void, 'EmitRaytracingAccelerationStructurePostbuildInfo', [(Pointer(Const(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_DESC)), 'pDesc'), (UINT, 'NumSourceAccelerationStructures'), (Array(Const(D3D12_GPU_VIRTUAL_ADDRESS), 'NumSourceAccelerationStructures'), 'pSourceAccelerationStructureData')]),
     StdMethod(Void, 'CopyRaytracingAccelerationStructure', [(D3D12_GPU_VIRTUAL_ADDRESS, 'DestAccelerationStructureData'), (D3D12_GPU_VIRTUAL_ADDRESS, 'SourceAccelerationStructureData'), (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE, 'Mode')]),
@@ -2443,7 +2443,7 @@ ID3D12PipelineLibrary.methods += [
     StdMethod(HRESULT, 'LoadGraphicsPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
     StdMethod(HRESULT, 'LoadComputePipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
     StdMethod(SIZE_T, 'GetSerializedSize', [], sideeffects=False),
-    StdMethod(HRESULT, 'Serialize', [Out(OpaqueBlob(Void, 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')], sideeffects=False),
+    StdMethod(HRESULT, 'Serialize', [Out(Blob(Void, 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')], sideeffects=False),
 ]
 
 ID3D12PipelineLibrary1.methods += [
@@ -2478,7 +2478,7 @@ ID3D12StateObject.methods += [
 ]
 
 ID3D12StateObjectProperties.methods += [
-    StdMethod(OpaqueBlob(Void, 'D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES'), 'GetShaderIdentifier', [(LPCWSTR, 'pExportName')], sideeffects=False),
+    StdMethod(Blob(Void, 'D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES'), 'GetShaderIdentifier', [(LPCWSTR, 'pExportName')], sideeffects=False),
     StdMethod(UINT64, 'GetShaderStackSize', [(LPCWSTR, 'pExportName')], sideeffects=False),
     StdMethod(UINT64, 'GetPipelineStackSize', [], sideeffects=False),
     StdMethod(Void, 'SetPipelineStackSize', [(UINT64, 'PipelineStackSizeInBytes')]),
@@ -2545,7 +2545,7 @@ ID3D12Device.methods += [
 ]
 
 ID3D12Device1.methods += [
-    StdMethod(HRESULT, 'CreatePipelineLibrary', [(OpaqueBlob(Const(Void), 'BlobLength'), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
+    StdMethod(HRESULT, 'CreatePipelineLibrary', [(Blob(Const(Void), 'BlobLength'), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
     StdMethod(HRESULT, 'SetEventOnMultipleFenceCompletion', [(Array(Const(ObjPointer(ID3D12Fence)), 'NumFences'), 'ppFences'), (Array(Const(UINT64), 'NumFences'), 'pFenceValues'), (UINT, 'NumFences'), (D3D12_MULTIPLE_FENCE_WAIT_FLAGS, 'Flags'), (HANDLE, 'hEvent')]),
     StdMethod(HRESULT, 'SetResidencyPriority', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (Array(Const(D3D12_RESIDENCY_PRIORITY), 'NumObjects'), 'pPriorities')]),
 ]
@@ -2576,7 +2576,7 @@ ID3D12Device5.methods += [
     StdMethod(Void, 'RemoveDevice', []),
     StdMethod(HRESULT, 'EnumerateMetaCommands', [InOut(Pointer(UINT), 'pNumMetaCommands'), Out(Array(D3D12_META_COMMAND_DESC, '*pNumMetaCommands'), 'pDesc')], sideeffects=False),
     StdMethod(HRESULT, 'EnumerateMetaCommandParameters', [(REFIID, 'CommandId'), (D3D12_META_COMMAND_PARAMETER_STAGE, 'Stage'), Out(Pointer(UINT), 'pTotalStructureSizeInBytes'), InOut(Pointer(UINT), 'pParameterCount'), Out(Array(D3D12_META_COMMAND_PARAMETER_DESC, '*pParameterCount'), 'pParameterDescs')], sideeffects=False),
-    StdMethod(HRESULT, 'CreateMetaCommand', [(REFIID, 'CommandId'), (UINT, 'NodeMask'), (OpaqueBlob(Const(Void), 'CreationParametersDataSizeInBytes'), 'pCreationParametersData'), (SIZE_T, 'CreationParametersDataSizeInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppMetaCommand')]),
+    StdMethod(HRESULT, 'CreateMetaCommand', [(REFIID, 'CommandId'), (UINT, 'NodeMask'), (Blob(Const(Void), 'CreationParametersDataSizeInBytes'), 'pCreationParametersData'), (SIZE_T, 'CreationParametersDataSizeInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppMetaCommand')]),
     StdMethod(HRESULT, 'CreateStateObject', [(Pointer(Const(D3D12_STATE_OBJECT_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppStateObject')]),
     StdMethod(Void, 'GetRaytracingAccelerationStructurePrebuildInfo', [(Pointer(Const(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS)), 'pDesc'), Out(Pointer(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO), 'pInfo')]),
     StdMethod(D3D12_DRIVER_MATCHING_IDENTIFIER_STATUS, 'CheckDriverMatchingIdentifier', [(D3D12_SERIALIZED_DATA_TYPE, 'SerializedDataType'), (Pointer(Const(D3D12_SERIALIZED_DATA_DRIVER_MATCHING_IDENTIFIER)), 'pIdentifierToCheck')]),
@@ -2589,6 +2589,8 @@ ID3D12Device6.methods += [
 d3d12 = Module('d3d12')
 d3d12.addInterfaces([
     ID3D12Debug,
+    ID3D12PipelineLibrary,
+    ID3D12PipelineLibrary1,
     ID3D12GraphicsCommandList,
     ID3D12GraphicsCommandList1,
     ID3D12GraphicsCommandList2,
@@ -2602,15 +2604,13 @@ d3d12.addInterfaces([
     ID3D12Device4,
     ID3D12Device5,
     ID3D12Device6,
-    ID3D12PipelineLibrary,
-    ID3D12PipelineLibrary1,
 ])
 
 d3d12.addFunctions([
     StdFunction(HRESULT, 'D3D12CreateDevice', [(ObjPointer(IUnknown), 'pAdapter'), (D3D_FEATURE_LEVEL, 'MinimumFeatureLevel'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDevice')]),
     StdFunction(HRESULT, 'D3D12GetDebugInterface', [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvDebug')]),
-    StdFunction(HRESULT, 'D3D12CreateRootSignatureDeserializer', [(LPCVOID, 'pSrcData'), (SIZE_T, 'SrcDataSizeInBytes'), (REFIID, 'pRootSignatureDeserializerInterface'), Out(Pointer(ObjPointer(Void)), 'ppRootSignatureDeserializer')]),
-    StdFunction(HRESULT, 'D3D12CreateVersionedRootSignatureDeserializer', [(LPCVOID, 'pSrcData'), (SIZE_T, 'SrcDataSizeInBytes'), (REFIID, 'pRootSignatureDeserializerInterface'), Out(Pointer(ObjPointer(Void)), 'ppRootSignatureDeserializer')]),
+    StdFunction(HRESULT, 'D3D12CreateRootSignatureDeserializer', [(Blob(Const(Void), 'SrcDataSizeInBytes'), 'pSrcData'), (SIZE_T, 'SrcDataSizeInBytes'), (REFIID, 'pRootSignatureDeserializerInterface'), Out(Pointer(ObjPointer(Void)), 'ppRootSignatureDeserializer')]),
+    StdFunction(HRESULT, 'D3D12CreateVersionedRootSignatureDeserializer', [(Blob(Const(Void), 'SrcDataSizeInBytes'), 'pSrcData'), (SIZE_T, 'SrcDataSizeInBytes'), (REFIID, 'pRootSignatureDeserializerInterface'), Out(Pointer(ObjPointer(Void)), 'ppRootSignatureDeserializer')]),
 
     StdFunction(HRESULT, 'D3D12EnableExperimentalFeatures', [(UINT, 'NumFeatures'), (Pointer(Const(IID)), 'pIIDs'), (OpaquePointer(Void), 'pConfigurationStructs'), (Pointer(UINT), 'pConfigurationStructSizes')]),
     StdFunction(HRESULT, 'D3D12SerializeRootSignature', [(Pointer(Const(D3D12_ROOT_SIGNATURE_DESC)), 'pRootSignature'), (D3D_ROOT_SIGNATURE_VERSION, 'Version'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppBlob'), Out(Pointer(ObjPointer(ID3DBlob)), 'ppErrorBlob')]),
