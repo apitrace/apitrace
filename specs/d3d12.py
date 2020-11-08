@@ -2306,7 +2306,7 @@ ID3D12CommandAllocator.methods += [
 ]
 
 ID3D12Fence.methods += [
-    StdMethod(UINT64, 'GetCompletedValue', [], sideeffects=False),
+    StdMethod(UINT64, 'GetCompletedValue', []),
     StdMethod(HRESULT, 'SetEventOnCompletion', [(UINT64, 'Value'), (HANDLE, 'hEvent')]),
     StdMethod(HRESULT, 'Signal', [(UINT64, 'Value')]),
 ]
