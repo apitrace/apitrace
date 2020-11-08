@@ -2442,8 +2442,8 @@ ID3D12PipelineLibrary.methods += [
     StdMethod(HRESULT, 'StorePipeline', [(LPCWSTR, 'pName'), (ObjPointer(ID3D12PipelineState), 'pPipeline')]),
     StdMethod(HRESULT, 'LoadGraphicsPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
     StdMethod(HRESULT, 'LoadComputePipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
-    StdMethod(SIZE_T, 'GetSerializedSize', []),
-    StdMethod(HRESULT, 'Serialize', [(OpaqueBlob(Const(Void), 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')]),
+    StdMethod(SIZE_T, 'GetSerializedSize', [], sideeffects=False),
+    StdMethod(HRESULT, 'Serialize', [Out(OpaqueBlob(Void, 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')], sideeffects=False),
 ]
 
 ID3D12PipelineLibrary1.methods += [
@@ -2602,6 +2602,8 @@ d3d12.addInterfaces([
     ID3D12Device4,
     ID3D12Device5,
     ID3D12Device6,
+    ID3D12PipelineLibrary,
+    ID3D12PipelineLibrary1,
 ])
 
 d3d12.addFunctions([
