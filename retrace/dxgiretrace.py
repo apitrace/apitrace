@@ -419,6 +419,12 @@ class D3DRetracer(Retracer):
                 print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
 
         if interface.name.startswith('ID3D12'):
+            if method.name == 'CreateCommandQueue':
+                # Disable GPU timeout
+                print('    D3D12_COMMAND_QUEUE_DESC _desc = *pDesc;')
+                print('    _desc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;')
+                print('    pDesc = &_desc;')
+
             if method.name == 'OMSetRenderTargets':
                 print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
