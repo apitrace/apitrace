@@ -165,7 +165,7 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'Unmap':
             if interface.name.startswith('ID3D12'):
-                print('    _unmap_resource(this);')
+                print('    _unmap_resource(m_pInstance);')
             else:
                 print('    if (_MapDesc.Size && _MapDesc.pData) {')
                 print('        if (_shouldShadowMap(pResourceInstance)) {')
@@ -225,7 +225,7 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    if (SUCCEEDED(_result) && ppData && *ppData)')
-                print('        _map_resource(this, *ppData);')
+                print('        _map_resource(m_pInstance, *ppData);')
             else:
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')
@@ -385,6 +385,10 @@ class D3DCommonTracer(DllTracer):
             print('    pDesc = &_heap_desc;')
 
         DllTracer.invokeMethod(self, interface, base, method)
+
+        if method.name == 'GetHeapProperties':
+            # Hide write watch from the application
+            print('    *pHeapFlags &= ~D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
 
         # When D2D is used on top of WARP software rasterizer it seems to do
         # most of its rendering via the undocumented and opaque IWarpPrivateAPI

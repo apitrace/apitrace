@@ -192,15 +192,23 @@ _flush_mapping_exception_memcpys(_D3D12_MAP_DESC& mapping)
     }
 }
 
-static inline void
-_map_resource(ID3D12Resource* pResource, void* pData)
+static inline D3D12_HEAP_FLAGS
+_get_heap_flags(ID3D12Resource* pResource)
 {
-    D3D12_HEAP_FLAGS flags;
+    D3D12_HEAP_FLAGS flags = D3D12_HEAP_FLAG_NONE;
     if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
     {
         os::log("apitrace: Failed to query heap properties\n");
         assert(false);
     }
+
+    return flags;
+}
+
+static inline void
+_map_resource(ID3D12Resource* pResource, void* pData)
+{
+    D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
@@ -217,12 +225,7 @@ _map_resource(ID3D12Resource* pResource, void* pData)
 static inline void
 _unmap_resource(ID3D12Resource* pResource)
 {
-    D3D12_HEAP_FLAGS flags;
-    if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
-    {
-        os::log("apitrace: Failed to query heap properties\n");
-        assert(false);
-    }
+    D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
