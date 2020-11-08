@@ -2605,6 +2605,7 @@ d3d12.addInterfaces([
     ID3D12Device6,
     ID3D12Heap1,
     ID3D12Resource1,
+    ID3D12Fence1,
 ])
 
 d3d12.addFunctions([
