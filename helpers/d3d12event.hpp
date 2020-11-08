@@ -275,8 +275,8 @@ namespace trace
 {
     DWORD fakeWaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
     DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable);
-    DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
-    DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable);
+    DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD nCountReal, const HANDLE* lpHandlesReal);
+    DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable, DWORD nCountReal, const HANDLE* lpHandlesReal);
 }
 
 extern std::mutex g_D3D12FenceEventMapMutex;
@@ -292,7 +292,6 @@ namespace D3D12EventHooks
 
             auto elem = g_D3D12FenceEventMap.find(hHandle);
             if (elem != g_D3D12FenceEventMap.end()) {
-                hHandle = elem->second;
                 shouldFake = true;
                 g_D3D12FenceEventMap.erase(elem);
             }
@@ -312,7 +311,6 @@ namespace D3D12EventHooks
 
             auto elem = g_D3D12FenceEventMap.find(hHandle);
             if (elem != g_D3D12FenceEventMap.end()) {
-                hHandle = elem->second;
                 shouldFake = true;
                 g_D3D12FenceEventMap.erase(elem);
             }
@@ -326,16 +324,52 @@ namespace D3D12EventHooks
 
     DWORD D3D12WaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds)
     {
-        return WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
-        assert(false);
-        return 0;
+        HANDLE fakeHandles[MAXIMUM_WAIT_OBJECTS];
+
+        DWORD fakeCount = 0;
+        {
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+
+            for (DWORD i = 0; i < nCount; i++)
+            {
+                auto elem = g_D3D12FenceEventMap.find(lpHandles[i]);
+                if (elem != g_D3D12FenceEventMap.end()) {
+                    fakeHandles[fakeCount] = lpHandles[i];
+                    fakeCount++;
+                    g_D3D12FenceEventMap.erase(elem);
+                }
+            }
+        }
+
+        if (fakeCount != 0)
+            return trace::fakeWaitForMultipleObjects(fakeCount, fakeHandles, bWaitAll, dwMilliseconds, nCount, lpHandles);
+        else
+            return WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
     }
 
     DWORD D3D12WaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable)
     {
-        return WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
-        assert(false);
-        return 0;
+        HANDLE fakeHandles[MAXIMUM_WAIT_OBJECTS];
+
+        DWORD fakeCount = 0;
+        {
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+
+            for (DWORD i = 0; i < nCount; i++)
+            {
+                auto elem = g_D3D12FenceEventMap.find(lpHandles[i]);
+                if (elem != g_D3D12FenceEventMap.end()) {
+                    fakeHandles[fakeCount] = lpHandles[i];
+                    fakeCount++;
+                    g_D3D12FenceEventMap.erase(elem);
+                }
+            }
+        }
+
+        if (fakeCount != 0)
+            return trace::fakeWaitForMultipleObjectsEx(fakeCount, fakeHandles, bWaitAll, dwMilliseconds, bAlertable, nCount, lpHandles);
+        else
+            return WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
     }
 }
 
