@@ -1,4 +1,5 @@
 EXPORTS
+	CompatValue @3
 	CreateDXGIFactory @10
 	CreateDXGIFactory1 @11
 	CreateDXGIFactory2 @12
