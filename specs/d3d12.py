@@ -2257,8 +2257,7 @@ ID3D12Object.methods += [
     StdMethod(HRESULT, 'GetPrivateData', [(REFGUID, 'guid'), InOut(Pointer(UINT), 'pDataSize'), Out(OpaquePointer(Void), 'pData')], sideeffects=False),
     StdMethod(HRESULT, 'SetPrivateData', [(REFGUID, 'guid'), (UINT, 'DataSize'), (OpaqueBlob(Const(Void), 'DataSize'), 'pData')]),
     StdMethod(HRESULT, 'SetPrivateDataInterface', [(REFGUID, 'guid'), (OpaquePointer(Const(IUnknown)), 'pData')], sideeffects=False),
-    # TODO(Josh): Do we want to re-enable this? Would be useful for markers.
-    StdMethod(HRESULT, 'SetName', [(LPCWSTR, 'Name')], sideeffects=False),
+    StdMethod(HRESULT, 'SetName', [(LPCWSTR, 'Name')]),
 ]
 
 ID3D12DeviceChild.methods += [
