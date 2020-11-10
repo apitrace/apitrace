@@ -506,6 +506,29 @@ class D3DRetracer(Retracer):
             print('        WaitForSingleObject(_wait_event, INFINITE);')
             print('    }')
 
+        # If LoadPipeline fails from the blob, create the pipeline state automagically.
+        # This will happen on mismatching drivers/vendors etc.
+        if method.name == 'LoadPipeline':
+            print('    if (_result == E_INVALIDARG) {')
+            print('        com_ptr<ID3D12Device1> _device;')
+            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
+            print('        _result = _device->CreatePipelineState(pDesc, riid, ppPipelineState);')
+            print('    }')
+
+        if method.name == 'LoadGraphicsPipeline':
+            print('    if (_result == E_INVALIDARG) {')
+            print('        com_ptr<ID3D12Device1> _device;')
+            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
+            print('        _result = _device->CreateGraphicsPipelineState(pDesc, riid, ppPipelineState);')
+            print('    }')
+
+        if method.name == 'LoadComputePipeline':
+            print('    if (_result == E_INVALIDARG) {')
+            print('        com_ptr<ID3D12Device1> _device;')
+            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
+            print('        _result = _device->CreateComputePipelineState(pDesc, riid, ppPipelineState);')
+            print('    }')
+
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print(r'    d3dretrace::processEvents();')
