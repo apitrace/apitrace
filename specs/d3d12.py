@@ -2529,8 +2529,8 @@ ID3D12CommandQueue.methods += [
 
 ID3D12PipelineLibrary.methods += [
     StdMethod(HRESULT, 'StorePipeline', [(LPCWSTR, 'pName'), (ObjPointer(ID3D12PipelineState), 'pPipeline')]),
-    StdMethod(HRESULT, 'LoadGraphicsPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
-    StdMethod(HRESULT, 'LoadComputePipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandQueue')]),
+    StdMethod(HRESULT, 'LoadGraphicsPipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_GRAPHICS_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
+    StdMethod(HRESULT, 'LoadComputePipeline', [(LPCWSTR, 'pName'), (Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
     StdMethod(SIZE_T, 'GetSerializedSize', [], sideeffects=False),
     StdMethod(HRESULT, 'Serialize', [Out(Blob(Void, 'DataSizeInBytes'), 'pData'), (SIZE_T, 'DataSizeInBytes')], sideeffects=False),
 ]
