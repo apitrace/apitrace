@@ -38,6 +38,11 @@
 #include "dxgisize.hpp"
 #include "com_ptr.hpp"
 
+template<typename T, typename U = T>
+constexpr T align(T what, U to) {
+    return (what + to - 1) & ~(to - 1);
+}
+
 static inline size_t
 _calcSubresourceSize12(ID3D12Resource *pDstResource, UINT DstSubresource, const D3D12_BOX *pDstBox, UINT SrcRowPitch, UINT SrcDepthPitch)
 {
@@ -94,4 +99,11 @@ _getSubobjectSize(D3D12_STATE_SUBOBJECT_TYPE Type)
 {
     assert(false);
     return 0;
+}
+
+static inline D3D12_PIPELINE_STATE_SUBOBJECT_TYPE
+_getStateStreamType(char *pStream)
+{
+    D3D12_PIPELINE_STATE_SUBOBJECT_TYPE value = *reinterpret_cast<D3D12_PIPELINE_STATE_SUBOBJECT_TYPE*>(pStream);
+    return value;
 }
