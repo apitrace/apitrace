@@ -83,11 +83,6 @@ _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
     return vp_result;
 }
 
-template<typename T, typename U = T>
-constexpr T align(T what, U to) {
-    return (what + to - 1) & ~(to - 1);
-}
-
 static inline void
 _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 {
