@@ -39,6 +39,8 @@ import specs.stdapi as stdapi
 def getWrapperInterfaceName(interface):
     return "Wrap" + interface.expr
 
+def getPolymorphStructOffset(enumType, type):
+    return 'align(sizeof(%s), alignof(%s))' % (enumType, type)
 
 debug = False
 
@@ -152,6 +154,9 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         pass
 
     def visitPolymorphic(self, polymorphic):
+        if polymorphic.stream:
+            self.visitEnum(polymorphic.streamEnum)
+
         if not polymorphic.contextLess:
             return
         print('static void _write__%s(int selector, %s const & value) {' % (polymorphic.tag, polymorphic.expr))
@@ -331,6 +336,41 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
             print('    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance))
         else:
             switchExpr = self.expand(polymorphic.switchExpr)
+            if polymorphic.stream:
+                switchValue = '_switch_type'
+                print(r'    size_t _blob_array_count = 0;')
+                print(r'    {')
+                print(r'        char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'        char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                print(r'        while(_blob_ptr < _blob_end) {')
+                print(r'            auto _switch_type = %s;' % switchExpr)
+                print(r'            switch (%s) {' % switchValue)
+                for cases, type in polymorphic.iterSwitch():
+                    for case in cases:
+                        print('    %s:' % case)
+                        print(r'    _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
+                        print(r'    _blob_array_count++;')
+                    print(r'        break;')
+                if polymorphic.defaultType is None:
+                    print(r'    default:')
+                    print(r'        _blob_ptr += sizeof(%s) + sizeof(void*);' % polymorphic.streamEnum)
+                    print(r'        _blob_array_count++;')
+                    print(r'        break;')
+                print(r'            }')
+                print(r'        }')
+                print(r'    }')
+                print(r'    char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_tmp = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                # * 2 to handle the enum also.
+                print(r'    trace::localWriter.beginArray(_blob_array_count * 2);')
+                print(r'    while(_blob_ptr < _blob_end) {')
+                print(r'    trace::localWriter.beginElement();')
+                print(r'    auto _switch_type = %s;' % switchExpr)
+                print(r'    trace::localWriter.writeEnum(&_enum%s_sig, _switch_type);' % polymorphic.streamEnum.tag)
+                print(r'    trace::localWriter.endElement();')
+                print(r'    trace::localWriter.beginElement();')
+                switchExpr = '_switch_type'
             print('    switch (%s) {' % switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
@@ -338,14 +378,25 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 caseInstance = instance
                 if type.expr is not None:
                     caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                if polymorphic.stream:
+                    print('        _blob_tmp = _blob_ptr + %s;' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type)))
+                    caseInstance = 'reinterpret_cast<%s>(_blob_tmp)' % (type)
                 self.visit(type, caseInstance)
+                if polymorphic.stream:
+                    print(r'    _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
                 print('        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
                 print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,))
+                if polymorphic.stream:
+                    print(r'        _blob_ptr += sizeof(%s) + sizeof(void*);' % polymorphic.streamEnum)
                 print(r'        trace::localWriter.writeNull();')
                 print(r'        break;')
             print('    }')
+            if polymorphic.stream:
+                print('        trace::localWriter.endElement();')
+                print('    }')
+                print('    trace::localWriter.endArray();')
 
 
 class WrapDecider(stdapi.Traverser):
@@ -414,6 +465,17 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
         # XXX: There might be polymorphic values that need wrapping in the future
         if typeNeedsWrapping(polymorphic):
             switchExpr = self.expand(polymorphic.switchExpr)
+            if polymorphic.stream:
+                print(r'    void* _blob = alloca(%s);' % polymorphic.streamSize)
+                print(r'    size_t _blob_size = %s;' % polymorphic.streamSize)
+                print(r'    memcpy(_blob, %s, _blob_size);'  % instance)
+                print(r'    %s = _blob;' % instance)
+                print(r'    char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_tmp = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                print(r'    while(_blob_ptr < _blob_end) {')
+                print(r'    auto _switch_type = %s;' % switchExpr)
+                switchExpr = '_switch_type'
             print('    switch (%s) {' % switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
@@ -421,12 +483,19 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
                 caseInstance = instance
                 if type.expr is not None:
                     caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                if polymorphic.stream:
+                    print('        _blob_tmp = _blob_ptr + %s;' % getPolymorphStructOffset(polymorphic.streamEnum, type))
+                    caseInstance = 'reinterpret_cast<%s>(_blob_tmp)' % (type)
                 self.visit(type, caseInstance)
+                if polymorphic.stream:
+                    print(r'        _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
                 print('        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
                 print(r'        break;')
             print('    }')
+            if polymorphic.stream:
+                print('    }')
 
 
 class ValueUnwrapper(ValueWrapper):
