@@ -564,7 +564,9 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True):
+    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True, stream=False, streamEnum=None, streamSize=0, streamAlignment=0):
+        if stream:
+            contextLess = False
         if defaultType is None:
             Type.__init__(self, None)
             contextLess = False
@@ -574,6 +576,10 @@ class Polymorphic(Type):
         self.switchTypes = switchTypes
         self.defaultType = defaultType
         self.contextLess = contextLess
+        self.stream          = stream
+        self.streamSize      = streamSize,
+        self.streamAlignment = streamAlignment
+        self.streamEnum      = streamEnum
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitPolymorphic(self, *args, **kwargs)
