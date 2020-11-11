@@ -827,7 +827,7 @@ class Tracer:
         print("public:")
         print("    static %s* _create(const char *entryName, %s * pInstance);" % (wrapperInterfaceName, interface.name))
         print("    static void _wrap(const char *entryName, %s ** ppInstance);" % (interface.name,))
-        print("    static void _unwrap(const char *entryName, %s ** pInstance);" % (interface.name,))
+        print("    static void _unwrap(const char *entryName, const %s * const * pInstance);" % (interface.name,))
         print()
 
         methods = list(interface.iterMethods())
@@ -935,7 +935,8 @@ class Tracer:
 
         # Unwrap pointer
         print(r'void')
-        print(r'%s::_unwrap(const char *entryName, %s **ppObj) {' % (wrapperInterfaceName, iface.name))
+        print(r'%s::_unwrap(const char *entryName, const %s * const *ppObjConst) {' % (wrapperInterfaceName, iface.name))
+        print(r'    %s **ppObj = const_cast<%s**>(ppObjConst);' % (iface.name, iface.name))
         print(r'    if (!ppObj || !*ppObj) {')
         print(r'        return;')
         print(r'    }')
