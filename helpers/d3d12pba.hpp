@@ -193,8 +193,9 @@ _get_heap_flags(ID3D12Resource* pResource)
     D3D12_HEAP_FLAGS flags = D3D12_HEAP_FLAG_NONE;
     if (FAILED(pResource->GetHeapProperties(nullptr, &flags)))
     {
-        os::log("apitrace: Failed to query heap properties\n");
-        assert(false);
+        // This is probably a reserved resource...
+        // These cannot be mapped to lets say FLAG_NONE!
+        return D3D12_HEAP_FLAG_NONE;
     }
 
     return flags;
