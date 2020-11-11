@@ -40,6 +40,11 @@ from specs.d3d11 import d3d11
 from specs import d3d12
 from specs.dcomp import dcomp
 
+def typeArrayOrPointer(arg, type_):
+    return (isinstance(arg.type, stdapi.Pointer) and arg.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Array) and arg.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Array) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is type_)
 
 class D3DRetracer(Retracer):
 
@@ -235,6 +240,21 @@ class D3DRetracer(Retracer):
             print(r'    }')
         # TODO(Josh): D3D12 Video
 
+    def lookupDescriptor(self, arg, _type, handler):
+        if arg.type is _type:
+            print(r'    %s = g_D3D12DescriptorSlabs.%s(%s);' % (arg.name, handler, arg.name))
+        if typeArrayOrPointer(arg, _type):
+            real_name = r'_real_%s' % arg.name
+            array_length = 1
+            if isinstance(arg.type, stdapi.Array):
+                array_length = arg.type.length
+            print(r'    %s* %s = (%s *)alloca(sizeof(%s) * %s);' % (_type, real_name, _type, _type, array_length))
+            print(r'    if (%s != nullptr) {' % arg.name)
+            print(r'        for (UINT _i = 0; _i < %s; _i++)' % array_length)
+            print(r'            %s[_i] = g_D3D12DescriptorSlabs.%s(%s[_i]);' % (real_name, handler, arg.name))
+            print(r'        %s = %s;' % (arg.name, real_name))
+            print(r'    }')
+
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('ID3D10Device', 'ID3D10Device1'):
@@ -393,27 +413,8 @@ class D3DRetracer(Retracer):
             print(r'    dwMilliseconds = 0;')
 
         for arg in method.args:
-            if arg.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(%s);' % (arg.name, arg.name))
-            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE) or \
-               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_CPU_DESCRIPTOR_HANDLE):
-                real_name = r'_real_%s' % arg.name
-                print(r'    D3D12_CPU_DESCRIPTOR_HANDLE %s;' % real_name)
-                print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(*%s);' % (real_name, arg.name))
-                print(r'        %s = &%s;' % (arg.name, real_name))
-                print(r'    }')
-
-            if arg.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE:
-                print(r'    %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(%s);' % (arg.name, arg.name))
-            if (isinstance(arg.type, stdapi.Pointer) and arg.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE) or \
-               (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is d3d12.D3D12_GPU_DESCRIPTOR_HANDLE):
-                real_name = r'_real_%s' % arg.name
-                print(r'    D3D12_GPU_DESCRIPTOR_HANDLE %s;' % real_name)
-                print(r'    if (%s != nullptr) {' % arg.name)
-                print(r'        %s = g_D3D12DescriptorSlabs.LookupGPUDescriptorHandle(%s[0]);' % (real_name, arg.name))
-                print(r'        %s = &%s;' % (arg.name, real_name))
-                print(r'    }')
+            self.lookupDescriptor(arg, d3d12.D3D12_CPU_DESCRIPTOR_HANDLE, 'LookupCPUDescriptorHandle')
+            self.lookupDescriptor(arg, d3d12.D3D12_GPU_DESCRIPTOR_HANDLE, 'LookupGPUDescriptorHandle')
 
             if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
                 print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
@@ -424,14 +425,6 @@ class D3DRetracer(Retracer):
                 print('    D3D12_COMMAND_QUEUE_DESC _desc = *pDesc;')
                 print('    _desc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;')
                 print('    pDesc = &_desc;')
-
-            if method.name == 'OMSetRenderTargets':
-                print('    assert(NumRenderTargetDescriptors <= D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT);')
-                print('    D3D12_CPU_DESCRIPTOR_HANDLE _real_render_target_descriptors[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];')
-                print('    for (UINT i = 0; i < NumRenderTargetDescriptors; i++) {')
-                print('        _real_render_target_descriptors[i] = g_D3D12DescriptorSlabs.LookupCPUDescriptorHandle(pRenderTargetDescriptors[i]);')
-                print('    }')
-                print('    pRenderTargetDescriptors = _real_render_target_descriptors;')
 
             if method.name == 'SetEventOnCompletion':
                 print('     {')
