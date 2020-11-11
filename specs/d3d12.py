@@ -2105,12 +2105,14 @@ D3D12_STATE_SUBOBJECT_POLYMORPH += [
 
 D3D12_STATE_SUBOBJECT.members += [
     (D3D12_STATE_SUBOBJECT_TYPE, 'Type'),
-    (Polymorphic('{self}.Type', D3D12_STATE_SUBOBJECT_POLYMORPH, None, contextLess=False), 'pDesc'),
+    #(Polymorphic('{self}.Type', D3D12_STATE_SUBOBJECT_POLYMORPH, None, contextLess=False), 'pDesc'),
+    (OpaqueBlob(Const(Void), '0'), 'pDesc'),
 ]
 
 D3D12_STATE_SUBOBJECT_NO_EXPORTS.members += [
     (D3D12_STATE_SUBOBJECT_TYPE, 'Type'),
-    (Polymorphic('{self}.Type', D3D12_STATE_SUBOBJECT_POLYMORPH_NO_EXPORTS, None, contextLess=False), 'pDesc'),
+    #(Polymorphic('{self}.Type', D3D12_STATE_SUBOBJECT_POLYMORPH_NO_EXPORTS, None, contextLess=False), 'pDesc'),
+    (OpaqueBlob(Const(Void), '0'), 'pDesc'),
 ]
 
 D3D12_STATE_OBJECT_DESC = Struct('D3D12_STATE_OBJECT_DESC', [
