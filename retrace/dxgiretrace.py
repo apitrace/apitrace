@@ -510,8 +510,8 @@ class D3DRetracer(Retracer):
         # This will happen on mismatching drivers/vendors etc.
         if method.name == 'LoadPipeline':
             print('    if (_result == E_INVALIDARG) {')
-            print('        com_ptr<ID3D12Device1> _device;')
-            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
+            print('        com_ptr<ID3D12Device2> _device;')
+            print('        _this->GetDevice(__uuidof(ID3D12Device2), reinterpret_cast<void**>(&_device));')
             print('        _result = _device->CreatePipelineState(pDesc, riid, ppPipelineState);')
             print('    }')
 
