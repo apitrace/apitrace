@@ -305,6 +305,16 @@ class D3DCommonTracer(DllTracer):
                 print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
                 print('    }')
 
+            if method.name in ('CopyTileMappings', 'UpdateTileMappings'):
+                # Extract these out here as we need to potentially update the VA.
+                if method.name == 'CopyTileMappings':
+                    resource_name = 'pDstResource_original'
+                else:
+                    resource_name = 'pResource_original'
+                print('    D3D12_RESOURCE_DESC _desc = %s->m_pInstance->GetDesc();' % resource_name)
+                print('    if (_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)')
+                print('        %s->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(%s->m_pInstance->GetGPUVirtualAddress());' % (resource_name, resource_name))
+
     def invokeFunction(self, function):
         if function.name.startswith('D3D12CreateDevice'):
             # Setup SEH to handle persistent mapping
