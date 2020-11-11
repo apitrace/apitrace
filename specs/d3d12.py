@@ -2742,7 +2742,7 @@ ID3D12Device.methods += [
 ]
 
 ID3D12Device1.methods += [
-    StdMethod(HRESULT, 'CreatePipelineLibrary', [(Blob(Const(Void), 'BlobLength'), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
+    StdMethod(HRESULT, 'CreatePipelineLibrary', [(OpaquePointer(Const(Void)), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
     StdMethod(HRESULT, 'SetEventOnMultipleFenceCompletion', [(Array(Const(ObjPointer(ID3D12Fence)), 'NumFences'), 'ppFences'), (Array(Const(UINT64), 'NumFences'), 'pFenceValues'), (UINT, 'NumFences'), (D3D12_MULTIPLE_FENCE_WAIT_FLAGS, 'Flags'), (HANDLE, 'hEvent')]),
     StdMethod(HRESULT, 'SetResidencyPriority', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (Array(Const(D3D12_RESIDENCY_PRIORITY), 'NumObjects'), 'pPriorities')]),
 ]
