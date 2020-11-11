@@ -492,11 +492,11 @@ class Retracer:
                 print('    memset(&%s, 0, sizeof %s); // FIXME' % (arg.name, arg.name))
             print()
 
-        if not success:
-            print('    if (1) {')
-            self.failFunction(function)
-            sys.stderr.write('warning: unsupported %s call\n' % function.name)
-            print('    }')
+        #if not success:
+            #print('    if (1) {')
+            #self.failFunction(function)
+            #sys.stderr.write('warning: unsupported %s call\n' % function.name)
+            #print('    }')
 
     def swizzleValues(self, function):
         for arg in function.args:
