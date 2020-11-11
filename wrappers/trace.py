@@ -536,6 +536,8 @@ class ValueUnwrapper(ValueWrapper):
         print("    }")
 
     def visitInterfacePointer(self, interface, instance):
+        if not '(' in instance and not '<' in instance and not '[' in instance:
+            print(r'    Wrap%s* %s_original = reinterpret_cast<Wrap%s *>(%s);' % (interface.name, instance, interface.name, instance))
         print(r'    Wrap%s::_unwrap(__FUNCTION__, &%s);' % (interface.name, instance))
 
 
