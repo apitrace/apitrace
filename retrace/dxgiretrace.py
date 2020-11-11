@@ -466,7 +466,12 @@ class D3DRetracer(Retracer):
                 print('        pDesc = &_real_desc;')
                 print('    }')
 
-        Retracer.invokeInterfaceMethod(self, interface, method)
+        if method.name == 'CreatePipelineLibrary':
+            # Make a fake pipeline library, so we can still make the state objects.
+            print('    *ppPipelineLibrary = reinterpret_cast<void*>(new _D3D12FakePipelineLibrary(_this));')
+            print('    _result = S_OK;')
+        else:
+            Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name == 'GetCPUDescriptorHandleForHeapStart':
             print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
@@ -493,29 +498,6 @@ class D3DRetracer(Retracer):
             print('        HANDLE _wait_event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')
             print('        _this->SetEventOnCompletion(_traced_result, _wait_event);')
             print('        WaitForSingleObject(_wait_event, INFINITE);')
-            print('    }')
-
-        # If LoadPipeline fails from the blob, create the pipeline state automagically.
-        # This will happen on mismatching drivers/vendors etc.
-        if method.name == 'LoadPipeline':
-            print('    if (_result == E_INVALIDARG) {')
-            print('        com_ptr<ID3D12Device2> _device;')
-            print('        _this->GetDevice(__uuidof(ID3D12Device2), reinterpret_cast<void**>(&_device));')
-            print('        _result = _device->CreatePipelineState(pDesc, riid, ppPipelineState);')
-            print('    }')
-
-        if method.name == 'LoadGraphicsPipeline':
-            print('    if (_result == E_INVALIDARG) {')
-            print('        com_ptr<ID3D12Device1> _device;')
-            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
-            print('        _result = _device->CreateGraphicsPipelineState(pDesc, riid, ppPipelineState);')
-            print('    }')
-
-        if method.name == 'LoadComputePipeline':
-            print('    if (_result == E_INVALIDARG) {')
-            print('        com_ptr<ID3D12Device1> _device;')
-            print('        _this->GetDevice(__uuidof(ID3D12Device1), reinterpret_cast<void**>(&_device));')
-            print('        _result = _device->CreateComputePipelineState(pDesc, riid, ppPipelineState);')
             print('    }')
 
         # process events after presents
@@ -685,6 +667,7 @@ def main():
     print(r'#include "d3d12size.hpp"')
     print(r'#include "d3d12slab.hpp"')
     print(r'#include "d3d12va.hpp"')
+    print(r'#include "d3d12pipelinelibrary.hpp"')
     print(r'#include "dcompimports.hpp"')
     print(r'#include "d3dstate.hpp"')
     print(r'#include "d3d9imports.hpp" // D3DERR_WASSTILLDRAWING')
