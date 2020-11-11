@@ -217,6 +217,12 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'ExecuteCommandLists':
             print('    _flush_mappings();')
 
+        if interface.name.startswith('ID3D12'):
+            # Disable raytracing (we don't support that right now.)
+            # Needs GPU VAs in buffers and such.
+            if method.name == 'CreateStateObject':
+                print('    return E_NOTIMPL;')
+
         DllTracer.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_name)
 
         if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
@@ -386,10 +392,18 @@ class D3DCommonTracer(DllTracer):
 
         DllTracer.invokeMethod(self, interface, base, method)
 
-        if method.name == 'GetHeapProperties':
-            # Hide write watch from the application
-            print('    if (pHeapFlags)')
-            print('        *pHeapFlags &= ~D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
+        if interface.name.startswith('ID3D12'):
+            if method.name == 'GetHeapProperties':
+                # Hide write watch from the application
+                print('    if (pHeapFlags)')
+                print('        *pHeapFlags &= ~D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH;')
+
+            # Disable raytracing (we don't support that right now.)
+            # Needs GPU VAs in buffers and such.
+            if method.name == 'CheckFeatureSupport':
+                print('    if (Feature == D3D12_FEATURE_D3D12_OPTIONS5) {')
+                print('        reinterpret_cast<D3D12_FEATURE_DATA_D3D12_OPTIONS5*>(pFeatureSupportData)->RaytracingTier = D3D12_RAYTRACING_TIER_NOT_SUPPORTED;')
+                print('    }')
 
         # When D2D is used on top of WARP software rasterizer it seems to do
         # most of its rendering via the undocumented and opaque IWarpPrivateAPI
