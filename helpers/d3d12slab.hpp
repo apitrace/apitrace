@@ -41,6 +41,9 @@ public:
 
     void RegisterSlab(const T& base, const T& value)
     {
+        if (value == 0)
+            return;
+
         m_slabs[GetIdx(base)] = value;
     }
 
@@ -69,6 +72,9 @@ public:
 
     T RegisterSlab(const T& value)
     {
+        if (value == 0)
+            return 0;
+
         const uint32_t idx = ++m_count;
         
         const T ptr = static_cast<T>(idx) << 32ull;
