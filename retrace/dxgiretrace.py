@@ -52,7 +52,8 @@ class D3DRetracer(Retracer):
         print('// Swizzling mapping for lock addresses, mapping a (pDeviceContext, pResource, Subresource) -> void *')
         print('typedef std::pair< IUnknown *, UINT > SubresourceKey;')
         print('static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;')
-        print('static std::map< IUnknown *, void * > g_MapsD3D12;')
+        print('struct _D3D12_MAP_REPLAY_DESC { uint32_t RefCount = 0; void* pData = nullptr; };')
+        print('static std::map< IUnknown *, _D3D12_MAP_REPLAY_DESC > g_MapsD3D12;')
         print()
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -510,7 +511,8 @@ class D3DRetracer(Retracer):
 
         if method.name in ('Map', 'Unmap'):
             if interface.name.startswith('ID3D12'):
-                print('    void * & _pbData = g_MapsD3D12[_this];')
+                print('    _D3D12_MAP_REPLAY_DESC & _desc = g_MapsD3D12[_this];')
+                print('    void * & _pbData = _desc.pData;')
             elif interface.name.startswith('ID3D11DeviceContext'):
                 print('    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];')
             else:
@@ -522,7 +524,13 @@ class D3DRetracer(Retracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    size_t _MappedSize = size_t(_getMapSize(_this));')
-                print('    _pbData = *ppData;')
+                print('    if (_desc.RefCount) {')
+                print('        ppData = nullptr;')
+                print('        _MappedSize = 0;')
+                print('    }')
+                print('    else')
+                print('        _pbData = *ppData;')
+                print('    _desc.RefCount++;')
             else:
                 print('    _MAP_DESC _MapDesc;')
                 print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
@@ -540,7 +548,10 @@ class D3DRetracer(Retracer):
                 print('    }')
 
         if method.name == 'Unmap':
-            print('    if (_pbData) {')
+            if interface.name.startswith('ID3D12'):
+                print('    if (_pbData && --_desc.RefCount == 0) {')
+            else:
+                print('    if (_pbData) {')
             print('        retrace::delRegionByPointer(_pbData);')
             print('        _pbData = 0;')
             print('    }')
