@@ -247,7 +247,12 @@ class D3DRetracer(Retracer):
             array_length = 1
             if isinstance(arg.type, stdapi.Array):
                 array_length = arg.type.length
-            print(r'    %s* %s = (%s *)alloca(sizeof(%s) * %s);' % (_type, real_name, _type, _type, array_length))
+            print(r'    %s* %s = (%s *) (%s > 1024 ? nullptr : alloca(sizeof(%s) * %s));' % (_type, real_name, _type, array_length, _type, array_length))
+            print(r'    std::vector<%s> _vec_%s;' % (_type, real_name))
+            print(r'    if (%s > 1024) {' % array_length)
+            print(r'        _vec_%s.resize(%s);' % (real_name, array_length))
+            print(r'        %s = _vec_%s.data();' % (real_name, real_name))
+            print(r'    }')
             print(r'    if (%s != nullptr) {' % arg.name)
             print(r'        for (UINT _i = 0; _i < %s; _i++)' % array_length)
             print(r'            %s[_i] = g_D3D12DescriptorSlabs.%s(%s[_i]);' % (real_name, handler, arg.name))
