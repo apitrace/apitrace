@@ -216,7 +216,6 @@ _map_resource(ID3D12Resource* pResource, void* pData)
     // Assert we're page aligned... If we aren't we need to do more work here.
     // TODO(Josh) : Placed resources.
     assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
-    auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     auto iter = g_D3D12AddressMappings.find(key);
     if (iter != g_D3D12AddressMappings.end())
         iter->second.RefCount++;
@@ -232,7 +231,6 @@ _unmap_resource(ID3D12Resource* pResource)
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
 
-    auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
     auto iter = g_D3D12AddressMappings.find(key);
     if (iter == g_D3D12AddressMappings.end())
@@ -278,7 +276,6 @@ _unmap_resource(ID3D12Resource* pResource)
 static inline void
 _flush_mappings()
 {
-    auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     for (auto& element : g_D3D12AddressMappings)
     {
         auto& mapping = element.second;

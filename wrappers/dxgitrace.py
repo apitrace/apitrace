@@ -148,6 +148,72 @@ class D3DCommonTracer(DllTracer):
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        result_name = '_result'
+
+        if interface.name.startswith('ID3D12'):
+            # Ensure ordering for functions that interact with fences
+            # Otherwise we can have races if we have eg.
+            # GetCompletedValue and then Signal
+            has_fence = False
+            if method.sideeffects:
+                if interface in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
+                    has_fence = True
+                for arg in method.args:
+                    if isinstance(arg.type, stdapi.ObjPointer) and arg.type.type in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
+                        has_fence = True
+            if has_fence:
+                print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12FenceOrderingMutex);')
+
+            if method.name == 'GetCPUDescriptorHandleForHeapStart':
+                print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
+
+            if method.name == 'GetGPUDescriptorHandleForHeapStart':
+                print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = D3D12_GPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
+
+            if method.name == 'GetGPUVirtualAddress':
+                print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_result = m_FakeAddress;')
+                print('    assert(_fake_result != 0);')
+
+            if method.name == 'GetDescriptorHandleIncrementSize':
+                print('    UINT _fake_result = _DescriptorIncrementSize;')
+
+            if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
+                result_name = '_fake_result'
+
+            if method.name in ('Map', 'Unmap', 'ExecuteCommandLists'):
+                print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+
+            if method.name == 'ExecuteCommandLists':
+                print('    _flush_mappings();')
+
+            # Disable raytracing (we don't support that right now.)
+            # Needs GPU VAs in buffers and such.
+            if method.name == 'CreateStateObject':
+                print('    return E_NOTIMPL;')
+
+            # Need to unmap the resource if the last public reference is
+            # eliminated.
+            if interface in (d3d12.ID3D12Resource, d3d12.ID3D12Resource1):
+                if method.name == 'AddRef':
+                    # Need to lock here to avoid another thread potentially
+                    # releasing while we are flushing.
+                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
+                if method.name == 'Release':
+                    # Need to lock here to avoid another thread potentially
+                    # releasing while we are flushing.
+                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
+                    # TODO(Josh): Make this less... hacky to get the reference.
+                    print('    m_pInstance->AddRef();')
+                    print('    ULONG _current_ref = m_pInstance->Release();')
+                    # If the current ref is 1, then the next one with be 0,
+                    # therefore we need to unmap the resource here to
+                    # avoid a dangling ptr.
+                    print('    std::unique_lock<std::mutex> _ordering_lock;')
+                    print('    if (_current_ref == 1) {')
+                    print('        _unmap_resource(m_pInstance);')
+                    print('        _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+                    print('    }')
+
         if method.getArgByName('pInitialData'):
             pDesc1 = method.getArgByName('pDesc1')
             if pDesc1 is not None:
@@ -189,66 +255,6 @@ class D3DCommonTracer(DllTracer):
             self.emit_memcpy('it->second.first', 'it->second.second')
             print('        m_MapDesc.erase(it);')
             print('    }')
-
-        result_name = '_result'
-
-        if interface.name.startswith('ID3D12'):
-            # Ensure ordering for functions that interact with fences
-            # Otherwise we can have races if we have eg.
-            # GetCompletedValue and then Signal
-            has_fence = False
-            if method.sideeffects:
-                if interface in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
-                    has_fence = True
-                for arg in method.args:
-                    if isinstance(arg.type, stdapi.ObjPointer) and arg.type.type in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
-                        has_fence = True
-            if has_fence:
-                print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12FenceOrderingMutex);')
-
-            if method.name == 'GetCPUDescriptorHandleForHeapStart':
-                print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
-
-            if method.name == 'GetGPUDescriptorHandleForHeapStart':
-                print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = D3D12_GPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
-
-            if method.name == 'GetGPUVirtualAddress':
-                print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_result = m_FakeAddress;')
-                print('    assert(_fake_result != 0);')
-
-            if method.name == 'GetDescriptorHandleIncrementSize':
-                print('    UINT _fake_result = _DescriptorIncrementSize;')
-
-            if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
-                result_name = '_fake_result'
-
-            if method.name == 'ExecuteCommandLists':
-                print('    _flush_mappings();')
-
-            # Disable raytracing (we don't support that right now.)
-            # Needs GPU VAs in buffers and such.
-            if method.name == 'CreateStateObject':
-                print('    return E_NOTIMPL;')
-
-            # Need to unmap the resource if the last public reference is
-            # eliminated.
-            if interface in (d3d12.ID3D12Resource, d3d12.ID3D12Resource1):
-                if method.name == 'AddRef':
-                    # Need to lock here to avoid another thread potentially
-                    # releasing while we are flushing.
-                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
-                if method.name == 'Release':
-                    # Need to lock here to avoid another thread potentially
-                    # releasing while we are flushing.
-                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
-                    # TODO(Josh): Make this less... hacky to get the reference.
-                    print('    m_pInstance->AddRef();')
-                    print('    ULONG _current_ref = m_pInstance->Release();')
-                    # If the current ref is 1, then the next one with be 0,
-                    # therefore we need to unmap the resource here to
-                    # avoid a dangling ptr.
-                    print('    if (_current_ref == 1)')
-                    print('        _unmap_resource(m_pInstance);')
 
         DllTracer.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_name)
 
