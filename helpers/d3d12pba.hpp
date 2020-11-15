@@ -49,6 +49,7 @@ struct _D3D12_MAP_DESC
     void* pData;
     SIZE_T Size;
     _D3D12_MAPPING_TYPE MappingType;
+    uint32_t RefCount;
  
     struct
     {
@@ -61,6 +62,7 @@ struct _D3D12_MAP_DESC
         pData(pData),
         Size(Size),
         MappingType(Type),
+        RefCount(1),
         ExceptionPath({ {}, OldProtect })
     {}
 
@@ -68,6 +70,7 @@ struct _D3D12_MAP_DESC
         pData(nullptr),
         Size(0),
         MappingType(_D3D12_MAPPING_INVALID),
+        RefCount(1),
         ExceptionPath({ {}, 0 })
     {}
 };
@@ -214,8 +217,11 @@ _map_resource(ID3D12Resource* pResource, void* pData)
     // TODO(Josh) : Placed resources.
     assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
     auto _lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
-    if (g_D3D12AddressMappings.find(key) == g_D3D12AddressMappings.end())
-        g_D3D12AddressMappings.insert(std::make_pair(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource))));
+    auto iter = g_D3D12AddressMappings.find(key);
+    if (iter != g_D3D12AddressMappings.end())
+        iter->second.RefCount++;
+    else
+        g_D3D12AddressMappings.try_emplace(key, _D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource));
 }
 
 static inline void
@@ -228,7 +234,11 @@ _unmap_resource(ID3D12Resource* pResource)
 
     auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
     SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
-    auto& mapping = g_D3D12AddressMappings[key];
+    auto iter = g_D3D12AddressMappings.find(key);
+    if (iter == g_D3D12AddressMappings.end())
+        return;
+
+    auto& mapping = iter->second;
     
     if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
     {
@@ -261,7 +271,8 @@ _unmap_resource(ID3D12Resource* pResource)
         assert(false);
     }
 
-    g_D3D12AddressMappings.erase(key);
+    if (--iter->second.RefCount == 0)
+        g_D3D12AddressMappings.erase(iter);
 }
 
 static inline void
