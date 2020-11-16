@@ -71,6 +71,7 @@ static const Command * commands[] = {
     &diff_images_command,
     &dump_command,
     &dump_images_command,
+    &gltrim_command,
     &leaks_command,
     &pickle_command,
     &sed_command,
