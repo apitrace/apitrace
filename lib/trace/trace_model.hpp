@@ -586,6 +586,12 @@ public:
         return *(args[index].value);
     }
 
+    inline const Value &
+    arg(unsigned index) const {
+        assert(index < args.size());
+        return *(args[index].value);
+    }
+
     Value &
     argByName(const char *argName);
 };
