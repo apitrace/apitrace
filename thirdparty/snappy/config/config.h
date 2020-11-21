@@ -1,9 +1,8 @@
 /* config.h.  Manually derived from config.h.in, with the subset of defines
  * that actually affect the library, given that most of them are meant for the
  * tests, which we don't build. */
-
-/* Define if building universal (internal helper macro) */
-/* #undef AC_APPLE_UNIVERSAL_BUILD */
+#ifndef THIRD_PARTY_SNAPPY_OPENSOURCE_CMAKE_CONFIG_H_
+#define THIRD_PARTY_SNAPPY_OPENSOURCE_CMAKE_CONFIG_H_
 
 /* Define to 1 if the compiler supports __builtin_ctz and friends. */
 #if defined(__GNUCC__)
@@ -20,35 +19,23 @@
 #  define HAVE_BYTESWAP_H 1
 #endif
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-/* #undef HAVE_DLFCN_H */
+/* Define to 1 if you have a definition for mmap() in <sys/mman.h>. */
+/* #undef HAVE_FUNC_MMAP */
 
-/* Use the gflags package for command-line parsing. */
+/* Define to 1 if you have a definition for sysconf() in <unistd.h>. */
+/* #undef HAVE_FUNC_SYSCONF */
+
+/* Define to 1 to use the gflags package for command-line parsing. */
 /* #undef HAVE_GFLAGS */
 
-/* Defined when Google Test is available. */
+/* Define to 1 if you have Google Test. */
 /* #undef HAVE_GTEST */
-
-/* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `fastlz' library (-lfastlz). */
-/* #undef HAVE_LIBFASTLZ */
-
-/* Define to 1 if you have the `lzf' library (-llzf). */
-/* #undef HAVE_LIBLZF */
 
 /* Define to 1 if you have the `lzo2' library (-llzo2). */
 /* #undef HAVE_LIBLZO2 */
 
-/* Define to 1 if you have the `quicklz' library (-lquicklz). */
-/* #undef HAVE_LIBQUICKLZ */
-
 /* Define to 1 if you have the `z' library (-lz). */
 /* #undef HAVE_LIBZ */
-
-/* Define to 1 if you have the <memory.h> header file. */
-/* #undef HAVE_MEMORY_H */
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
@@ -57,17 +44,6 @@
 #define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
-
-/* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
-
-/* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H 1
-
-/* Define to 1 if you have the <sys/byteswap.h> header file. */
-/* #undef HAVE_SYS_BYTESWAP_H */
-
 /* Define to 1 if you have the <sys/endian.h> header file. */
 /* #undef HAVE_SYS_ENDIAN_H */
 
@@ -77,16 +53,11 @@
 /* Define to 1 if you have the <sys/resource.h> header file. */
 /* #undef HAVE_SYS_RESOURCE_H */
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
-/* #undef HAVE_SYS_STAT_H */
-
 /* Define to 1 if you have the <sys/time.h> header file. */
 /* #undef HAVE_SYS_TIME_H */
 
-/* Define to 1 if you have the <sys/types.h> header file. */
-#if !defined(_MSC_VER)
-#  define HAVE_SYS_TYPES_H 1
-#endif
+/* Define to 1 if you have the <sys/uio.h> header file. */
+/* #undef HAVE_SYS_UIO_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #if !defined(_MSC_VER)
@@ -98,55 +69,18 @@
 #  define HAVE_WINDOWS_H 1
 #endif
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-/* #undef LT_OBJDIR */
-
-/* Name of package */
-/* #undef PACKAGE */
-
-/* Define to the address where bug reports for this package should be sent. */
-/* #undef PACKAGE_BUGREPORT */
-
-/* Define to the full name of this package. */
-/* #undef PACKAGE_NAME */
-
-/* Define to the full name and version of this package. */
-/* #undef PACKAGE_STRING */
-
-/* Define to the one symbol short name of this package. */
-/* #undef PACKAGE_TARNAME */
-
-/* Define to the home page for this package. */
-/* #undef PACKAGE_URL */
-
-/* Define to the version of this package. */
-/* #undef PACKAGE_VERSION */
-
-/* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
-
-/* Version number of package */
-/* #undef VERSION */
-
-/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
-   significant byte first (like Motorola and SPARC, unlike Intel). */
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
 #if defined(__GLIBC__)
 #  include <endian.h>
 #  if __BYTE_ORDER == __BIG_ENDIAN
-#    define WORDS_BIGENDIAN 1
+#    define SNAPPY_IS_BIG_ENDIAN 1
 #  endif
 #elif defined(__APPLE__)
 #  include <machine/endian.h>
 #  if __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN
-#    define WORDS_BIGENDIAN 1
+#    define SNAPPY_IS_BIG_ENDIAN 1
 #  endif
 #endif
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-/* #undef size_t */
-
-/* Define to `int' if <sys/types.h> does not define. */
-#if defined(_MSC_VER)
-#  define ssize_t int
-#endif
+#endif  // THIRD_PARTY_SNAPPY_OPENSOURCE_CMAKE_CONFIG_H_
