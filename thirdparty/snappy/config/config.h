@@ -37,13 +37,6 @@
 /* Define to 1 if you have the `z' library (-lz). */
 /* #undef HAVE_LIBZ */
 
-/* Define to 1 if you have the <stddef.h> header file. */
-#define HAVE_STDDEF_H 1
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
-
-/* Define to 1 if you have the <stdlib.h> header file. */
 /* Define to 1 if you have the <sys/endian.h> header file. */
 /* #undef HAVE_SYS_ENDIAN_H */
 
@@ -68,6 +61,12 @@
 #if defined(_WIN32)
 #  define HAVE_WINDOWS_H 1
 #endif
+
+/* Define to 1 if you target processors with SSSE3+ and have <tmmintrin.h>. */
+/* #undef SNAPPY_HAVE_SSSE3 */
+
+/* Define to 1 if you target processors with BMI2+ and have <bmi2intrin.h>. */
+/* #undef SNAPPY_HAVE_BMI2 */
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
