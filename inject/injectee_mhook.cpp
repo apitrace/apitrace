@@ -136,6 +136,8 @@ debugPrintf(const char *format, ...)
 }
 
 
+#ifndef __MINGW32__
+
 EXTERN_C void
 _assert(const char *_Message, const char *_File, unsigned _Line)
 {
@@ -143,8 +145,6 @@ _assert(const char *_Message, const char *_File, unsigned _Line)
     TerminateProcess(GetCurrentProcess(), 1);
 }
 
-
-#ifndef __MINGW32__
 
 EXTERN_C void
 _wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
