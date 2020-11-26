@@ -5,6 +5,7 @@ version: '{build}'
 branches:
   except:
   - /^travis.*$/
+  - /^github.*$/
 
 init:
 - git config --global core.autocrlf input
