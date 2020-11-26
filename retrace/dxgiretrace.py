@@ -343,7 +343,7 @@ class D3DRetracer(Retracer):
             print(r'    }')
 
         if method.name == 'GetData':
-            print(r'    pData = _allocator.alloc(DataSize);')
+            print(r'    pData = DataSize ? _allocator.alloc(DataSize) : nullptr;')
             print(r'    do {')
             self.doInvokeInterfaceMethod(interface, method)
             print(r'        GetDataFlags = 0; // Prevent infinite loop')
