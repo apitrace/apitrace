@@ -26,6 +26,18 @@ target_link_libraries (gltrim
     glretrace_common
     )
 
- install (TARGETS gltrim RUNTIME DESTINATION bin)
+install (TARGETS gltrim RUNTIME DESTINATION bin)
 
-add_subdirectory (tests)
+option (ENABLE_GLTRIM_TESTS "Enable running the gltrim tests." OFF)
+
+if (${ENABLE_GLTRIM_TESTS})
+   SET(gltrim_test_available "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+   if (EXISTS "${gltrim_test_available}")
+      add_subdirectory (tests)
+   else()
+      message(FATAL_ERROR
+         " gltrim tests requested but test submodule was not cloned, run\n"
+         "    git submodule update --init --recursive\n"
+         " to obtain test data and then re-run cmake.\n")
+   endif()
+endif()

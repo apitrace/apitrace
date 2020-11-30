@@ -1,0 +1,3 @@
+[submodule "frametrim/tests"]
+	path = frametrim/tests
+	url = https://github.com/apitrace/gltrim-tests.git
