@@ -76,6 +76,10 @@ public:
         delete [] pixels;
     }
 
+    inline unsigned sizeInBytes() const {
+        return width * height * bytesPerPixel;
+    }
+
     // Absolute stride
     inline unsigned
     _stride() const {

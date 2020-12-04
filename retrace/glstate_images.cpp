@@ -771,7 +771,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         if (retrace::resolveMSAA){
             // For resolved MSAA...
             image = new image::Image(desc.width, desc.height, channels, true, channelType);
-            memset(image->pixels, 0x0, desc.width * desc.height * sizeof(int));
+            memset(image->pixels, 0x0, image->sizeInBytes());
             getTexImageMSAA(target, format, type, desc, image->pixels, true);
         }
         else {
@@ -779,7 +779,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
             GLuint samples = std::max(desc.samples, 1);
             GLuint total_height = desc.height * samples;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
-            memset(image->pixels, 0x0, desc.width * total_height * sizeof(int));
+            memset(image->pixels, 0x0, image->sizeInBytes());
             getTexImageMSAA(target, format, type, desc, image->pixels, false);
         }
     }
