@@ -645,7 +645,7 @@ patchFunction(HMODULE hModule,
 
 
 
-struct StrCompare : public std::binary_function<const char *, const char *, bool> {
+struct StrCompare {
     bool operator() (const char * s1, const char * s2) const {
         return strcmp(s1, s2) < 0;
     }
@@ -653,7 +653,7 @@ struct StrCompare : public std::binary_function<const char *, const char *, bool
 
 typedef std::map<const char *, LPVOID, StrCompare> FunctionMap;
 
-struct StrICompare : public std::binary_function<const char *, const char *, bool> {
+struct StrICompare  {
     bool operator() (const char * s1, const char * s2) const {
         return stricmp(s1, s2) < 0;
     }
