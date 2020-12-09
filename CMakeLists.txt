@@ -133,8 +133,8 @@ if (ENABLE_GUI)
 endif ()
 
 if (MSVC)
-    if (${MSVC_VERSION} LESS 1910)
-        message (FATAL_ERROR "Visual Studio 2017 or later required")
+    if (${MSVC_VERSION} LESS 1928)
+        message (FATAL_ERROR "Visual Studio 2019 or later required")
     endif ()
 endif ()
 
@@ -265,6 +265,8 @@ if (MSVC)
     add_compiler_flags (-wd4577) # 'noexcept' used with no exception handling mode specified
     add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
     
+
+    add_compiler_flags (-std:c++17)
     # Use static runtime
     # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
     foreach (flag_var
@@ -276,25 +278,25 @@ if (MSVC)
         endif ()
     endforeach (flag_var)
 else ()
-    # Enable and require C++11
+    # Enable and require C++17
     #
-    # We must use `-std=gnu++11` instead `-std=c++11` as the latter defines
+    # We must use `-std=gnu++17` instead `-std=c++17` as the latter defines
     # __STRICT_ANSI__ which prevents _isnan from being declared with MinGW.
     #
     # See also:
     # - https://gcc.gnu.org/projects/cxx0x.html
     # - http://clang.llvm.org/cxx_status.html
-    check_cxx_compiler_flag ("-std=gnu++11" CXX_COMPILER_FLAG_STD_GNUXX11)
+    check_cxx_compiler_flag ("-std=gnu++17" CXX_COMPILER_FLAG_STD_GNUXX11)
     if (CXX_COMPILER_FLAG_STD_GNUXX11)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     else ()
-        message (FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} compiler does not support C++11")
+        message (FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} compiler does not support C++17")
     endif ()
 
     # We require at least GCC 4.9 for decent C++11 support
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-        message (FATAL_ERROR "GCC 4.9 or later required -- https://github.com/apitrace/apitrace/wiki/GCC")
+        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0")
+        message (FATAL_ERROR "GCC 7.0 or later required -- https://github.com/apitrace/apitrace/wiki/GCC")
     endif ()
 
     # Adjust warnings
