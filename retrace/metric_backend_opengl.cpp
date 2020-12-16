@@ -320,6 +320,10 @@ void MetricBackend_opengl::processQueries() {
             }
             if (metrics[METRIC_GPU_DURATION].profiled[i]) {
                 if (supportsTimestamp) {
+                    if (!metrics[METRIC_GPU_START].profiled[i]) {
+                        glGetQueryObjecti64v(query[QUERY_GPU_START], GL_QUERY_RESULT,
+                                             &gpuStart);
+                    }
                     glGetQueryObjecti64v(query[QUERY_GPU_DURATION], GL_QUERY_RESULT,
                                          &gpuEnd);
                     gpuEnd -= gpuStart;
