@@ -13,8 +13,10 @@ add_library (qubjson STATIC
     qubjson.cpp
 )
 
-add_gtest (qubjson_test qubjson_test.cpp)
-target_link_libraries (qubjson_test qubjson)
+if (BUILD_TESTING)
+    add_gtest (qubjson_test qubjson_test.cpp)
+    target_link_libraries (qubjson_test qubjson)
+endif ()
 
 set(qapitrace_SRCS
    apisurface.cpp

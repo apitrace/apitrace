@@ -5,5 +5,7 @@ add_library (guids STATIC
     guids.hpp
 )
 
-add_gtest (guids_test guids_test.cpp)
-target_link_libraries (guids_test guids)
+if (BUILD_TESTING)
+    add_gtest (guids_test guids_test.cpp)
+    target_link_libraries (guids_test guids)
+endif ()
