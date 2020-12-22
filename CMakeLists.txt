@@ -41,6 +41,8 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
+option (BUILD_TESTING "Enable unit tests" ON)
+
 option (ENABLE_TESTS "Enable additional tests" OFF)
 
 if (ANDROID)
@@ -433,7 +435,9 @@ endmacro ()
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-enable_testing ()
+if (BUILD_TESTING)
+    enable_testing ()
+endif ()
 if (CMAKE_CROSSCOMPILING)
     add_custom_target (check)
 elseif (DEFINED CMAKE_BUILD_TYPE)
