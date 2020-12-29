@@ -68,7 +68,7 @@ int
 getDrawBufferImageCount(void);
 
 image::Image *
-getDrawBufferImage(int n);
+getDrawBufferImage(int n, bool backBuffer);
 
 
 } /* namespace glstate */

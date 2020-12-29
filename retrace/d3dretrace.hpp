@@ -56,7 +56,7 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n) {
+    getSnapshot(int n, bool backBuffer) {
         if ((n != 0) || !pLastDevice) {
             return NULL;
         }

@@ -251,7 +251,7 @@ public:
     getSnapshotCount(void) = 0;
 
     virtual image::Image *
-    getSnapshot(int n) = 0;
+    getSnapshot(int n, bool backBuffer) = 0;
 
     virtual bool
     canDump(void) = 0;
