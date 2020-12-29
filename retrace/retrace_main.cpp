@@ -130,7 +130,7 @@ long long perFrameDelayUsec = 0;
 long long minFrameDurationUsec = 0;
 
 static void
-takeSnapshot(unsigned call_no);
+takeSnapshot(unsigned call_no, bool backBuffer);
 
 
 /**
@@ -165,7 +165,7 @@ frameComplete(trace::Call &call)
     }
 
     if (snapshotFrequency.contains(call)) {
-        takeSnapshot(call.no);
+        takeSnapshot(call.no, true);
         if (call.no >= snapshotFrequency.getLast()) {
             exit(0);
         }
@@ -186,7 +186,7 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n) override {
+    getSnapshot(int n, bool backBuffer) override {
         return NULL;
     }
 
@@ -218,12 +218,12 @@ static Snapshotter *snapshotter;
  * Take snapshots.
  */
 static void
-takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
+takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no, bool backBuffer) {
 
     assert(dumpingSnapshots);
     assert(snapshotPrefix);
 
-    std::unique_ptr<image::Image> src(dumper->getSnapshot(mrt));
+    std::unique_ptr<image::Image> src(dumper->getSnapshot(mrt, backBuffer));
     if (!src) {
         /* TODO for mrt>0 we probably don't want to treat this as an error: */
         if (mrt == 0)
@@ -279,7 +279,7 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
 }
 
 static void
-takeSnapshot(unsigned call_no)
+takeSnapshot(unsigned call_no, bool backBuffer)
 {
     static signed long long last_call_no = -1;
     if (call_no == last_call_no) {
@@ -292,10 +292,10 @@ takeSnapshot(unsigned call_no)
 
     if (retrace::snapshotMRT) {
         for (int mrt = -2; mrt < cnt; mrt++) {
-            takeSnapshot(call_no, mrt, snapshot_no);
+            takeSnapshot(call_no, mrt, snapshot_no, backBuffer);
         }
     } else {
-        takeSnapshot(call_no, 0, snapshot_no);
+        takeSnapshot(call_no, 0, snapshot_no, backBuffer);
     }
 
     snapshot_no++;
@@ -319,7 +319,7 @@ retraceCall(trace::Call *call) {
     retracer.retrace(*call);
 
     if (snapshotFrequency.contains(*call)) {
-        takeSnapshot(call->no);
+        takeSnapshot(call->no, false);
         if (call->no >= snapshotFrequency.getLast()) {
             exit(0);
         }

@@ -1242,7 +1242,7 @@ getDrawBufferImageCount()
 
 
 image::Image *
-getDrawBufferImage(int n)
+getDrawBufferImage(int n, bool backBuffer)
 {
     Context context;
 
@@ -1265,7 +1265,7 @@ getDrawBufferImage(int n)
         framebuffer_target = GL_FRAMEBUFFER;
     }
     GLint draw_framebuffer = 0;
-    if (context.framebuffer_object) {
+    if (context.framebuffer_object && !backBuffer) {
         glGetIntegerv(framebuffer_binding, &draw_framebuffer);
     }
 
@@ -1289,7 +1289,7 @@ getDrawBufferImage(int n)
 
     GLint draw_buffer = GL_NONE;
     ImageDesc desc;
-    if (draw_framebuffer) {
+    if (draw_framebuffer && !backBuffer) {
         if (context.ARB_draw_buffers) {
             glGetIntegerv(GL_DRAW_BUFFER0 + n, &draw_buffer);
             if (draw_buffer == GL_NONE) {
@@ -1304,7 +1304,7 @@ getDrawBufferImage(int n)
             return NULL;
         }
     } else if (n == 0) {
-        if (context.ES) {
+        if (context.ES || backBuffer) {
             // XXX: Draw buffer is always FRONT for single buffer context, BACK
             // for double buffered contexts. There is no way to know which (as
             // GL_DOUBLEBUFFER state is also unavailable), so always assume

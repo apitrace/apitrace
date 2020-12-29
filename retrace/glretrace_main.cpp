@@ -815,11 +815,11 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n) override {
+    getSnapshot(int n, bool backBuffer) override {
         if (!glretrace::getCurrentContext()) {
             return NULL;
         }
-        return glstate::getDrawBufferImage(n);
+        return glstate::getDrawBufferImage(n, backBuffer);
     }
 
     bool
