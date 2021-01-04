@@ -135,7 +135,7 @@ if (ENABLE_GUI)
 endif ()
 
 if (MSVC)
-    if (${MSVC_VERSION} LESS 1928)
+    if (${MSVC_VERSION} LESS 1920)
         message (FATAL_ERROR "Visual Studio 2019 or later required")
     endif ()
 endif ()
