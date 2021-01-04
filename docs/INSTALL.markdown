@@ -6,13 +6,13 @@
 
 Requirements common for all platforms:
 
-* C++ compiler
+* C++ 17 compiler
 
 * Python version 3.6 or newer
 
   * Python Image Library
 
-* CMake version 2.8.11 or higher (tested with version 2.8.12.2)
+* CMake version 2.8.11 or higher (tested with version 3.x)
 
 Optional dependencies:
 
@@ -97,7 +97,7 @@ Additional requirements:
 
 * CMake 3.7 or later
 
-* Microsoft Visual Studio 2017 or later (tested with 2019)
+* Microsoft Visual Studio 2019 or later
 
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.
