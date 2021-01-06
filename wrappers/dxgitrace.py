@@ -137,7 +137,9 @@ class D3DCommonTracer(DllTracer):
             if pDesc1 is not None:
                 print(r'    %s pDesc = pDesc1;' % (pDesc1.type,))
 
-        if interface is not d3d12.ID3D12Resource:
+        if interface not in [d3d12.ID3D12Resource,
+                             d3d12.ID3D12Resource1,
+                             d3d12.ID3D12Resource2]:
             if method.name in ('Map', 'Unmap'):
                 # On D3D11 Map/Unmap is not a resource method, but a context method instead.
                 resourceArg = method.getArgByName('pResource')
@@ -174,7 +176,9 @@ class D3DCommonTracer(DllTracer):
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if interface is not d3d12.ID3D12Resource:
+        if interface not in [d3d12.ID3D12Resource,
+                             d3d12.ID3D12Resource1,
+                             d3d12.ID3D12Resource2]:
             if method.name == 'Map':
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')

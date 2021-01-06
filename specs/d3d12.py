@@ -921,15 +921,10 @@ D3D12_DEPTH_STENCIL_VALUE = Struct('D3D12_DEPTH_STENCIL_VALUE', [
 
 D3D12_CLEAR_VALUE = Struct('D3D12_CLEAR_VALUE', [
     (DXGI_FORMAT, 'Format'),
-    (Union("{self}.Format", [
-        ('default', Array(FLOAT, 4), 'Color'),
-        ([
-            'DXGI_FORMAT_D24_UNORM_S8_UINT',
-            'DXGI_FORMAT_D16_UNORM',
-            'DXGI_FORMAT_D32_FLOAT',
-            'DXGI_FORMAT_D32_FLOAT_S8X24_UINT',
-        ], D3D12_DEPTH_STENCIL_VALUE, 'DepthStencil'),
-    ]), None), 
+
+    # Anonymous union
+    (Array(FLOAT, 4), 'Color'),
+    (D3D12_DEPTH_STENCIL_VALUE, 'DepthStencil'),
 ])
 
 D3D12_RANGE = Struct('D3D12_RANGE', [
@@ -1873,7 +1868,7 @@ D3D12_INDIRECT_ARGUMENT_DESC = Struct('D3D12_INDIRECT_ARGUMENT_DESC', [
 D3D12_COMMAND_SIGNATURE_DESC = Struct('D3D12_COMMAND_SIGNATURE_DESC', [
     (UINT, 'ByteStride'),
     (UINT, 'NumArgumentDescs'),
-    (Pointer(Const(D3D12_INDIRECT_ARGUMENT_DESC)), 'pArgumentDescs'),
+    (Array(Const(D3D12_INDIRECT_ARGUMENT_DESC), '{self}.NumArgumentDescs'), 'pArgumentDescs'),
     (UINT, 'NodeMask'),
 ])
 
@@ -2293,8 +2288,10 @@ D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS = Struct('D3D12_BUILD_RAYTR
     (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS, 'Flags'),
     (UINT, 'NumDescs'),
     (D3D12_ELEMENTS_LAYOUT, 'DescsLayout'),
+
+    # Anonymous union
+    (D3D12_GPU_VIRTUAL_ADDRESS, 'InstanceDescs'),
     (Union("{self}.DescsLayout", [
-        ('default', D3D12_GPU_VIRTUAL_ADDRESS, 'InstanceDescs'),
         ('D3D12_ELEMENTS_LAYOUT_ARRAY', Pointer(Const(D3D12_RAYTRACING_GEOMETRY_DESC)), 'pGeometryDescs'),
         ('D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS', Pointer(Const(Pointer(Const(D3D12_RAYTRACING_GEOMETRY_DESC)))), 'ppGeometryDescs'),
     ]), None),
@@ -2387,7 +2384,7 @@ D3D12_AUTO_BREADCRUMB_NODE = Struct('D3D12_AUTO_BREADCRUMB_NODE', [
     (ObjPointer(ID3D12CommandQueue), 'pCommandQueue'),
     (UINT32, 'BreadcrumbCount'),
     (Pointer(Const(UINT32)), 'pLastBreadcrumbValue'),
-    (Pointer(Const(D3D12_AUTO_BREADCRUMB_OP)), 'pCommandHistory'),
+    (Array(Const(D3D12_AUTO_BREADCRUMB_OP), '{self}.BreadcrumbCount'), 'pCommandHistory'),
 ])
 D3D12_AUTO_BREADCRUMB_NODE.members.extend([
     (OpaquePointer(Const(D3D12_AUTO_BREADCRUMB_NODE)), 'pNext')
@@ -2407,12 +2404,12 @@ D3D12_AUTO_BREADCRUMB_NODE1 = Struct('D3D12_AUTO_BREADCRUMB_NODE1', [
     (ObjPointer(ID3D12CommandQueue), 'pCommandQueue'),
     (UINT, 'BreadcrumbCount'),
     (Pointer(Const(UINT)), 'pLastBreadcrumbValue'),
-    (Pointer(Const(D3D12_AUTO_BREADCRUMB_OP)), 'pCommandHistory'),
+    (Array(Const(D3D12_AUTO_BREADCRUMB_OP), '{self}.BreadcrumbCount'), 'pCommandHistory'),
 ])
 D3D12_AUTO_BREADCRUMB_NODE1.members.extend([
     (OpaquePointer(Const(D3D12_AUTO_BREADCRUMB_NODE1)), 'pNext'),
     (UINT, 'BreadcrumbContextsCount'),
-    (Pointer(D3D12_DRED_BREADCRUMB_CONTEXT), 'pBreadcrumbContexts'),
+    (Array(D3D12_DRED_BREADCRUMB_CONTEXT, '{self}.BreadcrumbContextsCount'), 'pBreadcrumbContexts'),
 ])
 
 D3D12_DRED_VERSION = Enum('D3D12_DRED_VERSION', [
@@ -2780,7 +2777,7 @@ ID3D12GraphicsCommandList.methods += [
     StdMethod(Void, 'SetPipelineState', [(ObjPointer(ID3D12PipelineState), 'pPipelineState')]),
     StdMethod(Void, 'ResourceBarrier', [(UINT, 'NumBarriers'), (Pointer(Const(D3D12_RESOURCE_BARRIER)), 'pBarriers')]),
     StdMethod(Void, 'ExecuteBundle', [(ObjPointer(ID3D12GraphicsCommandList), 'pCommandList')]),
-    StdMethod(Void, 'SetDescriptorHeaps', [(UINT, 'NumDescriptorHeaps'), (Pointer(Const(ObjPointer(ID3D12DescriptorHeap))), 'ppDescriptorHeaps')]),
+    StdMethod(Void, 'SetDescriptorHeaps', [(UINT, 'NumDescriptorHeaps'), (Array(Const(ObjPointer(ID3D12DescriptorHeap)), 'NumDescriptorHeaps'), 'ppDescriptorHeaps')]),
     StdMethod(Void, 'SetComputeRootSignature', [(ObjPointer(ID3D12RootSignature), 'pRootSignature')]),
     StdMethod(Void, 'SetGraphicsRootSignature', [(ObjPointer(ID3D12RootSignature), 'pRootSignature')]),
     StdMethod(Void, 'SetComputeRootDescriptorTable', [(UINT, 'RootParameterIndex'), (D3D12_GPU_DESCRIPTOR_HANDLE, 'BaseDescriptor')]),
@@ -2815,8 +2812,8 @@ ID3D12GraphicsCommandList.methods += [
 ]
 
 ID3D12GraphicsCommandList1.methods += [
-    StdMethod(Void, 'AtomicCopyBufferUINT', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Pointer(Const(ObjPointer(ID3D12Resource))), 'ppDependentResources'), (Pointer(Const(D3D12_SUBRESOURCE_RANGE_UINT64)), 'pDependentSubresourceRanges')]),
-    StdMethod(Void, 'AtomicCopyBufferUINT64', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Pointer(Const(ObjPointer(ID3D12Resource))), 'ppDependentResources'), (Pointer(Const(D3D12_SUBRESOURCE_RANGE_UINT64)), 'pDependentSubresourceRanges')]),
+    StdMethod(Void, 'AtomicCopyBufferUINT', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Array(Const(ObjPointer(ID3D12Resource)), 'Dependencies'), 'ppDependentResources'), (Array(Const(D3D12_SUBRESOURCE_RANGE_UINT64), 'Dependencies'), 'pDependentSubresourceRanges')]),
+    StdMethod(Void, 'AtomicCopyBufferUINT64', [(ObjPointer(ID3D12Resource), 'pDstBuffer'), (UINT64, 'DstOffset'), (ObjPointer(ID3D12Resource), 'pSrcBuffer'), (UINT64, 'SrcOffset'), (UINT, 'Dependencies'), (Array(Const(ObjPointer(ID3D12Resource)), 'Dependencies'), 'ppDependentResources'), (Array(Const(D3D12_SUBRESOURCE_RANGE_UINT64), 'Dependencies'), 'pDependentSubresourceRanges')]),
     StdMethod(Void, 'OMSetDepthBounds', [(FLOAT, 'Min'), (FLOAT, 'Max')]),
     StdMethod(Void, 'SetSamplePositions', [(UINT, 'NumSamplesPerPixel'), (UINT, 'NumPixels'), Out(Pointer(D3D12_SAMPLE_POSITION), 'pSamplePositions')]),
     StdMethod(Void, 'ResolveSubresourceRegion', [(ObjPointer(ID3D12Resource), 'pDstResource'), (UINT, 'DstSubresource'), (UINT, 'DstX'), (UINT, 'DstY'), (ObjPointer(ID3D12Resource), 'pSrcResource'), (UINT, 'SrcSubresource'), Out(Pointer(D3D12_RECT), 'pSrcRect'), (DXGI_FORMAT, 'Format'), (D3D12_RESOLVE_MODE, 'ResolveMode')]),
@@ -2830,7 +2827,7 @@ ID3D12GraphicsCommandList2.methods += [
 ID3D12CommandQueue.methods += [
     StdMethod(Void, 'UpdateTileMappings', [(ObjPointer(ID3D12Resource), 'pResource'), (UINT, 'NumResourceRegions'), (Pointer(Const(D3D12_TILED_RESOURCE_COORDINATE)), 'pResourceRegionStartCoordinates'), (Pointer(Const(D3D12_TILE_REGION_SIZE)), 'pResourceRegionSizes'), (ObjPointer(ID3D12Heap), 'pHeap'), (UINT, 'NumRanges'), (Pointer(Const(D3D12_TILE_RANGE_FLAGS)), 'pRangeFlags'), (Pointer(Const(UINT)), 'pHeapRangeStartOffsets'), (Pointer(Const(UINT)), 'pRangeTileCounts'), (D3D12_TILE_MAPPING_FLAGS, 'Flags')]),
     StdMethod(Void, 'CopyTileMappings', [(ObjPointer(ID3D12Resource), 'pDstResource'), (Pointer(Const(D3D12_TILED_RESOURCE_COORDINATE)), 'pDstRegionStartCoordinate'), (ObjPointer(ID3D12Resource), 'pSrcResource'), (Pointer(Const(D3D12_TILED_RESOURCE_COORDINATE)), 'pSrcRegionStartCoordinate'), (Pointer(Const(D3D12_TILE_REGION_SIZE)), 'pRegionSize'), (D3D12_TILE_MAPPING_FLAGS, 'Flags')]),
-    StdMethod(Void, 'ExecuteCommandLists', [(UINT, 'NumCommandLists'), (Pointer(Const(ObjPointer(ID3D12CommandList))), 'ppCommandLists')]),
+    StdMethod(Void, 'ExecuteCommandLists', [(UINT, 'NumCommandLists'), (Array(Const(ObjPointer(ID3D12CommandList)), 'NumCommandLists'), 'ppCommandLists')]),
     StdMethod(Void, 'SetMarker', [(UINT, 'Metadata'), (OpaquePointer(Const(Void)), 'pData'), (UINT, 'Size')]),
     StdMethod(Void, 'BeginEvent', [(UINT, 'Metadata'), (OpaquePointer(Const(Void)), 'pData'), (UINT, 'Size')]),
     StdMethod(Void, 'EndEvent', []),
@@ -2869,8 +2866,8 @@ ID3D12Device.methods += [
     StdMethod(HRESULT, 'CreateSharedHandle', [(ObjPointer(ID3D12DeviceChild), 'pObject'), (Pointer(Const(SECURITY_ATTRIBUTES)), 'pAttributes'), (DWORD, 'Access'), (LPCWSTR, 'Name'), Out(Pointer(HANDLE), 'pHandle')]),
     StdMethod(HRESULT, 'OpenSharedHandle', [(HANDLE, 'NTHandle'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvObj')]),
     StdMethod(HRESULT, 'OpenSharedHandleByName', [(LPCWSTR, 'Name'), (DWORD, 'Access'), Out(Pointer(HANDLE), 'pNTHandle')]),
-    StdMethod(HRESULT, 'MakeResident', [(UINT, 'NumObjects'), (Pointer(Const(ObjPointer(ID3D12Pageable))), 'ppObjects')]),
-    StdMethod(HRESULT, 'Evict', [(UINT, 'NumObjects'), (Pointer(Const(ObjPointer(ID3D12Pageable))), 'ppObjects')]),
+    StdMethod(HRESULT, 'MakeResident', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects')]),
+    StdMethod(HRESULT, 'Evict', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects')]),
     StdMethod(HRESULT, 'CreateFence', [(UINT64, 'InitialValue'), (D3D12_FENCE_FLAGS, 'Flags'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppFence')]),
     StdMethod(HRESULT, 'GetDeviceRemovedReason', []),
     StdMethod(Void, 'GetCopyableFootprints', [(Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDesc'), (UINT, 'FirstSubresource'), (UINT, 'NumSubresources'), (UINT64, 'BaseOffset'), Out(Pointer(D3D12_PLACED_SUBRESOURCE_FOOTPRINT), 'pLayouts'), Out(Pointer(UINT), 'pNumRows'), Out(Pointer(UINT64), 'pRowSizeInBytes'), Out(Pointer(UINT64), 'pTotalBytes')]),
@@ -2895,8 +2892,8 @@ ID3D12PipelineLibrary1.methods += [
 
 ID3D12Device1.methods += [
     StdMethod(HRESULT, 'CreatePipelineLibrary', [(OpaquePointer(Const(Void)), 'pLibraryBlob'), (SIZE_T, 'BlobLength'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineLibrary')]),
-    StdMethod(HRESULT, 'SetEventOnMultipleFenceCompletion', [(Pointer(Const(ObjPointer(ID3D12Fence))), 'ppFences'), (Pointer(Const(UINT64)), 'pFenceValues'), (UINT, 'NumFences'), (D3D12_MULTIPLE_FENCE_WAIT_FLAGS, 'Flags'), (HANDLE, 'hEvent')]),
-    StdMethod(HRESULT, 'SetResidencyPriority', [(UINT, 'NumObjects'), (Pointer(Const(ObjPointer(ID3D12Pageable))), 'ppObjects'), (Pointer(Const(D3D12_RESIDENCY_PRIORITY)), 'pPriorities')]),
+    StdMethod(HRESULT, 'SetEventOnMultipleFenceCompletion', [(Array(Const(ObjPointer(ID3D12Fence)), 'NumFences'), 'ppFences'), (Array(Const(UINT64), 'NumFences'), 'pFenceValues'), (UINT, 'NumFences'), (D3D12_MULTIPLE_FENCE_WAIT_FLAGS, 'Flags'), (HANDLE, 'hEvent')]),
+    StdMethod(HRESULT, 'SetResidencyPriority', [(UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (Array(Const(D3D12_RESIDENCY_PRIORITY), 'NumObjects'), 'pPriorities')]),
 ]
 
 ID3D12Device2.methods += [
@@ -2906,7 +2903,7 @@ ID3D12Device2.methods += [
 ID3D12Device3.methods += [
     StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'OpenExistingHeapFromFileMapping', [(HANDLE, 'hFileMapping'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
-    StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Pointer(Const(ObjPointer(ID3D12Pageable))), 'ppObjects'), (ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
+    StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
 ]
 
 ID3D12ProtectedSession.methods += [
@@ -3025,7 +3022,7 @@ ID3D12MetaCommand.methods += [
 ]
 
 ID3D12GraphicsCommandList4.methods += [
-    StdMethod(Void, 'BeginRenderPass', [(UINT, 'NumRenderTargets'), (Pointer(Const(D3D12_RENDER_PASS_RENDER_TARGET_DESC)), 'pRenderTargets'), (Pointer(Const(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC)), 'pDepthStencil'), (D3D12_RENDER_PASS_FLAGS, 'Flags')]),
+    StdMethod(Void, 'BeginRenderPass', [(UINT, 'NumRenderTargets'), (Array(Const(D3D12_RENDER_PASS_RENDER_TARGET_DESC), 'NumRenderTargets'), 'pRenderTargets'), (Pointer(Const(D3D12_RENDER_PASS_DEPTH_STENCIL_DESC)), 'pDepthStencil'), (D3D12_RENDER_PASS_FLAGS, 'Flags')]),
     StdMethod(Void, 'EndRenderPass', []),
     StdMethod(Void, 'InitializeMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (OpaquePointer(Const(Void)), 'pInitializationParametersData'), (SIZE_T, 'InitializationParametersDataSizeInBytes')]),
     StdMethod(Void, 'ExecuteMetaCommand', [(ObjPointer(ID3D12MetaCommand), 'pMetaCommand'), (OpaquePointer(Const(Void)), 'pExecutionParametersData'), (SIZE_T, 'ExecutionParametersDataSizeInBytes')]),
