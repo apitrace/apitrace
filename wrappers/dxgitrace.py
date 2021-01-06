@@ -32,6 +32,7 @@ from specs.stdapi import API
 from specs import dxgi
 from specs import d3d10
 from specs import d3d11
+from specs import d3d12
 from specs import dcomp
 from specs import d3d9
 
@@ -136,31 +137,32 @@ class D3DCommonTracer(DllTracer):
             if pDesc1 is not None:
                 print(r'    %s pDesc = pDesc1;' % (pDesc1.type,))
 
-        if method.name in ('Map', 'Unmap'):
-            # On D3D11 Map/Unmap is not a resource method, but a context method instead.
-            resourceArg = method.getArgByName('pResource')
-            if resourceArg is None:
-                print('    _MAP_DESC & _MapDesc = m_MapDesc;')
-                print('    MemoryShadow & _MapShadow = m_MapShadow;')
-                print('    %s *pResourceInstance = m_pInstance;' % interface.name)
-            else:
-                print(r'    static bool _warned = false;')
-                print(r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED && !_warned) {')
-                print(r'        os::log("apitrace: warning: map with deferred context may not be realiably traced\n");')
-                print(r'        _warned = true;')
-                print(r'    }')
-                print('    _MAP_DESC & _MapDesc = m_MapDescs[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type)
-                print('    MemoryShadow & _MapShadow = m_MapShadows[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type)
-                print('    Wrap%spResourceInstance = static_cast<Wrap%s>(%s);' % (resourceArg.type, resourceArg.type, resourceArg.name))
+        if interface is not d3d12.ID3D12Resource:
+            if method.name in ('Map', 'Unmap'):
+                # On D3D11 Map/Unmap is not a resource method, but a context method instead.
+                resourceArg = method.getArgByName('pResource')
+                if resourceArg is None:
+                    print('    _MAP_DESC & _MapDesc = m_MapDesc;')
+                    print('    MemoryShadow & _MapShadow = m_MapShadow;')
+                    print('    %s *pResourceInstance = m_pInstance;' % interface.name)
+                else:
+                    print(r'    static bool _warned = false;')
+                    print(r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED && !_warned) {')
+                    print(r'        os::log("apitrace: warning: map with deferred context may not be realiably traced\n");')
+                    print(r'        _warned = true;')
+                    print(r'    }')
+                    print('    _MAP_DESC & _MapDesc = m_MapDescs[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type)
+                    print('    MemoryShadow & _MapShadow = m_MapShadows[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type)
+                    print('    Wrap%spResourceInstance = static_cast<Wrap%s>(%s);' % (resourceArg.type, resourceArg.type, resourceArg.name))
 
-        if method.name == 'Unmap':
-            print('    if (_MapDesc.Size && _MapDesc.pData) {')
-            print('        if (_shouldShadowMap(pResourceInstance)) {')
-            print('            _MapShadow.update(trace::fakeMemcpy);')
-            print('        } else {')
-            self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
-            print('        }')
-            print('    }')
+            if method.name == 'Unmap':
+                print('    if (_MapDesc.Size && _MapDesc.pData) {')
+                print('        if (_shouldShadowMap(pResourceInstance)) {')
+                print('            _MapShadow.update(trace::fakeMemcpy);')
+                print('        } else {')
+                self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
+                print('        }')
+                print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'ReleaseDecoderBuffer':
@@ -172,21 +174,22 @@ class D3DCommonTracer(DllTracer):
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if method.name == 'Map':
-            # NOTE: recursive locks are explicitely forbidden
-            print('    if (SUCCEEDED(_result)) {')
-            print('        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
-            print('        if (_MapDesc.pData && _shouldShadowMap(pResourceInstance)) {')
-            if interface.name.startswith('IDXGI'):
-                print('            (void)_MapShadow;')
-            else:
-                print('            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;')
-                print('            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);')
-            print('        }')
-            print('    } else {')
-            print('        _MapDesc.pData = NULL;')
-            print('        _MapDesc.Size = 0;')
-            print('    }')
+        if interface is not d3d12.ID3D12Resource:
+            if method.name == 'Map':
+                # NOTE: recursive locks are explicitely forbidden
+                print('    if (SUCCEEDED(_result)) {')
+                print('        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
+                print('        if (_MapDesc.pData && _shouldShadowMap(pResourceInstance)) {')
+                if interface.name.startswith('IDXGI'):
+                    print('            (void)_MapShadow;')
+                else:
+                    print('            bool _discard = MapType == 4 /* D3D1[01]_MAP_WRITE_DISCARD */;')
+                    print('            _MapShadow.cover(_MapDesc.pData, _MapDesc.Size, _discard);')
+                print('        }')
+                print('    } else {')
+                print('        _MapDesc.pData = NULL;')
+                print('        _MapDesc.Size = 0;')
+                print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'GetDecoderBuffer':
@@ -264,6 +267,7 @@ if __name__ == '__main__':
     api.addModule(d3d10.d3d10)
     api.addModule(d3d10.d3d10_1)
     api.addModule(d3d11.d3d11)
+    api.addModule(d3d12.d3d12)
     api.addModule(dcomp.dcomp)
     api.addModule(d3d9.d3dperf)
 

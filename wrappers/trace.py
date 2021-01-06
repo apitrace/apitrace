@@ -406,7 +406,8 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
     
     def visitPolymorphic(self, type, instance):
         # XXX: There might be polymorphic values that need wrapping in the future
-        raise NotImplementedError
+        print("    // raise NotImplementedError")
+        #raise NotImplementedError
 
 
 class ValueUnwrapper(ValueWrapper):
