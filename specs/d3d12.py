@@ -1845,23 +1845,23 @@ D3D12_INDIRECT_ARGUMENT_TYPE = Enum('D3D12_INDIRECT_ARGUMENT_TYPE', [
 D3D12_INDIRECT_ARGUMENT_DESC = Struct('D3D12_INDIRECT_ARGUMENT_DESC', [
     (D3D12_INDIRECT_ARGUMENT_TYPE, 'Type'),
     (Union("{self}.Type", [
-        ('D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW', Struct('VertexBuffer', [
+        ('D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW', Struct(None, [
             (UINT, 'Slot'),
-        ]), None),
-        ('D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT', Struct('Constant', [
+        ]), 'VertexBuffer'),
+        ('D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT', Struct(None, [
             (UINT, 'RootParameterIndex'),
             (UINT, 'DestOffsetIn32BitValues'),
             (UINT, 'Num32BitValuesToSet'),
-        ]), None),
-        ('D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW', Struct('ConstantBufferView', [
+        ]), 'Constant'),
+        ('D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW', Struct(None, [
             (UINT, 'RootParameterIndex'),
-        ]), None),
-        ('D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW', Struct('ShaderResourceView', [
+        ]), 'ConstantBufferView'),
+        ('D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW', Struct(None, [
             (UINT, 'RootParameterIndex'),
-        ]), None),
-        ('D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW', Struct('UnorderedAccessView', [
+        ]), 'ShaderResourceView'),
+        ('D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW', Struct(None, [
             (UINT, 'RootParameterIndex'),
-        ]), None),
+        ]), 'UnorderedAccessView'),
     ]), None),
 ])
 
@@ -2485,23 +2485,23 @@ D3D12_DRED_ALLOCATION_NODE1.members.extend([
 ])
 
 D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT = Struct('D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT', [
-    (Pointer(Const(D3D12_AUTO_BREADCRUMB_NODE)), 'pHeadAutoBreadcrumbNode'),
+    (OpaquePointer(Const(D3D12_AUTO_BREADCRUMB_NODE)), 'pHeadAutoBreadcrumbNode'),
 ])
 
 D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1 = Struct('D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1', [
-    (Pointer(Const(D3D12_AUTO_BREADCRUMB_NODE1)), 'pHeadAutoBreadcrumbNode'),
+    (OpaquePointer(Const(D3D12_AUTO_BREADCRUMB_NODE1)), 'pHeadAutoBreadcrumbNode'),
 ])
 
 D3D12_DRED_PAGE_FAULT_OUTPUT = Struct('D3D12_DRED_PAGE_FAULT_OUTPUT', [
     (D3D12_GPU_VIRTUAL_ADDRESS, 'PageFaultVA'),
-    (Pointer(Const(D3D12_DRED_ALLOCATION_NODE)), 'pHeadExistingAllocationNode'),
-    (Pointer(Const(D3D12_DRED_ALLOCATION_NODE)), 'pHeadRecentFreedAllocationNode'),
+    (OpaquePointer(Const(D3D12_DRED_ALLOCATION_NODE)), 'pHeadExistingAllocationNode'),
+    (OpaquePointer(Const(D3D12_DRED_ALLOCATION_NODE)), 'pHeadRecentFreedAllocationNode'),
 ])
 
 D3D12_DRED_PAGE_FAULT_OUTPUT1 = Struct('D3D12_DRED_PAGE_FAULT_OUTPUT1', [
     (D3D12_GPU_VIRTUAL_ADDRESS, 'PageFaultVA'),
-    (Pointer(Const(D3D12_DRED_ALLOCATION_NODE1)), 'pHeadExistingAllocationNode'),
-    (Pointer(Const(D3D12_DRED_ALLOCATION_NODE1)), 'pHeadRecentFreedAllocationNode'),
+    (OpaquePointer(Const(D3D12_DRED_ALLOCATION_NODE1)), 'pHeadExistingAllocationNode'),
+    (OpaquePointer(Const(D3D12_DRED_ALLOCATION_NODE1)), 'pHeadRecentFreedAllocationNode'),
 ])
 
 D3D12_DEVICE_REMOVED_EXTENDED_DATA1 = Struct('D3D12_DEVICE_REMOVED_EXTENDED_DATA1', [
