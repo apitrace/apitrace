@@ -53,17 +53,19 @@ usage(void)
         << "at the expense of a slightly smaller compression ratio than zlib\n"
         << "\n"
         << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality " << BROTLI_MIN_QUALITY << "-" << BROTLI_MAX_QUALITY << ", default " << BROTLI_DEFAULT_QUALITY << ")\n"
+        << "    -s,--snappy            Use Snappy compression (default format; recommended for qapitrace)\n"
         << "    -z,--zlib              Use ZLib compression\n"
         << "\n";
 }
 
 const static char *
-shortOptions = "hbz";
+shortOptions = "hbsz";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"brotli", optional_argument, 0, 'b'},
+    {"snappy", no_argument, 0, 's'},
     {"zlib", no_argument, 0, 'z'},
     {0, 0, 0, 0}
 };
@@ -235,6 +237,9 @@ command(int argc, char *argv[])
                     return 1;
                 }
             }
+            break;
+        case 's':
+            format = FORMAT_SNAPPY;
             break;
         case 'z':
             format = FORMAT_ZLIB;
