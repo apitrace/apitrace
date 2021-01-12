@@ -106,3 +106,31 @@ random(void) {
 
 } /* namespace os */
 
+
+#include <windows.h>
+#include <minidumpapiset.h>
+
+#include <string>
+
+static void DumpException(PEXCEPTION_POINTERS pExceptionPointers, const char* filename)
+{
+    typedef BOOL(WINAPI* MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType, CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam, CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam, CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+
+    HMODULE mhLib = ::LoadLibrary("dbghelp.dll");
+    MINIDUMPWRITEDUMP pDump = (MINIDUMPWRITEDUMP)::GetProcAddress(mhLib, "MiniDumpWriteDump");
+
+    std::string path = "C:\\Users\\davmc\\Desktop\\";
+    path += filename;
+    path += ".dmp";
+    HANDLE  hFile = ::CreateFile(path.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    _MINIDUMP_EXCEPTION_INFORMATION ExInfo;
+    ExInfo.ThreadId = ::GetCurrentThreadId();
+    ExInfo.ExceptionPointers = pExceptionPointers;
+    ExInfo.ClientPointers = FALSE;
+
+    pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpWithFullMemory, &ExInfo, NULL, NULL);
+
+    ::CloseHandle(hFile);
+    ::FreeLibrary(mhLib);
+}

@@ -404,10 +404,25 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
     def visitInterfacePointer(self, interface, instance):
         print("    Wrap%s::_wrap(__FUNCTION__, &%s);" % (interface.name, instance))
     
-    def visitPolymorphic(self, type, instance):
-        # XXX: There might be polymorphic values that need wrapping in the future
-        print("    // raise NotImplementedError")
-        #raise NotImplementedError
+    def visitPolymorphic(self, polymorphic, instance):
+        if polymorphic.contextLess:
+            raise NotImplementedError
+        else:
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print('    switch (%s) {' % switchExpr)
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print('    %s:' % case)
+                caseInstance = instance
+                if type.expr is not None:
+                    caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                self.visit(type, caseInstance)
+                print('        break;')
+            if polymorphic.defaultType is None:
+                print(r'    default:')
+                print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,))
+                print(r'        break;')
+            print('    }')
 
 
 class ValueUnwrapper(ValueWrapper):
@@ -869,6 +884,7 @@ class Tracer:
         wrapperInterfaceName = getWrapperInterfaceName(interface)
 
         print(method.prototype(wrapperInterfaceName + '::' + method.name) + ' {')
+        print('  __try {')
 
         if False:
             print(r'    os::log("%%s(%%p -> %%p)\n", "%s", this, m_pInstance);' % (wrapperInterfaceName + '::' + method.name))
@@ -888,6 +904,8 @@ class Tracer:
         if method.type is not stdapi.Void:
             print('    return _result;')
 
+        print('  }')
+        print('  __except(DumpException(GetExceptionInformation(), "%s_%s"), EXCEPTION_CONTINUE_SEARCH) { }' % (wrapperInterfaceName, method.name))
         print('}')
         print()
 

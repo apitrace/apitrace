@@ -2775,7 +2775,7 @@ ID3D12GraphicsCommandList.methods += [
     StdMethod(Void, 'OMSetBlendFactor', [(Pointer(Const(FLOAT)), 'BlendFactor')]),
     StdMethod(Void, 'OMSetStencilRef', [(UINT, 'StencilRef')]),
     StdMethod(Void, 'SetPipelineState', [(ObjPointer(ID3D12PipelineState), 'pPipelineState')]),
-    StdMethod(Void, 'ResourceBarrier', [(UINT, 'NumBarriers'), (Pointer(Const(D3D12_RESOURCE_BARRIER)), 'pBarriers')]),
+    StdMethod(Void, 'ResourceBarrier', [(UINT, 'NumBarriers'), (Array(Const(D3D12_RESOURCE_BARRIER), 'NumBarriers'), 'pBarriers')]),
     StdMethod(Void, 'ExecuteBundle', [(ObjPointer(ID3D12GraphicsCommandList), 'pCommandList')]),
     StdMethod(Void, 'SetDescriptorHeaps', [(UINT, 'NumDescriptorHeaps'), (Array(Const(ObjPointer(ID3D12DescriptorHeap)), 'NumDescriptorHeaps'), 'ppDescriptorHeaps')]),
     StdMethod(Void, 'SetComputeRootSignature', [(ObjPointer(ID3D12RootSignature), 'pRootSignature')]),
@@ -2873,7 +2873,7 @@ ID3D12Device.methods += [
     StdMethod(Void, 'GetCopyableFootprints', [(Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDesc'), (UINT, 'FirstSubresource'), (UINT, 'NumSubresources'), (UINT64, 'BaseOffset'), Out(Pointer(D3D12_PLACED_SUBRESOURCE_FOOTPRINT), 'pLayouts'), Out(Pointer(UINT), 'pNumRows'), Out(Pointer(UINT64), 'pRowSizeInBytes'), Out(Pointer(UINT64), 'pTotalBytes')]),
     StdMethod(HRESULT, 'CreateQueryHeap', [(Pointer(Const(D3D12_QUERY_HEAP_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'SetStablePowerState', [(BOOL, 'Enable')]),
-    StdMethod(HRESULT, 'CreateCommandSignature', [(Pointer(Const(D3D12_COMMAND_SIGNATURE_DESC)), 'pDesc'), (ObjPointer(ID3D12RootSignature), 'pRootSignature'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvCommandSignature')]),
+    StdMethod(HRESULT, 'CreateCommandSignature', [(OpaquePointer(Const(D3D12_COMMAND_SIGNATURE_DESC)), 'pDesc'), (ObjPointer(ID3D12RootSignature), 'pRootSignature'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvCommandSignature')]),
     StdMethod(Void, 'GetResourceTiling', [(ObjPointer(ID3D12Resource), 'pTiledResource'), Out(Pointer(UINT), 'pNumTilesForEntireResource'), Out(Pointer(D3D12_PACKED_MIP_INFO), 'pPackedMipDesc'), Out(Pointer(D3D12_TILE_SHAPE), 'pStandardTileShapeForNonPackedMips'), Out(Pointer(UINT), 'pNumSubresourceTilings'), (UINT, 'FirstSubresourceTilingToGet'), Out(Pointer(D3D12_SUBRESOURCE_TILING), 'pSubresourceTilingsForNonPackedMips')]),
     StdMethod(LUID, 'GetAdapterLuid', []),
 ]

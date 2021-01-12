@@ -53,13 +53,14 @@ public:
     getProcAddress(LPCSTR lpProcName)
     {
         if (!m_hModule) {
-            char szSystemDir[MAX_PATH] = {0};
+            const char* szSystemDir = "C:\\Users\\davmc\\Desktop\\Originals";
+            /*char szSystemDir[MAX_PATH] = {0};
             const char* pathOverride = getenv("APITRACE_FORCE_MODULE_PATH");
             if (pathOverride && *pathOverride) {
                 strncpy(szSystemDir, pathOverride, MAX_PATH);
             } else if (!GetSystemDirectoryA(szSystemDir, MAX_PATH)) {
                 return nullptr;
-            }
+            }*/
             std::string sDllPath = szSystemDir;
             sDllPath += "\\";
             sDllPath += m_szName;
