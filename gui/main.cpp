@@ -31,6 +31,8 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("ApiTrace");
+    QCoreApplication::setApplicationName("QApiTrace");
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
     qRegisterMetaType<QVector<ApiTraceCall*> >();
