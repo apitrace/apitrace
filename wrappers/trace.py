@@ -884,7 +884,6 @@ class Tracer:
         wrapperInterfaceName = getWrapperInterfaceName(interface)
 
         print(method.prototype(wrapperInterfaceName + '::' + method.name) + ' {')
-        print('  __try {')
 
         if False:
             print(r'    os::log("%%s(%%p -> %%p)\n", "%s", this, m_pInstance);' % (wrapperInterfaceName + '::' + method.name))
@@ -904,8 +903,6 @@ class Tracer:
         if method.type is not stdapi.Void:
             print('    return _result;')
 
-        print('  }')
-        print('  __except(DumpException(GetExceptionInformation(), "%s_%s"), EXCEPTION_CONTINUE_SEARCH) { }' % (wrapperInterfaceName, method.name))
         print('}')
         print()
 
