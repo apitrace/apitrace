@@ -324,20 +324,20 @@ D3D12_RASTERIZER_DESC = Struct('D3D12_RASTERIZER_DESC', [
 ])
 
 D3D12_SHADER_BYTECODE = Struct('D3D12_SHADER_BYTECODE', [
-    (OpaquePointer(Const(Void)), 'pShaderBytecode'),
+    (Blob(Const(Void), '{self}.BytecodeLength'), 'pShaderBytecode'),
     (SIZE_T, 'BytecodeLength'),
 ])
 
 D3D12_STREAM_OUTPUT_DESC = Struct('D3D12_STREAM_OUTPUT_DESC', [
-    (Pointer(Const(D3D12_SO_DECLARATION_ENTRY)), 'pSODeclaration'),
+    (Array(Const(D3D12_SO_DECLARATION_ENTRY), '{self}.NumEntries'), 'pSODeclaration'),
     (UINT, 'NumEntries'),
-    (OpaquePointer(Const(UINT)), 'pBufferStrides'),
+    (Array(Const(UINT), '{self}.NumStrides'), 'pBufferStrides'),
     (UINT, 'NumStrides'),
     (UINT, 'RasterizedStream'),
 ])
 
 D3D12_INPUT_LAYOUT_DESC = Struct('D3D12_INPUT_LAYOUT_DESC', [
-    (Pointer(Const(D3D12_INPUT_ELEMENT_DESC)), 'pInputElementDescs'),
+    (Array(Const(D3D12_INPUT_ELEMENT_DESC), '{self}.NumElements'), 'pInputElementDescs'),
     (UINT, 'NumElements'),
 ])
 
@@ -348,7 +348,7 @@ D3D12_INDEX_BUFFER_STRIP_CUT_VALUE = Enum('D3D12_INDEX_BUFFER_STRIP_CUT_VALUE', 
 ])
 
 D3D12_CACHED_PIPELINE_STATE = Struct('D3D12_CACHED_PIPELINE_STATE', [
-    (OpaquePointer(Const(Void)), 'pCachedBlob'),
+    (Blob(Const(Void), '{self}.CachedBlobSizeInBytes'), 'pCachedBlob'),
     (SIZE_T, 'CachedBlobSizeInBytes'),
 ])
 
@@ -2848,14 +2848,14 @@ ID3D12Device.methods += [
     StdMethod(HRESULT, 'CheckFeatureSupport', [(D3D12_FEATURE, 'Feature'), Out(OpaquePointer(Void), 'pFeatureSupportData'), (UINT, 'FeatureSupportDataSize')]),
     StdMethod(HRESULT, 'CreateDescriptorHeap', [(Pointer(Const(D3D12_DESCRIPTOR_HEAP_DESC)), 'pDescriptorHeapDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(UINT, 'GetDescriptorHandleIncrementSize', [(D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapType')]),
-    StdMethod(HRESULT, 'CreateRootSignature', [(UINT, 'nodeMask'), (OpaquePointer(Const(Void)), 'pBlobWithRootSignature'), (SIZE_T, 'blobLengthInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvRootSignature')]),
+    StdMethod(HRESULT, 'CreateRootSignature', [(UINT, 'nodeMask'), (Blob(Const(Void), 'blobLengthInBytes'), 'pBlobWithRootSignature'), (SIZE_T, 'blobLengthInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvRootSignature')]),
     StdMethod(Void, 'CreateConstantBufferView', [(Pointer(Const(D3D12_CONSTANT_BUFFER_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateShaderResourceView', [(ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(D3D12_SHADER_RESOURCE_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateUnorderedAccessView', [(ObjPointer(ID3D12Resource), 'pResource'), (ObjPointer(ID3D12Resource), 'pCounterResource'), (Pointer(Const(D3D12_UNORDERED_ACCESS_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateRenderTargetView', [(ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(D3D12_RENDER_TARGET_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateDepthStencilView', [(ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(D3D12_DEPTH_STENCIL_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateSampler', [(Pointer(Const(D3D12_SAMPLER_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
-    StdMethod(Void, 'CopyDescriptors', [(UINT, 'NumDestDescriptorRanges'), (Pointer(Const(D3D12_CPU_DESCRIPTOR_HANDLE)), 'pDestDescriptorRangeStarts'), (Pointer(Const(UINT)), 'pDestDescriptorRangeSizes'), (UINT, 'NumSrcDescriptorRanges'), (Pointer(Const(D3D12_CPU_DESCRIPTOR_HANDLE)), 'pSrcDescriptorRangeStarts'), (Pointer(Const(UINT)), 'pSrcDescriptorRangeSizes'), (D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapsType')]),
+    StdMethod(Void, 'CopyDescriptors', [(UINT, 'NumDestDescriptorRanges'), (Array(Const(D3D12_CPU_DESCRIPTOR_HANDLE), 'NumDestDescriptorRanges'), 'pDestDescriptorRangeStarts'), (Array(Const(UINT), 'NumDestDescriptorRanges'), 'pDestDescriptorRangeSizes'), (UINT, 'NumSrcDescriptorRanges'), (Array(Const(D3D12_CPU_DESCRIPTOR_HANDLE), 'NumSrcDescriptorRanges'), 'pSrcDescriptorRangeStarts'), (Array(Const(UINT), 'NumSrcDescriptorRanges'), 'pSrcDescriptorRangeSizes'), (D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapsType')]),
     StdMethod(Void, 'CopyDescriptorsSimple', [(UINT, 'NumDescriptors'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptorRangeStart'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'SrcDescriptorRangeStart'), (D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapsType')]),
     StdMethod(D3D12_RESOURCE_ALLOCATION_INFO, 'GetResourceAllocationInfo', [(UINT, 'visibleMask'), (UINT, 'numResourceDescs'), (Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDescs')]),
     StdMethod(D3D12_HEAP_PROPERTIES, 'GetCustomHeapProperties', [(UINT, 'nodeMask'), (D3D12_HEAP_TYPE, 'heapType')]),
