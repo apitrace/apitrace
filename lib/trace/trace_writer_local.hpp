@@ -117,5 +117,10 @@ namespace trace {
 
     void fakeMemcpy(const void *ptr, size_t size);
 
+    DWORD fakeWaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
+    DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable);
+    DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
+    DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable);
+
 } /* namespace trace */
 

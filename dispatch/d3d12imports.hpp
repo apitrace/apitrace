@@ -6,7 +6,7 @@
  **************************************************************************/
 
 /*
- * Central place for all D3D11 includes, and respective OS dependent headers.
+ * Central place for all D3D12 includes, and respective OS dependent headers.
  */
 
 #pragma once

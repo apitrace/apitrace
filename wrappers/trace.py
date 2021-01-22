@@ -39,6 +39,8 @@ import specs.stdapi as stdapi
 def getWrapperInterfaceName(interface):
     return "Wrap" + interface.expr
 
+def getPolymorphStructOffset(enumType, type):
+    return 'align(sizeof(%s), alignof(%s))' % (enumType, type)
 
 debug = False
 
@@ -152,6 +154,9 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         pass
 
     def visitPolymorphic(self, polymorphic):
+        if polymorphic.stream:
+            self.visitEnum(polymorphic.streamEnum)
+
         if not polymorphic.contextLess:
             return
         print('static void _write__%s(int selector, %s const & value) {' % (polymorphic.tag, polymorphic.expr))
@@ -331,6 +336,41 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
             print('    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance))
         else:
             switchExpr = self.expand(polymorphic.switchExpr)
+            if polymorphic.stream:
+                switchValue = '_switch_type'
+                print(r'    size_t _blob_array_count = 0;')
+                print(r'    {')
+                print(r'        char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'        char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                print(r'        while(_blob_ptr < _blob_end) {')
+                print(r'            auto _switch_type = %s;' % switchExpr)
+                print(r'            switch (%s) {' % switchValue)
+                for cases, type in polymorphic.iterSwitch():
+                    for case in cases:
+                        print('    %s:' % case)
+                        print(r'    _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
+                        print(r'    _blob_array_count++;')
+                    print(r'        break;')
+                if polymorphic.defaultType is None:
+                    print(r'    default:')
+                    print(r'        _blob_ptr += sizeof(%s) + sizeof(void*);' % polymorphic.streamEnum)
+                    print(r'        _blob_array_count++;')
+                    print(r'        break;')
+                print(r'            }')
+                print(r'        }')
+                print(r'    }')
+                print(r'    char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_tmp = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                # * 2 to handle the enum also.
+                print(r'    trace::localWriter.beginArray(_blob_array_count * 2);')
+                print(r'    while(_blob_ptr < _blob_end) {')
+                print(r'    trace::localWriter.beginElement();')
+                print(r'    auto _switch_type = %s;' % switchExpr)
+                print(r'    trace::localWriter.writeEnum(&_enum%s_sig, _switch_type);' % polymorphic.streamEnum.tag)
+                print(r'    trace::localWriter.endElement();')
+                print(r'    trace::localWriter.beginElement();')
+                switchExpr = '_switch_type'
             print('    switch (%s) {' % switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
@@ -338,14 +378,25 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 caseInstance = instance
                 if type.expr is not None:
                     caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                if polymorphic.stream:
+                    print('        _blob_tmp = _blob_ptr + %s;' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type)))
+                    caseInstance = 'reinterpret_cast<%s>(_blob_tmp)' % (type)
                 self.visit(type, caseInstance)
+                if polymorphic.stream:
+                    print(r'    _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
                 print('        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
                 print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,))
+                if polymorphic.stream:
+                    print(r'        _blob_ptr += sizeof(%s) + sizeof(void*);' % polymorphic.streamEnum)
                 print(r'        trace::localWriter.writeNull();')
                 print(r'        break;')
             print('    }')
+            if polymorphic.stream:
+                print('        trace::localWriter.endElement();')
+                print('    }')
+                print('    trace::localWriter.endArray();')
 
 
 class WrapDecider(stdapi.Traverser):
@@ -362,6 +413,12 @@ class WrapDecider(stdapi.Traverser):
 
     def visitObjPointer(self, interface):
         self.needsWrapping = True
+
+
+def typeNeedsWrapping(type):
+    visitor = WrapDecider()
+    visitor.visit(type)
+    return visitor.needsWrapping
 
 
 class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
@@ -403,12 +460,22 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
 
     def visitInterfacePointer(self, interface, instance):
         print("    Wrap%s::_wrap(__FUNCTION__, &%s);" % (interface.name, instance))
-    
+
     def visitPolymorphic(self, polymorphic, instance):
-        if polymorphic.contextLess:
-            raise NotImplementedError
-        else:
+        # XXX: There might be polymorphic values that need wrapping in the future
+        if typeNeedsWrapping(polymorphic):
             switchExpr = self.expand(polymorphic.switchExpr)
+            if polymorphic.stream:
+                print(r'    void* _blob = alloca(%s);' % polymorphic.streamSize)
+                print(r'    size_t _blob_size = %s;' % polymorphic.streamSize)
+                print(r'    memcpy(_blob, %s, _blob_size);'  % instance)
+                print(r'    %s = _blob;' % instance)
+                print(r'    char* _blob_ptr = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_tmp = reinterpret_cast<char*>(%s);' % instance)
+                print(r'    char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                print(r'    while(_blob_ptr < _blob_end) {')
+                print(r'    auto _switch_type = %s;' % switchExpr)
+                switchExpr = '_switch_type'
             print('    switch (%s) {' % switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
@@ -416,13 +483,20 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
                 caseInstance = instance
                 if type.expr is not None:
                     caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                if polymorphic.stream:
+                    print('        _blob_tmp = _blob_ptr + %s;' % getPolymorphStructOffset(polymorphic.streamEnum, type))
+                    caseInstance = 'reinterpret_cast<%s>(_blob_tmp)' % (type)
                 self.visit(type, caseInstance)
+                if polymorphic.stream:
+                    print(r'        _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
                 print('        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
                 print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,))
                 print(r'        break;')
             print('    }')
+            if polymorphic.stream:
+                print('    }')
 
 
 class ValueUnwrapper(ValueWrapper):
@@ -463,6 +537,8 @@ class ValueUnwrapper(ValueWrapper):
         print("    }")
 
     def visitInterfacePointer(self, interface, instance):
+        if not '(' in instance and not '<' in instance and not '[' in instance:
+            print(r'    Wrap%s* %s_original = reinterpret_cast<Wrap%s *>(%s);' % (interface.name, instance, interface.name, instance))
         print(r'    Wrap%s::_unwrap(__FUNCTION__, &%s);' % (interface.name, instance))
 
 
@@ -482,7 +558,8 @@ class Tracer:
     '''Base class to orchestrate the code generation of API tracing.'''
 
     # 0-3 are reserved to memcpy, malloc, free, and realloc
-    __id = 4
+    # 4-7 are reserved for WaitForMultipleObjects
+    __id = 8
 
     def __init__(self):
         self.api = None
@@ -676,18 +753,13 @@ class Tracer:
     def wrapRet(self, function, instance):
         self.wrapValue(function.type, instance)
 
-    def needsWrapping(self, type):
-        visitor = WrapDecider()
-        visitor.visit(type)
-        return visitor.needsWrapping
-
     def wrapValue(self, type, instance):
-        if self.needsWrapping(type):
+        if typeNeedsWrapping(type):
             visitor = ValueWrapper()
             visitor.visit(type, instance)
 
     def unwrapValue(self, type, instance):
-        if self.needsWrapping(type):
+        if typeNeedsWrapping(type):
             visitor = ValueUnwrapper()
             visitor.visit(type, instance)
 
@@ -758,7 +830,7 @@ class Tracer:
         print("public:")
         print("    static %s* _create(const char *entryName, %s * pInstance);" % (wrapperInterfaceName, interface.name))
         print("    static void _wrap(const char *entryName, %s ** ppInstance);" % (interface.name,))
-        print("    static void _unwrap(const char *entryName, %s ** pInstance);" % (interface.name,))
+        print("    static void _unwrap(const char *entryName, const %s * const * pInstance);" % (interface.name,))
         print()
 
         methods = list(interface.iterMethods())
@@ -866,7 +938,8 @@ class Tracer:
 
         # Unwrap pointer
         print(r'void')
-        print(r'%s::_unwrap(const char *entryName, %s **ppObj) {' % (wrapperInterfaceName, iface.name))
+        print(r'%s::_unwrap(const char *entryName, const %s * const *ppObjConst) {' % (wrapperInterfaceName, iface.name))
+        print(r'    %s **ppObj = const_cast<%s**>(ppObjConst);' % (iface.name, iface.name))
         print(r'    if (!ppObj || !*ppObj) {')
         print(r'        return;')
         print(r'    }')
@@ -907,6 +980,9 @@ class Tracer:
         print()
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        self.implementWrapperInterfaceMethodBodyEx(interface, base, method, '_result')
+
+    def implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_override):
         assert not method.internal
 
         sigName = interface.name + '::' + method.sigName()
@@ -929,7 +1005,8 @@ class Tracer:
                 self.serializeArg(method, arg)
         print('    trace::localWriter.endEnter();')
         
-        self.invokeMethod(interface, base, method)
+        if result_override == '_result':
+            self.invokeMethod(interface, base, method)
 
         print('    trace::localWriter.beginLeave(_call);')
 
@@ -941,9 +1018,9 @@ class Tracer:
         print('    }')
 
         if method.type is not stdapi.Void:
-            self.serializeRet(method, '_result')
+            self.serializeRet(method, result_override)
         if method.type is not stdapi.Void:
-            self.wrapRet(method, '_result')
+            self.wrapRet(method, result_override)
 
         if method.name == 'Release':
             assert method.type is not stdapi.Void

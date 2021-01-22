@@ -288,6 +288,159 @@ void fakeMemcpy(const void *ptr, size_t size) {
     localWriter.endLeave();
 }
 
+static const char *WaitForSingleObject_args[2] = {"hHandle", "dwMilliseconds"};
+const FunctionSig WaitForSingleObject_sig = {4, "WaitForSingleObject", 2, WaitForSingleObject_args};
+
+static const char *WaitForSingleObjectEx_args[3] = {"hHandle", "dwMilliseconds", "bAlertable"};
+const FunctionSig WaitForSingleObjectEx_sig = {5, "WaitForSingleObjectEx", 3, WaitForSingleObjectEx_args};
+
+static const char *WaitForMultipleObjects_args[4] = {"nCount", "lpHandles", "bWaitAll", "dwMilliseconds"};
+const FunctionSig WaitForMultipleObjects_sig = {6, "WaitForMultipleObjects", 4, WaitForMultipleObjects_args};
+
+static const char *WaitForMultipleObjectsEx_args[5] = {"nCount", "lpHandles", "bWaitAll", "dwMilliseconds", "bAlertable"};
+const FunctionSig WaitForMultipleObjectsEx_sig = {7, "WaitForMultipleObjectsEx", 5, WaitForMultipleObjects_args};
+
+static const trace::EnumValue _milliseconds_values[] = {
+    {"INFINITE", INFINITE},
+};
+
+static const trace::EnumSig _milliseconds_sig = {
+    0, 1, _milliseconds_values
+};
+
+static const trace::EnumValue _bool_values[] = {
+    {"TRUE",  TRUE},
+    {"FALSE", FALSE},
+};
+
+static const trace::EnumSig _bool_sig = {
+    1, 2, _bool_values
+};
+
+DWORD fakeWaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForSingleObject_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writePointer((uintptr_t)hHandle);
+    localWriter.endArg();
+    localWriter.beginArg(1);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+    localWriter.endEnter();
+    DWORD _result = WaitForSingleObject(hHandle, dwMilliseconds);
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
+
+DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForSingleObjectEx_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writePointer((uintptr_t)hHandle);
+    localWriter.endArg();
+    localWriter.beginArg(1);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bAlertable);
+    localWriter.endArg();
+    localWriter.endEnter();
+    DWORD _result = WaitForSingleObjectEx(hHandle, dwMilliseconds, bAlertable);
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
+
+DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD nCountReal, const HANDLE* lpHandlesReal)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForMultipleObjects_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(nCount);
+    localWriter.endArg();
+
+    localWriter.beginArg(1);
+    localWriter.beginArray(nCount);
+    for (DWORD i = 0; i < nCount; i++)
+    {
+        localWriter.beginElement();
+        localWriter.writePointer((uintptr_t)lpHandles[i]);
+        localWriter.endElement();
+    }
+    localWriter.endArray();
+    localWriter.endArg();
+
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bWaitAll);
+    localWriter.endArg();
+
+    localWriter.beginArg(3);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+
+    localWriter.endEnter();
+
+    DWORD _result = WaitForMultipleObjects(nCountReal, lpHandlesReal, bWaitAll, dwMilliseconds);
+
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
+
+DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable, DWORD nCountReal, const HANDLE* lpHandlesReal)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForMultipleObjectsEx_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(nCount);
+    localWriter.endArg();
+
+    localWriter.beginArg(1);
+    localWriter.beginArray(nCount);
+    for (DWORD i = 0; i < nCount; i++)
+    {
+        localWriter.beginElement();
+        localWriter.writePointer((uintptr_t)lpHandles[i]);
+        localWriter.endElement();
+    }
+    localWriter.endArray();
+    localWriter.endArg();
+
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bWaitAll);
+    localWriter.endArg();
+
+    localWriter.beginArg(3);
+    localWriter.writeEnum(&_milliseconds_sig, dwMilliseconds);
+    localWriter.endArg();
+
+    localWriter.beginArg(4);
+    localWriter.writeEnum(&_bool_sig, bAlertable);
+    localWriter.endArg();
+
+    localWriter.endEnter();
+
+    DWORD _result = WaitForMultipleObjectsEx(nCountReal, lpHandlesReal, bWaitAll, dwMilliseconds, bAlertable);
+
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
 
 } /* namespace trace */
 

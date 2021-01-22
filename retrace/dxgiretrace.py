@@ -1,6 +1,7 @@
 ##########################################################################
 #
 # Copyright 2011 Jose Fonseca
+# Copyright 2020 Joshua Ashton for Valve Software
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,13 +31,20 @@
 import sys
 from dllretrace import DllRetracer as Retracer
 import specs.dxgi
+from specs import stdapi
 from specs.stdapi import API
 from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10, d3d10_1
 from specs.d3d11 import d3d11
+from specs import d3d12
 from specs.dcomp import dcomp
 
+def typeArrayOrPointer(arg, type_):
+    return (isinstance(arg.type, stdapi.Pointer) and arg.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Pointer) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Array) and arg.type.type is type_) or \
+           (isinstance(arg.type, stdapi.Array) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is type_)
 
 class D3DRetracer(Retracer):
 
@@ -44,6 +52,8 @@ class D3DRetracer(Retracer):
         print('// Swizzling mapping for lock addresses, mapping a (pDeviceContext, pResource, Subresource) -> void *')
         print('typedef std::pair< IUnknown *, UINT > SubresourceKey;')
         print('static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;')
+        print('struct _D3D12_MAP_REPLAY_DESC { uint32_t RefCount = 0; void* pData = nullptr; };')
+        print('static std::map< IUnknown *, _D3D12_MAP_REPLAY_DESC > g_MapsD3D12;')
         print()
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -56,6 +66,7 @@ class D3DRetracer(Retracer):
         "D3D10CreateDeviceAndSwapChain1",
         "D3D11CreateDevice",
         "D3D11CreateDeviceAndSwapChain",
+        "D3D12CreateDevice",
     ]
 
     def invokeFunction(self, function):
@@ -96,6 +107,16 @@ class D3DRetracer(Retracer):
 
                 # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE_UNKNOWN')
+
+            if function.name.startswith('D3D12CreateDevice'):
+                # Toggle debugging
+                print(r'    if (retrace::debug >= 2) {')
+                print(r'        ID3D12Debug* debugController;')
+                print(r'        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))')
+                print(r'            debugController->EnableDebugLayer();')
+                print(r'        else')
+                print(r'            retrace::warning(call) << "Direct3D 12.x SDK Debug Layer (d3d12*sdklayers.dll) not available, continuing without debug output\n";')
+                print(r'    }')
 
         Retracer.invokeFunction(self, function)
 
@@ -173,6 +194,7 @@ class D3DRetracer(Retracer):
                 print(r'    _queryDesc.MiscFlags = 0;')
                 print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D11Query **>(ppCounter));')
                 return
+            # TODO(Josh): We need to do something for d3d12 counters here but this gets a lil more complex
 
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
@@ -215,6 +237,27 @@ class D3DRetracer(Retracer):
             print(r'        Sleep(1);')
             Retracer.doInvokeInterfaceMethod(self, interface, method)
             print(r'    }')
+        # TODO(Josh): D3D12 Video
+
+    def lookupDescriptor(self, arg, _type, handler):
+        if arg.type is _type:
+            print(r'    %s = g_D3D12DescriptorSlabs.%s(%s);' % (arg.name, handler, arg.name))
+        if typeArrayOrPointer(arg, _type):
+            real_name = r'_real_%s' % arg.name
+            array_length = 1
+            if isinstance(arg.type, stdapi.Array):
+                array_length = arg.type.length
+            print(r'    %s* %s = (%s *) (%s > 1024 ? nullptr : alloca(sizeof(%s) * %s));' % (_type, real_name, _type, array_length, _type, array_length))
+            print(r'    std::vector<%s> _vec_%s;' % (_type, real_name))
+            print(r'    if (%s > 1024) {' % array_length)
+            print(r'        _vec_%s.resize(%s);' % (real_name, array_length))
+            print(r'        %s = _vec_%s.data();' % (real_name, real_name))
+            print(r'    }')
+            print(r'    if (%s != nullptr) {' % arg.name)
+            print(r'        for (UINT _i = 0; _i < %s; _i++)' % array_length)
+            print(r'            %s[_i] = g_D3D12DescriptorSlabs.%s(%s[_i]);' % (real_name, handler, arg.name))
+            print(r'        %s = %s;' % (arg.name, real_name))
+            print(r'    }')
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
@@ -232,6 +275,7 @@ class D3DRetracer(Retracer):
                 print(r'    }')
             else:
                 print(r'    d3d11Dumper.bindDevice(_this);')
+        # TODO(Josh): d3d12 command queue???
 
         # intercept private interfaces
         if method.name == 'QueryInterface':
@@ -317,7 +361,7 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             return
 
-        if method.name == 'Map':
+        if method.name == 'Map' and not interface.name.startswith('ID3D12Resource'):
             # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
             # way to cope with it (other than retry).
             mapFlagsArg = method.getArgByName('MapFlags')
@@ -378,14 +422,103 @@ class D3DRetracer(Retracer):
 ''')
             return
 
-        Retracer.invokeInterfaceMethod(self, interface, method)
+        for arg in method.args:
+            self.lookupDescriptor(arg, d3d12.D3D12_CPU_DESCRIPTOR_HANDLE, 'LookupCPUDescriptorHandle')
+            self.lookupDescriptor(arg, d3d12.D3D12_GPU_DESCRIPTOR_HANDLE, 'LookupGPUDescriptorHandle')
+
+            if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
+                print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
+
+        if interface.name.startswith('ID3D12'):
+            if method.name == 'CreateCommandQueue':
+                # Disable GPU timeout
+                print('    D3D12_COMMAND_QUEUE_DESC _desc = *pDesc;')
+                print('    _desc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;')
+                print('    pDesc = &_desc;')
+
+            if method.name == 'SetEventOnCompletion':
+                print('     {')
+                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
+                print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
+                print('         if (_fence_event_iter == g_D3D12FenceEventMap.end()) {')
+                print('             HANDLE event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')
+                print('             g_D3D12FenceEventMap.insert(std::make_pair(hEvent, event));')
+                print('             hEvent = event;')
+                print('         } else {')
+                print('             hEvent = _fence_event_iter->second;')
+                print('         }')
+                print('     }')
+
+            if method.name == 'IASetVertexBuffers':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
+                print('    for (UINT i = 0; i < NumViews; i++) {')
+                print('        _real_views[i] = pViews[i];')
+                print('        _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('    }')
+                print('    pViews = _real_views;')
+
+            if method.name == 'IASetIndexBuffer':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_INDEX_BUFFER_VIEW _real_view;')
+                print('    if (pView) {')
+                print('        _real_view = *pView;')
+                print('        _real_view.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_view.BufferLocation);')
+                print('        pView = &_real_view;')
+                print('    }')
+
+            if method.name == 'CreateConstantBufferView':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    D3D12_CONSTANT_BUFFER_VIEW_DESC _real_desc;')
+                print('    if (pDesc) {')
+                print('        _real_desc = *pDesc;')
+                print('        _real_desc.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_desc.BufferLocation);')
+                print('        pDesc = &_real_desc;')
+                print('    }')
+
+        if method.name == 'CreatePipelineLibrary':
+            # Make a fake pipeline library, so we can still make the state objects.
+            print('    *ppPipelineLibrary = reinterpret_cast<void*>(new _D3D12FakePipelineLibrary(_this));')
+            print('    _result = S_OK;')
+        else:
+            Retracer.invokeInterfaceMethod(self, interface, method)
+
+        if method.name == 'GetCPUDescriptorHandleForHeapStart':
+            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialCPU(_fake_descriptor_ptr, _result);')
+
+        if method.name == 'GetGPUDescriptorHandleForHeapStart':
+            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialGPU(_fake_descriptor_ptr, _result);')
+
+        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart'):
+            print('    D3D12_DESCRIPTOR_HEAP_DESC _desc = _this->GetDesc();')
+            print('    com_ptr<ID3D12Device> _device = nullptr;')
+            print('    _this->GetDevice(__uuidof(ID3D12Device), reinterpret_cast<void**>(&_device));')
+            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialIncrement(_fake_descriptor_ptr, _device->GetDescriptorHandleIncrementSize(_desc.Type));')
+
+        if method.name == 'GetGPUVirtualAddress':
+            print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_va = call.ret->toUInt();')
+            print('    g_D3D12AddressSlabs.RegisterSlab(_fake_va, _result);')
+
+        if method.name == 'GetCompletedValue':
+            print('    UINT64 _traced_result = call.ret->toUInt();')
+            print('    if (_result < _traced_result)')
+            print('    {')
+            print('        HANDLE _wait_event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')
+            print('        _this->SetEventOnCompletion(_traced_result, _wait_event);')
+            print('        WaitForSingleObject(_wait_event, INFINITE);')
+            print('    }')
 
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
             print(r'    d3dretrace::processEvents();')
 
         if method.name in ('Map', 'Unmap'):
-            if interface.name.startswith('ID3D11DeviceContext'):
+            if interface.name.startswith('ID3D12'):
+                print('    _D3D12_MAP_REPLAY_DESC & _desc = g_MapsD3D12[_this];')
+                print('    void * & _pbData = _desc.pData;')
+            elif interface.name.startswith('ID3D11DeviceContext'):
                 print('    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];')
             else:
                 subresourceArg = method.getArgByName('Subresource')
@@ -394,23 +527,36 @@ class D3DRetracer(Retracer):
                 print('    void * & _pbData = g_Maps[0][SubresourceKey(_this, Subresource)];')
 
         if method.name == 'Map':
-            print('    _MAP_DESC _MapDesc;')
-            print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
-            print('    size_t _MappedSize = _MapDesc.Size;')
-            print('    if (_MapDesc.Size) {')
-            print('        _pbData = _MapDesc.pData;')
-            if interface.name.startswith('ID3D11DeviceContext'):
-                # Prevent false warnings on 1D and 2D resources, since the
-                # pitches are often junk there...
-                print('        _normalizeMap(pResource, pMappedResource);')
+            if interface.name.startswith('ID3D12'):
+                print('    size_t _MappedSize = size_t(_getMapSize(_this));')
+                print('    if (_desc.RefCount) {')
+                print('        ppData = nullptr;')
+                print('        _MappedSize = 0;')
+                print('    }')
+                print('    else')
+                print('        _pbData = *ppData;')
+                print('    _desc.RefCount++;')
             else:
+                print('    _MAP_DESC _MapDesc;')
+                print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
+                print('    size_t _MappedSize = _MapDesc.Size;')
+                print('    if (_MapDesc.Size) {')
                 print('        _pbData = _MapDesc.pData;')
-            print('    } else {')
-            print('        return;')
-            print('    }')
+                if interface.name.startswith('ID3D11DeviceContext'):
+                    # Prevent false warnings on 1D and 2D resources, since the
+                    # pitches are often junk there...
+                    print('        _normalizeMap(pResource, pMappedResource);')
+                else:
+                    print('        _pbData = _MapDesc.pData;')
+                print('    } else {')
+                print('        return;')
+                print('    }')
 
         if method.name == 'Unmap':
-            print('    if (_pbData) {')
+            if interface.name.startswith('ID3D12'):
+                print('    if (_pbData && --_desc.RefCount == 0) {')
+            else:
+                print('    if (_pbData) {')
             print('        retrace::delRegionByPointer(_pbData);')
             print('        _pbData = 0;')
             print('    }')
@@ -448,7 +594,8 @@ class D3DRetracer(Retracer):
         Retracer.retraceInterfaceMethodBody(self, interface, method)
 
         # Add pitch swizzling information to the region
-        if method.name == 'Map' and interface.name not in ('ID3D10Buffer', 'ID3D10Texture1D'):
+        # TODO(Josh): Any way we can fudge this to make pitches device agnostic on D3D12?
+        if method.name == 'Map' and interface.name not in ('ID3D10Buffer', 'ID3D10Texture1D', 'ID3D12Resource'):
             if interface.name.startswith('ID3D11DeviceContext'):
                 outArg = method.getArgByName('pMappedResource')
                 memberNames = ('pData', 'RowPitch', 'DepthPitch')
@@ -516,6 +663,7 @@ def main():
     print(r'#include <string.h>')
     print()
     print(r'#include <iostream>')
+    print(r'#include <mutex>')
     print()
     print(r'#include "d3dretrace.hpp"')
     print(r'#include "os_version.hpp"')
@@ -526,6 +674,11 @@ def main():
     print(r'#include "d3d10state.hpp"')
     print(r'#include "d3d11imports.hpp"')
     print(r'#include "d3d11size.hpp"')
+    print(r'#include "d3d12imports.hpp"')
+    print(r'#include "d3d12size.hpp"')
+    print(r'#include "d3d12slab.hpp"')
+    print(r'#include "d3d12va.hpp"')
+    print(r'#include "d3d12pipelinelibrary.hpp"')
     print(r'#include "dcompimports.hpp"')
     print(r'#include "d3dstate.hpp"')
     print(r'#include "d3d9imports.hpp" // D3DERR_WASSTILLDRAWING')
@@ -534,12 +687,18 @@ def main():
     print('''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;''')
     print('''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;''')
     print()
+    print('_D3D12_DESCRIPTOR_RESOLVER g_D3D12DescriptorSlabs;')
+    print('_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
+    print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
+    print('std::mutex g_D3D12FenceEventMapMutex;')
+    print()
 
     api = API()
     api.addModule(dxgi)
     api.addModule(d3d10)
     api.addModule(d3d10_1)
     api.addModule(d3d11)
+    api.addModule(d3d12.d3d12)
     api.addModule(dcomp)
 
     retracer = D3DRetracer()
