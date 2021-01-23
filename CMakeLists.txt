@@ -295,10 +295,10 @@ else ()
         message (FATAL_ERROR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} compiler does not support C++17")
     endif ()
 
-    # We require at least GCC 5.0 for decent C++17 support
+    # We require at least GCC 7.0 for decent C++17 support
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-        message (FATAL_ERROR "GCC 5.0 or later required -- https://github.com/apitrace/apitrace/wiki/GCC")
+        CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0")
+        message (FATAL_ERROR "GCC 7.0 or later required -- https://github.com/apitrace/apitrace/wiki/GCC")
     endif ()
 
     # Adjust warnings
