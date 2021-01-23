@@ -32,7 +32,7 @@
 #pragma once
 
 #include <windows.h>
-#include <map>
+#include <unordered_set>
 #include <mutex>
 
 namespace IATHook
@@ -279,8 +279,8 @@ namespace trace
     DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable, DWORD nCountReal, const HANDLE* lpHandlesReal);
 }
 
-extern std::mutex g_D3D12FenceEventMapMutex;
-extern std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;
+extern std::mutex g_D3D12FenceEventSetMutex;
+extern std::unordered_set<HANDLE> g_D3D12FenceEventSet;
 
 namespace D3D12EventHooks
 {
@@ -288,12 +288,12 @@ namespace D3D12EventHooks
     {
         bool shouldFake = false;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventSetMutex);
 
-            auto elem = g_D3D12FenceEventMap.find(hHandle);
-            if (elem != g_D3D12FenceEventMap.end()) {
+            auto elem = g_D3D12FenceEventSet.find(hHandle);
+            if (elem != g_D3D12FenceEventSet.end()) {
                 shouldFake = true;
-                g_D3D12FenceEventMap.erase(elem);
+                g_D3D12FenceEventSet.erase(elem);
             }
         }
 
@@ -307,12 +307,12 @@ namespace D3D12EventHooks
     {
         bool shouldFake = false;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventSetMutex);
 
-            auto elem = g_D3D12FenceEventMap.find(hHandle);
-            if (elem != g_D3D12FenceEventMap.end()) {
+            auto elem = g_D3D12FenceEventSet.find(hHandle);
+            if (elem != g_D3D12FenceEventSet.end()) {
                 shouldFake = true;
-                g_D3D12FenceEventMap.erase(elem);
+                g_D3D12FenceEventSet.erase(elem);
             }
         }
 
@@ -328,15 +328,15 @@ namespace D3D12EventHooks
 
         DWORD fakeCount = 0;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventSetMutex);
 
             for (DWORD i = 0; i < nCount; i++)
             {
-                auto elem = g_D3D12FenceEventMap.find(lpHandles[i]);
-                if (elem != g_D3D12FenceEventMap.end()) {
+                auto elem = g_D3D12FenceEventSet.find(lpHandles[i]);
+                if (elem != g_D3D12FenceEventSet.end()) {
                     fakeHandles[fakeCount] = lpHandles[i];
                     fakeCount++;
-                    g_D3D12FenceEventMap.erase(elem);
+                    g_D3D12FenceEventSet.erase(elem);
                 }
             }
         }
@@ -353,15 +353,15 @@ namespace D3D12EventHooks
 
         DWORD fakeCount = 0;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventSetMutex);
 
             for (DWORD i = 0; i < nCount; i++)
             {
-                auto elem = g_D3D12FenceEventMap.find(lpHandles[i]);
-                if (elem != g_D3D12FenceEventMap.end()) {
+                auto elem = g_D3D12FenceEventSet.find(lpHandles[i]);
+                if (elem != g_D3D12FenceEventSet.end()) {
                     fakeHandles[fakeCount] = lpHandles[i];
                     fakeCount++;
-                    g_D3D12FenceEventMap.erase(elem);
+                    g_D3D12FenceEventSet.erase(elem);
                 }
             }
         }

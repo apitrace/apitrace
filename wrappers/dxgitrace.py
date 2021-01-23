@@ -369,10 +369,8 @@ class D3DCommonTracer(DllTracer):
         if interface.name.startswith('ID3D12'):
             if method.name == 'SetEventOnCompletion':
                 print('     {')
-                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
-                print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
-                print('         if (_fence_event_iter == g_D3D12FenceEventMap.end())')
-                print('             g_D3D12FenceEventMap.insert(std::make_pair(hEvent, hEvent));')
+                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventSetMutex);')
+                print('         g_D3D12FenceEventSet.insert(hEvent);')
                 print('     }')
 
             if method.name == 'IASetVertexBuffers':
@@ -495,8 +493,8 @@ if __name__ == '__main__':
     print('std::mutex g_D3D12AddressMappingsMutex;')
     print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')
 
-    print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
-    print('std::mutex g_D3D12FenceEventMapMutex;')
+    print('std::unordered_set<HANDLE> g_D3D12FenceEventSet;')
+    print('std::mutex g_D3D12FenceEventSetMutex;')
 
     print('std::mutex g_D3D12FenceOrderingMutex;')
 
