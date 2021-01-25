@@ -241,7 +241,7 @@ class D3DRetracer(Retracer):
 
     def lookupDescriptor(self, arg, _type, handler):
         if arg.type is _type:
-            print(r'    %s = g_D3D12DescriptorSlabs.%s(%s);' % (arg.name, handler, arg.name))
+            print(r'    %s = g_D3D12DescriptorResolver.%s(%s);' % (arg.name, handler, arg.name))
         if typeArrayOrPointer(arg, _type):
             real_name = r'_real_%s' % arg.name
             array_length = 1
@@ -255,7 +255,7 @@ class D3DRetracer(Retracer):
             print(r'    }')
             print(r'    if (%s != nullptr) {' % arg.name)
             print(r'        for (UINT _i = 0; _i < %s; _i++)' % array_length)
-            print(r'            %s[_i] = g_D3D12DescriptorSlabs.%s(%s[_i]);' % (real_name, handler, arg.name))
+            print(r'            %s[_i] = g_D3D12DescriptorResolver.%s(%s[_i]);' % (real_name, handler, arg.name))
             print(r'        %s = %s;' % (arg.name, real_name))
             print(r'    }')
 
@@ -422,14 +422,14 @@ class D3DRetracer(Retracer):
 ''')
             return
 
-        for arg in method.args:
-            self.lookupDescriptor(arg, d3d12.D3D12_CPU_DESCRIPTOR_HANDLE, 'LookupCPUDescriptorHandle')
-            self.lookupDescriptor(arg, d3d12.D3D12_GPU_DESCRIPTOR_HANDLE, 'LookupGPUDescriptorHandle')
-
-            if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
-                print(r'    %s = g_D3D12AddressSlabs.LookupSlab(%s);' % (arg.name, arg.name))
-
         if interface.name.startswith('ID3D12'):
+            for arg in method.args:
+                self.lookupDescriptor(arg, d3d12.D3D12_CPU_DESCRIPTOR_HANDLE, 'Resolve')
+                self.lookupDescriptor(arg, d3d12.D3D12_GPU_DESCRIPTOR_HANDLE, 'Resolve')
+
+                if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
+                    print(r'    %s = g_D3D12AddressResolver.Resolve(%s);' % (arg.name, arg.name))
+
             if method.name == 'CreateCommandQueue':
                 # Disable GPU timeout
                 print('    D3D12_COMMAND_QUEUE_DESC _desc = *pDesc;')
@@ -454,7 +454,7 @@ class D3DRetracer(Retracer):
                 print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
                 print('    for (UINT i = 0; i < NumViews; i++) {')
                 print('        _real_views[i] = pViews[i];')
-                print('        _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('        _real_views[i].BufferLocation = g_D3D12AddressResolver.Resolve(_real_views[i].BufferLocation);')
                 print('    }')
                 print('    pViews = _real_views;')
 
@@ -463,7 +463,7 @@ class D3DRetracer(Retracer):
                 print('    D3D12_INDEX_BUFFER_VIEW _real_view;')
                 print('    if (pView) {')
                 print('        _real_view = *pView;')
-                print('        _real_view.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_view.BufferLocation);')
+                print('        _real_view.BufferLocation = g_D3D12AddressResolver.Resolve(_real_view.BufferLocation);')
                 print('        pView = &_real_view;')
                 print('    }')
 
@@ -472,7 +472,7 @@ class D3DRetracer(Retracer):
                 print('    D3D12_CONSTANT_BUFFER_VIEW_DESC _real_desc;')
                 print('    if (pDesc) {')
                 print('        _real_desc = *pDesc;')
-                print('        _real_desc.BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_desc.BufferLocation);')
+                print('        _real_desc.BufferLocation = g_D3D12AddressResolver.Resolve(_real_desc.BufferLocation);')
                 print('        pDesc = &_real_desc;')
                 print('    }')
 
@@ -482,24 +482,6 @@ class D3DRetracer(Retracer):
             print('    _result = S_OK;')
         else:
             Retracer.invokeInterfaceMethod(self, interface, method)
-
-        if method.name == 'GetCPUDescriptorHandleForHeapStart':
-            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
-            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialCPU(_fake_descriptor_ptr, _result);')
-
-        if method.name == 'GetGPUDescriptorHandleForHeapStart':
-            print('    UINT64 _fake_descriptor_ptr = call.ret->toStruct()->members[0]->toUInt();')
-            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialGPU(_fake_descriptor_ptr, _result);')
-
-        if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart'):
-            print('    D3D12_DESCRIPTOR_HEAP_DESC _desc = _this->GetDesc();')
-            print('    com_ptr<ID3D12Device> _device = nullptr;')
-            print('    _this->GetDevice(__uuidof(ID3D12Device), reinterpret_cast<void**>(&_device));')
-            print('    g_D3D12DescriptorSlabs.RegisterSlabPartialIncrement(_fake_descriptor_ptr, _device->GetDescriptorHandleIncrementSize(_desc.Type));')
-
-        if method.name == 'GetGPUVirtualAddress':
-            print('    D3D12_GPU_VIRTUAL_ADDRESS _fake_va = call.ret->toUInt();')
-            print('    g_D3D12AddressSlabs.RegisterSlab(_fake_va, _result);')
 
         if method.name == 'GetCompletedValue':
             print('    UINT64 _traced_result = call.ret->toUInt();')
@@ -588,6 +570,19 @@ class D3DRetracer(Retracer):
             print(r'       char label[32];')
             print(r'       _snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
             print(r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(label)+1, label);' % ppBuffer.name)
+            print(r'    }')
+
+        if method.name == 'CreateDescriptorHeap':
+            pDesc = method.args[0]
+            ppvHeap = method.args[2]
+            print(r'    com_ptr<ID3D12DescriptorHeap> pDescriptorHeap(IID_ID3D12DescriptorHeap, %s);' % (ppvHeap.name))
+            print(r'    if (pDescriptorHeap) {')
+            print(r'        UINT ToIncrementSize = _this->GetDescriptorHandleIncrementSize(%s->Type);' % (pDesc.name))
+            print(r'        D3D12_CPU_DESCRIPTOR_HANDLE CPUTo = pDescriptorHeap->GetCPUDescriptorHandleForHeapStart();')
+            print(r'        g_D3D12DescriptorResolver.Register(CPUFrom, FromIncrementSize, CPUTo, ToIncrementSize, %s->NumDescriptors);' % (pDesc.name))
+            print(r'')
+            print(r'        D3D12_GPU_DESCRIPTOR_HANDLE GPUTo = pDescriptorHeap->GetGPUDescriptorHandleForHeapStart();')
+            print(r'        g_D3D12DescriptorResolver.Register(GPUFrom, FromIncrementSize, GPUTo, ToIncrementSize, %s->NumDescriptors);' % (pDesc.name))
             print(r'    }')
 
     def retraceInterfaceMethodBody(self, interface, method):
@@ -687,8 +682,8 @@ def main():
     print('''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;''')
     print('''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;''')
     print()
-    print('_D3D12_DESCRIPTOR_RESOLVER g_D3D12DescriptorSlabs;')
-    print('_D3D12_ADDRESS_SLAB_RESOLVER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
+    print('D3D12_DESCRIPTOR_RESOLVER g_D3D12DescriptorResolver;')
+    print('D3D12_ADDRESS_RESOLVER g_D3D12AddressResolver;')
     print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')
     print('std::mutex g_D3D12FenceEventMapMutex;')
     print()

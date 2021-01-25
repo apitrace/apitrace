@@ -2711,7 +2711,7 @@ ID3D12Resource.methods += [
     StdMethod(HRESULT, 'Map', [(UINT, 'Subresource'), (Pointer(Const(D3D12_RANGE)), 'pReadRange'), Out(Pointer(LinearPointer(Void, '_MappedSize')), 'ppData')]),
     StdMethod(Void, 'Unmap', [(UINT, 'Subresource'), (Pointer(Const(D3D12_RANGE)), 'pWrittenRange')]),
     StdMethod(D3D12_RESOURCE_DESC, 'GetDesc', []),
-    StdMethod(D3D12_GPU_VIRTUAL_ADDRESS, 'GetGPUVirtualAddress', []),
+    StdMethod(D3D12_GPU_VIRTUAL_ADDRESS, 'GetGPUVirtualAddress', [], sideeffects=False),
     StdMethod(HRESULT, 'WriteToSubresource', [(UINT, 'DstSubresource'), (Pointer(Const(D3D12_BOX)), 'pDstBox'), (Blob(Const(Void), '_calcSubresourceSize12(_this, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)'), 'pSrcData'), (UINT, 'SrcRowPitch'), (UINT, 'SrcDepthPitch')]),
     StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaquePointer(Void), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')], sideeffects=False),
     StdMethod(HRESULT, 'GetHeapProperties', [Out(Pointer(D3D12_HEAP_PROPERTIES), 'pHeapProperties'), Out(Pointer(D3D12_HEAP_FLAGS), 'pHeapFlags')]),
@@ -2736,9 +2736,9 @@ ID3D12PipelineState.methods += [
 ]
 
 ID3D12DescriptorHeap.methods += [
-    StdMethod(D3D12_DESCRIPTOR_HEAP_DESC, 'GetDesc', []),
-    StdMethod(D3D12_CPU_DESCRIPTOR_HANDLE, 'GetCPUDescriptorHandleForHeapStart', []),
-    StdMethod(D3D12_GPU_DESCRIPTOR_HANDLE, 'GetGPUDescriptorHandleForHeapStart', []),
+    StdMethod(D3D12_DESCRIPTOR_HEAP_DESC, 'GetDesc', [], sideeffects=False),
+    StdMethod(D3D12_CPU_DESCRIPTOR_HANDLE, 'GetCPUDescriptorHandleForHeapStart', [], sideeffects=False),
+    StdMethod(D3D12_GPU_DESCRIPTOR_HANDLE, 'GetGPUDescriptorHandleForHeapStart', [], sideeffects=False),
 ]
 
 ID3D12QueryHeap.methods += [
@@ -2748,7 +2748,7 @@ ID3D12CommandSignature.methods += [
 ]
 
 ID3D12CommandList.methods += [
-    StdMethod(D3D12_COMMAND_LIST_TYPE, 'GetType', []),
+    StdMethod(D3D12_COMMAND_LIST_TYPE, 'GetType', [], sideeffects=False),
 ]
 
 ID3D12GraphicsCommandList.methods += [
@@ -2840,8 +2840,12 @@ ID3D12Device.methods += [
     StdMethod(HRESULT, 'CreateComputePipelineState', [(Pointer(Const(D3D12_COMPUTE_PIPELINE_STATE_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppPipelineState')]),
     StdMethod(HRESULT, 'CreateCommandList', [(UINT, 'nodeMask'), (D3D12_COMMAND_LIST_TYPE, 'type'), (ObjPointer(ID3D12CommandAllocator), 'pCommandAllocator'), (ObjPointer(ID3D12PipelineState), 'pInitialState'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppCommandList')]),
     StdMethod(HRESULT, 'CheckFeatureSupport', [(D3D12_FEATURE, 'Feature'), Out(Blob(Void, 'FeatureSupportDataSize'), 'pFeatureSupportData'), (UINT, 'FeatureSupportDataSize')], sideeffects=False),
-    StdMethod(HRESULT, 'CreateDescriptorHeap', [(Pointer(Const(D3D12_DESCRIPTOR_HEAP_DESC)), 'pDescriptorHeapDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
-    StdMethod(UINT, 'GetDescriptorHandleIncrementSize', [(D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapType')]),
+    StdMethod(HRESULT, 'CreateDescriptorHeap', [(Pointer(Const(D3D12_DESCRIPTOR_HEAP_DESC)), 'pDescriptorHeapDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')], vars=[
+        (UINT, 'FromIncrementSize'),
+        (D3D12_CPU_DESCRIPTOR_HANDLE, 'CPUFrom'),
+        (D3D12_GPU_DESCRIPTOR_HANDLE, 'GPUFrom')
+    ]),
+    StdMethod(UINT, 'GetDescriptorHandleIncrementSize', [(D3D12_DESCRIPTOR_HEAP_TYPE, 'DescriptorHeapType')], sideeffects=False),
     StdMethod(HRESULT, 'CreateRootSignature', [(UINT, 'nodeMask'), (Blob(Const(Void), 'blobLengthInBytes'), 'pBlobWithRootSignature'), (SIZE_T, 'blobLengthInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvRootSignature')]),
     StdMethod(Void, 'CreateConstantBufferView', [(Pointer(Const(D3D12_CONSTANT_BUFFER_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),
     StdMethod(Void, 'CreateShaderResourceView', [(ObjPointer(ID3D12Resource), 'pResource'), (Pointer(Const(D3D12_SHADER_RESOURCE_VIEW_DESC)), 'pDesc'), (D3D12_CPU_DESCRIPTOR_HANDLE, 'DestDescriptor')]),

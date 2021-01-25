@@ -26,170 +26,176 @@
 
 #pragma once
 
-#include <array>
-#include <atomic>
+#include <d3d12.h>
+#include <map>
 
-template <typename T>
-class _D3D12_ADDRESS_SLAB_RESOLVER
+class D3D12_ADDRESS_RESOLVER
 {
-public:
-    static constexpr size_t SlabCount = 64 * 1024;
-
-    _D3D12_ADDRESS_SLAB_RESOLVER()
-        : m_slabs()
-    {}
-
-    void RegisterSlab(const T& base, const T& value)
-    {
-        if (value == 0)
-            return;
-
-        m_slabs[GetIdx(base)] = value;
-    }
-
-    T LookupSlab(const T& value)
-    {
-        if (value == 0)
-            return 0;
-
-        return m_slabs[GetIdx(value)] + (value & 0xFFFFFFFFull);
-    }
-
-    inline size_t GetIdx(const T& value) { return (value >> 32ull) - 1ull; }
-
 private:
-    std::array<T, SlabCount> m_slabs;
-};
+    typedef struct _RESOURCE_INFO
+    {
+        D3D12_GPU_VIRTUAL_ADDRESS Base;
+        D3D12_GPU_VIRTUAL_ADDRESS End;
 
-template <typename T>
-class _D3D12_ADDRESS_SLAB_TRACER
-{
+        D3D12_RESOURCE_ALLOCATION_INFO AllocationInfo;
+    } MEMORY_INFO;
+
+    typedef struct _DESCRIPTOR_HEAP_INFO
+    {
+        MEMORY_INFO From;
+        MEMORY_INFO To;
+    } ADDRESS_INFO;
+
 public:
-    _D3D12_ADDRESS_SLAB_TRACER()
-        : m_resolver()
-        , m_count({ 0 })
+    D3D12_ADDRESS_RESOLVER()
     {}
 
-    T RegisterSlab(const T& value)
+    inline void Register(D3D12_GPU_VIRTUAL_ADDRESS From, D3D12_RESOURCE_ALLOCATION_INFO FromAllocationInfo, D3D12_GPU_VIRTUAL_ADDRESS To, D3D12_RESOURCE_ALLOCATION_INFO ToAllocationInfo)
     {
-        if (value == 0)
-            return 0;
-
-        const uint32_t idx = ++m_count;
-        
-        const T ptr = static_cast<T>(idx) << 32ull;
-        m_resolver.RegisterSlab(ptr, value);
-        return ptr;
+        m_Addresses.emplace(From, ADDRESS_INFO{
+            MEMORY_INFO{
+                From,
+                From + FromAllocationInfo.SizeInBytes,
+                FromAllocationInfo
+            },
+            MEMORY_INFO{
+                To,
+                To + ToAllocationInfo.SizeInBytes,
+                ToAllocationInfo
+            },
+        });
     }
 
-    T LookupSlab(const T& ptr)
+    inline void Unregister(D3D12_GPU_VIRTUAL_ADDRESS From)
     {
-        return m_resolver.LookupSlab(ptr);
-    }
-private:
-    _D3D12_ADDRESS_SLAB_RESOLVER<T> m_resolver;
-    std::atomic<uint32_t> m_count;
-};
-
-constexpr UINT _DescriptorIncrementSize = 64;
-
-struct _D3D12_DESCRIPTOR_INFO
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle;
-    D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
-
-    UINT                        IncrementSize;
-};
-
-class _D3D12_DESCRIPTOR_RESOLVER
-{
-public:
-    static constexpr size_t SlabCount = 64 * 1024;
-
-    _D3D12_DESCRIPTOR_RESOLVER()
-        : m_slabs()
-    {}
-
-    inline void RegisterSlab(UINT64 Base, _D3D12_DESCRIPTOR_INFO Info)
-    {
-        m_slabs[GetIdx(Base)] = Info;
+        m_Addresses.erase(From);
     }
 
-    inline void RegisterSlabPartialCPU(UINT64 Base, D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle)
+    inline D3D12_GPU_VIRTUAL_ADDRESS Resolve(D3D12_GPU_VIRTUAL_ADDRESS Address)
     {
-        m_slabs[GetIdx(Base)].CPUHandle = CPUHandle;
-    }
+        // upper_bound returns (desired element) + 1
+        auto AddressIterator = (--m_Addresses.upper_bound(Address));
+        if (AddressIterator == m_Addresses.end())
+        {
+            throw std::runtime_error("Unable to find the desired address");
+        }
 
-    inline void RegisterSlabPartialGPU(UINT64 Base, D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle)
-    {
-        m_slabs[GetIdx(Base)].GPUHandle = GPUHandle;
-    }
+        // Verify the handle is within the found heap
+        auto& AddressMap = AddressIterator->second;
+        if (!(Address >= AddressMap.From.Base && Address < AddressMap.From.End))
+        {
+            throw std::runtime_error("Unable to find the desired address");
+        }
 
-    inline void RegisterSlabPartialIncrement(UINT64 Base, UINT IncrementSize)
-    {
-        m_slabs[GetIdx(Base)].IncrementSize = IncrementSize;
-    }
-
-    inline D3D12_CPU_DESCRIPTOR_HANDLE LookupCPUDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
-    {
-        if (Handle.ptr == 0)
-            return D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
-
-        _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
-        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
-        offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
-        assert(info.CPUHandle.ptr);
-        return D3D12_CPU_DESCRIPTOR_HANDLE { info.CPUHandle.ptr + offset };
-    }
-
-    inline D3D12_GPU_DESCRIPTOR_HANDLE LookupGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE Handle)
-    {
-        if (Handle.ptr == 0)
-            return D3D12_GPU_DESCRIPTOR_HANDLE{ 0 };
-
-        _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
-        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
-        offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
-        assert(info.GPUHandle.ptr);
-        return D3D12_GPU_DESCRIPTOR_HANDLE{ info.GPUHandle.ptr + offset };
-    }
-
-    inline size_t GetIdx(UINT64 value) { return (value >> 32ull) - 1ull; }
-
-private:
-    std::array<_D3D12_DESCRIPTOR_INFO, SlabCount> m_slabs;
-};
-
-class _D3D12_DESCRIPTOR_TRACER
-{
-public:
-    _D3D12_DESCRIPTOR_TRACER()
-        : m_resolver()
-        , m_count({ 0 })
-    {}
-
-    inline UINT64 RegisterSlab(D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle, D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle, UINT IncrementSize)
-    {
-        const _D3D12_DESCRIPTOR_INFO info = { CPUHandle, GPUHandle, IncrementSize };
-
-        const uint32_t idx = ++m_count;
-        const UINT64 ptr = static_cast<UINT64>(idx) << 32ull;
-
-        m_resolver.RegisterSlab(ptr, info);
-        return ptr;
-    }
-
-    inline D3D12_CPU_DESCRIPTOR_HANDLE LookupCPUDescriptorHandle(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
-    {
-        return m_resolver.LookupCPUDescriptorHandle(Handle);
-    }
-
-    inline D3D12_GPU_DESCRIPTOR_HANDLE LookupGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE Handle)
-    {
-        return m_resolver.LookupGPUDescriptorHandle(Handle);
+        return AddressMap.To.Base + (Address - AddressMap.From.Base);
     }
 
 private:
-    _D3D12_DESCRIPTOR_RESOLVER m_resolver;
-    std::atomic<uint32_t> m_count;
+    std::map<D3D12_GPU_VIRTUAL_ADDRESS, ADDRESS_INFO> m_Addresses;
+};
+
+class D3D12_DESCRIPTOR_RESOLVER
+{
+private:
+    typedef struct _DESCRIPTOR_INFO
+    {
+        SIZE_T Base;
+        SIZE_T End;
+
+        UINT IncrementSize;
+    } DESCRIPTOR_INFO;
+
+    typedef struct _DESCRIPTOR_HEAP_INFO
+    {
+        DESCRIPTOR_INFO From;
+        DESCRIPTOR_INFO To;
+
+        UINT Count;
+    } DESCRIPTOR_HEAP_INFO;
+
+public:
+    D3D12_DESCRIPTOR_RESOLVER()
+    {}
+
+    inline void Register(D3D12_CPU_DESCRIPTOR_HANDLE From, UINT FromIncrementSize, D3D12_CPU_DESCRIPTOR_HANDLE To, UINT ToIncrementSize, UINT Count)
+    {
+        Register(m_CPUHeaps, From.ptr, FromIncrementSize, To.ptr, ToIncrementSize, Count);
+    }
+
+    inline void Register(D3D12_GPU_DESCRIPTOR_HANDLE From, UINT FromIncrementSize, D3D12_GPU_DESCRIPTOR_HANDLE To, UINT ToIncrementSize, UINT Count)
+    {
+        Register(m_GPUHeaps, From.ptr, FromIncrementSize, To.ptr, ToIncrementSize, Count);
+    }
+
+    inline void Unregister(D3D12_CPU_DESCRIPTOR_HANDLE From)
+    {
+        Unregister(m_CPUHeaps, From.ptr);
+    }
+
+    inline void Unregister(D3D12_GPU_DESCRIPTOR_HANDLE From)
+    {
+        Unregister(m_GPUHeaps, From.ptr);
+    }
+
+    inline D3D12_CPU_DESCRIPTOR_HANDLE Resolve(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
+    {
+        return D3D12_CPU_DESCRIPTOR_HANDLE{
+            Resolve(m_CPUHeaps, Handle.ptr)
+        };
+    }
+
+    inline D3D12_GPU_DESCRIPTOR_HANDLE Resolve(D3D12_GPU_DESCRIPTOR_HANDLE Handle)
+    {
+        return D3D12_GPU_DESCRIPTOR_HANDLE{
+            Resolve(m_GPUHeaps, Handle.ptr)
+        };
+    }
+
+private:
+    inline void Register(std::map<SIZE_T, DESCRIPTOR_HEAP_INFO>& Heaps, SIZE_T From, UINT FromIncrementSize, SIZE_T To, UINT ToIncrementSize, UINT Count)
+    {
+        Heaps.emplace(From, DESCRIPTOR_HEAP_INFO{
+            DESCRIPTOR_INFO{
+                From,
+                From + FromIncrementSize * Count,
+                FromIncrementSize
+            },
+            DESCRIPTOR_INFO{
+                To,
+                To + ToIncrementSize * Count,
+                ToIncrementSize
+            },
+            Count
+        });
+    }
+
+    inline void Unregister(std::map<SIZE_T, DESCRIPTOR_HEAP_INFO>& Heaps, SIZE_T From)
+    {
+        Heaps.erase(From);
+    }
+
+    inline SIZE_T Resolve(const std::map<SIZE_T, DESCRIPTOR_HEAP_INFO>& Heaps, SIZE_T Handle)
+    {
+        if (Handle == 0)
+            return Handle;
+
+        // upper_bound returns (desired element) + 1
+        auto HeapIterator = (--m_CPUHeaps.upper_bound(Handle));
+        if (HeapIterator == m_CPUHeaps.end())
+        {
+            throw std::runtime_error("Unable to find the desired handle");
+        }
+
+        // Verify the handle is within the found heap
+        auto& Heap = HeapIterator->second;
+        if (!(Handle >= Heap.From.Base && Handle < Heap.From.End))
+        {
+            throw std::runtime_error("Unable to find the desired handle");
+        }
+
+        return Heap.To.Base + ((Handle - Heap.From.Base) / Heap.From.IncrementSize) * Heap.To.IncrementSize;
+    }
+
+    std::map<SIZE_T, DESCRIPTOR_HEAP_INFO> m_CPUHeaps;
+    std::map<SIZE_T, DESCRIPTOR_HEAP_INFO> m_GPUHeaps;
 };
