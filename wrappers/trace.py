@@ -721,6 +721,14 @@ class Tracer:
     def serializeArgValue(self, function, arg):
         self.serializeValue(arg.type, arg.name)
 
+    def serializeVar(self, function, arg):
+        print('    trace::localWriter.beginVar(%u);' % (arg.index,))
+        self.serializeVarValue(function, arg)
+        print('    trace::localWriter.endVar();')
+
+    def serializeVarValue(self, function, arg):
+        self.serializeValue(arg.type, arg.name)
+
     def wrapArg(self, function, arg):
         assert not isinstance(arg.type, stdapi.ObjPointer)
 
@@ -739,6 +747,12 @@ class Tracer:
         self.wrapValue(arg.type, arg.name)
 
     def unwrapArg(self, function, arg):
+        self.unwrapValue(arg.type, arg.name)
+
+    def wrapVar(self, function, arg):
+        self.wrapValue(arg.type, arg.name)
+
+    def unwrapVar(self, function, arg):
         self.unwrapValue(arg.type, arg.name)
 
     def serializeRet(self, function, instance):
@@ -968,6 +982,8 @@ class Tracer:
         for arg in method.args:
             if not arg.output:
                 self.unwrapArg(method, arg)
+        for var in method.vars:
+            print('    %s %s;' % (var.type, var.name))
 
         self.implementWrapperInterfaceMethodBody(interface, base, method)
 
@@ -993,8 +1009,13 @@ class Tracer:
             sys.stderr.write('note: overloaded method %s\n' % (sigName,))
 
         numArgs = len(method.args) + 1
+        numVars = len(method.vars)
         print('    static const char * _args[%u] = {%s};' % (numArgs, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args])))
-        print('    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (self.getFunctionSigId(), sigName, numArgs))
+        if numVars > 0:
+            print('    static const char * _vars[%u] = {%s};' % (numVars, ', '.join(['"%s"' % var.name for var in method.vars])))
+        else:
+            print('    static const char ** _vars = nullptr;')
+        print('    static const trace::FunctionSig _sig = {%u, "%s", %u, _args, %u, _vars};' % (self.getFunctionSigId(), sigName, numArgs, numVars))
 
         print('    unsigned _call = trace::localWriter.beginEnter(&_sig);')
         print('    trace::localWriter.beginArg(0);')
@@ -1015,6 +1036,9 @@ class Tracer:
             if arg.output:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
+        for var in method.vars:
+            self.serializeVar(method, var)
+            self.wrapVar(method, var)
         print('    }')
 
         if method.type is not stdapi.Void:

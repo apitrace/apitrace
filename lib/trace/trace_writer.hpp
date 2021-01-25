@@ -68,6 +68,9 @@ namespace trace {
         void beginArg(unsigned index);
         inline void endArg(void) {}
 
+        void beginVar(unsigned index);
+        inline void endVar(void) {}
+
         void beginReturn(void);
         inline void endReturn(void) {}
 

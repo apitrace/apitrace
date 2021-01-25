@@ -216,6 +216,10 @@ unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
         for (unsigned i = 0; i < sig->num_args; ++i) {
             _writeString(sig->arg_names[i]);
         }
+        _writeUInt(sig->num_vars);
+        for (unsigned i = 0; i < sig->num_vars; ++i) {
+            _writeString(sig->var_names[i]);
+        }
         functions[sig->id] = true;
     }
 
@@ -237,6 +241,11 @@ void Writer::endLeave(void) {
 
 void Writer::beginArg(unsigned index) {
     _writeByte(trace::CALL_ARG);
+    _writeUInt(index);
+}
+
+void Writer::beginVar(unsigned index) {
+    _writeByte(trace::CALL_VAR);
     _writeUInt(index);
 }
 

@@ -49,6 +49,7 @@ enum CallDetail {
     CALL_THREAD,
     CALL_BACKTRACE,
     CALL_FLAGS,
+    CALL_VAR,
 };
 
 enum Type {

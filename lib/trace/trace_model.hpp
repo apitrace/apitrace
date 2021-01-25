@@ -53,6 +53,8 @@ struct FunctionSig {
     const char *name;
     unsigned num_args;
     const char **arg_names;
+    unsigned num_vars;
+    const char** var_names;
 };
 
 
@@ -550,6 +552,12 @@ struct Arg
 };
 
 
+struct Var
+{
+    Value* value;
+};
+
+
 class Call
 {
 public:
@@ -557,6 +565,7 @@ public:
     unsigned no;
     const FunctionSig *sig;
     std::vector<Arg> args;
+    std::vector<Var> vars;
     Value *ret;
 
     CallFlags flags;
@@ -567,6 +576,7 @@ public:
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 
+        vars(_sig->num_vars),
         ret(0),
         flags(_flags),
         backtrace(0),
@@ -588,6 +598,15 @@ public:
 
     Value &
     argByName(const char *argName);
+
+    inline Value&
+    var(unsigned index) {
+        assert(index < vars.size());
+        return *(vars[index].value);
+    }
+
+    Value&
+    varByName(const char* varName);
 };
 
 

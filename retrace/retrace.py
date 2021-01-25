@@ -491,6 +491,17 @@ class Retracer:
                 success =  False
                 print('    memset(&%s, 0, sizeof %s); // FIXME' % (arg.name, arg.name))
             print()
+        for var in function.vars:
+            var_type = var.type.mutable()
+            print('    %s %s;' % (var_type, var.name))
+            rvalue = 'call.var(%u)' % (var.index,)
+            lvalue = var.name
+            try:
+                self.extractVar(function, var, var_type, lvalue, rvalue)
+            except UnsupportedType:
+                success =  False
+                print('    memset(&%s, 0, sizeof %s); // FIXME' % (var.name, var.name))
+            print()
 
         #if not success:
             #print('    if (1) {')
@@ -527,6 +538,10 @@ class Retracer:
         ValueAllocator().visit(arg_type, lvalue, rvalue)
         if arg.input:
             ValueDeserializer().visit(arg_type, lvalue, rvalue)
+    
+    def extractVar(self, function, var, var_type, lvalue, rvalue):
+        ValueAllocator().visit(var_type, lvalue, rvalue)
+        ValueDeserializer().visit(var_type, lvalue, rvalue)
     
     def extractOpaqueArg(self, function, arg, arg_type, lvalue, rvalue):
         try:
