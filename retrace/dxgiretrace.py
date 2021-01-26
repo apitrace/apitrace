@@ -32,7 +32,7 @@ import sys
 from dllretrace import DllRetracer as Retracer
 import specs.dxgi
 from specs import stdapi
-from specs.stdapi import API
+from specs.stdapi import API, Visitor
 from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10, d3d10_1
@@ -46,6 +46,167 @@ def typeArrayOrPointer(arg, type_):
            (isinstance(arg.type, stdapi.Array) and arg.type.type is type_) or \
            (isinstance(arg.type, stdapi.Array) and isinstance(arg.type.type, stdapi.Const) and arg.type.type.type is type_)
 
+class D3D12ArgumentResolver(Visitor):
+    class TypeCheck(Visitor):
+        resolvable = dict()
+
+        def visit(self, type):
+            _result = self.resolvable.get(type, None)
+            if _result is None:
+                _result = Visitor.visit(self, type)
+                self.resolvable[type] = _result
+            return _result
+
+        def visitAlias(self, alias):
+            if alias.expr == 'D3D12_GPU_VIRTUAL_ADDRESS':
+                return True
+            return self.visit(alias.type)
+
+        def visitLiteral(self, literal):
+            return False
+
+        def visitOpaque(self, array):
+            return False
+
+        def visitString(self, array):
+            return False
+
+        def visitEnum(self, array):
+            return False
+
+        def visitBlob(self, array):
+            return False
+
+        def visitBitmask(self, array):
+            return False
+
+        def visitIntPointer(self, array):
+            return False
+
+        def visitObjPointer(self, array):
+            return False
+
+        def visitLinearPointer(self, array):
+            return False
+
+        def visitHandle(self, array):
+            return False
+
+        def visitPointer(self, pointer):
+            return self.visit(pointer.type)
+
+        def visitConst(self, const):
+            return self.visit(const.type)
+
+        def visitReference(self, reference):
+            return self.visit(reference.type)
+
+        def visitArray(self, array):
+            return self.visit(array.type)
+
+        def visitStruct(self, struct):
+            # NOTE(damcclos): Skipping Ray tracing structures with const internals for now
+            if struct.name in ('D3D12_RAYTRACING_GEOMETRY_DESC',):
+                return False
+            if struct.name in ('D3D12_CPU_DESCRIPTOR_HANDLE', 'D3D12_GPU_DESCRIPTOR_HANDLE'):
+                return True
+
+            _result = False
+            for type, _ in struct.members:
+                _result |= self.visit(type)
+            return _result
+
+        def visitPolymorphic(self, polymorphic):
+            _result = False
+            for _, type in polymorphic.switchTypes:
+                _result |= self.visit(type)
+            return _result
+            
+    __type_check = TypeCheck()
+    __default_indent = '    '
+    __structs = None
+
+    def expand(self, expr):
+        # Expand a C expression, replacing certain variables
+        if not isinstance(expr, str):
+            return expr
+        variables = {}
+
+        if self.__structs is not None:
+            variables['self'] = '(%s)' % self.__structs[0]
+
+        expandedExpr = expr.format(**variables)
+        if expandedExpr != expr and 0:
+            sys.stderr.write("  %r -> %r\n" % (expr, expandedExpr))
+        return expandedExpr
+
+    def visit(self, type, lvalue, **kwargs):
+        if self.__type_check.visit(type):
+            return Visitor.visit(self, type, lvalue, **kwargs)
+
+    def visitMethod(self, method):
+        for arg in method.args:
+            if arg.input:
+                self.visit(arg.type, arg.name)
+
+    def visitAlias(self, alias, lvalue, indent = __default_indent, **kwargs):
+        if alias.expr == 'D3D12_GPU_VIRTUAL_ADDRESS':
+            print(r'%s%s = g_D3D12AddressResolver.Resolve(%s);' % (indent, lvalue, lvalue))
+        else:
+            self.visit(alias.type, lvalue, indent = indent, **kwargs)
+
+    def visitConst(self, const, lvalue, **kwargs):
+        self.visit(const.type, lvalue, **kwargs)
+
+    def visitReference(self, reference, lvalue, **kwargs):
+        self.visit(reference.type, lvalue, **kwargs)
+
+    def visitStruct(self, struct, lvalue, indent = __default_indent, **kwargs):
+        if struct.name in ('D3D12_CPU_DESCRIPTOR_HANDLE', 'D3D12_GPU_DESCRIPTOR_HANDLE'):
+            print(r'%s%s = g_D3D12DescriptorResolver.Resolve(%s);' % (indent, lvalue, lvalue))
+        else:
+            self.__structs = (lvalue, self.__structs)
+            for type, name in struct.members:
+                lvalue1 = lvalue
+                if name is not None:
+                    lvalue1 += '.' + name
+                self.visit(type, lvalue1, indent = indent, **kwargs)
+            _, self.__structs = self.__structs
+
+    def visitPointer(self, pointer, lvalue, indent = __default_indent, **kwargs):
+        print(r'%sif(%s != nullptr) {' % (indent, lvalue))
+        self.visit(pointer.type, '(*' + lvalue + ')', indent = indent + self.__default_indent, **kwargs)
+        print(r'%s}' % (indent))
+
+    def visitArray(self, array, lvalue, indent = __default_indent, **kwargs):
+        array_length = self.expand(array.length)
+        print(r'%sif(%s != nullptr) {' % (indent, lvalue))
+        indent1 = indent + self.__default_indent
+        print(r'%sfor (size_t _i = 0, _s = %s; _i < _s; ++_i) {' % (indent1, array_length))
+        self.visit(array.type, lvalue + '[_i]', indent = indent1 + self.__default_indent, **kwargs)
+        print(r'%s}' % (indent1))
+        print(r'%s}' % (indent))
+
+    def visitPolymorphic(self, polymorphic, lvalue, indent = __default_indent, **kwargs):
+        if polymorphic.defaultType is None or polymorphic.stream:
+            if polymorphic.stream:
+                raise NotImplementedError
+            indent1 = indent + self.__default_indent
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print(r'%sswitch (%s) {' % (indent, switchExpr))
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print(r'%s%s:' % (indent, case))
+                self.visit(type, lvalue, indent = indent1, **kwargs)
+                print(r'%sbreak;' % indent1)
+            if polymorphic.defaultType is None:
+                print(r'%sdefault:' % indent)
+                print(r'%sretrace::warning(call) << "unexpected polymorphic case " << %s << "\n";' % (indent1, switchExpr))
+                print(r'%sbreak;' % (indent1))
+            print(r'%s}' % indent)
+        else:
+            self.visit(polymorphic.defaultType, lvalue, indent = indent, **kwargs)
+            
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
@@ -239,26 +400,6 @@ class D3DRetracer(Retracer):
             print(r'    }')
         # TODO(Josh): D3D12 Video
 
-    def lookupDescriptor(self, arg, _type, handler):
-        if arg.type is _type:
-            print(r'    %s = g_D3D12DescriptorResolver.%s(%s);' % (arg.name, handler, arg.name))
-        if typeArrayOrPointer(arg, _type):
-            real_name = r'_real_%s' % arg.name
-            array_length = 1
-            if isinstance(arg.type, stdapi.Array):
-                array_length = arg.type.length
-            print(r'    %s* %s = (%s *) (%s > 1024 ? nullptr : alloca(sizeof(%s) * %s));' % (_type, real_name, _type, array_length, _type, array_length))
-            print(r'    std::vector<%s> _vec_%s;' % (_type, real_name))
-            print(r'    if (%s > 1024) {' % array_length)
-            print(r'        _vec_%s.resize(%s);' % (real_name, array_length))
-            print(r'        %s = _vec_%s.data();' % (real_name, real_name))
-            print(r'    }')
-            print(r'    if (%s != nullptr) {' % arg.name)
-            print(r'        for (UINT _i = 0; _i < %s; _i++)' % array_length)
-            print(r'            %s[_i] = g_D3D12DescriptorResolver.%s(%s[_i]);' % (real_name, handler, arg.name))
-            print(r'        %s = %s;' % (arg.name, real_name))
-            print(r'    }')
-
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('ID3D10Device', 'ID3D10Device1'):
@@ -423,12 +564,7 @@ class D3DRetracer(Retracer):
             return
 
         if interface.name.startswith('ID3D12'):
-            for arg in method.args:
-                self.lookupDescriptor(arg, d3d12.D3D12_CPU_DESCRIPTOR_HANDLE, 'Resolve')
-                self.lookupDescriptor(arg, d3d12.D3D12_GPU_DESCRIPTOR_HANDLE, 'Resolve')
-
-                if arg.type is d3d12.D3D12_GPU_VIRTUAL_ADDRESS:
-                    print(r'    %s = g_D3D12AddressResolver.Resolve(%s);' % (arg.name, arg.name))
+            D3D12ArgumentResolver().visitMethod(method)
 
             if method.name == 'CreateCommandQueue':
                 # Disable GPU timeout

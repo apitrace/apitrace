@@ -2956,7 +2956,7 @@ ID3D12Device5.methods += [
     StdMethod(HRESULT, 'EnumerateMetaCommandParameters', [(REFGUID, 'CommandId'), (D3D12_META_COMMAND_PARAMETER_STAGE, 'Stage'), Out(Pointer(UINT), 'pTotalStructureSizeInBytes'), Out(Pointer(UINT), 'pParameterCount'), Out(Array(D3D12_META_COMMAND_PARAMETER_DESC, '*pParameterCount'), 'pParameterDescs')], sideeffects=False),
     StdMethod(HRESULT, 'CreateMetaCommand', [(REFGUID, 'CommandId'), (UINT, 'NodeMask'), (Blob(Const(Void), 'CreationParametersDataSizeInBytes'), 'pCreationParametersData'), (SIZE_T, 'CreationParametersDataSizeInBytes'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppMetaCommand')]),
     StdMethod(HRESULT, 'CreateStateObject', [(Pointer(Const(D3D12_STATE_OBJECT_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppStateObject')]),
-    StdMethod(Void, 'GetRaytracingAccelerationStructurePrebuildInfo', [(Pointer(Const(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS)), 'pDesc'), Out(Pointer(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO), 'pInfo')]),
+    StdMethod(Void, 'GetRaytracingAccelerationStructurePrebuildInfo', [(Pointer(Const(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS)), 'pDesc'), Out(Pointer(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO), 'pInfo')], sideeffects=False),
     StdMethod(D3D12_DRIVER_MATCHING_IDENTIFIER_STATUS, 'CheckDriverMatchingIdentifier', [(D3D12_SERIALIZED_DATA_TYPE, 'SerializedDataType'), (Pointer(Const(D3D12_SERIALIZED_DATA_DRIVER_MATCHING_IDENTIFIER)), 'pIdentifierToCheck')]),
 ]
 
