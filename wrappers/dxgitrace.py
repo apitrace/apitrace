@@ -261,6 +261,30 @@ class D3DCommonTracer(DllTracer):
                 print('    }')
                 print('    pDesc = &_heap_desc;')
 
+            if method.name == 'OpenExistingHeapFromAddress':
+                pAddress = method.args[0]
+                print(r'    // From vkd3d')
+                print(r'    if (%s != nullptr) {' % pAddress.name)
+                print(r'        MEMORY_BASIC_INFORMATION info;')
+                print(r'        if (!VirtualQuery(%s, &info, sizeof(info))) {' % pAddress.name)
+                print(r'            return E_INVALIDARG;')
+                print(r'        }')
+                print(r'        // Allocation base must equal address')
+                print(r'        if (info.AllocationBase != %s || info.BaseAddress != info.AllocationBase) {' % pAddress.name)
+                print(r'            return E_INVALIDARG;')
+                print(r'        }')
+                print(r'        // All page must be committed')
+                print(r'        if (info.State != MEM_COMMIT) {')
+                print(r'            return E_INVALIDARG;')
+                print(r'        }')
+                print(r'        // We can only have one region of page protection types.')
+                print(r'        // Verify this by querying the end of the range.')
+                print(r'        allocationSize = info.RegionSize;')
+                print(r'        if (VirtualQuery((uint8_t*)%s + allocationSize, &info, sizeof(info)) && info.AllocationBase == %s) {' % (pAddress.name, pAddress.name))
+                print(r'            return E_INVALIDARG;')
+                print(r'        }')
+                print(r'    }')
+
         DllTracer.invokeMethod(self, interface, base, method)
 
         if interface.name.startswith('ID3D12'):
@@ -330,7 +354,6 @@ if __name__ == '__main__':
 
     # TODO: Expose this via a runtime option
     print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
-
 
     print('std::mutex g_D3D12AddressMappingsMutex;')
     print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')

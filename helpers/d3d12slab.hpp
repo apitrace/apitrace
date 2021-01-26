@@ -28,11 +28,57 @@
 
 #include <d3d12.h>
 #include <map>
+#include <stdexcept>
+
+class D3D12_HEAP_ALLOCATOR
+{
+private:
+    typedef struct _HEAP_INFO
+    {
+        void* Address;
+        SIZE_T Bytes;
+    } HEAP_INFO;
+
+public:
+    D3D12_HEAP_ALLOCATOR()
+    {}
+
+    inline void* Register(const void* From, SIZE_T Bytes)
+    {
+        void* To = VirtualAlloc(nullptr, Bytes, MEM_COMMIT, PAGE_READWRITE);
+        if (To == nullptr)
+        {
+            throw std::runtime_error("Unable to allocate desired memory");
+        }
+
+        m_Heaps.emplace(From, HEAP_INFO{
+            To,
+            Bytes,
+        });
+
+        return To;
+    }
+
+    inline void Unregister(void* From)
+    {
+        // TODO(damcclos):
+        throw std::runtime_error("Not implemented");
+    }
+
+    inline void* Resolve(D3D12_GPU_VIRTUAL_ADDRESS Address)
+    {
+        // TODO(damcclos):
+        throw std::runtime_error("Not implemented");
+    }
+
+private:
+    std::map<const void*, HEAP_INFO> m_Heaps;
+};
 
 class D3D12_ADDRESS_RESOLVER
 {
 private:
-    typedef struct _RESOURCE_INFO
+    typedef struct _MEMORY_INFO
     {
         D3D12_GPU_VIRTUAL_ADDRESS Base;
         D3D12_GPU_VIRTUAL_ADDRESS End;
@@ -40,7 +86,7 @@ private:
         D3D12_RESOURCE_ALLOCATION_INFO AllocationInfo;
     } MEMORY_INFO;
 
-    typedef struct _DESCRIPTOR_HEAP_INFO
+    typedef struct _ADDRESS_INFO
     {
         MEMORY_INFO From;
         MEMORY_INFO To;

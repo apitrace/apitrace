@@ -449,32 +449,9 @@ class D3DRetracer(Retracer):
                 print('         }')
                 print('     }')
 
-            if method.name == 'IASetVertexBuffers':
-                # TODO(Josh): MAKE THIS AUTOGEN
-                print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
-                print('    for (UINT i = 0; i < NumViews; i++) {')
-                print('        _real_views[i] = pViews[i];')
-                print('        _real_views[i].BufferLocation = g_D3D12AddressResolver.Resolve(_real_views[i].BufferLocation);')
-                print('    }')
-                print('    pViews = _real_views;')
-
-            if method.name == 'IASetIndexBuffer':
-                # TODO(Josh): MAKE THIS AUTOGEN
-                print('    D3D12_INDEX_BUFFER_VIEW _real_view;')
-                print('    if (pView) {')
-                print('        _real_view = *pView;')
-                print('        _real_view.BufferLocation = g_D3D12AddressResolver.Resolve(_real_view.BufferLocation);')
-                print('        pView = &_real_view;')
-                print('    }')
-
-            if method.name == 'CreateConstantBufferView':
-                # TODO(Josh): MAKE THIS AUTOGEN
-                print('    D3D12_CONSTANT_BUFFER_VIEW_DESC _real_desc;')
-                print('    if (pDesc) {')
-                print('        _real_desc = *pDesc;')
-                print('        _real_desc.BufferLocation = g_D3D12AddressResolver.Resolve(_real_desc.BufferLocation);')
-                print('        pDesc = &_real_desc;')
-                print('    }')
+            if method.name == 'OpenExistingHeapFromAddress':
+                pAddress = method.args[0]
+                print(r'    %s = g_D3D12HeapAllocator.Register(%s, allocationSize);' % (pAddress.name, pAddress.name))
 
         if method.name == 'CreatePipelineLibrary':
             # Make a fake pipeline library, so we can still make the state objects.
@@ -682,6 +659,7 @@ def main():
     print('''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;''')
     print('''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;''')
     print()
+    print('D3D12_HEAP_ALLOCATOR g_D3D12HeapAllocator;')
     print('D3D12_DESCRIPTOR_RESOLVER g_D3D12DescriptorResolver;')
     print('D3D12_ADDRESS_RESOLVER g_D3D12AddressResolver;')
     print('std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;')

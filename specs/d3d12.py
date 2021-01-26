@@ -2899,7 +2899,9 @@ ID3D12Device2.methods += [
 ]
 
 ID3D12Device3.methods += [
-    StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
+    StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')], vars=[
+        (SIZE_T, 'allocationSize')
+    ]),
     StdMethod(HRESULT, 'OpenExistingHeapFromFileMapping', [(HANDLE, 'hFileMapping'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
 ]
