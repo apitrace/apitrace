@@ -305,6 +305,15 @@ class D3DCommonTracer(DllTracer):
                 print(r'        }')
                 print(r'    }')
 
+
+            if method.name == 'CheckFeatureSupport':
+                Feature = method.args[0]
+                pFeatureData = method.args[1]
+                print(r'    if (SUCCEEDED(_result) && %s == D3D12_FEATURE_D3D12_OPTIONS5) {' % Feature.name)
+                print(r'        D3D12_FEATURE_DATA_D3D12_OPTIONS5* pOptions5 = reinterpret_cast<D3D12_FEATURE_DATA_D3D12_OPTIONS5*>(%s);' % pFeatureData.name)
+                print(r'        pOptions5->RaytracingTier = D3D12_RAYTRACING_TIER_NOT_SUPPORTED;')
+                print(r'    }')
+
         # When D2D is used on top of WARP software rasterizer it seems to do
         # most of its rendering via the undocumented and opaque IWarpPrivateAPI
         # interface.  Althought hiding this interface will affect behavior,
