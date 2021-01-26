@@ -2704,13 +2704,13 @@ ID3D12Pageable.methods += [
 ]
 
 ID3D12Heap.methods += [
-    StdMethod(D3D12_HEAP_DESC, 'GetDesc', []),
+    StdMethod(D3D12_HEAP_DESC, 'GetDesc', [], sideeffects=False),
 ]
 
 ID3D12Resource.methods += [
     StdMethod(HRESULT, 'Map', [(UINT, 'Subresource'), (Pointer(Const(D3D12_RANGE)), 'pReadRange'), Out(Pointer(LinearPointer(Void, '_MappedSize')), 'ppData')]),
     StdMethod(Void, 'Unmap', [(UINT, 'Subresource'), (Pointer(Const(D3D12_RANGE)), 'pWrittenRange')]),
-    StdMethod(D3D12_RESOURCE_DESC, 'GetDesc', []),
+    StdMethod(D3D12_RESOURCE_DESC, 'GetDesc', [], sideeffects=False),
     StdMethod(D3D12_GPU_VIRTUAL_ADDRESS, 'GetGPUVirtualAddress', [], sideeffects=False),
     StdMethod(HRESULT, 'WriteToSubresource', [(UINT, 'DstSubresource'), (Pointer(Const(D3D12_BOX)), 'pDstBox'), (Blob(Const(Void), '_calcSubresourceSize12(_this, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)'), 'pSrcData'), (UINT, 'SrcRowPitch'), (UINT, 'SrcDepthPitch')]),
     StdMethod(HRESULT, 'ReadFromSubresource', [Out(OpaquePointer(Void), 'pDstData'), (UINT, 'DstRowPitch'), (UINT, 'DstDepthPitch'), (UINT, 'SrcSubresource'), (Pointer(Const(D3D12_BOX)), 'pSrcBox')], sideeffects=False),
@@ -2829,7 +2829,7 @@ ID3D12CommandQueue.methods += [
     StdMethod(HRESULT, 'Wait', [(ObjPointer(ID3D12Fence), 'pFence'), (UINT64, 'Value')]),
     StdMethod(HRESULT, 'GetTimestampFrequency', [Out(Pointer(UINT64), 'pFrequency')]),
     StdMethod(HRESULT, 'GetClockCalibration', [Out(Pointer(UINT64), 'pGpuTimestamp'), Out(Pointer(UINT64), 'pCpuTimestamp')]),
-    StdMethod(D3D12_COMMAND_QUEUE_DESC, 'GetDesc', []),
+    StdMethod(D3D12_COMMAND_QUEUE_DESC, 'GetDesc', [], sideeffects=False),
 ]
 
 ID3D12Device.methods += [
@@ -2859,7 +2859,10 @@ ID3D12Device.methods += [
     StdMethod(D3D12_HEAP_PROPERTIES, 'GetCustomHeapProperties', [(UINT, 'nodeMask'), (D3D12_HEAP_TYPE, 'heapType')]),
     StdMethod(HRESULT, 'CreateCommittedResource', [(Pointer(Const(D3D12_HEAP_PROPERTIES)), 'pHeapProperties'), (D3D12_HEAP_FLAGS, 'HeapFlags'), (Pointer(Const(D3D12_RESOURCE_DESC)), 'pResourceDesc'), (D3D12_RESOURCE_STATES, 'InitialResourceState'), (Pointer(Const(D3D12_CLEAR_VALUE)), 'pOptimizedClearValue'), (REFIID, 'riidResource'), Out(Pointer(ObjPointer(Void)), 'ppvResource')]),
     StdMethod(HRESULT, 'CreateHeap', [(Pointer(Const(D3D12_HEAP_DESC)), 'pDesc'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
-    StdMethod(HRESULT, 'CreatePlacedResource', [(ObjPointer(ID3D12Heap), 'pHeap'), (UINT64, 'HeapOffset'), (Pointer(Const(D3D12_RESOURCE_DESC)), 'pDesc'), (D3D12_RESOURCE_STATES, 'InitialState'), (Pointer(Const(D3D12_CLEAR_VALUE)), 'pOptimizedClearValue'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvResource')]),
+    StdMethod(HRESULT, 'CreatePlacedResource', [(ObjPointer(ID3D12Heap), 'pHeap'), (UINT64, 'HeapOffset'), (Pointer(Const(D3D12_RESOURCE_DESC)), 'pDesc'), (D3D12_RESOURCE_STATES, 'InitialState'), (Pointer(Const(D3D12_CLEAR_VALUE)), 'pOptimizedClearValue'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvResource')], vars=[
+        (D3D12_GPU_VIRTUAL_ADDRESS, 'GPUFrom'),
+        (D3D12_RESOURCE_ALLOCATION_INFO, 'FromAllocationInfo')
+    ]),
     StdMethod(HRESULT, 'CreateReservedResource', [(Pointer(Const(D3D12_RESOURCE_DESC)), 'pDesc'), (D3D12_RESOURCE_STATES, 'InitialState'), (Pointer(Const(D3D12_CLEAR_VALUE)), 'pOptimizedClearValue'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvResource')]),
     StdMethod(HRESULT, 'CreateSharedHandle', [(ObjPointer(ID3D12DeviceChild), 'pObject'), (Pointer(Const(SECURITY_ATTRIBUTES)), 'pAttributes'), (DWORD, 'Access'), (LPCWSTR, 'Name'), Out(Pointer(HANDLE), 'pHandle')]),
     StdMethod(HRESULT, 'OpenSharedHandle', [(HANDLE, 'NTHandle'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvObj')]),
@@ -2900,7 +2903,7 @@ ID3D12Device2.methods += [
 
 ID3D12Device3.methods += [
     StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')], vars=[
-        (SIZE_T, 'allocationSize')
+        (SIZE_T, 'AllocationSize')
     ]),
     StdMethod(HRESULT, 'OpenExistingHeapFromFileMapping', [(HANDLE, 'hFileMapping'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'), (ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
@@ -2912,7 +2915,7 @@ ID3D12ProtectedSession.methods += [
 ]
 
 ID3D12ProtectedResourceSession.methods += [
-    StdMethod(D3D12_PROTECTED_RESOURCE_SESSION_DESC, 'GetDesc', []),
+    StdMethod(D3D12_PROTECTED_RESOURCE_SESSION_DESC, 'GetDesc', [], sideeffects=False),
 ]
 
 ID3D12Device4.methods += [
@@ -2985,7 +2988,7 @@ ID3D12Device6.methods += [
 ]
 
 ID3D12ProtectedResourceSession1.methods += [
-    StdMethod(D3D12_PROTECTED_RESOURCE_SESSION_DESC1, 'GetDesc1', []),
+    StdMethod(D3D12_PROTECTED_RESOURCE_SESSION_DESC1, 'GetDesc1', [], sideeffects=False),
 ]
 
 ID3D12Device7.methods += [
@@ -3006,7 +3009,7 @@ ID3D12Resource1.methods += [
 ]
 
 ID3D12Resource2.methods += [
-    StdMethod(D3D12_RESOURCE_DESC1, 'GetDesc1', []),
+    StdMethod(D3D12_RESOURCE_DESC1, 'GetDesc1', [], sideeffects=False),
 ]
 
 ID3D12Heap1.methods += [

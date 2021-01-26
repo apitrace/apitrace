@@ -587,7 +587,7 @@ class D3DRetracer(Retracer):
 
             if method.name == 'OpenExistingHeapFromAddress':
                 pAddress = method.args[0]
-                print(r'    %s = g_D3D12HeapAllocator.Register(%s, allocationSize);' % (pAddress.name, pAddress.name))
+                print(r'    %s = g_D3D12HeapAllocator.Register(%s, AllocationSize);' % (pAddress.name, pAddress.name))
 
         if method.name == 'CreatePipelineLibrary':
             # Make a fake pipeline library, so we can still make the state objects.
@@ -706,6 +706,18 @@ class D3DRetracer(Retracer):
             print(r'        else {')
             print(r'            D3D12_GPU_DESCRIPTOR_HANDLE GPUTo = pDescriptorHeap->GetGPUDescriptorHandleForHeapStart();')
             print(r'            g_D3D12DescriptorResolver.Register(GPUFrom, FromIncrementSize, GPUTo, ToIncrementSize, %s->NumDescriptors);' % (pDesc.name))
+            print(r'        }')
+            print(r'    }')
+
+        if method.name == 'CreatePlacedResource':
+            pDesc = method.args[2]
+            ppvResource = method.args[6]
+            print(r'    if (SUCCEEDED(_result) && %s->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {' % (pDesc.name))
+            print(r'        com_ptr<ID3D12Resource> pResource(IID_ID3D12Resource, %s);' % (ppvResource.name))
+            print(r'        if (pResource) {')
+            print(r'            D3D12_GPU_VIRTUAL_ADDRESS GPUTo = pResource->GetGPUVirtualAddress();')
+            print(r'            D3D12_RESOURCE_ALLOCATION_INFO ToAllocationInfo = _this->GetResourceAllocationInfo(0, 1, %s);' % (pDesc.name))
+            print(r'            g_D3D12AddressResolver.Register(GPUFrom, FromAllocationInfo, GPUTo, ToAllocationInfo);')
             print(r'        }')
             print(r'    }')
 

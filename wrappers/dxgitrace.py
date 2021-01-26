@@ -279,8 +279,8 @@ class D3DCommonTracer(DllTracer):
                 print(r'        }')
                 print(r'        // We can only have one region of page protection types.')
                 print(r'        // Verify this by querying the end of the range.')
-                print(r'        allocationSize = info.RegionSize;')
-                print(r'        if (VirtualQuery((uint8_t*)%s + allocationSize, &info, sizeof(info)) && info.AllocationBase == %s) {' % (pAddress.name, pAddress.name))
+                print(r'        AllocationSize = info.RegionSize;')
+                print(r'        if (VirtualQuery((uint8_t*)%s + AllocationSize, &info, sizeof(info)) && info.AllocationBase == %s) {' % (pAddress.name, pAddress.name))
                 print(r'            return E_INVALIDARG;')
                 print(r'        }')
                 print(r'    }')
@@ -305,6 +305,16 @@ class D3DCommonTracer(DllTracer):
                 print(r'        }')
                 print(r'    }')
 
+            if method.name == 'CreatePlacedResource':
+                pDesc = method.args[2]
+                ppvResource = method.args[6]
+                print(r'    if (SUCCEEDED(_result) && %s->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {' % (pDesc.name))
+                print(r'        com_ptr<ID3D12Resource> pResource(IID_ID3D12Resource, %s);' % (ppvResource.name))
+                print(r'        if (pResource) {')
+                print(r'            GPUFrom = pResource->GetGPUVirtualAddress();')
+                print(r'            FromAllocationInfo = _this->GetResourceAllocationInfo(0, 1, %s);' % (pDesc.name))
+                print(r'        }')
+                print(r'    }')
 
             if method.name == 'CheckFeatureSupport':
                 Feature = method.args[0]

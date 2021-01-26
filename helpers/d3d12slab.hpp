@@ -119,21 +119,25 @@ public:
 
     inline D3D12_GPU_VIRTUAL_ADDRESS Resolve(D3D12_GPU_VIRTUAL_ADDRESS Address)
     {
-        // upper_bound returns (desired element) + 1
-        auto AddressIterator = (--m_Addresses.upper_bound(Address));
-        if (AddressIterator == m_Addresses.end())
-        {
-            throw std::runtime_error("Unable to find the desired address");
+        if (Address != 0) {
+            // upper_bound returns (desired element) + 1
+            auto AddressIterator = (--m_Addresses.upper_bound(Address));
+            if (AddressIterator == m_Addresses.end())
+            {
+                throw std::runtime_error("Unable to find the desired address");
+            }
+
+            // Verify the handle is within the found heap
+            auto& AddressMap = AddressIterator->second;
+            if (!(Address >= AddressMap.From.Base && Address < AddressMap.From.End))
+            {
+                throw std::runtime_error("Unable to find the desired address");
+            }
+
+            return AddressMap.To.Base + (Address - AddressMap.From.Base);
         }
 
-        // Verify the handle is within the found heap
-        auto& AddressMap = AddressIterator->second;
-        if (!(Address >= AddressMap.From.Base && Address < AddressMap.From.End))
-        {
-            throw std::runtime_error("Unable to find the desired address");
-        }
-
-        return AddressMap.To.Base + (Address - AddressMap.From.Base);
+        return Address;
     }
 
 private:
@@ -226,8 +230,8 @@ private:
             return Handle;
 
         // upper_bound returns (desired element) + 1
-        auto HeapIterator = (--m_CPUHeaps.upper_bound(Handle));
-        if (HeapIterator == m_CPUHeaps.end())
+        auto HeapIterator = (--Heaps.upper_bound(Handle));
+        if (HeapIterator == Heaps.end())
         {
             throw std::runtime_error("Unable to find the desired handle");
         }
