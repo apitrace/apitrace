@@ -304,6 +304,11 @@ class D3DCommonTracer(DllTracer):
                 print(r'            GPUFrom = pDescriptorHeap->GetGPUDescriptorHandleForHeapStart();')
                 print(r'        }')
                 print(r'    }')
+                print(r'    else {')
+                print(r'        memset(&FromIncrementSize, 0, sizeof(FromIncrementSize));')
+                print(r'        memset(&CPUFrom, 0, sizeof(CPUFrom));')
+                print(r'        memset(&GPUFrom, 0, sizeof(GPUFrom));')
+                print(r'    }')
 
             if method.name == 'CreatePlacedResource':
                 pDesc = method.args[2]
@@ -314,6 +319,10 @@ class D3DCommonTracer(DllTracer):
                 print(r'            GPUFrom = pResource->GetGPUVirtualAddress();')
                 print(r'            FromAllocationInfo = _this->GetResourceAllocationInfo(0, 1, %s);' % (pDesc.name))
                 print(r'        }')
+                print(r'    }')
+                print(r'    else {')
+                print(r'        memset(&GPUFrom, 0, sizeof(GPUFrom));')
+                print(r'        memset(&FromAllocationInfo, 0, sizeof(FromAllocationInfo));')
                 print(r'    }')
 
             if method.name == 'CheckFeatureSupport':
