@@ -152,6 +152,7 @@ add_convenience_library (backtrace EXCLUDE_FROM_ALL
     print.c
     state.c
     sort.c
+    testlib.c
 )
 
 add_executable (btest btest.c)

@@ -1,5 +1,5 @@
 /* mmap.c -- Memory allocation with mmap.
-   Copyright (C) 2012-2016 Free Software Foundation, Inc.
+   Copyright (C) 2012-2021 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Google.
 
 Redistribution and use in source and binary forms, with or without
@@ -7,13 +7,13 @@ modification, are permitted provided that the following conditions are
 met:
 
     (1) Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer. 
+    notice, this list of conditions and the following disclaimer.
 
     (2) Redistributions in binary form must reproduce the above copyright
     notice, this list of conditions and the following disclaimer in
     the documentation and/or other materials provided with the
-    distribution.  
-    
+    distribution.
+
     (3) The name of the author may not be used to
     endorse or promote products derived from this software without
     specific prior written permission.
@@ -42,12 +42,20 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #include "backtrace.h"
 #include "internal.h"
 
+#ifndef HAVE_DECL_GETPAGESIZE
+extern int getpagesize (void);
+#endif
+
 /* Memory allocation on systems that provide anonymous mmap.  This
    permits the backtrace functions to be invoked from a signal
    handler, assuming that mmap is async-signal safe.  */
 
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
+#endif
+
+#ifndef MAP_FAILED
+#define MAP_FAILED ((void *)-1)
 #endif
 
 /* A list of free memory blocks.  */
@@ -65,10 +73,32 @@ struct backtrace_freelist_struct
 static void
 backtrace_free_locked (struct backtrace_state *state, void *addr, size_t size)
 {
-  /* Just leak small blocks.  We don't have to be perfect.  */
+  /* Just leak small blocks.  We don't have to be perfect.  Don't put
+     more than 16 entries on the free list, to avoid wasting time
+     searching when allocating a block.  If we have more than 16
+     entries, leak the smallest entry.  */
+
   if (size >= sizeof (struct backtrace_freelist_struct))
     {
+      size_t c;
+      struct backtrace_freelist_struct **ppsmall;
+      struct backtrace_freelist_struct **pp;
       struct backtrace_freelist_struct *p;
+
+      c = 0;
+      ppsmall = NULL;
+      for (pp = &state->freelist; *pp != NULL; pp = &(*pp)->next)
+	{
+	  if (ppsmall == NULL || (*pp)->size < (*ppsmall)->size)
+	    ppsmall = pp;
+	  ++c;
+	}
+      if (c >= 16)
+	{
+	  if (size <= (*ppsmall)->size)
+	    return;
+	  *ppsmall = (*ppsmall)->next;
+	}
 
       p = (struct backtrace_freelist_struct *) addr;
       p->next = state->freelist;
@@ -295,5 +325,7 @@ backtrace_vector_release (struct backtrace_state *state,
   backtrace_free (state, (char *) vec->base + aligned, alc,
 		  error_callback, data);
   vec->alc = 0;
+  if (vec->size == 0)
+    vec->base = NULL;
   return 1;
 }

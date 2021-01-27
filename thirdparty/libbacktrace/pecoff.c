@@ -1,5 +1,5 @@
 /* pecoff.c -- Get debug data from a PE/COFFF file for backtraces.
-   Copyright (C) 2015-2016 Free Software Foundation, Inc.
+   Copyright (C) 2015-2021 Free Software Foundation, Inc.
    Adapted from elf.c by Tristan Gingold, AdaCore.
 
 Redistribution and use in source and binary forms, with or without
@@ -133,19 +133,7 @@ typedef struct {
   uint16_t sc;
 } b_coff_internal_symbol;
 
-/* An index of sections we care about.  */
-
-enum debug_section
-{
-  DEBUG_INFO,
-  DEBUG_LINE,
-  DEBUG_ABBREV,
-  DEBUG_RANGES,
-  DEBUG_STR,
-  DEBUG_MAX
-};
-
-/* Names of sections, indexed by enum debug_section.  */
+/* Names of sections, indexed by enum dwarf_section in internal.h.  */
 
 static const char * const debug_section_names[DEBUG_MAX] =
 {
@@ -153,7 +141,11 @@ static const char * const debug_section_names[DEBUG_MAX] =
   ".debug_line",
   ".debug_abbrev",
   ".debug_ranges",
-  ".debug_str"
+  ".debug_str",
+  ".debug_addr",
+  ".debug_str_offsets",
+  ".debug_line_str",
+  ".debug_rnglists"
 };
 
 /* Information we gather for the sections we care about.  */
@@ -164,8 +156,6 @@ struct debug_section_info
   off_t offset;
   /* Section size.  */
   size_t size;
-  /* Section contents, after read from file.  */
-  const unsigned char *data;
 };
 
 /* Information we keep for an coff symbol.  */
@@ -340,7 +330,7 @@ coff_is_function_symbol (const b_coff_internal_symbol *isym)
 
 static int
 coff_initialize_syminfo (struct backtrace_state *state,
-			 uintptr_t base_address,
+			 uintptr_t base_address, int is_64,
 			 const b_coff_section_header *sects, size_t sects_num,
 			 const b_coff_external_symbol *syms, size_t syms_size,
 			 const unsigned char *strtab, size_t strtab_size,
@@ -436,9 +426,12 @@ coff_initialize_syminfo (struct backtrace_state *state,
 	  else
 	    name = isym.name;
 
-	  /* Strip leading '_'.  */
-	  if (name[0] == '_')
-	    name++;
+	  if (!is_64)
+	    {
+	      /* Strip leading '_'.  */
+	      if (name[0] == '_')
+		name++;
+	    }
 
 	  /* Symbol value is section relative, so we need to read the address
 	     of its section.  */
@@ -615,7 +608,9 @@ coff_add (struct backtrace_state *state, int descriptor,
   off_t max_offset;
   struct backtrace_view debug_view;
   int debug_view_valid;
+  int is_64;
   uintptr_t image_base;
+  struct dwarf_sections dwarf_sections;
 
   *found_sym = 0;
   *found_dwarf = 0;
@@ -631,10 +626,10 @@ coff_add (struct backtrace_state *state, int descriptor,
     goto fail;
 
   {
-    const char *vptr = (const char *)fhdr_view.data;
+    const unsigned char *vptr = fhdr_view.data;
 
     if (vptr[0] == 'M' && vptr[1] == 'Z')
-      memcpy (&fhdr_off, vptr + 0x3c, 4);
+      fhdr_off = coff_read4 (vptr + 0x3c);
     else
       fhdr_off = 0;
   }
@@ -689,12 +684,16 @@ coff_add (struct backtrace_state *state, int descriptor,
   sects = (const b_coff_section_header *)
     (sects_view.data + fhdr.size_of_optional_header);
 
+  is_64 = 0;
   if (fhdr.size_of_optional_header > sizeof (*opt_hdr))
     {
       if (opt_hdr->magic == PE_MAGIC)
 	image_base = opt_hdr->u.pe.image_base;
       else if (opt_hdr->magic == PEP_MAGIC)
-	image_base = opt_hdr->u.pep.image_base;
+	{
+	  image_base = opt_hdr->u.pep.image_base;
+	  is_64 = 1;
+	}
       else
 	{
 	  error_callback (data, "bad magic in PE optional header", 0);
@@ -727,7 +726,7 @@ coff_add (struct backtrace_state *state, int descriptor,
 	goto fail;
       syms_view_valid = 1;
 
-      memcpy (&str_size, syms_view.data + syms_size, 4);
+      str_size = coff_read4 (syms_view.data + syms_size);
 
       str_off = syms_off + syms_size;
 
@@ -787,7 +786,7 @@ coff_add (struct backtrace_state *state, int descriptor,
       if (sdata == NULL)
 	goto fail;
 
-      if (!coff_initialize_syminfo (state, image_base,
+      if (!coff_initialize_syminfo (state, image_base, is_64,
 				    sects, sects_num,
 				    syms_view.data, syms_size,
 				    str_view.data, str_size,
@@ -804,8 +803,11 @@ coff_add (struct backtrace_state *state, int descriptor,
 
   backtrace_release_view (state, &sects_view, error_callback, data);
   sects_view_valid = 0;
-  backtrace_release_view (state, &syms_view, error_callback, data);
-  syms_view_valid = 0;
+  if (syms_view_valid)
+    {
+      backtrace_release_view (state, &syms_view, error_callback, data);
+      syms_view_valid = 0;
+    }
 
   /* Read all the debug sections in a single view, since they are
      probably adjacent in the file.  We never release this view.  */
@@ -845,26 +847,20 @@ coff_add (struct backtrace_state *state, int descriptor,
 
   for (i = 0; i < (int) DEBUG_MAX; ++i)
     {
-      if (sections[i].size == 0)
-	sections[i].data = NULL;
+      size_t size = sections[i].size;
+      dwarf_sections.size[i] = size;
+      if (size == 0)
+	dwarf_sections.data[i] = NULL;
       else
-	sections[i].data = ((const unsigned char *) debug_view.data
-			    + (sections[i].offset - min_offset));
+	dwarf_sections.data[i] = ((const unsigned char *) debug_view.data
+				  + (sections[i].offset - min_offset));
     }
 
-  if (!backtrace_dwarf_add (state, /* base_address */ 0,
-			    sections[DEBUG_INFO].data,
-			    sections[DEBUG_INFO].size,
-			    sections[DEBUG_LINE].data,
-			    sections[DEBUG_LINE].size,
-			    sections[DEBUG_ABBREV].data,
-			    sections[DEBUG_ABBREV].size,
-			    sections[DEBUG_RANGES].data,
-			    sections[DEBUG_RANGES].size,
-			    sections[DEBUG_STR].data,
-			    sections[DEBUG_STR].size,
-			    0, /* FIXME */
-			    error_callback, data, fileline_fn))
+  if (!backtrace_dwarf_add (state, /* base_address */ 0, &dwarf_sections,
+			    0, /* FIXME: is_bigendian */
+			    NULL, /* altlink */
+			    error_callback, data, fileline_fn,
+			    NULL /* returned fileline_entry */))
     goto fail;
 
   *found_dwarf = 1;
@@ -890,7 +886,8 @@ coff_add (struct backtrace_state *state, int descriptor,
    sections.  */
 
 int
-backtrace_initialize (struct backtrace_state *state, int descriptor,
+backtrace_initialize (struct backtrace_state *state,
+		      const char *filename ATTRIBUTE_UNUSED, int descriptor,
 		      backtrace_error_callback error_callback,
 		      void *data, fileline *fileline_fn)
 {
@@ -916,7 +913,8 @@ backtrace_initialize (struct backtrace_state *state, int descriptor,
       if (found_sym)
 	backtrace_atomic_store_pointer (&state->syminfo_fn, coff_syminfo);
       else
-	__sync_bool_compare_and_swap (&state->syminfo_fn, NULL, coff_nosyms);
+	(void) __sync_bool_compare_and_swap (&state->syminfo_fn, NULL,
+					     coff_nosyms);
     }
 
   if (!state->threaded)
