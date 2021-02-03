@@ -146,6 +146,7 @@ public:
         bt_texture,
         bt_tf,
         bt_uniform,
+        bt_names_access,
         bt_last,
     };
 
@@ -153,7 +154,10 @@ public:
     void map(const trace::Call& call);
     void map_range(const trace::Call& call);
     void unmap(const trace::Call& call);
-    void memcopy(const trace::Call& call);
+    void memcopy(const trace::Call& call, CallSet& out_set, bool recording);
+    void namedMap(const trace::Call& call);
+    void namedMapRange(const trace::Call& call);
+    void namedUnmap(const trace::Call& call);
 
     void namedData(const trace::Call& call);
 

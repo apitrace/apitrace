@@ -499,12 +499,38 @@ BufferObjectMap::map(const trace::Call& call)
 }
 
 void
+BufferObjectMap::namedMap(const trace::Call& call)
+{
+    auto buf = getById(call.arg(0).toUInt());
+    if (buf) {
+        m_mapped_buffers[bt_names_access][buf->id()] = buf;
+        uint64_t begin = call.ret->toUInt();
+        uint64_t end = begin + m_buffer_sizes[buf->id()];
+        m_buffer_mappings[buf->id()] = std::make_pair(begin, end);
+        buf->addCall(trace2call(call));
+    }
+}
+
+void
 BufferObjectMap::map_range(const trace::Call& call)
 {
     unsigned target = getBindpointFromCall(call);
     auto buf = boundAtBinding(target);
     if (buf) {
         m_mapped_buffers[target][buf->id()] = buf;
+        uint64_t begin = call.ret->toUInt();
+        uint64_t end = begin + call.arg(2).toUInt();
+        m_buffer_mappings[buf->id()] = std::make_pair(begin, end);
+        buf->addCall(trace2call(call));
+    }
+}
+
+void
+BufferObjectMap::namedMapRange(const trace::Call& call)
+{
+    auto buf = getById(call.arg(0).toUInt());
+    if (buf) {
+        m_mapped_buffers[bt_names_access][buf->id()] = buf;
         uint64_t begin = call.ret->toUInt();
         uint64_t end = begin + call.arg(2).toUInt();
         m_buffer_mappings[buf->id()] = std::make_pair(begin, end);
@@ -523,6 +549,18 @@ BufferObjectMap::unmap(const trace::Call& call)
         buf->addCall(trace2call(call));
     }
 }
+
+void
+BufferObjectMap::namedUnmap(const trace::Call& call)
+{
+    auto buf = getById(call.arg(0).toUInt());
+    if (buf) {
+        m_mapped_buffers[bt_names_access].erase(buf->id());
+        m_buffer_mappings[buf->id()] = std::make_pair(0, 0);
+        buf->addCall(trace2call(call));
+    }
+}
+
 
 void
 BufferObjectMap::memcopy(const trace::Call& call)
