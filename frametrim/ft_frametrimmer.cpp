@@ -1054,6 +1054,22 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
             cur_prog->emitCallsTo(m_required_calls);
     }
 
+    auto cur_pipeline = m_program_pipelines.boundTo(0, 0);
+    if (cur_pipeline) {
+        for(auto && [key, buf]: m_buffers) {
+            if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
+                cur_pipeline->addDependency(buf);
+        }
+        m_buffers.addSSBODependencies(cur_pipeline);
+        m_textures.addImageDependencies(cur_pipeline);
+
+        if (fb->id())
+            fb->addDependency(cur_pipeline);
+
+        if (m_recording_frame)
+            cur_pipeline->emitCallsTo(m_required_calls);
+    }
+
     auto buf = m_buffers.boundToTarget(GL_ELEMENT_ARRAY_BUFFER);
 
     if (fb->id()) {
