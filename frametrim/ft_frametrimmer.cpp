@@ -678,6 +678,7 @@ FrameTrimmeImpl::registerStateCalls()
         "glClearColor",
         "glClearDepth",
         "glClearStencil",
+        "glClipControl",
         "glColorMask",
         "glColorPointer",
         "glCullFace",
