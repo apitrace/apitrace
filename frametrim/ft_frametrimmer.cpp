@@ -835,6 +835,7 @@ FrameTrimmeImpl::registerVaCalls()
     MAP_OBJ(glGenVertexArrays, m_vertex_arrays, VertexArrayMap::generate);
     MAP_OBJ(glDeleteVertexArrays, m_vertex_arrays, VertexArrayMap::destroy);
     MAP_RV(glBindVertexArray, oglBind, m_vertex_arrays, 0);
+    //MAP_OBJ(glVertexAttribBinding, m_vertex_buffer_pointers, VertexAttribObjectMap::vaBinding);
 
     MAP(glDisableVertexAttribArray, recordRequiredCall);
     MAP(glEnableVertexAttribArray, recordRequiredCall);
@@ -848,6 +849,11 @@ FrameTrimmeImpl::registerVaCalls()
 
     MAP(glVertexPointer, recordRequiredCall);
     MAP(glTexCoordPointer, recordRequiredCall);
+
+    MAP(glVertexAttribBinding, recordRequiredCall);
+    MAP(glVertexAttribFormat, recordRequiredCall);
+    MAP(glVertexBindingDivisor, recordRequiredCall);
+
     MAP(glVertexAttrib1, recordRequiredCall);
     MAP(glVertexAttrib2, recordRequiredCall);
     MAP(glVertexAttrib3, recordRequiredCall);
@@ -859,6 +865,7 @@ FrameTrimmeImpl::registerVaCalls()
     MAP(glVertexAttribP3, recordRequiredCall);
     MAP(glVertexAttribP4, recordRequiredCall);
     MAP(glTexGen, recordRequiredCall);
+    MAP(glTextureBarrier, recordRequiredCall);
 
     MAP(glDisableClientState, recordRequiredCall);
     MAP(glEnableClientState, recordRequiredCall);

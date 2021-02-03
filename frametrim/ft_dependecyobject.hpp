@@ -178,7 +178,8 @@ class VertexAttribObjectMap: public DependecyObjectWithDefaultBindPointMap {
 public:
     VertexAttribObjectMap();
     void bindAVO(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);
-    void bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);
+    void bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);    
+    void vaBinding(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);
 private:
     unsigned next_id;
 };
