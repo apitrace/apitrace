@@ -599,11 +599,6 @@ _align(X x, Y y) {
     return (x + (y - 1)) & ~(y - 1);
 }
 
-template<typename X, typename Y>
-auto _div_round_up(X a, Y b) -> decltype(a / b) {
-    return (a + b - 1) / b;
-}
-
 static inline unsigned
 _gl_format_size(GLenum format, GLenum type)
 {
@@ -686,7 +681,7 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
         row_length = width;
     }
 
-    size_t row_stride = _div_round_up(row_length*bits_per_pixel, 8);
+    size_t row_stride = (row_length*bits_per_pixel + 7)/8;
 
     /*
      * The OpenGL specification states that the unpack alignment should be
@@ -712,7 +707,7 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
      * here as that could result in reading beyond the end of the buffer when
      * selecting sub-rectangles via GL_UNPACK_SKIP_*.
      */
-    size_t size = _div_round_up(width*bits_per_pixel, 8);
+    size_t size = (width*bits_per_pixel + 7)/8;
     if (height > 1) {
         size += (height - 1)*row_stride;
     }
@@ -723,91 +718,10 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
     /* XXX: GL_UNPACK_IMAGE_HEIGHT and GL_UNPACK_SKIP_IMAGES should probably
      * not be considered for pixel rectangles. */
 
-    size += _div_round_up(skip_pixels*bits_per_pixel, 8);
+    size += (skip_pixels*bits_per_pixel + 7)/8;
     size += skip_rows*row_stride;
     size += skip_images*image_stride;
 
-    return size;
-}
-
-static inline size_t
-_gl_compressed_image_size(GLenum format, GLsizei width, GLsizei height, GLsizei depth, GLsizei imageSize, GLboolean has_unpack_subimage)
-{
-    /* imageSize may not be the amount of bytes we must copy from user's ptr
-     * if the pixel storage modes were set by user. Supplied imageSize​ has to be
-     *   GL_UNPACK_COMPRESSED_BLOCK_SIZE * (width / GL_UNPACK_COMPRESSED_BLOCK_WIDTH) *
-     *   (height / GL_UNPACK_COMPRESSED_BLOCK_HEIGHT) * (depth / GL_UNPACK_COMPRESSED_BLOCK_DEPTH)
-     * which doesn't account storage modes. However storage mods do affect how
-     * much bytes we should copy.
-     */
-
-    if (!has_unpack_subimage) {
-        return imageSize;
-    }
-
-    GLint row_length = 0;   /* A number of groups in the row */
-    GLint image_height = height;
-    GLint skip_pixels = 0;
-    GLint skip_rows = 0;
-    GLint skip_images = 0;
-
-    GLint skip_bytes = 0;
-
-    GLint block_size = 0;
-    GLint block_width = 0;
-    GLint block_height = 0;
-    GLint block_depth = 0;
-
-    _glGetIntegerv(GL_UNPACK_COMPRESSED_BLOCK_SIZE,   &block_size);
-    _glGetIntegerv(GL_UNPACK_COMPRESSED_BLOCK_WIDTH,  &block_width);
-    _glGetIntegerv(GL_UNPACK_COMPRESSED_BLOCK_HEIGHT, &block_height);
-    _glGetIntegerv(GL_UNPACK_COMPRESSED_BLOCK_DEPTH,  &block_depth);
-
-    /* The OpenGL specification states:
-     *  "By default the pixel storage modes UNPACK_ROW_LENGTH, UNPACK_SKIP_ROWS,
-     *  UNPACK_SKIP_PIXELS, UNPACK_IMAGE_HEIGHT and UNPACK_SKIP_IMAGES are
-     *  ignored for compressed images. To enable UNPACK_SKIP_PIXELS and
-     *  UNPACK_ROW_LENGTH, blocksize and bw must both be non-zero."
-     */
-    if (block_size <= 0 || block_width <= 0) {
-        return imageSize;
-    }
-
-    GLint _height = 0;
-    _glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
-    _glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &_height);
-    _glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
-    _glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
-    _glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
-
-    if (_height > 0)
-        image_height = _height;
-
-    GLint const groups_in_row   = row_length <= 0
-                                    ? width
-                                    : row_length;
-    GLint const rows_per_slice  = block_height
-                                    ? _div_round_up(image_height, block_height)
-                                    : image_height;
-    GLint const slices          = block_depth
-                                    ?  _div_round_up(depth, block_depth)
-                                    : depth;
-    GLint const blocks_per_row  = _div_round_up(groups_in_row, block_width);
-    GLint const bytes_per_row   = block_size * blocks_per_row;
-
-    skip_bytes = skip_pixels * block_size / block_width;
-    if (block_height)
-        skip_bytes += skip_rows * bytes_per_row / block_height;
-    if (block_depth)
-        skip_bytes += skip_images / block_depth * bytes_per_row * rows_per_slice;
-
-    size_t const size           = bytes_per_row * rows_per_slice * slices + skip_bytes;
-/*
-    os::log("%s w/h/d(%d/%d/%d) block_size: %d block_width: %d block_height: %d block_depth: %d row_length: %d image_height: %d\n"
-        "%s groups_in_row: %d rows_per_slice: %d slices: %d blocks_per_row: %d bytes_per_row: %d skip_bytes: %d size: %lu\n",
-        __func__, width, height, depth, block_size, block_width, block_height, block_depth, row_length, image_height,
-        __func__, groups_in_row, rows_per_slice, slices, blocks_per_row, bytes_per_row, skip_bytes, size);
-*/
     return size;
 }
 
@@ -815,8 +729,6 @@ _gl_compressed_image_size(GLenum format, GLsizei width, GLsizei height, GLsizei 
 #define _glTexImage3D_size(format, type, width, height, depth) _gl_image_size(format, type, width, height, depth, can_unpack_subimage())
 #define _glTexImage2D_size(format, type, width, height)        _gl_image_size(format, type, width, height, 1, can_unpack_subimage())
 #define _glTexImage1D_size(format, type, width)                _gl_image_size(format, type, width, 1, 1, can_unpack_subimage())
-
-#define _glCompressedTexImage_size(format, width, height, depth, imageSize) _gl_compressed_image_size(format, width, height, depth, imageSize, can_unpack_subimage())
 
 #define _glDrawPixels_size(format, type, width, height) _glTexImage2D_size(format, type, width, height)
 #define _glConvolutionFilter1D_size(format, type, width) _glTexImage1D_size(format, type, width)
