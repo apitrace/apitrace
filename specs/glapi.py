@@ -776,6 +776,11 @@ glapi.addFunctions([
     GlFunction(Void, "glGetnHistogram", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "values")]),
     GlFunction(Void, "glGetnMinmax", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "values")]),
 
+    # GL_VERSION_4_6
+    GlFunction(Void, "glSpecializeShader", [(GLshader, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
+    GlFunction(Void, "glMultiDrawArraysIndirectCount", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectCount", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+
     # GL_VERSION_ES_CM_1_0
     GlFunction(Void, "glClipPlanef", [(GLenum, "plane"), (Array(Const(GLfloat), 4), "equation")]),
     GlFunction(Void, "glFrustumf", [(GLfloat, "left"), (GLfloat, "right"), (GLfloat, "bottom"), (GLfloat, "top"), (GLfloat, "zNear"), (GLfloat, "zFar")]),
@@ -1229,8 +1234,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetCompressedTextureSubImage", [(GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "bufSize"), Out(GLpointer, "pixels")]),
 
     # GL_ARB_gl_spirv
-    GlFunction(Void, "glSpecializeShaderARB", [(GLuint, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
-    GlFunction(Void, "glSpecializeShader", [(GLuint, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
+    GlFunction(Void, "glSpecializeShaderARB", [(GLshader, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
 
     # GL_ARB_gpu_shader_fp64
     GlFunction(Void, "glUniform1d", [(GLlocation, "location"), (GLdouble, "x")]),
