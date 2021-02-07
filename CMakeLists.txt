@@ -82,6 +82,12 @@ endif ()
 
 include (CheckCXXSourceCompiles)
 
+if (MSVC)
+    if (${MSVC_VERSION} LESS 1920)
+        message (FATAL_ERROR "Visual Studio 2019 or later required")
+    endif ()
+endif ()
+
 # Check for compiler TLS support.  We don't use compiler TLS support on Windows
 # because, even if the compiler supports it, Windows XP does not support TLS on
 # DLLs.
@@ -132,12 +138,6 @@ if (ENABLE_GUI)
     endif()
     find_package (Qt5Widgets ${REQUIRE_GUI})
     find_package (Qt5Network ${REQUIRE_GUI})
-endif ()
-
-if (MSVC)
-    if (${MSVC_VERSION} LESS 1920)
-        message (FATAL_ERROR "Visual Studio 2019 or later required")
-    endif ()
 endif ()
 
 if (WIN32)
