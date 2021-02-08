@@ -13,3 +13,4 @@ EXPORTS
         DXVA2CreateDirect3DDeviceManager9
         DXVA2CreateVideoService
         Direct3D9ForceHybridEnumeration @16
+        Direct3D9SetMaximizedWindowedModeShim @17

@@ -160,6 +160,7 @@ if __name__ == '__main__':
     tracer = D3D9Tracer()
     tracer.traceApi(api)
 
+    # Used by WHCK
     print(r'EXTERN_C PUBLIC')
     print(r'void __stdcall Direct3D9ForceHybridEnumeration(UINT uHybrid) {')
     print(r'    typedef void (WINAPI *PFNDIRECT3D9FORCEHYBRIDENUMERATION)(UINT);')
@@ -167,6 +168,21 @@ if __name__ == '__main__':
     print(r'        (PFNDIRECT3D9FORCEHYBRIDENUMERATION)g_modD3D9.getProcAddress(MAKEINTRESOURCEA(16));')
     print(r'    if (pfnDirect3D9ForceHybridEnumeration) {')
     print(r'        pfnDirect3D9ForceHybridEnumeration(uHybrid);')
+    print(r'    } else {')
+    print(r'        os::log("warning: ignoring call to unavailable function %s\n", __FUNCTION__);')
+    print(r'    }')
+    print(r'}')
+    print()
+
+    # Used by Direct3D9 app compatibility shim
+    # https://github.com/apitrace/apitrace/issues/704
+    print(r'EXTERN_C PUBLIC')
+    print(r'void __stdcall Direct3D9SetMaximizedWindowedModeShim(UINT uUnknown, UINT uEnable) {')
+    print(r'    typedef void (WINAPI *PFNDIRECT3D9SETMAXIMIZEDWINDOWEDMODESHIM)(UINT, UINT);')
+    print(r'    PFNDIRECT3D9SETMAXIMIZEDWINDOWEDMODESHIM pfnDirect3D9SetMaximizedWindowedModeShim =')
+    print(r'        (PFNDIRECT3D9SETMAXIMIZEDWINDOWEDMODESHIM)g_modD3D9.getProcAddress(MAKEINTRESOURCEA(17));')
+    print(r'    if (pfnDirect3D9SetMaximizedWindowedModeShim) {')
+    print(r'        pfnDirect3D9SetMaximizedWindowedModeShim(uUnknown, uEnable);')
     print(r'    } else {')
     print(r'        os::log("warning: ignoring call to unavailable function %s\n", __FUNCTION__);')
     print(r'    }')
