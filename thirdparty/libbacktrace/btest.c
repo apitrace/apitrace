@@ -467,7 +467,11 @@ check_open_files (void)
 
   for (i = 3; i < 10; i++)
     {
-      if (close (i) == 0)
+      /*
+       * If run through ctest, descriptor 3 or 6 will still be open due to
+       * https://gitlab.kitware.com/cmake/cmake/-/issues/18863
+       */
+      if (close (i) == 0 && i != 3 && i != 6)
 	{
 	  fprintf (stderr,
 		   "ERROR: descriptor %d still open after tests complete\n",
