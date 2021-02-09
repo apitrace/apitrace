@@ -2847,8 +2847,8 @@ ID3D11Multithread = Interface('ID3D11Multithread', IUnknown)
 ID3D11VideoContext2 = Interface('ID3D11VideoContext2', ID3D11VideoContext1)
 
 ID3D11Device4.methods += [
-    StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')]),
-    StdMethod(Void, 'UnregisterDeviceRemoved', [(DWORD, 'dwCookie')]),
+    StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(Void, 'UnregisterDeviceRemoved', [(DWORD, 'dwCookie')], sideeffects=False),
 ]
 
 ID3D11Device5.methods += [
