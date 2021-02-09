@@ -2503,6 +2503,7 @@ ID3D11DebugTest.methods += [
 
 d3d11.addInterfaces([
     ID3D11Device1,
+    ID3D11VideoProcessorEnumerator1,
     ID3DUserDefinedAnnotation,
     ID3D11DebugTest,
 ])
