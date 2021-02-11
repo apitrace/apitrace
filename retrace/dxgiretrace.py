@@ -269,6 +269,9 @@ class D3DRetracer(Retracer):
 
         # notify frame has been completed
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
+            # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
+            # way to cope with it (other than retry).
+            print(r'    Flags &= ~DXGI_PRESENT_DO_NOT_WAIT;')
             if interface.name.startswith('IDXGISwapChainDWM'):
                 print(r'    com_ptr<IDXGISwapChain> pSwapChain;')
                 print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, (void **) &pSwapChain))) {')
