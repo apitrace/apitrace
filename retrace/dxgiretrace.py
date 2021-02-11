@@ -254,6 +254,17 @@ class D3DRetracer(Retracer):
             print(r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);')
             self.checkResult(interface, method)
             return
+        if method.name == 'CreateSwapChainForCompositionSurfaceHandle':
+            print(r'    com_ptr<IDXGIFactory2> pFactory;')
+            print(r'    _result = _this->QueryInterface(IID_IDXGIFactory2, (void **)&pFactory);')
+            print(r'    assert(SUCCEEDED(_result));')
+            print(r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);')
+            print(r'    pDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;')
+            print(r'    _result = pFactory->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);')
+            self.checkResult(interface, method)
+            return
+        if method.name == 'ResizeBuffers':
+            print(r'    SwapChainFlags &= ~DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;')
         if method.name == 'CreateTargetForHwnd':
             print(r'    hwnd = d3dretrace::createWindow(1024, 768);')
 
