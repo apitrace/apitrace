@@ -2624,9 +2624,9 @@ D3D11_TEXTURE2D_DESC1 = Struct("D3D11_TEXTURE2D_DESC1", [
     (DXGI_FORMAT, "Format"),
     (DXGI_SAMPLE_DESC, "SampleDesc"),
     (D3D11_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D11_BIND_FLAG, "BindFlags"),
+    (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D11_RESOURCE_MISC_FLAG, "MiscFlags"),
     (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
 ])
 
@@ -2641,9 +2641,9 @@ D3D11_TEXTURE3D_DESC1 = Struct("D3D11_TEXTURE3D_DESC1", [
     (UINT, "MipLevels"),
     (DXGI_FORMAT, "Format"),
     (D3D11_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D11_BIND_FLAG, "BindFlags"),
+    (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D11_RESOURCE_MISC_FLAG, "MiscFlags"),
     (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
 ])
 
