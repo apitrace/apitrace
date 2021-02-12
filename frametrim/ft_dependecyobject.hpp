@@ -98,6 +98,8 @@ public:
     ObjectMap::iterator begin();
     ObjectMap::iterator end();
 
+    void addBoundAsDependencyTo(UsedObject& obj);
+
 protected:
 
     UsedObject::Pointer bind(unsigned bindpoint, unsigned id);
