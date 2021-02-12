@@ -571,7 +571,7 @@ BufferObjectMap::namedUnmap(const trace::Call& call)
 
 
 void
-BufferObjectMap::memcopy(const trace::Call& call)
+BufferObjectMap::memcopy(const trace::Call& call, CallSet& out_set, bool recording)
 {
     uint64_t start = call.arg(0).toUInt();
     unsigned buf_id = 0;
@@ -587,6 +587,9 @@ BufferObjectMap::memcopy(const trace::Call& call)
     }
     auto buf = getById(buf_id);
     buf->addCall(trace2call(call));
+
+    if (recording)
+        buf->emitCallsTo(out_set);
 }
 
 void BufferObjectMap::addSSBODependencies(UsedObject::Pointer dep)
