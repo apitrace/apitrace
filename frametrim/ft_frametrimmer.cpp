@@ -425,6 +425,10 @@ FrameTrimmeImpl::equalChars(const char *l, const char *r)
     m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
                         std::ref(data1), param, std::ref(data2), std::ref(data3))))
 
+#define MAP_OBJ_RR(name, obj, call, data1, data2) \
+    m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
+                        std::ref(data1), std::ref(data2))))
+
 #define MAP_OBJ_RRR(name, obj, call, data1, data2, data3) \
     m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
                         std::ref(data1), std::ref(data2), std::ref(data3))))
@@ -550,7 +554,7 @@ FrameTrimmeImpl::registerBufferCalls()
     MAP_OBJ(glMapNamedBufferRange, m_buffers, BufferObjectMap::namedMapRange);
     MAP_OBJ(glUnmapNamedBuffer, m_buffers, BufferObjectMap::namedUnmap);
     MAP_OBJ(glMapBufferRange, m_buffers, BufferObjectMap::map_range);
-    MAP_OBJ(memcpy, m_buffers, BufferObjectMap::memcopy);
+    MAP_OBJ_RR(memcpy, m_buffers, BufferObjectMap::memcopy, m_required_calls, m_recording_frame);
     MAP_OBJ(glFlushMappedBufferRange, m_buffers, BufferObjectMap::callOnBoundObject);
     MAP_OBJ(glFlushMappedNamedBufferRange, m_buffers, BufferObjectMap::callOnNamedObject);
     MAP_OBJ(glUnmapBuffer, m_buffers, BufferObjectMap::unmap);
