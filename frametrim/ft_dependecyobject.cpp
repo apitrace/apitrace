@@ -390,6 +390,14 @@ DependecyObjectMap::emitBoundObjects(CallSet& out_calls)
         out_calls.insert(c);
 }
 
+void DependecyObjectMap::addBoundAsDependencyTo(UsedObject& obj)
+{
+    for (auto&& [key, bound_obj]: m_bound_object) {
+        if (bound_obj)
+            obj.addDependency(bound_obj);
+    }
+}
+
 void DependecyObjectMap::emitBoundObjectsExt(CallSet& out_calls)
 {
     (void)out_calls;

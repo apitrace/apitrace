@@ -1074,13 +1074,10 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
             cur_pipeline->emitCallsTo(m_required_calls);
     }
 
-    auto buf = m_buffers.boundToTarget(GL_ELEMENT_ARRAY_BUFFER);
-
     if (fb->id()) {
         fb->addCall(trace2call(call));
 
-        if (buf)
-           fb->addDependency(buf);
+        m_buffers.addBoundAsDependencyTo(*fb);
 
         for(auto&& [key, vbo]: m_vertex_attrib_pointers) {
             if (vbo)
@@ -1103,8 +1100,7 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
             if (vbo)
                 vbo->emitCallsTo(m_required_calls);
         }
-        if (buf)
-            buf->emitCallsTo(m_required_calls);
+        m_buffers.emitBoundObjects(m_required_calls);
     }
 }
 
