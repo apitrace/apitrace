@@ -124,8 +124,23 @@ check_function_exists (strnlen HAVE_DECL_STRNLEN)
 check_function_exists (getexecname HAVE_GETEXECNAME)
 
 include (CheckIncludeFile)
-check_include_file (dwarf.h HAVE_DWARF_H)
 check_include_file (libdwarf/dwarf.h HAVE_LIBDWARF_DWARF_H)
+if (NOT HAVE_LIBDWARF_DWARF_H)
+    check_include_file (dwarf.h HAVE_DWARF_H)
+    if (HAVE_DWARF_H)
+        check_c_source_compiles (
+            "#include <dwarf.h>
+            #ifdef DW_FORM_strx
+            int main() { return 0; }
+            #endif"
+            HAVE_DWARF5)
+        if (NOT HAVE_DWARF5)
+            message (STATUS "dwarf.h does not support DWARF5")
+            set (HAVE_DWARF_H FALSE)
+        endif ()
+    endif ()
+endif ()
+
 if (NOT HAVE_DWARF_H AND NOT HAVE_LIBDWARF_DWARF_H)
     set (FORMAT_FILE unknown.c)
     set (BACKTRACE_SUPPORTED 0)
