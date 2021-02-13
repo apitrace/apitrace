@@ -6,16 +6,21 @@ distro=ubuntu-16.04
 source_dir=$PWD
 build_dir=$source_dir/build/docker-$distro
 docker_image=$distro-apitrace
-nproc=`nproc`
-uid=`id -u`
+uid=$(id -u)
+
+test -t 0 && interactive=true || interactive=false
 
 set -x
+
+docker_run () {
+    docker run -i=$interactive --tty=$interactive --rm -v "$PWD:$PWD" -u "$uid" $docker_image "$@"
+}
 
 test -d $source_dir/ci/docker/$distro
 docker build -t $docker_image $source_dir/ci/docker/$distro
 
-docker \
-    run -i -t -v $PWD:$PWD -u "$uid" $docker_image cmake \
+docker_run \
+    cmake \
     -G Ninja \
     -H$source_dir \
     -B$build_dir \
@@ -26,10 +31,10 @@ docker \
     -DENABLE_STATIC_EXE=OFF \
     -DENABLE_WAFFLE=on
 
-docker run -i -t -v $PWD:$PWD -u "$uid" $docker_image cmake --build $build_dir -- -j$nproc all
+docker_run cmake --build $build_dir -- all
 if false
 then
-    docker run -i -t -v $PWD:$PWD -u "$uid" $docker_image cmake --build $build_dir -- -j$nproc test
+    docker_run cmake --build $build_dir -- test
 fi
 
 ldd -r $build_dir/glretrace
