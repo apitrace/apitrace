@@ -2,7 +2,7 @@
 
 set -e
 
-distro=centos-6
+distro=centos-7
 source_dir=$PWD
 build_dir=$source_dir/build/docker-$distro
 docker_image=$distro-apitrace
