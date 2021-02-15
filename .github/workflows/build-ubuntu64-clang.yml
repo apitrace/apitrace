@@ -1,0 +1,21 @@
+name: build-ubuntu64-clang
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: apt-install
+      run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
+    - name: cmake
+      run: cmake -H$PWD -B$PWD/build -G Ninja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DENABLE_GUI=1
+    - name: build
+      run: cmake --build $PWD/build --use-stderr
+    - name: check
+      run: cmake --build $PWD/build --use-stderr --target check
+    - name: package
+      run: cmake --build $PWD/build --use-stderr --target package

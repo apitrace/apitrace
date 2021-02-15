@@ -1,0 +1,26 @@
+name: build-msvc
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        toolset: ["Win32", "x64"]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: Configure
+      run: cmake -H. -Bbuild -G "Visual Studio 16 2019" -A ${{ matrix.toolset }}
+      shell: cmd
+    - name: Build
+      run: cmake --build build --config "RelWithDebInfo" -- /verbosity:minimal /maxcpucount
+      shell: cmd
+    - name: Check
+      run: cmake --build build --config "RelWithDebInfo" --target check -- /verbosity:minimal /maxcpucount
+      shell: cmd
+    - name: Package
+      run: cmake --build build --config "RelWithDebInfo" --target package -- /verbosity:minimal /maxcpucount
+      shell: cmd

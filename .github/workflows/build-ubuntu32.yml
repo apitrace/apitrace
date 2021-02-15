@@ -1,0 +1,19 @@
+name: build-ubuntu32
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: apt-install
+      run: sudo apt-get install -qq -y --no-install-recommends linux-libc-dev gcc-multilib gcc-multilib g++-multilib python3 ninja-build cmake
+    - name: cmake
+      run: cmake -H$PWD -B$PWD/build -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0
+    - name: build
+      run: cmake --build $PWD/build --use-stderr
+    - name: check
+      run: cmake --build $PWD/build --use-stderr --target check

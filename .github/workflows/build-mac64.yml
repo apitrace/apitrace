@@ -1,0 +1,17 @@
+name: build-mac64
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: cmake
+      run: cmake -H$PWD -B$PWD/build
+    - name: build
+      run: cmake --build $PWD/build --use-stderr
+    - name: check
+      run: cmake --build $PWD/build --use-stderr --target check
