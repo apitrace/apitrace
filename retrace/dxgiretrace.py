@@ -123,11 +123,23 @@ class D3DRetracer(Retracer):
         if interface is not None:
             print(r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {')
             getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
+            getDeviceMethod = interface.getMethodByName("GetDevice")
             if getDeviceRemovedReasonMethod is not None:
                 print(r'            HRESULT _reason = _this->GetDeviceRemovedReason();')
                 print(r'            retrace::failed(call, _reason);')
-            getDeviceMethod = interface.getMethodByName("GetDevice")
-            if getDeviceMethod is not None and len(getDeviceMethod.args) == 1:
+            elif getDeviceMethod is not None and interface.name.startswith('IDXGISwapChain'):
+                print(r'            com_ptr<ID3D11Device> _pDevice11;')
+                print(r'            com_ptr<ID3D10Device> _pDevice10;')
+                print(r'            HRESULT _reason = S_OK;')
+                print(r'            if (SUCCEEDED(_this->GetDevice(IID_ID3D11Device, (void **)&_pDevice11))) {')
+                print(r'                _reason = _pDevice11->GetDeviceRemovedReason();')
+                print(r'            } else if (SUCCEEDED(_this->GetDevice(IID_ID3D10Device, (void **)&_pDevice10))) {')
+                print(r'                _reason = _pDevice10->GetDeviceRemovedReason();')
+                print(r'            }')
+                print(r'            if (_reason != S_OK) {')
+                print(r'                retrace::failed(call, _reason);')
+                print(r'            }')
+            elif getDeviceMethod is not None and len(getDeviceMethod.args) == 1:
                 print(r'            com_ptr<%s> _pDevice;' % getDeviceMethod.args[0].type.type.type)
                 print(r'            _this->GetDevice(&_pDevice);')
                 print(r'            HRESULT _reason = _pDevice->GetDeviceRemovedReason();')
