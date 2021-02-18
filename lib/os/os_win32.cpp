@@ -190,8 +190,8 @@ int execute(char * const * args)
     }
 
     STARTUPINFOA startupInfo;
-    memset(&startupInfo, 0, sizeof(startupInfo));
-    startupInfo.cb = sizeof(startupInfo);
+    memset(&startupInfo, 0, sizeof startupInfo);
+    startupInfo.cb = sizeof startupInfo;
 
     PROCESS_INFORMATION processInformation;
 
