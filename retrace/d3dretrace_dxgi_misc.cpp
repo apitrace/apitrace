@@ -176,4 +176,54 @@ createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppR
 }
 
 
+void
+deviceRemoved(trace::Call &call, ID3D11Device *pDevice)
+{
+    HRESULT hrReason = pDevice->GetDeviceRemovedReason();
+    retrace::failed(call, hrReason);
+    exit(EXIT_FAILURE);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D10Device *pDevice)
+{
+    HRESULT hrReason = pDevice->GetDeviceRemovedReason();
+    retrace::failed(call, hrReason);
+    exit(EXIT_FAILURE);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D11DeviceChild *pDeviceChild)
+{
+    com_ptr<ID3D11Device> pDevice;
+    pDeviceChild->GetDevice(&pDevice);
+    deviceRemoved(call, pDevice);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D10DeviceChild *pDeviceChild)
+{
+    com_ptr<ID3D10Device> pDevice;
+    pDeviceChild->GetDevice(&pDevice);
+    deviceRemoved(call, pDevice);
+}
+
+void
+deviceRemoved(trace::Call &call, IDXGISwapChain *pSwapChain)
+{
+    com_ptr<ID3D11Device> pDevice11;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pDevice11))) {
+        deviceRemoved(call, pDevice11);
+        return;
+    }
+
+    com_ptr<ID3D10Device> pDevice10;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pDevice10))) {
+        deviceRemoved(call, pDevice10);
+        return;
+    }
+
+    exit(EXIT_FAILURE);
+}
+
 } /* namespace d3dretrace */
