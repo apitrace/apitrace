@@ -602,6 +602,26 @@ void BufferObjectMap::addSSBODependencies(UsedObject::Pointer dep)
     }
 }
 
+void BufferObjectMap::copyBufferSubData(const trace::Call& call)
+{
+    auto src = boundTo(call.arg(0).toUInt());
+    auto dst = boundTo(call.arg(1).toUInt());
+    assert(dst);
+    assert(src);
+    dst->addDependency(src);
+    dst->addCall(trace2call(call));
+}
+
+void BufferObjectMap::copyNamedBufferSubData(const trace::Call& call)
+{
+    auto src = getById(call.arg(0).toUInt());
+    auto dst = getById(call.arg(1).toUInt());
+    assert(dst);
+    assert(src);
+    dst->addDependency(src);
+    dst->addCall(trace2call(call));
+}
+
 VertexAttribObjectMap::VertexAttribObjectMap():next_id(1)
 {
 
