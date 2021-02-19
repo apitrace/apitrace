@@ -571,6 +571,12 @@ void FrameTrimmeImpl::registerDrawCalls()
     MAP(glDrawElements, oglDraw);
     MAP(glDrawRangeElements, oglDraw);
     MAP(glDrawRangeElementsBaseVertex, oglDraw);
+
+    MAP(glDrawArraysInstanced, oglDraw);
+
+    MAP(glDrawElementsIndirect, oglDraw);
+    MAP(glMultiDrawArraysIndirect, oglDraw);
+    MAP(glMultiDrawElementsIndirect, oglDraw);
 }
 
 void
