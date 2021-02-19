@@ -167,6 +167,9 @@ public:
 
     void addSSBODependencies(UsedObject::Pointer dep);
 
+    void copyBufferSubData(const trace::Call& call);
+    void copyNamedBufferSubData(const trace::Call& call);
+
 private:
     unsigned getBindpointFromCall(const trace::Call& call) const override;
 
