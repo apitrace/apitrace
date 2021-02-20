@@ -85,6 +85,12 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+    - name: Cache Downloads
+      id: cache-downloads
+      uses: actions/cache@v2
+      with:
+        path: "*qtbase-*.7z"
+        key: ${{ runner.os }}-${{ matrix.target }}-5.15.2-0
     - name: Build
       run: .\ci\build-msvc.ps1 -target ${{ matrix.target }}
 

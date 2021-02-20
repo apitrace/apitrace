@@ -1,6 +1,6 @@
 param (
     [ValidateSet('win64','win32')][string]$target = 'win64',
-    [string]$config = 'RelWithDebInfo',
+    [string]$config = 'Debug',
     [string]$buildRoot = 'build',
     [string]$qtRoot = 'Qt'
 )
