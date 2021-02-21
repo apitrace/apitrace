@@ -4,7 +4,6 @@ version: '{build}'
 
 branches:
   except:
-  - /^travis.*$/
   - /^github.*$/
 
 init:

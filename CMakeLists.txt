@@ -661,10 +661,6 @@ set (CPACK_PACKAGE_VERSION "latest")
 if (($ENV{APPVEYOR}) AND ($ENV{APPVEYOR_REPO_TAG}))
     set (CPACK_PACKAGE_VERSION "$ENV{APPVEYOR_REPO_TAG_NAME}")
 endif ()
-# https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-if (($ENV{TRAVIS}) AND NOT "$ENV{TRAVIS_TAG}" STREQUAL "")
-    set (CPACK_PACKAGE_VERSION "$ENV{TRAVIS_TAG}")
-endif ()
 
 # cpack mistakenly detects Mingw-w64 as win32
 if (MINGW)
