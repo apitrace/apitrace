@@ -19,8 +19,6 @@ add_executable(gltrim
    ft_matrixstate.cpp
    ft_tracecall.cpp)
 
-set_target_properties(gltrim PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-
 target_link_libraries (gltrim
     retrace_common
     glretrace_common

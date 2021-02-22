@@ -268,7 +268,7 @@ if (MSVC)
     add_compiler_flags (-wd4577) # 'noexcept' used with no exception handling mode specified
     add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
     
-    add_compiler_flags (-std:c++17)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
 
     # Use static runtime
     # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
