@@ -80,6 +80,14 @@ class D3DRetracer(Retracer):
                 print(r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;')
                 print(r'    }')
 
+                # D3D10CreateDevice(D3D10_DRIVER_TYPE_REFERENCE) fails with
+                # DXGI_ERROR_UNSUPPORTED on 64bits.
+                print(r'#ifdef _WIN64')
+                print(r'    if (DriverType == D3D10_DRIVER_TYPE_REFERENCE) {')
+                print(r'        DriverType = D3D10_DRIVER_TYPE_WARP;')
+                print(r'    }')
+                print(r'#endif')
+
                 # Force driver
                 self.forceDriver('D3D10_DRIVER_TYPE_HARDWARE')
 
@@ -138,7 +146,11 @@ class D3DRetracer(Retracer):
         print(r'        _result = d3dretrace::createAdapter(_pFactory, IID_IDXGIAdapter1, (void **)&_pAdapter);')
         print(r'        pAdapter = _pAdapter;')
         print(r'        DriverType = %s;' % driverType)
-        print(r'        Software = NULL;')
+        print(r'        Software = nullptr;')
+        print(r'    }')
+        print(r'    if (Software) {')
+        print(r'        Software = LoadLibraryA("d3d10warp.dll");')
+        print(r'        assert(Software != nullptr);')
         print(r'    }')
 
     def doInvokeInterfaceMethod(self, interface, method):
