@@ -20,6 +20,11 @@ add_convenience_library (png_bundled EXCLUDE_FROM_ALL
     pngwutil.c
 )
 
+if (APPLE)
+    # https://github.com/apitrace/apitrace/issues/711
+    target_compile_definitions (png_bundled PRIVATE PNG_ARM_NEON_OPT=0)
+endif ()
+
 install (
     FILES LICENSE
     DESTINATION ${DOC_INSTALL_DIR}
