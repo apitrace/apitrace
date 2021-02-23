@@ -399,7 +399,7 @@ IDirect3D9Ex.methods += [
     StdMethod(UINT, "GetAdapterModeCountEx", [(D3DADAPTER, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter") ], sideeffects=False),
     StdMethod(HRESULT, "EnumAdapterModesEx", [(D3DADAPTER, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODEEX), "pMode")], sideeffects=False),
     StdMethod(HRESULT, "GetAdapterDisplayModeEx", [(D3DADAPTER, "Adapter"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
-    StdMethod(HRESULT, "CreateDeviceEx", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
+    StdMethod(HRESULT, "CreateDeviceEx", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), InOut(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
     StdMethod(HRESULT, "GetAdapterLUID", [(D3DADAPTER, "Adapter"), Out(Pointer(LUID), "pLUID")], sideeffects=False),
 ]
 
@@ -417,7 +417,7 @@ IDirect3DDevice9Ex.methods += [
     StdMethod(HRESULT, "CreateRenderTargetEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), InOut(Pointer(SHARED_HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     StdMethod(HRESULT, "CreateOffscreenPlainSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), InOut(Pointer(SHARED_HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     StdMethod(HRESULT, "CreateDepthStencilSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), InOut(Pointer(SHARED_HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
-    StdMethod(HRESULT, "ResetEx", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode")]),
+    StdMethod(HRESULT, "ResetEx", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), InOut(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode")]),
     StdMethod(HRESULT, "GetDisplayModeEx", [(UINT, "iSwapChain"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
 ]
 
