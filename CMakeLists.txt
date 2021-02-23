@@ -2,7 +2,7 @@ message (STATUS "Using CMake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMA
 if (MSVC)
     cmake_minimum_required (VERSION 3.7.0)
 else ()
-    cmake_minimum_required (VERSION 2.8.12)
+    cmake_minimum_required (VERSION 3.0.0)
 endif ()
 
 
