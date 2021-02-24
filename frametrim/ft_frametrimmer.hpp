@@ -30,6 +30,7 @@
 #include "trace_parser.hpp"
 
 #include <vector>
+#include <unordered_set>
 
 namespace frametrim {
 
@@ -50,6 +51,7 @@ public:
     void finalize();
 
     std::vector<unsigned> getSortedCallIds();
+    std::unordered_set<unsigned> getUniqueCallIds();
 private:
     struct FrameTrimmeImpl *impl;
 
