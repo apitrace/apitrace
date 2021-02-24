@@ -184,24 +184,24 @@ static int trim_to_frame(const char *filename,
         return 2;
     }
 
-    auto call_ids = trimmer.getSortedCallIds();
+    auto call_ids = trimmer.getUniqueCallIds();
     std::cerr << "Write output file\n";
 
     p.close();
     p.open(filename);
     call.reset(p.parse_call());
 
-    auto callid_itr = call_ids.begin();
-
     std::cerr << "Copying " << call_ids.size() << " calls\n";
 
-    while (call && callid_itr != call_ids.end()) {
-        while (call->no != *callid_itr)
+    while (1) {
+        while (call && call_ids.find(call->no) == call_ids.end())
             call.reset(p.parse_call());
+
+        if (!call)
+            break;
 
         writer.writeCall(call.get());
         call.reset(p.parse_call());
-        ++callid_itr;
     }
 
     if (options.top_frame_call_counts) {

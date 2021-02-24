@@ -72,6 +72,7 @@ struct FrameTrimmeImpl {
     void endTargetFrame();
 
     std::vector<unsigned> getSortedCallIds();
+    std::unordered_set<unsigned> getUniqueCallIds();
 
     static unsigned equalChars(const char *l, const char *r);
 
@@ -188,6 +189,12 @@ std::vector<unsigned>
 FrameTrimmer::getSortedCallIds()
 {
     return impl->getSortedCallIds();
+}
+
+std::unordered_set<unsigned>
+FrameTrimmer::getUniqueCallIds()
+{
+    return impl->getUniqueCallIds();
 }
 
 void FrameTrimmer::finalize()
@@ -367,13 +374,19 @@ void FrameTrimmeImpl::endTargetFrame()
     m_recording_frame = false;
 }
 
+std::unordered_set<unsigned>
+FrameTrimmeImpl::getUniqueCallIds()
+{
+    std::unordered_set<unsigned> retval;
+    for(auto&& c: m_required_calls)
+        retval.insert(c->callNo());
+    return retval;
+}
+
 std::vector<unsigned>
 FrameTrimmeImpl::getSortedCallIds()
 {
-    std::unordered_set<unsigned> make_sure_its_singular;
-
-    for(auto&& c: m_required_calls)
-        make_sure_its_singular.insert(c->callNo());
+    auto make_sure_its_singular = getUniqueCallIds();
 
     std::vector<unsigned> sorted_calls(
                 make_sure_its_singular.begin(),
