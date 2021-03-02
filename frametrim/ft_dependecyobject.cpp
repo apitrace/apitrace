@@ -122,7 +122,9 @@ void DependecyObjectMap::destroy(const trace::Call& call)
     const auto ids = (call.arg(1)).toArray();
     for (auto& v : ids->values) {
         assert(m_objects[v->toUInt()]->id() == v->toUInt());
-        m_objects[v->toUInt()]->addCall(c);
+        auto obj_it = m_objects.find(v->toUInt());
+        if (obj_it != m_objects.end())
+            obj_it->second->addCall(c);
     }
 }
 
@@ -136,11 +138,10 @@ void DependecyObjectMap::create(const trace::Call& call)
 
 void DependecyObjectMap::del(const trace::Call& call)
 {
-    auto obj = m_objects[call.arg(0).toUInt()];
-    auto c = trace2call(call);
-    obj->addCall(c);
+    auto obj_it = m_objects.find(call.arg(0).toUInt());
+    if (obj_it != m_objects.end())
+        obj_it->second->addCall(trace2call(call));
 }
-
 
 void DependecyObjectMap::addObject(unsigned id, UsedObject::Pointer obj)
 {
