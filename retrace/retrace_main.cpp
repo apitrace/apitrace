@@ -120,6 +120,7 @@ bool useCallNos = true;
 bool singleThread = false;
 bool ignoreRetvals = false;
 bool contextCheck = true;
+bool snapshotForceBackbuffer = false;
 int64_t minCpuTime = 1000;
 
 unsigned frameNo = 0;
@@ -165,7 +166,7 @@ frameComplete(trace::Call &call)
     }
 
     if (snapshotFrequency.contains(call)) {
-        takeSnapshot(call.no, true);
+        takeSnapshot(call.no, snapshotForceBackbuffer);
         if (call.no >= snapshotFrequency.getLast()) {
             exit(0);
         }
@@ -319,7 +320,7 @@ retraceCall(trace::Call *call) {
     retracer.retrace(*call);
 
     if (snapshotFrequency.contains(*call)) {
-        takeSnapshot(call->no, false);
+        takeSnapshot(call->no, snapshotForceBackbuffer);
         if (call->no >= snapshotFrequency.getLast()) {
             exit(0);
         }
@@ -711,6 +712,7 @@ usage(const char *argv0) {
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -t, --snapshot-threaded encode screenshots on multiple threads\n"
+        "      --snapshot-force-backbuffer always read from the backbuffer when taking a snapshot (default read from the current draw buffer)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
@@ -755,6 +757,7 @@ enum {
     SNAPSHOT_ALPHA_OPT,
     SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
+    SNAPSHOT_FORCE_BACKBUFFER_OPT,
     DUMP_FORMAT_OPT,
     MARKERS_OPT,
     MIN_CPU_TIME_OPT,
@@ -796,6 +799,7 @@ longOptions[] = {
     {"snapshot-alpha", no_argument, 0, SNAPSHOT_ALPHA_OPT},
     {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
+    {"snapshot-force-backbuffer", no_argument, 0, SNAPSHOT_FORCE_BACKBUFFER_OPT},
     {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
@@ -1145,6 +1149,9 @@ int main(int argc, char **argv)
             break;
         case SNAPSHOT_INTERVAL_OPT:
             snapshotInterval = atoi(optarg);
+            break;
+        case SNAPSHOT_FORCE_BACKBUFFER_OPT:
+            snapshotForceBackbuffer = true;
             break;
         case 't':
             snapshotThreaded = true;
