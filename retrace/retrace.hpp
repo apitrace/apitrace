@@ -103,6 +103,14 @@ public:
 };
 
 
+enum EQueryHandling {
+    QUERY_SKIP,
+    QUERY_RUN,
+    QUERY_RUN_AND_CHECK_RESULT
+};
+
+extern EQueryHandling queryHandling;
+
 /**
  * Output verbosity when retracing files.
  */
