@@ -123,6 +123,8 @@ bool contextCheck = true;
 bool snapshotForceBackbuffer = false;
 int64_t minCpuTime = 1000;
 
+retrace::EQueryHandling queryResultHandling = retrace::QUERY_SKIP;
+
 unsigned frameNo = 0;
 unsigned callNo = 0;
 
@@ -695,6 +697,7 @@ usage(const char *argv0) {
         "      --pframes           frame profiling metrics selection\n"
         "      --pdrawcalls        draw call profiling metrics selection\n"
         "      --list-metrics      list all available metrics for TRACE\n"
+        "      --query-handling    How query readbacks should be handled: ('skip', 'run', 'check'), default is 'skip'\n"
         "      --gen-passes        generate profiling passes and output passes number\n"
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
@@ -761,6 +764,7 @@ enum {
     DUMP_FORMAT_OPT,
     MARKERS_OPT,
     MIN_CPU_TIME_OPT,
+    QUERY_HANDLING_OPT,
     IGNORE_CALLS_OPT,
 };
 
@@ -792,6 +796,7 @@ longOptions[] = {
     {"pcalls", required_argument, 0, PCALLS_OPT},
     {"pframes", required_argument, 0, PFRAMES_OPT},
     {"pdrawcalls", required_argument, 0, PDRAWCALLS_OPT},
+    {"query-handling", required_argument, 0, QUERY_HANDLING_OPT},
     {"list-metrics", no_argument, 0, PLMETRICS_OPT},
     {"gen-passes", no_argument, 0, GENPASS_OPT},
     {"sb", no_argument, 0, SB_OPT},
@@ -1233,6 +1238,14 @@ int main(int argc, char **argv)
             retrace::verbosity = -1;
             retrace::profilingWithBackends = true;
             retrace::profilingListMetrics = true;
+            break;
+        case QUERY_HANDLING_OPT:
+            if (strcmp(optarg, "check") == 0)
+                retrace::queryHandling = retrace::QUERY_RUN_AND_CHECK_RESULT;
+            else if (strcmp(optarg, "run") == 0)
+                retrace::queryHandling = retrace::QUERY_RUN;
+            else
+                retrace::queryHandling = retrace::QUERY_SKIP;
             break;
         case GENPASS_OPT:
             retrace::debug = 0;

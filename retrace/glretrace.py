@@ -175,15 +175,17 @@ class GlRetracer(Retracer):
             print(r'        return;')
             print(r'    }')
 
-        # When no query buffer object is bound, glGetQueryObject is a no-op.
+        # When no query buffer object is bound, and we don't request that glGetQueryObject
+        # is run than glGetQueryObject is a no-op.
         if function.name.startswith('glGetQueryObject'):
             print(r'    GLint _query_buffer = 0;')
             print(r'    if (currentContext && currentContext->features().query_buffer_object) {')
             print(r'        glGetIntegerv(GL_QUERY_BUFFER_BINDING, &_query_buffer);')
             print(r'    }')
-            print(r'    if (!_query_buffer) {')
+            print(r'    if (!_query_buffer && retrace::queryHandling == retrace::QUERY_SKIP) {')
             print(r'        return;')
             print(r'    }')
+            print(r'wait_for_query_result:')
 
         # Pre-snapshots
         if self.bind_framebuffer_function_regex.match(function.name):
@@ -195,6 +197,24 @@ class GlRetracer(Retracer):
             return
 
         Retracer.retraceFunctionBody(self, function)
+
+        # If we have a query buffer or if we execute the query we have to loop until the
+        # query result is actually available to get the proper result - for the following
+        # execution if the query buffer is used or for the check to make sense, and if we
+        # just want to execute the query for timing purpouses we also should wait
+        # for the result.
+        if function.name.startswith('glGetQueryObject'):
+           print(r'    if (!_query_buffer && retrace::queryHandling != retrace::QUERY_SKIP) {')
+           print(r'        auto query_result = call.arg(2).toArray();')
+           print(r'        assert(query_result && query_result->values.size() == 1);')
+           print(r'        auto expect = static_cast<decltype(retval)>(query_result->values[0]->toUInt());')
+           print(r'        if (call.arg(1).toUInt() == GL_QUERY_RESULT_AVAILABLE) {')
+           print(r'            if (expect == 1 && retval == 0)')
+           print(r'                goto wait_for_query_result;')
+           print(r'        } else if (retrace::queryHandling == retrace::QUERY_RUN_AND_CHECK_RESULT && expect != retval) {')
+           print(r'           retrace::warning(call) << "Warning: query returned " << retval << " but trace contained " << expect << "\n";')
+           print(r'        }')
+           print(r'    }')
 
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
@@ -553,7 +573,13 @@ class GlRetracer(Retracer):
             print('    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue))
             return
         if function.name.startswith('glGetQueryObject') and arg.output:
-            print('    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue))
+            pointer_type = "%s" % (arg_type)
+            basetype = pointer_type.split(" ")[0]
+            print('    %s retval;' % (basetype))
+            print('    if (_query_buffer)')
+            print('        %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue))
+            print('    else')
+            print('        %s = &retval;' % (lvalue))
             return
 
         if (arg.type.depends(glapi.GLlocation) or \
