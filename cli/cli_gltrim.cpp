@@ -69,7 +69,6 @@ usage(void)
 {
     std::vector<const char *>opts;
     opts.push_back("--help");
-    trace::API api = trace::API_GL;
     executeGLTrim(opts, NULL);
 }
 
