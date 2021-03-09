@@ -19,7 +19,6 @@ RUN \
   libx11-dev \
   libgl-dev \
   libwaffle-dev \
-  python2.7 \
   python3 \
   ninja-build \
   cmake \

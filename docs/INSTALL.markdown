@@ -12,7 +12,7 @@ Requirements common for all platforms:
 
   * Python Image Library
 
-* CMake version 3.0 or newer
+* CMake version 3.8 or newer
 
 Optional dependencies:
 
