@@ -1,6 +1,6 @@
 param (
     [ValidateSet('win64','win32')][string]$target = 'win64',
-    [string]$config = 'Debug',
+    [string]$config,
     [string]$buildRoot = 'build',
     [string]$qtRoot = 'Qt'
 )
@@ -78,6 +78,20 @@ Write-Host "Adding $qtBinPath to environment path."
 $Env:Path = "$qtBinPath;$Env:Path"
 
 $generator = 'Visual Studio 16 2019'
+
+if (!$config) {
+    $config = 'Debug'
+    # Default to release on master and tag Appveyor builds
+    if ((Test-Path Env:APPVEYOR) -And
+        ((Test-Path Env:APPVEYOR_REPO_TAG_NAME) -Or
+         (($Env:APPVEYOR_REPO_BRANCH -eq 'master') -And !(Test-Path Env:APPVEYOR_PULL_REQUEST_NUMBER)))) {
+        $config = 'RelWithDebInfo'
+    }
+    # Default to release on tags GitHub builds
+    if ($Env:GITHUB_EVENT_NAME -eq "push" -And $Env:GITHUB_REF.StartsWith('refs/tags/')) {
+        $config = 'RelWithDebInfo'
+    }
+}
 
 Exec { cmake --version }
 Exec { python --version }
