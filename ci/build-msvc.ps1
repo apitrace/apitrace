@@ -70,7 +70,7 @@ if (!(Test-Path $archive -PathType Leaf)) {
 $qtToolchainPath = "$qtRoot\$qtVersion\$toolchain"
 if (!(Test-Path $qtToolchainPath -PathType Container)) {
 	Write-Host "Extracting $archive to $qtToolchainPath ..."
-	Exec { 7z x -y "-oQt" $archive | Out-Null }
+	Exec { 7z x -y "-o$qtRoot" $archive | Out-Null }
 }
 
 $qtBinPath = Resolve-Path "$qtToolchainPath\bin"
@@ -78,16 +78,18 @@ Write-Host "Adding $qtBinPath to environment path."
 $Env:Path = "$qtBinPath;$Env:Path"
 
 $generator = 'Visual Studio 16 2019'
-$config = 'RelWithDebInfo'
 
 Exec { cmake --version }
 Exec { python --version }
 
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-H." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
+
 Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config "--" /verbosity:minimal /maxcpucount }
+
 Write-Host "Testing ..."
 Exec { cmake --build $buildRoot --config $config --target check "--" /verbosity:minimal /maxcpucount }
+
 Write-Host "Packaging ..."
 Exec { cmake --build $buildRoot --config $config --target package "--" /verbosity:minimal /maxcpucount }
