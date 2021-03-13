@@ -31,11 +31,13 @@ docker_run \
     -DENABLE_STATIC_EXE=OFF \
     -DENABLE_WAFFLE=on
 
-docker_run cmake --build $build_dir -- all
+docker_run cmake --build $build_dir
 if false
 then
-    docker_run cmake --build $build_dir -- test
+    docker_run cmake --build $build_dir --target test
 fi
 
 ldd -r $build_dir/glretrace
 ldd -r $build_dir/eglretrace
+
+docker_run cmake --build $build_dir --target package

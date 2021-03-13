@@ -49,8 +49,6 @@ jobs:
       run: cmake --build $PWD/build --use-stderr
     - name: check
       run: cmake --build $PWD/build --use-stderr --target check
-    - name: package
-      run: cmake --build $PWD/build --use-stderr --target package
 
   ubuntu-16_04:
     runs-on: ubuntu-latest
@@ -58,8 +56,14 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: apt-install
+    - name: build
       run: ci/build-ubuntu-16.04.sh
+    - if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+      uses: actions/upload-artifact@v2
+      with:
+        name: apitrace-ubuntu-16.04
+        path: build/docker-ubuntu-16.04/apitrace-*.tar.bz2
+        if-no-files-found: error
 
   mingw32:
     runs-on: ubuntu-latest
