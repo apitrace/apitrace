@@ -17,7 +17,18 @@ docker_run () {
 }
 
 test -d $source_dir/ci/docker/$distro
-docker build -t $docker_image $source_dir/ci/docker/$distro
+
+if [ "$GITHUB_ACTIONS" = true ]
+then
+    # See:
+    # - https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei
+    # - https://github.com/dtinth/github-actions-docker-layer-caching-poc/blob/master/.github/workflows/dockerimage.yml
+    docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
+    docker build -t $docker_image --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache $source_dir/ci/docker/$distro
+    docker tag $docker_image docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
+else
+    docker build -t $docker_image $source_dir/ci/docker/$distro
+fi
 
 docker_run \
     cmake \
