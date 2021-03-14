@@ -52,6 +52,8 @@ jobs:
 
   ubuntu-16_04:
     runs-on: ubuntu-latest
+    env:
+      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -59,7 +61,7 @@ jobs:
     - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
     - name: build
       run: ci/build-ubuntu-16.04.sh
-    - if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    - if: env.PACKAGE == 'true'
       uses: actions/upload-artifact@v2
       with:
         name: apitrace-ubuntu-16.04

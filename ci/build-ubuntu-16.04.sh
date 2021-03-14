@@ -30,12 +30,19 @@ else
     docker build -t $docker_image $source_dir/ci/docker/$distro
 fi
 
+if [ "$PACKAGE" = "true" ]
+then
+    CMAKE_BUILD_TYPE=Release
+else
+    CMAKE_BUILD_TYPE=Debug
+fi
+
 docker_run \
     cmake \
     -G Ninja \
     -H$source_dir \
     -B$build_dir \
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} \
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
     -DENABLE_GUI=OFF \
     -DENABLE_STATIC_LIBGCC=OFF \
     -DENABLE_STATIC_LIBSTDCXX=OFF \
@@ -51,4 +58,7 @@ fi
 ldd -r $build_dir/glretrace
 ldd -r $build_dir/eglretrace
 
-docker_run cmake --build $build_dir --target package
+if [ "$PACKAGE" = true ]
+then
+    docker_run cmake --build $build_dir --target package
+fi
