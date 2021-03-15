@@ -477,6 +477,13 @@ class D3DRetracer(Retracer):
                 print('    for (UINT i = 0; i < Count; i++)')
                 print('         pParams[i].Dest = g_D3D12AddressSlabs.LookupSlab(pParams[i].Dest);')
 
+            if method.name == 'OpenExistingHeapFromAddress':
+                print('    size_t _AddressSize = call.arg(1).toBlob()->size;')
+                print('    void *_AlignedAddress = VirtualAlloc(NULL, _AddressSize, MEM_COMMIT, PAGE_READWRITE);')
+                print('    memcpy(_AlignedAddress, pAddress, _AddressSize);')
+                print('    pAddress = _AlignedAddress;')
+                print('    retrace::addRegion(call, (unsigned long long)call.arg(1).toBlob()->base_ptr, _AlignedAddress, _AddressSize);')
+
         if method.name == 'CreatePipelineLibrary':
             # Make a fake pipeline library, so we can still make the state objects.
             print('    *ppPipelineLibrary = reinterpret_cast<void*>(new _D3D12FakePipelineLibrary(_this));')

@@ -223,15 +223,56 @@ _map_resource(ID3D12Resource* pResource, void* pData)
         g_D3D12AddressMappings.try_emplace(key, _D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource));
 }
 
-static inline void
-_unmap_resource(ID3D12Resource* pResource)
+static inline size_t _d3d12_AllocationSize(const void *pAddress)
 {
-    D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
+    MEMORY_BASIC_INFORMATION info;
 
-    if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
+    /* Query the base pointer */
+    if (!VirtualQuery(pAddress, &info, sizeof(info)))
+        return 0;
+
+    /* Allocation base must equal address. */
+    if (info.AllocationBase != pAddress)
+        return 0;
+    if (info.BaseAddress != info.AllocationBase)
+        return 0;
+
+    /* All pages must be committed. */
+    if (info.State != MEM_COMMIT)
+        return 0;
+
+    const size_t allocation_size = info.RegionSize;
+
+    /* All pages must have same protections, so there cannot be multiple regions for VirtualQuery. */
+    if (VirtualQuery((uint8_t *)pAddress + allocation_size, &info, sizeof(info)) &&
+            info.AllocationBase == pAddress)
+        return 0;
+
+    return allocation_size;
+}
+
+
+static inline void
+_map_resource(ID3D12Heap* pResource, void* pData)
+{
+    SIZE_T allocation_size = _d3d12_AllocationSize(pData);
+    if (!allocation_size)
         return;
 
-    SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
+    SIZE_T key = reinterpret_cast<SIZE_T>(pResource);
+    // Assert we're page aligned... If we aren't we need to do more work here.
+    // TODO(Josh) : Placed resources.
+    assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
+    auto iter = g_D3D12AddressMappings.find(key);
+    if (iter != g_D3D12AddressMappings.end())
+        iter->second.RefCount++;
+    else
+        g_D3D12AddressMappings.try_emplace(key, _D3D12_MAPPING_WRITE_WATCH, pData, allocation_size);
+}
+
+static inline void
+_unmap_resource(SIZE_T key)
+{
     auto iter = g_D3D12AddressMappings.find(key);
     if (iter == g_D3D12AddressMappings.end())
         return;
@@ -271,6 +312,23 @@ _unmap_resource(ID3D12Resource* pResource)
 
     if (--iter->second.RefCount == 0)
         g_D3D12AddressMappings.erase(iter);
+}
+
+static inline void
+_unmap_resource(ID3D12Resource* pResource)
+{
+    D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
+
+    if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
+        return;
+
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)));
+}
+
+static inline void
+_unmap_resource(ID3D12Heap* pResource)
+{
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)));
 }
 
 static inline void

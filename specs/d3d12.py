@@ -2754,7 +2754,7 @@ ID3D12Device2.methods += [
 ID3D12Device3.methods += [
     # TODO(Josh): Implement OpenExistingHeapFromAddress, etc properly
     # Mark all dirty then VirtualProtect their stuff. Yuck.
-    StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(OpaquePointer(Const(Void)), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
+    StdMethod(HRESULT, 'OpenExistingHeapFromAddress', [(Blob(Const(Void), '_d3d12_AllocationSize(pAddress)'), 'pAddress'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'OpenExistingHeapFromFileMapping', [(HANDLE, 'hFileMapping'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvHeap')]),
     StdMethod(HRESULT, 'EnqueueMakeResident', [(D3D12_RESIDENCY_FLAGS, 'Flags'), (UINT, 'NumObjects'), (Array(Const(ObjPointer(ID3D12Pageable)), 'NumObjects'), 'ppObjects'),(ObjPointer(ID3D12Fence), 'pFenceToSignal'), (UINT64, 'FenceValueToSignal')]),
 ]
