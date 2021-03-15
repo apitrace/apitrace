@@ -472,6 +472,11 @@ class D3DRetracer(Retracer):
                 print('        pDesc = &_real_desc;')
                 print('    }')
 
+            if method.name == 'WriteBufferImmediate':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    for (UINT i = 0; i < Count; i++)')
+                print('         pParams[i].Dest = g_D3D12AddressSlabs.LookupSlab(pParams[i].Dest);')
+
         if method.name == 'CreatePipelineLibrary':
             # Make a fake pipeline library, so we can still make the state objects.
             print('    *ppPipelineLibrary = reinterpret_cast<void*>(new _D3D12FakePipelineLibrary(_this));')
