@@ -379,11 +379,13 @@ class D3DCommonTracer(DllTracer):
             if method.name == 'IASetVertexBuffers':
                 # TODO(Josh): MAKE THIS AUTOGEN
                 print('    D3D12_VERTEX_BUFFER_VIEW _real_views[D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];')
-                print('    for (UINT i = 0; i < NumViews; i++) {')
-                print('        _real_views[i] = pViews[i];')
-                print('        _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('    if (pViews != nullptr) {')
+                print('        for (UINT i = 0; i < NumViews; i++) {')
+                print('            _real_views[i] = pViews[i];')
+                print('            _real_views[i].BufferLocation = g_D3D12AddressSlabs.LookupSlab(_real_views[i].BufferLocation);')
+                print('        }')
+                print('        pViews = _real_views;')
                 print('    }')
-                print('    pViews = _real_views;')
 
             if method.name == 'IASetIndexBuffer':
                 # TODO(Josh): MAKE THIS AUTOGEN
