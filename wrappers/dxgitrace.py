@@ -403,6 +403,14 @@ class D3DCommonTracer(DllTracer):
                 print('        pDesc = &_real_desc;')
                 print('    }')
 
+            if method.name == 'WriteBufferImmediate':
+                # TODO(Josh): MAKE THIS AUTOGEN
+                print('    for (UINT i = 0; i < Count; i++) {')
+                print('         D3D12_WRITEBUFFERIMMEDIATE_PARAMETER _param = pParams[i];')
+                print('         _param.Dest = g_D3D12AddressSlabs.LookupSlab(_param.Dest);')
+                print('        _this->WriteBufferImmediate(1, &_param, &pModes[i]);')
+                print('    }')
+
             if method.name in ('CreateCommittedResource', 'CreateCommittedResource1'):
                 print('    D3D12_HEAP_PROPERTIES _heap_properties = *pHeapProperties;')
                 print('    if (pHeapProperties->Type == D3D12_HEAP_TYPE_UPLOAD)')
@@ -425,7 +433,8 @@ class D3DCommonTracer(DllTracer):
                 print('    }')
                 print('    pDesc = &_heap_desc;')
 
-        DllTracer.invokeMethod(self, interface, base, method)
+        if method.name != 'WriteBufferImmediate':
+            DllTracer.invokeMethod(self, interface, base, method)
 
         if interface.name.startswith('ID3D12'):
             if method.name == 'GetHeapProperties':
