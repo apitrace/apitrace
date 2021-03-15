@@ -331,7 +331,8 @@ public:
 class Blob : public Value
 {
 public:
-    Blob(size_t _size) {
+    Blob(void *_base_ptr, size_t _size) {
+        base_ptr = _base_ptr;
         size = _size;
         buf = new char[_size];
         bound = false;
@@ -348,6 +349,7 @@ public:
     const Blob *toBlob(void) const override { return this; }
     Blob *toBlob(void) override { return this; }
 
+    void *base_ptr;
     size_t size;
     char *buf;
     bool bound;

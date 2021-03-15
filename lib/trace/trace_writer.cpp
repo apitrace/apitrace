@@ -341,6 +341,7 @@ void Writer::writeBlob(const void *data, size_t size) {
         return;
     }
     _writeByte(trace::TYPE_BLOB);
+    _writeUInt((unsigned long long) data);
     _writeUInt(size);
     if (size) {
         _write(data, size);

@@ -892,8 +892,9 @@ void Parser::scan_array(void) {
 
 
 Value *Parser::parse_blob(void) {
+    void *base_ptr = (void *)read_uint();
     size_t size = read_uint();
-    Blob *blob = new Blob(size);
+    Blob *blob = new Blob(base_ptr, size);
     if (size) {
         file->read(blob->buf, size);
     }
@@ -902,6 +903,7 @@ Value *Parser::parse_blob(void) {
 
 
 void Parser::scan_blob(void) {
+    void *base_ptr = (void *)read_uint();
     size_t size = read_uint();
     if (size) {
         file->skip(size);
