@@ -283,6 +283,27 @@ void fakeMemcpy(const void *ptr, size_t size) {
     localWriter.endLeave();
 }
 
+
+void fakeMalloc(const void *ptr, size_t size) {
+    assert(ptr);
+    if (!size) {
+        return;
+    }
+
+    unsigned _call = localWriter.beginEnter(&malloc_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(size);
+    localWriter.endArg();
+    localWriter.endEnter();
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writePointer((uintptr_t)ptr);
+    localWriter.endReturn();
+    localWriter.endLeave();
+}
+
+
 static const char *WaitForSingleObject_args[2] = {"hHandle", "dwMilliseconds"};
 const FunctionSig WaitForSingleObject_sig = {4, "WaitForSingleObject", 2, WaitForSingleObject_args};
 

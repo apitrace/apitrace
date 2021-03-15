@@ -144,6 +144,11 @@ class D3DCommonTracer(DllTracer):
                 ('D3D12_GPU_VIRTUAL_ADDRESS', 'm_FakeAddress', '0'),
                 ('std::mutex', 'm_RefCountMutex', None)
             ]
+        if interface.hasBase(d3d12.ID3D12Heap):
+            variables += [
+                ('const void *', 'm_UserPointer', '0'),
+                ('std::mutex', 'm_RefCountMutex', None)
+            ]
 
         return variables
 
@@ -193,7 +198,7 @@ class D3DCommonTracer(DllTracer):
 
             # Need to unmap the resource if the last public reference is
             # eliminated.
-            if interface in (d3d12.ID3D12Resource, d3d12.ID3D12Resource1):
+            if interface in (d3d12.ID3D12Resource, d3d12.ID3D12Resource1, d3d12.ID3D12Heap, d3d12.ID3D12Heap1):
                 if method.name == 'AddRef':
                     # Need to lock here to avoid another thread potentially
                     # releasing while we are flushing.
@@ -210,8 +215,13 @@ class D3DCommonTracer(DllTracer):
                     # avoid a dangling ptr.
                     print('    std::unique_lock<std::mutex> _ordering_lock;')
                     print('    if (_current_ref == 1) {')
-                    print('        _unmap_resource(m_pInstance);')
-                    print('        _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+                    if interface in (d3d12.ID3D12Heap, d3d12.ID3D12Heap1):
+                        print('    if (m_UserPointer != nullptr)')
+                    print('        {')
+                    print('            _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+                    print('            /* If Heap with a funny ptr, we should free here */')
+                    print('            _unmap_resource(m_pInstance);')
+                    print('        }')
                     print('    }')
 
         if method.getArgByName('pInitialData'):
@@ -281,6 +291,15 @@ class D3DCommonTracer(DllTracer):
                 print('        _MapDesc.pData = NULL;')
                 print('        _MapDesc.Size = 0;')
                 print('    }')
+
+        if method.name == 'OpenExistingHeapFromAddress':
+            print('    if (SUCCEEDED(_result) && pAddress) {')
+            print('        trace::fakeMalloc(pAddress, _d3d12_AllocationSize(pAddress));')
+            print('        trace::fakeMemcpy(pAddress, _d3d12_AllocationSize(pAddress));')
+            print('        auto *pHeap = *reinterpret_cast<WrapID3D12Heap**>(ppvHeap);')
+            print('        _map_resource(pHeap->m_pInstance, (void *) pAddress);')
+            print('        pHeap->m_UserPointer = pAddress;')
+            print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'GetDecoderBuffer':

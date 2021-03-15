@@ -116,6 +116,7 @@ namespace trace {
     extern LocalWriter localWriter;
 
     void fakeMemcpy(const void *ptr, size_t size);
+    void fakeMalloc(const void *ptr, size_t size);
 
     DWORD fakeWaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
     DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable);
