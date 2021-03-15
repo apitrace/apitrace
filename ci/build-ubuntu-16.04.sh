@@ -10,11 +10,15 @@ uid=$(id -u)
 
 test -t 0 && interactive=true || interactive=false
 
-set -x
-
 docker_run () {
     docker run -i=$interactive --tty=$interactive --rm -v "$PWD:$PWD" -u "$uid" $docker_image "$@"
 }
+
+symbol_versions () {
+    nm -D -u --with-symbol-versions "$@" | sed -n -e 's/.*@/\t/p' | sort -u
+}
+
+set -x
 
 test -d $source_dir/ci/docker/$distro
 
@@ -55,8 +59,8 @@ then
     docker_run cmake --build $build_dir --target test
 fi
 
-ldd -r $build_dir/glretrace
-ldd -r $build_dir/eglretrace
+symbol_versions $build_dir/glretrace
+symbol_versions $build_dir/eglretrace
 
 if [ "$PACKAGE" = true ]
 then
