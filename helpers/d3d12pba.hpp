@@ -126,7 +126,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         // Clip to this resource's region
         uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
         size_t size = contiguous_pages * PageSize;
-        size = std::min(base_address + size, resource_start + mapping.Size) - base_address;
+        size = std::min<size_t>(base_address + size, resource_start + mapping.Size) - base_address;
 
         trace::fakeMemcpy(reinterpret_cast<void*>(base_address), size);
     }
@@ -184,7 +184,7 @@ _flush_mapping_exception_memcpys(_D3D12_MAP_DESC& mapping)
         uintptr_t page_start     = resource_start + dirtyPages[i].PageStart * page_size;
         void* start = reinterpret_cast<void*>(page_start);
         size_t size = (dirtyPages[i].PageEnd - dirtyPages[i].PageStart) * page_size;
-        size = std::min(page_start + size, resource_start + mapping.Size) - page_start;
+        size = std::min<size_t>(page_start + size, resource_start + mapping.Size) - page_start;
 
         trace::fakeMemcpy(start, size);
     }
@@ -291,7 +291,7 @@ _flush_mappings()
             _flush_mapping_exception_memcpys(mapping);
             mapping.ExceptionPath.DirtyPages.clear();
 
-            [[maybe_unused]] DWORD old_protection;
+            DWORD old_protection;
             // Re-apply page guard given we came from ExecuteCommandLists
             bool result = _guard_mapped_memory(mapping, &old_protection);
             os::log("apitrace: Failed to guard memory\n");
