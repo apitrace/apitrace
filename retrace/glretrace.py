@@ -211,8 +211,10 @@ class GlRetracer(Retracer):
            print(r'        if (call.arg(1).toUInt() == GL_QUERY_RESULT_AVAILABLE) {')
            print(r'            if (expect == 1 && retval == 0)')
            print(r'                goto wait_for_query_result;')
-           print(r'        } else if (retrace::queryHandling == retrace::QUERY_RUN_AND_CHECK_RESULT && expect != retval) {')
-           print(r'           retrace::warning(call) << "Warning: query returned " << retval << " but trace contained " << expect << "\n";')
+           print(r'        } else if (retrace::queryHandling == retrace::QUERY_RUN_AND_CHECK_RESULT &&')
+           print(r'                   abs(static_cast<int64_t>(expect) - static_cast<int64_t>(retval)) > retrace::queryTolerance) {')
+           print(r'           retrace::warning(call) << "Warning: query returned " << retval << " but trace contained " << expect')
+           print(r'                                  << " (tol = " << retrace::queryTolerance << ")\n";')
            print(r'        }')
            print(r'    }')
 
