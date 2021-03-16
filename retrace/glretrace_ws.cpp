@@ -53,7 +53,9 @@ getVisual(glfeatures::Profile profile) {
     std::map<glfeatures::Profile, glws::Visual *>::iterator it = visuals.find(profile);
     if (it == visuals.end()) {
         glws::Visual *visual = NULL;
-        unsigned samples = retrace::samples;
+        unsigned requested_samples = retrace::samples > 1 ? retrace::samples :
+                                                            (profile.samples ? profile.samples : 1);
+        unsigned samples = requested_samples;
         /* The requested number of samples might not be available, try fewer until we succeed */
         while (!visual && samples > 0) {
             visual = glws::createVisual(retrace::doubleBuffer, samples, profile);
@@ -65,8 +67,8 @@ getVisual(glfeatures::Profile profile) {
             std::cerr << "error: failed to create OpenGL visual\n";
             exit(1);
         }
-        if (samples != retrace::samples) {
-            std::cerr << "warning: Using " << samples << " samples instead of the requested " << retrace::samples << "\n";
+        if (samples != requested_samples) {
+            std::cerr << "warning: Using " << samples << " samples instead of the requested " << requested_samples << "\n";
         }
         visuals[profile] = visual;
         return visual;
@@ -298,6 +300,20 @@ parseAttrib(const trace::Value *attribs, int param, int default_, int terminator
     }
 
     return default_;
+}
+
+void
+setSamples(trace::Call& call, int samples)
+{
+    if (samples > 0)  {
+        if (retrace::samples == 1)
+            retrace::samples = samples;
+        else {
+            retrace::warning(call) << "Overriding samples value " << samples
+                                   << " found in trace with command line parameter "
+                                   << retrace::samples << "\n";
+        }
+    }
 }
 
 

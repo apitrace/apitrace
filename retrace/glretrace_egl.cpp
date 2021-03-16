@@ -146,6 +146,9 @@ static void retrace_eglChooseConfig(trace::Call &call) {
         }
     }
 
+    if (parseAttrib(attrib_array, EGL_SAMPLE_BUFFERS))
+        profile.samples = parseAttrib(attrib_array, EGL_SAMPLES);
+
     unsigned num_config = num_config_ptr->values[0]->toUInt();
     for (unsigned i = 0; i < num_config; ++i) {
         unsigned long long orig_config = config_array->values[i]->toUIntPtr();
