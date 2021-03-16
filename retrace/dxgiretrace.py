@@ -544,6 +544,8 @@ class D3DRetracer(Retracer):
                 print('    else')
                 print('        _pbData = *ppData;')
                 print('    _desc.RefCount++;')
+                print('    if (!ppData)')
+                print('        return;')
             else:
                 print('    _MAP_DESC _MapDesc;')
                 print('    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames()))
