@@ -44,7 +44,7 @@ trace::DumpFlags dumpFlags = trace::DUMP_FLAG_THREAD_IDS;
 static bool call_dumped = false;
 
 EQueryHandling queryHandling = QUERY_SKIP;
-
+unsigned queryTolerance = 0;
 
 static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {

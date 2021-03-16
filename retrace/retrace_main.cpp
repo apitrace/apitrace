@@ -698,6 +698,7 @@ usage(const char *argv0) {
         "      --pdrawcalls        draw call profiling metrics selection\n"
         "      --list-metrics      list all available metrics for TRACE\n"
         "      --query-handling    How query readbacks should be handled: ('skip', 'run', 'check'), default is 'skip'\n"
+        "      --query-tolerance   Set a tolerance when comparing recorded query results to evaluated ones, a value >0 enables query-handling 'check'\n"
         "      --gen-passes        generate profiling passes and output passes number\n"
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
@@ -765,6 +766,7 @@ enum {
     MARKERS_OPT,
     MIN_CPU_TIME_OPT,
     QUERY_HANDLING_OPT,
+    QUERY_CHECK_TOLARANCE_OPT,
     IGNORE_CALLS_OPT,
 };
 
@@ -797,6 +799,7 @@ longOptions[] = {
     {"pframes", required_argument, 0, PFRAMES_OPT},
     {"pdrawcalls", required_argument, 0, PDRAWCALLS_OPT},
     {"query-handling", required_argument, 0, QUERY_HANDLING_OPT},
+    {"query-tolerance", required_argument, 0, QUERY_CHECK_TOLARANCE_OPT},
     {"list-metrics", no_argument, 0, PLMETRICS_OPT},
     {"gen-passes", no_argument, 0, GENPASS_OPT},
     {"sb", no_argument, 0, SB_OPT},
@@ -1246,6 +1249,11 @@ int main(int argc, char **argv)
                 retrace::queryHandling = retrace::QUERY_RUN;
             else
                 retrace::queryHandling = retrace::QUERY_SKIP;
+            break;
+        case QUERY_CHECK_TOLARANCE_OPT:
+            retrace::queryTolerance = atoi(optarg);
+            if (retrace::queryTolerance > 0)
+                retrace::queryHandling = retrace::QUERY_RUN_AND_CHECK_RESULT;
             break;
         case GENPASS_OPT:
             retrace::debug = 0;
