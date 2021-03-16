@@ -90,11 +90,14 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
+typedef std::map<unsigned long long, int> FBConfigMap;
 
 // sid -> Drawable* map
 static DrawableMap drawable_map;
 
 static DrawableMap pbuffer_map;
+
+static FBConfigMap fbconfig_map;
 
 // ctx -> Context* map
 static ContextMap context_map;
@@ -170,6 +173,8 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
 
     bool singleBuffer = true;
     int profile = 0;
+    int sample_buffers = 0;
+    int samples = 0;
 
     const trace::Array * attribs = call.arg(0).toArray();
     if (attribs) {
@@ -226,14 +231,18 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFAStencilSize:
             case kCGLPFAAuxBuffers:
             case kCGLPFAAccumSize:
-            case kCGLPFASampleBuffers:
-            case kCGLPFASamples:
             case kCGLPFARendererID:
             case kCGLPFADisplayMask:
             case kCGLPFAVirtualScreenCount:
                 ++i;
                 break;
 
+            case kCGLPFASampleBuffers:
+                sample_buffers = attribs->values[i++]->toSInt();
+                break;
+            case kCGLPFASamples:
+                samples = attribs->values[i++]->toSInt();
+                break;
             case kCGLPFAOpenGLProfile:
                 profile = attribs->values[i++]->toSInt();
                 break;
@@ -269,6 +278,9 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
 
     // XXX: Generalize this, don't override command line options.
     retrace::doubleBuffer = !singleBuffer;
+
+    if (sample_buffers && samples > 0)
+        pixelFormat->profile.samples = samples;
 
     retrace::addObj(call, pix, pixelFormat);
 }
