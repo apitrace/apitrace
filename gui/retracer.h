@@ -52,6 +52,8 @@ public:
     bool isMsaaResolve() const;
     void setMsaaResolve(bool resolve);
 
+
+
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
 
@@ -67,6 +69,12 @@ public:
     void resetThumbnailsToCapture();
 
     QString thumbnailCallSet();
+
+    int queryHandling();
+    void setQueryHandling(int handling);
+
+    int queryCheckReportThreshold();
+    void setQueryCheckReportThreshold(int value);
 
 signals:
     void finished(const QString &output);
@@ -95,6 +103,8 @@ private:
     bool m_profileGpu;
     bool m_profileCpu;
     bool m_profilePixels;
+    int m_queryHandling;
+    int m_queryCheckThreshold;
 
     QProcessEnvironment m_processEnvironment;
 

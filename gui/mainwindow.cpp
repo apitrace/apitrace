@@ -250,6 +250,16 @@ void MainWindow::replayStart()
     dlgUi.coreProfileCB->setChecked(
         m_retracer->isCoreProfile());
 
+    dlgUi.queryHandlingSelector->addItem("Skip");
+    dlgUi.queryHandlingSelector->addItem("Run");
+    dlgUi.queryHandlingSelector->addItem("Run & Check");
+    dlgUi.queryHandlingSelector->setCurrentIndex(
+                m_retracer->queryHandling());
+
+    dlgUi.queryCheckReportThreshold->setValue(
+                m_retracer->queryCheckReportThreshold());
+
+
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
@@ -264,6 +274,11 @@ void MainWindow::replayStart()
             dlgUi.coreProfileCB->isChecked());
 
         m_retracer->setProfiling(false, false, false);
+
+        m_retracer->setQueryHandling(
+                    dlgUi.queryHandlingSelector->currentIndex());
+        m_retracer->setQueryCheckReportThreshold(
+                    dlgUi.queryCheckReportThreshold->value());
 
         replayTrace(false, false);
     }
