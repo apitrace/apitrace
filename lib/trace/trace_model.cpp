@@ -249,11 +249,10 @@ unsigned long long Repr   ::toUIntPtr(void) const { return machineValue->toUIntP
 
 
 // string cast
-const char * Value ::toString(void)  const { assert(0); return NULL; }
-const char * Null  ::toString(void)  const { return NULL; }
-const char * String::toString(void)  const { return value; }
-const char * WString::toString(void) const { return (const char *) value; }
-const char * Repr  ::toString(void)  const { return machineValue->toString(); }
+const char * Value ::toString(void) const { assert(0); return NULL; }
+const char * Null  ::toString(void) const { return NULL; }
+const char * String::toString(void) const { return value; }
+const char * Repr  ::toString(void) const { return machineValue->toString(); }
 
 
 // virtual Value::visit()

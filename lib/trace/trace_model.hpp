@@ -252,7 +252,6 @@ public:
     ~WString();
 
     bool toBool(void) const override;
-    const char* toString(void) const override;
     void visit(Visitor &visitor) override;
 
     const wchar_t * value;
