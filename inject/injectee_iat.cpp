@@ -965,13 +965,13 @@ MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     BOOL bLoaded = FALSE;
 
     /*
-     * XXX: On Windows 10 GDI's ChoosePixelFormat calls
+     * XXX: GDI's DescribePixelFormat does
      *
      *   HMODULE hModule = LoadLibraryExA("OPENGL32", 0, 0)
      *   GetProcAddress(hModule, "wglDescribePixelFormat")
      *   MyFreeLibrary(hModule)
      *
-     * over and over again, possibly for every pixel format, and we end up
+     * And GLFW3 calls it for every existing pixel format, and we end up
      * spending an eternity inside Tool Help Library functions.  To avoid this,
      * we try to detect when loading an existing library and do nothing.
      *
