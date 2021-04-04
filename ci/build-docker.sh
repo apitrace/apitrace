@@ -16,7 +16,16 @@ uid=$(id -u)
 test -t 0 && interactive=true || interactive=false
 
 docker_run () {
-    docker run -i=$interactive --tty=$interactive --rm -v "$PWD:$PWD" -u "$uid" $docker_tag "$@"
+    docker run \
+        --rm \
+        -i=$interactive \
+        --tty=$interactive \
+        -e CMAKE_BUILD_PARALLEL_LEVEL \
+        -v "$PWD:$PWD" \
+        -w "$PWD" \
+        -u "$uid" \
+        $docker_tag \
+        "$@"
 }
 
 symbol_versions () {
@@ -44,7 +53,7 @@ else
     CMAKE_BUILD_TYPE=Debug
 fi
 
-export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(getconf_NPROCESSORS_ONLN)}
+export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(getconf _NPROCESSORS_ONLN)}
 
 docker_run \
     cmake \
