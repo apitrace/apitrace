@@ -7,7 +7,7 @@ source_dir=$PWD
 
 distro="$1"
 shift
-test -d $source_dir/ci/docker/$distro
+test -f $source_dir/ci/docker/$distro.Dockerfile
 
 build_dir=$source_dir/build/docker-$distro
 docker_tag=$distro-apitrace
@@ -31,10 +31,10 @@ then
     # - https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei
     # - https://github.com/dtinth/github-actions-docker-layer-caching-poc/blob/master/.github/workflows/dockerimage.yml
     docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
-    docker build -t $docker_tag --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache $source_dir/ci/docker/$distro
+    docker build -t $docker_tag --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache -f $source_dir/ci/docker/$distro.Dockerfile $source_dir/ci/docker
     docker tag $docker_tag docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
 else
-    docker build -t $docker_tag $source_dir/ci/docker/$distro
+    docker build -t $docker_tag -f $source_dir/ci/docker/$distro.Dockerfile $source_dir/ci/docker
 fi
 
 if [ "$PACKAGE" = "true" ]
