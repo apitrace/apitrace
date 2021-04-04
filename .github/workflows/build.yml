@@ -21,21 +21,18 @@ jobs:
       run: cmake --build $PWD/build --use-stderr --target package
 
   ubuntu32:
-    # FIXME
-    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: apt-install
-      run: sudo apt-get install -qq -y --no-install-recommends linux-libc-dev gcc-multilib gcc-multilib g++-multilib python3 ninja-build cmake
-    - name: cmake
-      run: cmake -S$PWD -B$PWD/build -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0
-    - name: build
-      run: cmake --build $PWD/build --use-stderr
-    - name: check
-      run: cmake --build $PWD/build --use-stderr --target check
+    - run: sudo dpkg --add-architecture i386
+    - run: sudo apt-get update
+    - run: sudo apt-get install -qq -y --no-install-recommends gcc-multilib g++-multilib python3 ninja-build cmake libx11-dev:i386
+    - run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DENABLE_GUI=0
+    - run: cmake --build build --use-stderr
+    - run: cmake --build build --use-stderr --target check
+    - run: test -x build/glretrace -a -x build/wrappers/glxtrace.so
 
   ubuntu64-clang:
     runs-on: ubuntu-latest
