@@ -21,6 +21,8 @@ jobs:
       run: cmake --build $PWD/build --use-stderr --target package
 
   ubuntu32:
+    # FIXME
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
