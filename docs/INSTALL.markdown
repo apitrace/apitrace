@@ -49,7 +49,7 @@ Optional dependencies:
 
 Build as:
 
-    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
     make -C build
 
 Other possible values for `CMAKE_BUILD_TYPE` `Debug`, `Release`,
@@ -59,7 +59,7 @@ You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
 you have a multilib gcc and 32-bits X11 libraries, by doing:
 
     cmake \
-        -H. -Bbuild32 \
+        -S. -Bbuild32 \
         -DCMAKE_C_FLAGS=-m32 \
         -DCMAKE_CXX_FLAGS=-m32 \
         -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 \
@@ -78,7 +78,7 @@ First install Qt through [Homebrew](https://brew.sh/) like
 
 Then do:
 
-    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
+    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
     make -C build
 
 
@@ -106,7 +106,7 @@ To build with Visual Studio first open a Command Prompt window (*not* Visual
 Studio Command Prompt window), change into the Apitrace source, and invoke
 CMake GUI as:
 
-    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
+    cmake-gui -S. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
 
 and press the _Configure_ button.
 
@@ -129,7 +129,7 @@ generators are available on your system:
 
 At the end of the output, choose a generator and start configuring the project:
 
-    cmake -H. -Bbuild -G "Visual Studio 16 2019" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
+    cmake -S. -Bbuild -G "Visual Studio 16 2019" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
 
 Note as off Qt version 5.9.1 there's no `msvc2019` directory, only `msvc2017`
 and `msvc2017_64`, but `msvc2017` should work as MSVC 2019 is binary backwards

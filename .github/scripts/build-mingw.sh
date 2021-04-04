@@ -13,7 +13,7 @@ echo "set (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >> Toolchain.cmake
 echo "set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> Toolchain.cmake
 echo "set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> Toolchain.cmake
 
-cmake -H$PWD -B$PWD/build -G Ninja -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0
+cmake -S$PWD -B$PWD/build -G Ninja -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0
 cmake --build $PWD/build --use-stderr
 cmake --build $PWD/build --use-stderr --target check
 cmake --build $PWD/build --use-stderr --target package

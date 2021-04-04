@@ -48,7 +48,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(getconf_NPROCE
 
 docker_run \
     cmake \
-    -H$source_dir \
+    -S$source_dir \
     -B$build_dir \
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
     "$@"

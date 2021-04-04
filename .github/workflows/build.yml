@@ -12,7 +12,7 @@ jobs:
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends gcc g++ zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
-      run: cmake -H$PWD -B$PWD/build -G Ninja -DENABLE_GUI=1
+      run: cmake -S$PWD -B$PWD/build -G Ninja -DENABLE_GUI=1
     - name: build
       run: cmake --build $PWD/build --use-stderr
     - name: check
@@ -31,7 +31,7 @@ jobs:
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends linux-libc-dev gcc-multilib gcc-multilib g++-multilib python3 ninja-build cmake
     - name: cmake
-      run: cmake -H$PWD -B$PWD/build -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0
+      run: cmake -S$PWD -B$PWD/build -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 -DENABLE_GUI=0
     - name: build
       run: cmake --build $PWD/build --use-stderr
     - name: check
@@ -46,7 +46,7 @@ jobs:
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
-      run: cmake -H$PWD -B$PWD/build -G Ninja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DENABLE_GUI=1
+      run: cmake -S$PWD -B$PWD/build -G Ninja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DENABLE_GUI=1
     - name: build
       run: cmake --build $PWD/build --use-stderr
     - name: check

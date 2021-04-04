@@ -33,7 +33,7 @@ matrix:
 before_build:
 - set Path=C:\Python36;%Path%
 - set Path=%QT5%\bin;%Path%
-- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" -A "%CMAKE_TOOLSET%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
+- cmake -S. -Bbuild -G "%CMAKE_GENERATOR%" -A "%CMAKE_TOOLSET%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
 
 build_script:
 - cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
