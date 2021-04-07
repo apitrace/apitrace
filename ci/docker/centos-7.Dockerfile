@@ -21,11 +21,11 @@ RUN yum -y install rh-python36 && \
     yum clean all && \
     /usr/bin/scl enable rh-python36 true
 
-# https://www.softwarecollections.org/en/scls/rhscl/devtoolset-7/
-RUN yum -y install devtoolset-7-gcc devtoolset-7-binutils devtoolset-7-gcc-c++ && \
+# https://www.softwarecollections.org/en/scls/rhscl/devtoolset-8/
+RUN yum -y install devtoolset-8-gcc devtoolset-8-binutils devtoolset-8-gcc-c++ && \
     yum clean all && \
-    /usr/bin/scl enable devtoolset-7 true
+    /usr/bin/scl enable devtoolset-8 true
 
 # Make sure the above SCLs are already enabled
-ENTRYPOINT ["/usr/bin/scl", "enable", "rh-python36", "devtoolset-7", "--"]
-CMD ["/usr/bin/scl", "enable", "rh-python36", "devtoolset-7", "--", "/bin/bash"]
+ENTRYPOINT ["/usr/bin/scl", "enable", "rh-python36", "devtoolset-8", "--"]
+CMD ["/usr/bin/scl", "enable", "rh-python36", "devtoolset-8", "--", "/bin/bash"]
