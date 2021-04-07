@@ -4,12 +4,12 @@ ENV container docker
 
 RUN yum -y update && \
     yum clean all
-RUN yum -y install zlib-devel libX11-devel make && \
+RUN yum -y install zlib-devel libX11-devel && \
     yum clean all
 
 RUN yum -y install epel-release && \
     yum clean all
-RUN yum -y install cmake3 && \
+RUN yum -y install ninja-build cmake3 && \
     yum clean all && \
     ln -s cmake3 /usr/bin/cmake
 

@@ -20,7 +20,6 @@ docker_run () {
         --rm \
         -i=$interactive \
         --tty=$interactive \
-        -e CMAKE_BUILD_PARALLEL_LEVEL \
         -v "$PWD:$PWD" \
         -w "$PWD" \
         -u "$uid" \
@@ -52,8 +51,6 @@ then
 else
     CMAKE_BUILD_TYPE=Debug
 fi
-
-export CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$(getconf _NPROCESSORS_ONLN)}
 
 docker_run \
     cmake \
