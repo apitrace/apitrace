@@ -4,12 +4,16 @@ version: '{build}'
 
 branches:
   except:
-  - /^github.*$/
+    - /^github.*$/
 
 init:
-- git config --global core.autocrlf input
+  - git config --global core.autocrlf input
 
 shallow_clone: true
+
+cache:
+ - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86.7z
+ - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
 
 # https://www.appveyor.com/docs/windows-images-software/
 image: Visual Studio 2019
@@ -18,32 +22,22 @@ environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
   CONFIGURATION: RelWithDebInfo
   matrix:
-  - job_name: msvc32
-    CMAKE_GENERATOR: "Visual Studio 16 2019"
-    CMAKE_TOOLSET: "Win32"
-    QT5: C:\Qt\5.14\msvc2017
-  - job_name: msvc64
-    CMAKE_GENERATOR: "Visual Studio 16 2019"
-    CMAKE_TOOLSET: "x64"
-    QT5: C:\Qt\5.14\msvc2017_64
+    - job_name: msvc32
+      TARGET: win32
+    - job_name: msvc64
+      TARGET: win64
 
 matrix:
   fast_finish: true
 
 before_build:
-- set Path=C:\Python36;%Path%
-- set Path=%QT5%\bin;%Path%
-- cmake -S. -Bbuild -G "%CMAKE_GENERATOR%" -A "%CMAKE_TOOLSET%" "-DCMAKE_PREFIX_PATH=%QT5%" -DENABLE_GUI=ON
+  - set Path=C:\Python36;%Path%
 
 build_script:
-- cmake --build build --config "%CONFIGURATION%" -- %MSBUILD_FLAGS%
-
-after_build:
-- cmake --build build --config "%CONFIGURATION%" --target check -- %MSBUILD_FLAGS%
-- cmake --build build --config "%CONFIGURATION%" --target package -- %MSBUILD_FLAGS%
+  - ps: .\ci\build-msvc.ps1 -target $Env:TARGET -config $Env:CONFIGURATION
 
 artifacts:
-- path: build/apitrace-*.7z
+  - path: build/apitrace-*.7z
 
 deploy:
   provider: GitHub
