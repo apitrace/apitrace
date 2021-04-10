@@ -93,9 +93,6 @@ if (!$config) {
     }
 }
 
-Exec { cmake --version }
-Exec { python --version }
-
 Write-Host "Configuring onto $buildRoot ..."
 Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
 

@@ -29,9 +29,6 @@ environment:
 matrix:
   fast_finish: true
 
-before_build:
-  - set Path=C:\Python36;%Path%
-
 build_script:
   - ps: .\ci\build-msvc.ps1 -target $Env:TARGET
 
