@@ -18,7 +18,6 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
         # Several MinGW headers are lacking.  Use our own.
         include_directories (BEFORE
             ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec
-            ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wrl
         )
 
         remove_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
