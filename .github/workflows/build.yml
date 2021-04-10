@@ -103,6 +103,13 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.target }}-5.15.2-0
     - name: Build
       run: .\ci\build-msvc.ps1 -target ${{ matrix.target }}
+    - name: Upload artifacts
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v2
+      with:
+        name: apitrace-${{ matrix.target }}
+        path: build/apitrace-*.7z
+        if-no-files-found: error
 
   mac64:
     runs-on: macos-latest
