@@ -17,6 +17,10 @@ indent_size = 4
 indent_style = space
 trim_trailing_whitespace = false
 
+[*.ps1]
+indent_style = space
+indent_size = 4
+
 [*.py]
 indent_style = space
 indent_size = 4
