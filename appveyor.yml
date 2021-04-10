@@ -20,7 +20,6 @@ image: Visual Studio 2019
 
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
-  CONFIGURATION: RelWithDebInfo
   matrix:
     - job_name: msvc32
       TARGET: win32
@@ -34,7 +33,7 @@ before_build:
   - set Path=C:\Python36;%Path%
 
 build_script:
-  - ps: .\ci\build-msvc.ps1 -target $Env:TARGET -config $Env:CONFIGURATION
+  - ps: .\ci\build-msvc.ps1 -target $Env:TARGET
 
 artifacts:
   - path: build/apitrace-*.7z
