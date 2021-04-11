@@ -34,13 +34,11 @@
 
 /* XXX: We still use our own implementation:
  *
- * - MSVC's C++11 threads implementation are hardcoded to use C++ exceptions
- *
  * - MinGW's C++11 threads implementation is often either missing or relies on
  *   winpthreads
  */
 
-#if !defined(_WIN32)
+#if !defined(__MINGW32__)
 #define HAVE_CXX11_THREADS
 #endif
 
