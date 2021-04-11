@@ -8,14 +8,18 @@ for target
 do
     test -f cmake/toolchain/$target.cmake
     test -f dxsdk-master/Cache-$target.cmake
-    cmake \
-        -S . \
-        -B build/$target \
-        -G Ninja \
-        -DCMAKE_TOOLCHAIN_FILE=$PWD/cmake/toolchain/$target.cmake \
-        -C dxsdk-master/Cache-mingw32.cmake \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DENABLE_GUI=NO
+    if [ ! build/$target/CMakeCache.txt -nt "$0" ]
+    then
+        cmake \
+            -S . \
+            -B build/$target \
+            -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$PWD/cmake/toolchain/$target.cmake \
+            -C dxsdk-master/Cache-mingw32.cmake \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=YES \
+            -DENABLE_GUI=NO
+    fi
     cmake --build build/$target --use-stderr
     cmake --build build/$target --use-stderr --target check
     if [ "${GITHUB_ACTIONS:-false}" = true ]
