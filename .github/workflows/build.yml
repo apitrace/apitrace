@@ -77,14 +77,9 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: apt-install
-      run: sudo apt-get install -qq -y --no-install-recommends g++-mingw-w64-i686 ninja-build cmake
-    - name: dxsdk
-      run: wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
-    - name: build
-      run: .github/scripts/build-mingw.sh
-      env:
-        MINGW_PREFIX: i686-w64-mingw32
+    - run: sudo apt-get install -qq -y --no-install-recommends g++-mingw-w64-i686 ninja-build cmake
+    - run: wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
+    - run: ci/build-mingw.sh mingw32
 
   msvc:
     runs-on: windows-latest
