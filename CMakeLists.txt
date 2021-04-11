@@ -410,10 +410,10 @@ if (CMAKE_CROSSCOMPILING)
     add_custom_target (check)
 elseif (DEFINED CMAKE_BUILD_TYPE)
     # Single configuration
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure USES_TERMINAL)
 else ()
     # Multiple configuration
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure)
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure USES_TERMINAL)
 endif ()
 
 
