@@ -24,12 +24,6 @@ if (WIN32)
         shell32
     )
 endif ()
-if (ANDROID)
-    target_link_libraries (os
-        log
-    )
-endif ()
-
 if (APPLE)
     target_link_libraries (os
         "-framework Foundation"

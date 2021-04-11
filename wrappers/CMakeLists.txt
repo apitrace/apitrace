@@ -26,7 +26,7 @@ if (ENABLE_STATIC_LIBSTDCXX)
 endif ()
 
 macro (target_linker_version_script target version_script)
-    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         # https://sourceware.org/binutils/docs/ld/VERSION.html
         set_property (
             TARGET ${target}

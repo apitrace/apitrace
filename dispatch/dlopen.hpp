@@ -44,15 +44,7 @@ _dlopen(const char *filename, int flag)
     static PFN_DLOPEN dlopen_ptr = NULL;
 
     if (!dlopen_ptr) {
-#ifdef ANDROID
-        /* Android does not have dlopen in libdl.so; instead, the
-         * implementation is available in the dynamic linker itself.
-         * Oddly enough, we still can interpose it, but need to use
-         * RTLD_DEFAULT to get pointer to the original function.  */
-        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_DEFAULT, "dlopen");
-#else
         dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
-#endif
         if (!dlopen_ptr) {
             os::log("apitrace: error: failed to look up real dlopen\n");
             return NULL;

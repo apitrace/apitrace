@@ -52,14 +52,6 @@ namespace os {
         return proc.rss;
     }
 
-#elif defined(__ANDROID__)
-
-    long long
-    getVsize(void);
-
-    long long
-    getRss(void);
-
 #else
 
     inline long long

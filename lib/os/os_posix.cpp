@@ -48,10 +48,6 @@
 #include <mach-o/dyld.h>
 #endif
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-
 #ifndef PATH_MAX
 #warning PATH_MAX undefined
 #define PATH_MAX 4096
@@ -95,14 +91,7 @@ getProcessName(void)
 #else
     ssize_t len;
 
-#ifdef ANDROID
-    // On Android, we are almost always interested in the actual process title
-    // rather than path to the VM kick-off executable
-    // (/system/bin/app_process).
-    len = 0;
-#else
     len = readlink("/proc/self/exe", buf, size - 1);
-#endif
 
     if (len <= 0) {
         // /proc/self/exe is not available on setuid processes, so fallback to
@@ -186,9 +175,7 @@ getConfigDir(void)
         assert(homeDir);
         if (homeDir) {
             path = homeDir;
-#if !defined(ANDROID)
             path.join(".config");
-#endif
         }
     }
 #endif
@@ -259,9 +246,6 @@ log(const char *format, ...)
     va_list ap;
     va_start(ap, format);
     fflush(stdout);
-#ifdef ANDROID
-    __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
-#else
     static FILE *log = NULL;
     if (!log) {
         // Duplicate stderr file descriptor, to prevent applications from
@@ -272,7 +256,6 @@ log(const char *format, ...)
     }
     vfprintf(log, format, ap);
     fflush(log);
-#endif
     va_end(ap);
     logging = false;
 }
@@ -426,42 +409,6 @@ resetExceptionCallback(void)
 #endif
 }
 
-#ifdef __ANDROID__
-#include "os_memory.hpp"
-#include <cassert>
-#include <cstdio>
-
-#include <fcntl.h>
-#include <unistd.h>
-
-char statmBuff[256];
-static __uint64_t pageSize = sysconf(_SC_PAGESIZE);
-
-static long size, resident;
-
-static inline void parseStatm()
-{
-    int fd = open("/proc/self/statm", O_RDONLY, 0);
-    int sz = read(fd, statmBuff, 255);
-    close(fd);
-    statmBuff[sz] = 0;
-    sz = sscanf(statmBuff, "%ld %ld",
-               &size, &resident);
-    assert(sz == 2);
-}
-
-long long getVsize()
-{
-    parseStatm();
-    return pageSize * size;
-}
-
-long long getRss()
-{
-    parseStatm();
-    return pageSize * resident;
-}
-#endif
 
 } /* namespace os */
 

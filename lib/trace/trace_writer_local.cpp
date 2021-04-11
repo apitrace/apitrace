@@ -102,10 +102,6 @@ LocalWriter::open(void) {
 #endif
         process.trimDirectory();
 
-#ifdef ANDROID
-        os::String prefix = "/data/data";
-        prefix.join(process);
-#else
         os::String prefix = os::getCurrentDir();
 #ifdef _WIN32
         // Default to user's desktop, as current directory often points to
@@ -115,7 +111,6 @@ LocalWriter::open(void) {
         if (SUCCEEDED(hr)) {
             prefix = szDesktopPath;
         }
-#endif
 #endif
         prefix.join(process);
 

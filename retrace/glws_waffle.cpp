@@ -124,9 +124,7 @@ init(void)
 {
     int32_t waffle_platform;;
 
-#if defined(__ANDROID__)
-    waffle_platform = WAFFLE_PLATFORM_ANDROID;
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
     waffle_platform = WAFFLE_PLATFORM_CGL
 #elif defined(_WIN32)
     waffle_platform = WAFFLE_PLATFORM_WGL

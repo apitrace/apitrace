@@ -52,25 +52,23 @@ endif ()
 # processes, they must not depend on any shared object that could also be
 # provided by such applications.  See also
 # http://lists.freedesktop.org/archives/mesa-dev/2015-March/079121.html
-if (NOT ANDROID)
-    option (ENABLE_STATIC_SNAPPY "Statically link against snappy" ON)
-    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
-        option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
-        if (NOT (ENABLE_STATIC_LIBGCC AND
-                 ENABLE_STATIC_LIBSTDCXX AND
-                 ENABLE_STATIC_SNAPPY))
-            # XXX: Should probably throw a run-time too.
-            message (WARNING
-                "LD_PRELOAD wrappers not statically linked against all "
-                "dependencies, therefore will fail to work with many "
-                "third-party applications built on different Linux "
-                "distributions and that ship their own shared-object "
-                "dependencies."
-            )
-        endif ()
-        option (ENABLE_STATIC_EXE "Statically link executables" OFF)
+option (ENABLE_STATIC_SNAPPY "Statically link against snappy" ON)
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
+    option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
+    if (NOT (ENABLE_STATIC_LIBGCC AND
+             ENABLE_STATIC_LIBSTDCXX AND
+             ENABLE_STATIC_SNAPPY))
+        # XXX: Should probably throw a run-time too.
+        message (WARNING
+            "LD_PRELOAD wrappers not statically linked against all "
+            "dependencies, therefore will fail to work with many "
+            "third-party applications built on different Linux "
+            "distributions and that ship their own shared-object "
+            "dependencies."
+        )
     endif ()
+    option (ENABLE_STATIC_EXE "Statically link executables" OFF)
 endif ()
 
 
@@ -99,22 +97,14 @@ list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include (ConvenienceLibrary)
 include (InstallPDB)
 
-if (ANDROID)
-    set (ENABLE_GUI false)
-else ()
-    macro (find_host_package)
-        find_package (${ARGN})
-    endmacro()
-endif ()
-
 if (CMAKE_VERSION VERSION_LESS 3.12)
-    find_host_package (PythonInterp 3 REQUIRED)
+    find_package (PythonInterp 3 REQUIRED)
     if (NOT PYTHON_VERSION_MAJOR EQUAL 3)
         message (FATAL_ERROR "Python 3.x required and requested, but Python ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} found.")
     endif ()
     set (Python3_EXECUTABLE "${PYTHON_EXECUTABLE}")
 else ()
-    find_host_package (Python3 REQUIRED)
+    find_package (Python3 REQUIRED)
 endif ()
 
 find_package (Threads)
@@ -291,10 +281,7 @@ else ()
     add_compiler_flags (-fno-strict-aliasing)
 
     # No RTTI required
-    # XXX: there's a dynamic_cast in Android
-    if (NOT ANDROID)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
-    endif ()
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Disable C++ exceptions
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
