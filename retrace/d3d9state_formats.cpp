@@ -144,7 +144,7 @@ formatToString(D3DFORMAT fmt)
 static DXGI_FORMAT
 convertFormatDXGI(D3DFORMAT Format)
 {
-    switch ((int)Format) {
+    switch (DWORD(Format)) {
     case D3DFMT_UNKNOWN:
         return DXGI_FORMAT_UNKNOWN;
     case D3DFMT_A8R8G8B8:
@@ -255,7 +255,7 @@ ConvertImage(D3DFORMAT SrcFormat,
 
     unsigned numChannels;
     image::ChannelType channelType;
-    switch (SrcFormat) {
+    switch (DWORD(SrcFormat)) {
     case D3DFMT_A8R8G8B8:
     case D3DFMT_A8B8G8R8:
         numChannels = 4;
@@ -313,7 +313,7 @@ ConvertImage(D3DFORMAT SrcFormat,
     dst = image->start();
     src = (const unsigned char *)SrcData;
     for (unsigned y = 0; y < Height; ++y) {
-        switch (SrcFormat) {
+        switch (DWORD(SrcFormat)) {
         case D3DFMT_A8R8G8B8:
             for (unsigned x = 0; x < Width; ++x) {
                 dst[4*x + 0] = src[4*x + 2];
