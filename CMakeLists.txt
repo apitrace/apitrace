@@ -406,7 +406,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 if (BUILD_TESTING)
     enable_testing ()
 endif ()
-if (CMAKE_CROSSCOMPILING)
+if (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
     add_custom_target (check)
 elseif (DEFINED CMAKE_BUILD_TYPE)
     # Single configuration
@@ -550,7 +550,7 @@ macro (add_gtest)
     add_executable (${ARGV})
     target_link_libraries (${ARGV0} gtest)
     add_dependencies (check ${ARGV0})
-    add_test (NAME ${ARGV0} COMMAND $<TARGET_FILE:${ARGV0}>)
+    add_test (NAME ${ARGV0} COMMAND ${ARGV0})
 endmacro ()
 
 

@@ -31,7 +31,12 @@ target_link_libraries (mhook-test
     mhook
     ws2_32
 )
-add_test (NAME mhook-test COMMAND $<TARGET_FILE:mhook-test>)
+add_test (NAME mhook-test COMMAND mhook-test)
+
+if (CMAKE_CROSSCOMPILING)
+    # It does not run reliably on old Wine versions
+    set_tests_properties (mhook-test PROPERTIES DISABLED TRUE)
+endif ()
 
 
 install (
