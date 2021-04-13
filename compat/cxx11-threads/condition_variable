@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011-2012 Jose Fonseca
+ * Copyright 2011-2021 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,44 +23,61 @@
  *
  **************************************************************************/
 
-/*
- * OS native thread abstraction.
- *
- * Mimics/leverages C++11 threads.
- */
 
 #pragma once
 
 
-#include <thread>
+#include_next <condition_variable>
+
+#include <assert.h>
+#include <process.h>
+#include <windows.h>
+
 #include <mutex>
-#include <condition_variable>
-
-namespace os {
-
-    using std::mutex;
-    using std::recursive_mutex;
-    using std::unique_lock;
-    using std::condition_variable;
-    using std::thread;
-
-} /* namespace os */
 
 
-/**
- * Compiler TLS.
- *
- * It's not portable to use for DLLs on Windows XP, or non-POD types.
- *
- * See also:
- * - http://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Thread_002dLocal.html
- * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
- * - https://msdn.microsoft.com/en-us/library/y5f6w579.aspx
- */
-#if defined(__GNUC__)
-#  define OS_THREAD_LOCAL __thread
-#elif defined(_MSC_VER)
-#  define OS_THREAD_LOCAL __declspec(thread)
-#else
-#  error Unsupported C++ compiler
-#endif
+namespace std {
+
+
+    class condition_variable
+    {
+    private:
+        // Supported on Vista an higher.
+        typedef CONDITION_VARIABLE native_handle_type;
+        native_handle_type _native_handle;
+
+    public:
+        condition_variable() {
+            InitializeConditionVariable(&_native_handle);
+        }
+
+        ~condition_variable() {
+            /* No-op */
+        }
+
+        inline void
+        notify_one(void) {
+            WakeConditionVariable(&_native_handle);
+        }
+
+        inline void
+        notify_all(void) {
+            WakeAllConditionVariable(&_native_handle);
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock) {
+            mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
+            SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
+            while (!pred) {
+                wait(lock);
+            }
+        }
+    };
+
+
+} /* namespace std */

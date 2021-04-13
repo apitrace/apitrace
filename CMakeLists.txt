@@ -327,6 +327,15 @@ if (APPLE)
 endif ()
 
 if (MINGW)
+    # We use our C++11 threads implementation to avoid depending on winpthreads
+    check_cxx_source_compiles ("#include <thread>\nstd::thread t; int main() { return 0; }" HAVE_CXX11_THREADS)
+    if (HAVE_CXX11_THREADS)
+        message (FATAL_ERROR "MinGW builds require WIN32 threads.")
+    else ()
+        # TODO: Consider https://github.com/meganz/mingw-std-threads
+        include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+    endif ()
+
     # Avoid depending on MinGW runtime DLLs
     add_linker_flags (-static-libgcc -static-libstdc++)
 elseif (ENABLE_STATIC_EXE)
