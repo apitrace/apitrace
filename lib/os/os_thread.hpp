@@ -64,15 +64,10 @@ namespace os {
 
 
 #include <assert.h>
-#ifdef _WIN32
-#  include <process.h>
-#  include <windows.h>
-#  if _WIN32_WINNT >= 0x0600
-#    define HAVE_WIN32_CONDITION_VARIABLES
-#  endif
-#else
-#  include <pthread.h>
-#  include <unistd.h>
+#include <process.h>
+#include <windows.h>
+#if _WIN32_WINNT >= 0x0600
+#  define HAVE_WIN32_CONDITION_VARIABLES
 #endif
 
 #include <functional>
@@ -87,11 +82,7 @@ namespace os {
     class _base_mutex
     {
     public:
-#ifdef _WIN32
         typedef CRITICAL_SECTION native_handle_type;
-#else
-        typedef pthread_mutex_t native_handle_type;
-#endif
 
     protected:
         _base_mutex(void) {
@@ -99,29 +90,17 @@ namespace os {
 
     public:
         ~_base_mutex() {
-#ifdef _WIN32
             DeleteCriticalSection(&_native_handle);
-#else
-            pthread_mutex_destroy(&_native_handle);
-#endif
         }
 
         inline void
         lock(void) {
-#ifdef _WIN32
             EnterCriticalSection(&_native_handle);
-#else
-            pthread_mutex_lock(&_native_handle);
-#endif
         }
 
         inline void
         unlock(void) {
-#ifdef _WIN32
             LeaveCriticalSection(&_native_handle);
-#else
-            pthread_mutex_unlock(&_native_handle);
-#endif
         }
 
         native_handle_type & native_handle() {
@@ -141,11 +120,7 @@ namespace os {
     public:
         inline
         mutex(void) {
-#ifdef _WIN32
             InitializeCriticalSection(&_native_handle);
-#else
-            pthread_mutex_init(&_native_handle, NULL);
-#endif
         }
     };
 
@@ -158,15 +133,7 @@ namespace os {
     public:
         inline
         recursive_mutex(void) {
-#ifdef _WIN32
             InitializeCriticalSection(&_native_handle);
-#else
-            pthread_mutexattr_t attr;
-            pthread_mutexattr_init(&attr);
-            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-            pthread_mutex_init(&_native_handle, &attr);
-            pthread_mutexattr_destroy(&attr);
-#endif
         }
     };
 
@@ -218,8 +185,7 @@ namespace os {
     class condition_variable
     {
     private:
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
         // Only supported on Vista an higher. Not yet supported by WINE.
         typedef CONDITION_VARIABLE native_handle_type;
         native_handle_type _native_handle;
@@ -233,76 +199,55 @@ namespace os {
         };
         HANDLE hEvents[EVENT_COUNT];
 #endif
-#else
-        typedef pthread_cond_t native_handle_type;
-        native_handle_type _native_handle;
-#endif
 
     public:
         condition_variable() {
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
             InitializeConditionVariable(&_native_handle);
-#  else
+#else
             cWaiters = 0;
             hEvents[EVENT_ONE] = CreateEvent(NULL, FALSE, FALSE, NULL);
             hEvents[EVENT_ALL] = CreateEvent(NULL, TRUE, FALSE, NULL);
-#  endif
-#else
-            pthread_cond_init(&_native_handle, NULL);
 #endif
         }
 
         ~condition_variable() {
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
             /* No-op */
-#  else
+#else
             CloseHandle(hEvents[EVENT_ALL]);
             CloseHandle(hEvents[EVENT_ONE]);
-#  endif
-#else
-            pthread_cond_destroy(&_native_handle);
 #endif
         }
 
         inline void
         notify_one(void) {
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
             WakeConditionVariable(&_native_handle);
-#  else
+#else
             if (cWaiters) {
                 SetEvent(hEvents[EVENT_ONE]);
             }
-#  endif
-#else
-            pthread_cond_signal(&_native_handle);
 #endif
         }
 
         inline void
         notify_all(void) {
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
             WakeAllConditionVariable(&_native_handle);
-#  else
+#else
             if (cWaiters) {
                 SetEvent(hEvents[EVENT_ALL]);
             }
-#  endif
-#else
-            pthread_cond_broadcast(&_native_handle);
 #endif
         }
 
         inline void
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
-#ifdef _WIN32
-#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+#ifdef HAVE_WIN32_CONDITION_VARIABLES
             SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
-#  else
+#else
             InterlockedIncrement(&cWaiters);
             LeaveCriticalSection(&mutex_native_handle);
             DWORD dwResult;
@@ -312,9 +257,6 @@ namespace os {
                 dwResult == WAIT_OBJECT_0 + EVENT_ALL) {
                 ResetEvent(hEvents[EVENT_ALL]);
             }
-#  endif
-#else
-            pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
         }
 
@@ -332,11 +274,7 @@ namespace os {
      */
     class thread {
     public:
-#ifdef _WIN32
         typedef HANDLE native_handle_type;
-#else
-        typedef pthread_t native_handle_type;
-#endif
 
         inline
         thread() :
@@ -359,13 +297,9 @@ namespace os {
 
         static unsigned
         hardware_concurrency(void) {
-#ifdef _WIN32
             SYSTEM_INFO si;
             GetSystemInfo(&si);
             return si.dwNumberOfProcessors;
-#else
-            return sysconf(_SC_NPROCESSORS_ONLN);
-#endif
         }
 
         template< class Function, class... Args >
@@ -390,11 +324,7 @@ namespace os {
 
         inline void
         join() {
-#ifdef _WIN32
             WaitForSingleObject(_native_handle, INFINITE);
-#else
-            pthread_join(_native_handle, NULL);
-#endif
         }
 
     private:
@@ -402,11 +332,7 @@ namespace os {
 
         template< typename Param >
         static
-#ifdef _WIN32
         unsigned __stdcall
-#else
-        void *
-#endif
         _callback(void *lpParameter) {
             Param *pParam = static_cast<Param *>(lpParameter);
             (*pParam)();
@@ -417,14 +343,8 @@ namespace os {
         template< typename Param >
         static inline native_handle_type
         _create(Param *function) {
-#ifdef _WIN32
             uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, function, 0, NULL);
             return reinterpret_cast<HANDLE>(handle);
-#else
-            pthread_t t;
-            pthread_create(&t, NULL, &_callback<Param>, function);
-            return t;
-#endif
         }
     };
 
