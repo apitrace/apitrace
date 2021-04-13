@@ -66,9 +66,6 @@ namespace os {
 #include <assert.h>
 #include <process.h>
 #include <windows.h>
-#if _WIN32_WINNT >= 0x0600
-#  define HAVE_WIN32_CONDITION_VARIABLES
-#endif
 
 #include <functional>
 
@@ -185,79 +182,33 @@ namespace os {
     class condition_variable
     {
     private:
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
-        // Only supported on Vista an higher. Not yet supported by WINE.
+        // Supported on Vista an higher.
         typedef CONDITION_VARIABLE native_handle_type;
         native_handle_type _native_handle;
-#else
-        // http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
-        LONG cWaiters;
-        enum {
-            EVENT_ONE = 0,
-            EVENT_ALL,
-            EVENT_COUNT
-        };
-        HANDLE hEvents[EVENT_COUNT];
-#endif
 
     public:
         condition_variable() {
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
             InitializeConditionVariable(&_native_handle);
-#else
-            cWaiters = 0;
-            hEvents[EVENT_ONE] = CreateEvent(NULL, FALSE, FALSE, NULL);
-            hEvents[EVENT_ALL] = CreateEvent(NULL, TRUE, FALSE, NULL);
-#endif
         }
 
         ~condition_variable() {
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
             /* No-op */
-#else
-            CloseHandle(hEvents[EVENT_ALL]);
-            CloseHandle(hEvents[EVENT_ONE]);
-#endif
         }
 
         inline void
         notify_one(void) {
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
             WakeConditionVariable(&_native_handle);
-#else
-            if (cWaiters) {
-                SetEvent(hEvents[EVENT_ONE]);
-            }
-#endif
         }
 
         inline void
         notify_all(void) {
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
             WakeAllConditionVariable(&_native_handle);
-#else
-            if (cWaiters) {
-                SetEvent(hEvents[EVENT_ALL]);
-            }
-#endif
         }
 
         inline void
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
-#ifdef HAVE_WIN32_CONDITION_VARIABLES
             SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
-#else
-            InterlockedIncrement(&cWaiters);
-            LeaveCriticalSection(&mutex_native_handle);
-            DWORD dwResult;
-            dwResult = WaitForMultipleObjects(EVENT_COUNT, hEvents, FALSE, INFINITE);
-            EnterCriticalSection(&mutex_native_handle);
-            if (InterlockedDecrement(&cWaiters) == 0 &&
-                dwResult == WAIT_OBJECT_0 + EVENT_ALL) {
-                ResetEvent(hEvents[EVENT_ALL]);
-            }
-#endif
         }
 
         inline void
