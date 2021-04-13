@@ -4,6 +4,8 @@ set -eux
 
 test $# -gt 0 || set -- mingw32 mingw64
 
+test ! -d /usr/lib/ccache || export PATH="/usr/lib/ccache:$PATH"
+
 for target
 do
     test -f cmake/toolchain/$target.cmake
