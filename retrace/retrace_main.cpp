@@ -400,8 +400,8 @@ private:
 
     unsigned leg;
 
-    os::mutex mutex;
-    os::condition_variable wake_cond;
+    std::mutex mutex;
+    std::condition_variable wake_cond;
 
     /**
      * There are protected by the mutex.
@@ -409,7 +409,7 @@ private:
     bool finished;
     trace::Call *baton;
 
-    os::thread thread;
+    std::thread thread;
 
     static void
     runnerThread(RelayRunner *_this);
@@ -423,7 +423,7 @@ public:
     {
         /* The fore runner does not need a new thread */
         if (leg) {
-            thread = os::thread(runnerThread, this);
+            thread = std::thread(runnerThread, this);
         }
     }
 
@@ -438,7 +438,7 @@ public:
      */
     void
     runRace(void) {
-        os::unique_lock<os::mutex> lock(mutex);
+        std::unique_lock<std::mutex> lock(mutex);
 
         while (1) {
             while (!finished && !baton) {
@@ -1296,7 +1296,7 @@ int main(int argc, char **argv)
 #endif
 
     if (snapshotThreaded) {
-        snapshotter = new ThreadedSnapshotter(os::thread::hardware_concurrency());
+        snapshotter = new ThreadedSnapshotter(std::thread::hardware_concurrency());
     } else {
         snapshotter = new Snapshotter();
     }
