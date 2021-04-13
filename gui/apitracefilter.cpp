@@ -129,5 +129,3 @@ QString ApiTraceFilter::customFilterRegexp() const
 {
     return m_customRegexp.pattern();
 }
-
-#include "apitracefilter.moc"

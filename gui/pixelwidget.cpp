@@ -408,5 +408,3 @@ QColor PixelWidget::colorAtCurrentPosition() const
 {
     return m_currentColor;
 }
-
-#include "pixelwidget.moc"

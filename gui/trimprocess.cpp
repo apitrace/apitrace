@@ -106,5 +106,3 @@ void TrimProcess::updateTrimPath()
                   .arg(baseName)
                   .arg(m_trimIndex);
 }
-
-#include "trimprocess.moc"

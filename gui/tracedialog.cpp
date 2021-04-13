@@ -152,5 +152,3 @@ bool TraceDialog::isDirOk(const QString &path)
 
     return true;
 }
-
-#include "tracedialog.moc"

@@ -43,5 +43,3 @@ void ShadersSourceWidget::changeShader(const QString &key)
 {
     m_edit->setPlainText(m_sources.value(key));
 }
-
-#include "shaderssourcewidget.moc"

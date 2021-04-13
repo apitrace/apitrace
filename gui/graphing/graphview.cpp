@@ -183,5 +183,3 @@ void GraphView::setDefaultView(qint64 min, qint64 max)
 
     update();
 }
-
-#include "graphview.moc"

@@ -92,5 +92,3 @@ void SearchWidget::show()
     m_ui.lineEdit->setFocus(Qt::ShortcutFocusReason);
     m_ui.lineEdit->setPalette(m_origPalette);
 }
-
-#include "searchwidget.moc"

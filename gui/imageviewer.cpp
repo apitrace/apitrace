@@ -250,5 +250,3 @@ void ImageViewer::zoomToFit()
 
     m_pixelWidget->setZoom(std::min(w / (double)iw, h / (double)ih), false);
 }
-
-#include "imageviewer.moc"

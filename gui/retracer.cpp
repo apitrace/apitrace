@@ -633,5 +633,3 @@ void Retracer::run()
 
     emit finished(msg);
 }
-
-#include "retracer.moc"

@@ -144,5 +144,3 @@ void SettingsDialog::setFilterModel(ApiTraceFilter *filter)
     m_filter = filter;
     filtersFromModel(m_filter);
 }
-
-#include "settingsdialog.moc"

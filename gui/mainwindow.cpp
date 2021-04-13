@@ -1966,5 +1966,3 @@ void MainWindow::updateRecentLaunchesMenu()
         });
     }
 }
-
-#include "mainwindow.moc"

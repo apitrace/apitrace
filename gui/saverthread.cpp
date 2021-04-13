@@ -381,5 +381,3 @@ void SaverThread::run()
 
     emit traceSaved();
 }
-
-#include "saverthread.moc"

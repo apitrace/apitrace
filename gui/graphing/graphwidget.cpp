@@ -578,6 +578,3 @@ void GraphWidget::updateSelection(bool emitSignal)
         emit selectionChanged(transformSelectionOut(m_selection));
     }
 }
-
-
-#include "graphwidget.moc"

@@ -415,5 +415,3 @@ void ApiTraceModel::endLoadingFrame(ApiTraceFrame *frame)
 
     m_loadingFrames.remove(frame);
 }
-
-#include "apitracemodel.moc"

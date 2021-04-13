@@ -1006,5 +1006,3 @@ void GLSLEdit::contextMenuEvent(QContextMenuEvent *e)
     menu->exec(e->globalPos());
     delete menu;
 }
-
-#include "glsledit.moc"
