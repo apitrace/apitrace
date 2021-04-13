@@ -16,6 +16,7 @@
 *.ilk
 *.json
 *.lib
+*.log
 *.moc*
 *.o
 *.obj
