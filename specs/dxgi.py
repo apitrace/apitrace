@@ -398,7 +398,7 @@ DWORD_TIMEOUT = FakeEnum(DWORD, [
 ])
 
 IDXGIKeyedMutex.methods += [
-    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD_TIMEOUT, "dwMilliseconds")], sideeffects=False),
+    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD_TIMEOUT, "dwMilliseconds")]),
     StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")]),
 ]
 

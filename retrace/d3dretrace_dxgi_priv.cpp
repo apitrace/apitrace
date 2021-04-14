@@ -273,11 +273,6 @@ overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *
         }
     }
 
-    if (riid == IID_IDXGIKeyedMutex) {
-        *pResult = pUnknown->QueryInterface(IID_IDXGIDeviceSubObject, ppvObj);
-        return TRUE;
-    }
-
     return FALSE;
 }
 

@@ -367,32 +367,12 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             print(r'    return;')
 
-        if method.name in ('CreateTexture1D', 'CreateTexture2D', 'CreateTexture3D', 'CreateBuffer'):
-            # We don't capture multiple processes, so ignore keyed mutexes to avoid deadlocks
-            print(r'    if (pDesc->MiscFlags & D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) {')
-            print(r'        pDesc->MiscFlags &= ~D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;')
-            print(r'        pDesc->MiscFlags |= D3D11_RESOURCE_MISC_SHARED;')
-            print(r'    }')
-
-        if method.name == 'ReleaseSync':
-            # We must flush the device that used this surface, as per
-            # https://docs.microsoft.com/en-us/windows/win32/api/d3d10/nf-d3d10-id3d10device-opensharedresource
-            print(r'''
-    com_ptr<ID3D11DeviceChild> pDeviceChild;
-    com_ptr<ID3D11Device> pDevice;
-    com_ptr<ID3D11DeviceContext> pDeviceContext;
-    HRESULT hr = _this->QueryInterface(IID_ID3D11DeviceChild, (void **)&pDeviceChild);
-    if (SUCCEEDED(hr)) {
-        pDeviceChild->GetDevice(&pDevice);
-        pDevice->GetImmediateContext(&pDeviceContext);
-        pDeviceContext->Flush();
-    } else {
-        retrace::warning(call) << "ReleaseSync without D3D11 device\n";
-    }
-    (void)Key;
-    (void)_result;
-''')
-            return
+        # We don't capture multiple processes, so don't wait keyed mutexes to
+        # avoid deadlocks.  However it's important to try honouring the
+        # IDXGIKeyedMutex interfaces so that single processes using multiple
+        # contexts work reliably, by ensuring pending commands get flushed.
+        if method.name == 'AcquireSync':
+            print(r'    dwMilliseconds = 0;')
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
@@ -505,6 +485,15 @@ class D3DRetracer(Retracer):
             print(r'        }')
             print(r'    }')
 
+    def checkResult(self, interface, methodOrFunction):
+        if interface is not None and interface.name == 'IDXGIKeyedMutex' and methodOrFunction.name == 'AcquireSync':
+            print(r'    if (_result != S_OK) {')
+            print(r'        retrace::failed(call, _result);')
+            self.handleFailure(interface, methodOrFunction)
+            print(r'    }')
+            return
+
+        return Retracer.checkResult(self, interface, methodOrFunction)
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         # Set object names
