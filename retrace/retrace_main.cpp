@@ -996,6 +996,29 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+/*
+ * Show the current call number on the first Ctrl-C/Break event.
+ */
+static BOOL WINAPI
+consoleCtrlHandler(DWORD fdwCtrlType)
+{
+    static int cCtrlC = 0;
+    static int cCtrlBreak = 0;
+
+    switch (fdwCtrlType) {
+    case CTRL_C_EVENT:
+        fprintf(stderr, "%u: warning: caught Ctrl-C event\n",
+                retrace::callNo);
+        return cCtrlC++ ? FALSE : TRUE;
+    case CTRL_BREAK_EVENT:
+        fprintf(stderr, "%u: warning: caught Ctrl-Break event\n",
+                retrace::callNo);
+        return cCtrlBreak++ ? FALSE : TRUE;
+    default:
+        return FALSE;
+    }
+}
+
 #endif  // _WIN32
 
 
@@ -1020,6 +1043,7 @@ int main(int argc, char **argv)
    if (!IsDebuggerPresent()) {
       AddVectoredExceptionHandler(0, VectoredHandler);
    }
+   SetConsoleCtrlHandler(&consoleCtrlHandler, TRUE);
 #endif
 
     assert(snapshotFrequency.empty());
