@@ -138,13 +138,13 @@ class D3DRetracer(Retracer):
     def forceDriver(self, driverType):
         # This can only work when pAdapter is NULL. For non-NULL pAdapter we
         # need to override inside the EnumAdapters call below
-        print(r'    com_ptr<IDXGIFactory1> _pFactory;')
-        print(r'    com_ptr<IDXGIAdapter> _pAdapter;')
+        print(r'    ComPtr<IDXGIFactory1> _pFactory;')
+        print(r'    ComPtr<IDXGIAdapter> _pAdapter;')
         print(r'    if (pAdapter == nullptr && retrace::driver != retrace::DRIVER_DEFAULT) {')
-        print(r'        _result = CreateDXGIFactory1(IID_IDXGIFactory1, (void **)&_pFactory);')
+        print(r'        _result = CreateDXGIFactory1(IID_IDXGIFactory1, &_pFactory);')
         print(r'        assert(SUCCEEDED(_result));')
-        print(r'        _result = d3dretrace::createAdapter(_pFactory, IID_IDXGIAdapter1, (void **)&_pAdapter);')
-        print(r'        pAdapter = _pAdapter;')
+        print(r'        _result = d3dretrace::createAdapter(_pFactory.Get(), IID_IDXGIAdapter1, &_pAdapter);')
+        print(r'        pAdapter = _pAdapter.Get();')
         print(r'        DriverType = %s;' % driverType)
         print(r'        Software = nullptr;')
         print(r'    }')
@@ -257,8 +257,8 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             return
         if method.name == 'CreateSwapChainForCompositionSurfaceHandle':
-            print(r'    com_ptr<IDXGIFactory2> pFactory;')
-            print(r'    _result = _this->QueryInterface(IID_IDXGIFactory2, (void **)&pFactory);')
+            print(r'    ComPtr<IDXGIFactory2> pFactory;')
+            print(r'    _result = _this->QueryInterface(IID_IDXGIFactory2, &pFactory);')
             print(r'    assert(SUCCEEDED(_result));')
             print(r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);')
             print(r'    pDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;')
@@ -286,9 +286,9 @@ class D3DRetracer(Retracer):
             # way to cope with it (other than retry).
             print(r'    Flags &= ~DXGI_PRESENT_DO_NOT_WAIT;')
             if interface.name.startswith('IDXGISwapChainDWM'):
-                print(r'    com_ptr<IDXGISwapChain> pSwapChain;')
-                print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, (void **) &pSwapChain))) {')
-                print(r'        dxgiDumper.bindDevice(pSwapChain);')
+                print(r'    ComPtr<IDXGISwapChain> pSwapChain;')
+                print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, &pSwapChain))) {')
+                print(r'        dxgiDumper.bindDevice(pSwapChain.Get());')
                 print(r'    } else {')
                 print(r'        assert(0);')
                 print(r'    }')

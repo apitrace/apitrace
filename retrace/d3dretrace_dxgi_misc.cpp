@@ -29,7 +29,10 @@
 #include "d3d11imports.hpp"
 #include "d3dretrace.hpp"
 
-#include "com_ptr.hpp"
+#include <wrl/client.h>
+
+
+using Microsoft::WRL::ComPtr;
 
 
 namespace d3dretrace {
@@ -77,8 +80,8 @@ createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
         }
         hr = pFactory->CreateSoftwareAdapter(hSoftware, &pAdapter);
     } else if (GpuPreference != DXGI_GPU_PREFERENCE_UNSPECIFIED) {
-        com_ptr<IDXGIFactory6> pFactory6;
-        if (SUCCEEDED(pFactory->QueryInterface(IID_IDXGIFactory6, (void **)&pFactory6))) {
+        ComPtr<IDXGIFactory6> pFactory6;
+        if (SUCCEEDED(pFactory->QueryInterface(IID_IDXGIFactory6, &pFactory6))) {
             hr = pFactory6->EnumAdapterByGpuPreference(0, GpuPreference, IID_IDXGIAdapter1, (void **)&pAdapter);
         } else {
             hr = DXGI_ERROR_NOT_FOUND;
@@ -134,7 +137,7 @@ createSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void **ppR
         Checker, sizeof Checker[0], sizeof Checker
     };
 
-    com_ptr<ID3D10Texture2D> pResource;
+    ComPtr<ID3D10Texture2D> pResource;
     HRESULT hr = pDevice->CreateTexture2D(&Desc, &InitialData, &pResource);
     if (SUCCEEDED(hr)) {
         hr = pResource->QueryInterface(ReturnedInterface, ppResource);
@@ -166,7 +169,7 @@ createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppR
         Checker, sizeof Checker[0], sizeof Checker
     };
 
-    com_ptr<ID3D11Texture2D> pResource;
+    ComPtr<ID3D11Texture2D> pResource;
     HRESULT hr = pDevice->CreateTexture2D(&Desc, &InitialData, &pResource);
     if (SUCCEEDED(hr)) {
         hr = pResource->QueryInterface(ReturnedInterface, ppResource);
@@ -195,31 +198,31 @@ deviceRemoved(trace::Call &call, ID3D10Device *pDevice)
 void
 deviceRemoved(trace::Call &call, ID3D11DeviceChild *pDeviceChild)
 {
-    com_ptr<ID3D11Device> pDevice;
+    ComPtr<ID3D11Device> pDevice;
     pDeviceChild->GetDevice(&pDevice);
-    deviceRemoved(call, pDevice);
+    deviceRemoved(call, pDevice.Get());
 }
 
 void
 deviceRemoved(trace::Call &call, ID3D10DeviceChild *pDeviceChild)
 {
-    com_ptr<ID3D10Device> pDevice;
+    ComPtr<ID3D10Device> pDevice;
     pDeviceChild->GetDevice(&pDevice);
-    deviceRemoved(call, pDevice);
+    deviceRemoved(call, pDevice.Get());
 }
 
 void
 deviceRemoved(trace::Call &call, IDXGISwapChain *pSwapChain)
 {
-    com_ptr<ID3D11Device> pDevice11;
-    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pDevice11))) {
-        deviceRemoved(call, pDevice11);
+    ComPtr<ID3D11Device> pDevice11;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D11Device, &pDevice11))) {
+        deviceRemoved(call, pDevice11.Get());
         return;
     }
 
-    com_ptr<ID3D10Device> pDevice10;
-    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pDevice10))) {
-        deviceRemoved(call, pDevice10);
+    ComPtr<ID3D10Device> pDevice10;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D10Device, &pDevice10))) {
+        deviceRemoved(call, pDevice10.Get());
         return;
     }
 
