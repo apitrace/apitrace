@@ -786,7 +786,9 @@ patchModule(HMODULE hModule,
         stricmp(szBaseName, "AcLayers.dll") == 0 ||
         stricmp(szBaseName, "ConEmuHk.dll") == 0 ||
         stricmp(szBaseName, "gameoverlayrenderer.dll") == 0 ||
-        stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0) {
+        stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0 ||
+        stricmp(szBaseName, "nvoglv32.dll") == 0 ||
+        stricmp(szBaseName, "nvoglv64.dll") == 0) {
         return;
     }
 
