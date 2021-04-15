@@ -328,9 +328,15 @@ endif ()
 
 if (MINGW)
     # We use our C++11 threads implementation to avoid depending on winpthreads
-    check_cxx_source_compiles ("#include <thread>\nstd::thread t; int main() { return 0; }" HAVE_CXX11_THREADS)
-    if (HAVE_CXX11_THREADS)
-        message (FATAL_ERROR "MinGW builds require WIN32 threads.")
+    execute_process (
+        COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_HAS_GTHREADS\n#error _GLIBCXX_HAS_GTHREADS\n#endif"
+        COMMAND "${CMAKE_CXX_COMPILER}" -x c++ -E -
+        RESULT_VARIABLE STATUS_CXX11_THREADS
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+    if (NOT STATUS_CXX11_THREADS EQUAL 0)
+        message (SEND_ERROR "MinGW builds require WIN32 threads.")
     else ()
         # TODO: Consider https://github.com/meganz/mingw-std-threads
         include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
