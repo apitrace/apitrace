@@ -13,6 +13,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends gcc g++ libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libprocps-dev libgtest-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
@@ -30,6 +31,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - run: sudo dpkg --add-architecture i386
     - run: sudo apt-get update
     - run: sudo apt-get install -qq -y --no-install-recommends gcc-multilib g++-multilib python3 ninja-build cmake libx11-dev:i386
@@ -44,6 +46,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
@@ -61,6 +64,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
     - name: build
       run: ci/build-ubuntu-18.04.sh
@@ -77,6 +81,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - run: sudo apt-get install -qq -y --no-install-recommends g++-mingw-w64-i686 ninja-build cmake
     - run: wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
     - run: ci/build-mingw.sh mingw32
@@ -90,6 +95,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
       uses: actions/cache@v2
@@ -112,6 +118,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+        submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
       uses: actions/cache@v2
