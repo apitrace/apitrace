@@ -42,7 +42,6 @@ add_executable (apitrace
 target_link_libraries (apitrace
     common
     brotli_dec brotli_enc brotli_common
-    ${ZLIB_LIBRARIES}
     ${GETOPT_LIBRARIES}
     ${CMAKE_DL_LIBS}
 )

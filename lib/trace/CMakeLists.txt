@@ -32,6 +32,7 @@ target_link_libraries (common
     highlight
     os
     Snappy::snappy
+    ZLIB::ZLIB
     brotli_dec brotli_common
 )
 

@@ -482,23 +482,16 @@ if (NOT ENABLE_STATIC_SNAPPY)
     find_package (Snappy)
 endif ()
 
-add_subdirectory (thirdparty)
-
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
-add_subdirectory (thirdparty/brotli)
-
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
     # gzip traces (e.g., apitrace-tests/traces/zlib-no-eof.trace).
     find_package (ZLIB 1.2.6)
 endif ()
-if (NOT ZLIB_FOUND)
-    message (STATUS "Using bundled ZLIB")
-    set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
-    set (ZLIB_LIBRARIES z_bundled)
-    add_subdirectory (thirdparty/zlib)
-endif ()
-include_directories (${ZLIB_INCLUDE_DIRS})
+
+add_subdirectory (thirdparty)
+
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
+add_subdirectory (thirdparty/brotli)
 
 # FindPNG.cmake will search ZLIB internally (without requiring any particular
 # version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.

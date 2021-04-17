@@ -116,7 +116,6 @@ target_link_libraries (qapitrace
     qubjson
     image
     common
-    ${ZLIB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
 

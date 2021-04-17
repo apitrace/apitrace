@@ -25,6 +25,8 @@ if (APPLE)
     target_compile_definitions (png_bundled PRIVATE PNG_ARM_NEON_OPT=0)
 endif ()
 
+target_link_libraries (png_bundled PUBLIC ZLIB::ZLIB)
+
 install (
     FILES LICENSE
     DESTINATION ${DOC_INSTALL_DIR}
