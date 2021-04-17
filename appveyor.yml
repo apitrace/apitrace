@@ -11,6 +11,23 @@ init:
 
 shallow_clone: true
 
+# Clone git submodules.  See:
+# - https://github.com/appveyor/ci/issues/899#issuecomment-567280434
+# - https://www.appveyor.com/docs/global-yml/#cloning
+clone_script:
+- ps: >-
+    if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
+      git clone -q --depth 1 --branch=$env:APPVEYOR_REPO_BRANCH https://github.com/$env:APPVEYOR_REPO_NAME.git $env:APPVEYOR_BUILD_FOLDER
+      cd $env:APPVEYOR_BUILD_FOLDER
+      git checkout -qf $env:APPVEYOR_REPO_COMMIT
+    } else {
+      git clone -q --depth 1 https://github.com/$env:APPVEYOR_REPO_NAME.git $env:APPVEYOR_BUILD_FOLDER
+      cd $env:APPVEYOR_BUILD_FOLDER
+      git fetch -q origin +refs/pull/$env:APPVEYOR_PULL_REQUEST_NUMBER/merge:
+      git checkout -qf FETCH_HEAD
+    }
+- cmd: git submodule update --init --depth 1 --recursive
+
 cache:
  - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86.7z
  - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
