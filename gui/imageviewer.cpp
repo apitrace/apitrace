@@ -120,8 +120,6 @@ void ImageViewer::slotUpdate()
 
 QSize ImageViewer::sizeHint() const
 {
-    QSize size;
-
     int vScrollWidth = scrollArea->verticalScrollBar() ?
                 scrollArea->verticalScrollBar()->width() : 0;
     int hScrollHeight = scrollArea->horizontalScrollBar() ?
