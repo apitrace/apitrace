@@ -1,3 +1,8 @@
 [submodule "frametrim/tests"]
 	path = frametrim/tests
 	url = https://github.com/apitrace/gltrim-tests.git
+	shallow = true
+[submodule "thirdparty/zlib"]
+	path = thirdparty/zlib
+	url = https://github.com/madler/zlib
+	shallow = true
