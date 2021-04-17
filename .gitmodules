@@ -6,6 +6,10 @@
 	path = thirdparty/brotli
 	url = https://github.com/google/brotli
 	shallow = true
+[submodule "thirdparty/libpng"]
+	path = thirdparty/libpng
+	url = https://github.com/apitrace/libpng
+	shallow = true
 [submodule "thirdparty/snappy"]
 	path = thirdparty/snappy
 	url = https://github.com/google/snappy
