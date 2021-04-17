@@ -1,5 +1,3 @@
-force_release_build ()
-
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   add_definitions(-DOS_LINUX)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")

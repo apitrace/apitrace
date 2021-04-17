@@ -398,16 +398,6 @@ if (HAVE_BIGENDIAN)
     add_definitions (-DHAVE_BIGENDIAN)
 endif ()
 
-# Force certain components to always be built as release
-macro (force_release_build)
-    if (MSVC)
-        # TODO: Needs special care due since runtime must match
-    else ()
-        set (CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_RELWITHDEBINFO})
-        set (CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
-    endif ()
-endmacro ()
-
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

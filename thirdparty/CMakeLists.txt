@@ -1,3 +1,11 @@
+# Force thirdparty components to always be built as release
+if (MSVC)
+    # TODO: Needs special care due since runtime must match
+else ()
+    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif ()
+
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
     message (STATUS "Using bundled Snappy")
     add_subdirectory (snappy)
@@ -5,7 +13,7 @@ endif ()
 
 if (NOT ZLIB_FOUND)
     message (STATUS "Using bundled ZLIB")
-    add_subdirectory (zlib)
+    include (zlib.cmake)
 endif ()
 
 if (NOT PNG_FOUND)

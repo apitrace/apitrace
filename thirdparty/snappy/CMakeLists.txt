@@ -1,5 +1,3 @@
-force_release_build ()
-
 add_convenience_library (snappy EXCLUDE_FROM_ALL
     snappy-internal.h
     snappy-stubs-internal.h
