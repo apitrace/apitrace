@@ -2,6 +2,10 @@
 	path = frametrim/tests
 	url = https://github.com/apitrace/gltrim-tests.git
 	shallow = true
+[submodule "thirdparty/brotli"]
+	path = thirdparty/brotli
+	url = https://github.com/google/brotli
+	shallow = true
 [submodule "thirdparty/snappy"]
 	path = thirdparty/snappy
 	url = https://github.com/google/snappy
