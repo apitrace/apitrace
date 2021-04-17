@@ -7,3 +7,8 @@ if (NOT ZLIB_FOUND)
     message (STATUS "Using bundled ZLIB")
     add_subdirectory (zlib)
 endif ()
+
+if (NOT PNG_FOUND)
+    message (STATUS "Using bundled PNG")
+    add_subdirectory (libpng)
+endif ()

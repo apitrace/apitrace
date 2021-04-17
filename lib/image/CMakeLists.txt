@@ -1,5 +1,4 @@
 include_directories (
-    ${PNG_INCLUDE_DIR}
     ${MD5_INCLUDE_DIR}
 )
 
@@ -13,6 +12,6 @@ add_library (image STATIC
 )
 
 target_link_libraries (image
-    ${PNG_LIBRARIES}
+    PNG::PNG
     ${MD5_LIBRARIES}
 )

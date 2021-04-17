@@ -1,7 +1,3 @@
-include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
 add_convenience_library (png_bundled EXCLUDE_FROM_ALL
     png.c
     pngerror.c
@@ -20,6 +16,8 @@ add_convenience_library (png_bundled EXCLUDE_FROM_ALL
     pngwutil.c
 )
 
+target_include_directories (png_bundled PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 if (APPLE)
     # https://github.com/apitrace/apitrace/issues/711
     target_compile_definitions (png_bundled PRIVATE PNG_ARM_NEON_OPT=0)
@@ -32,3 +30,5 @@ install (
     DESTINATION ${DOC_INSTALL_DIR}
     RENAME LICENSE-libpng.txt
 )
+
+add_library (PNG::PNG ALIAS png_bundled)

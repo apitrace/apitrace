@@ -488,11 +488,6 @@ if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     find_package (ZLIB 1.2.6)
 endif ()
 
-add_subdirectory (thirdparty)
-
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
-add_subdirectory (thirdparty/brotli)
-
 # FindPNG.cmake will search ZLIB internally (without requiring any particular
 # version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.
 # So if the system's ZLIB was did not meet the our requirements, then there's
@@ -500,13 +495,11 @@ add_subdirectory (thirdparty/brotli)
 if (NOT WIN32 AND NOT APPLE AND NOT ENABLE_STATIC_EXE AND ZLIB_FOUND)
     find_package (PNG)
 endif ()
-if (NOT PNG_FOUND)
-    message (STATUS "Using bundled PNG")
-    set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
-    set (PNG_DEFINITIONS "")
-    set (PNG_LIBRARIES png_bundled)
-    add_subdirectory (thirdparty/libpng)
-endif ()
+
+add_subdirectory (thirdparty)
+
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
+add_subdirectory (thirdparty/brotli)
 
 if (MSVC)
     add_subdirectory (thirdparty/getopt)
