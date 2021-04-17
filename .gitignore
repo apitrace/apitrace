@@ -6,7 +6,6 @@
 *.bmp
 *.bz2
 *.cbp
-*.cmake
 *.dll
 *.dmg
 *.dylib
@@ -31,10 +30,16 @@
 *.trace
 *.zip
 *.ubj
-_CPack_Packages
 CMakeCache.txt
 CMakeFiles
+cmake_install.cmake
 CMakeLists.txt.user
+CMakeScripts
+compile_commands.json
+CPackConfig.cmake
+_CPack_Packages
+CPackSourceConfig.cmake
+CTestTestfile.cmake
 Makefile
 apitrace
 btest
