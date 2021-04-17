@@ -1,10 +1,12 @@
-# Force thirdparty components to always be built as release
-if (MSVC)
-    # TODO: Needs special care due since runtime must match
-else ()
-    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-endif ()
+# Force certain components to be optimized as release
+macro (target_optimize TARGET)
+    target_compile_definitions (${TARGET} PRIVATE -DNDEBUG)
+    if (MSVC)
+        # TODO: MSVC makes it impossible to override early options.
+    else ()
+        target_compile_options (${TARGET} PRIVATE -O3)
+    endif ()
+endmacro ()
 
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
     message (STATUS "Using bundled Snappy")

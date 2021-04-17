@@ -41,8 +41,12 @@ add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
     c/enc/utf8_util.c
 )
 
-target_link_libraries (brotli_enc PUBLIC brotli_common)
 target_link_libraries (brotli_dec PUBLIC brotli_common)
+target_link_libraries (brotli_enc PUBLIC brotli_common)
+
+target_optimize (brotli_common)
+target_optimize (brotli_dec)
+target_optimize (brotli_enc)
 
 install (
     FILES LICENSE

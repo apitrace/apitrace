@@ -30,6 +30,8 @@ target_include_directories (snappy PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_optimize (snappy)
+
 add_library (Snappy::snappy ALIAS snappy)
 
 install (

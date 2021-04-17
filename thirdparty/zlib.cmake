@@ -25,6 +25,8 @@ else ()
     target_compile_definitions (z_bundled PRIVATE HAVE_UNISTD_H)
 endif ()
 
+target_optimize (z_bundled)
+
 install (
     FILES zlib/README
     DESTINATION ${DOC_INSTALL_DIR}
