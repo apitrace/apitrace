@@ -25,7 +25,7 @@ endif ()
 
 if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
     message (STATUS "Using bundled Brotli")
-    add_subdirectory (brotli)
+    include (brotli.cmake)
 endif ()
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
