@@ -46,7 +46,7 @@ static ContextMap context_map;
 
 
 static glws::Drawable *
-getDrawable(unsigned long drawable_id) {
+getDrawable(unsigned long drawable_id, Context *ctx) {
     if (drawable_id == 0) {
         return NULL;
     }
@@ -54,7 +54,8 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glretrace::createDrawable());
+        return (drawable_map[drawable_id] =
+                glretrace::createDrawable(ctx ? ctx->actualProfile() : defaultProfile));
     }
 
     return it->second;
@@ -109,7 +110,8 @@ static void retrace_glXMakeCurrent(trace::Call &call) {
         return;
     }
 
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt(),
+                                               getContext(call.arg(2).toUInt()));
     Context *new_context = getContext(call.arg(2).toUIntPtr());
 
     glretrace::makeCurrent(call, new_drawable, new_context);
@@ -129,7 +131,7 @@ static void retrace_glXDestroyContext(trace::Call &call) {
 }
 
 static void retrace_glXCopySubBufferMESA(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
     int x = call.arg(2).toSInt();
     int y = call.arg(3).toSInt();
     int width = call.arg(4).toSInt();
@@ -139,7 +141,7 @@ static void retrace_glXCopySubBufferMESA(trace::Call &call) {
 }
 
 static void retrace_glXSwapBuffers(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
 
     frame_complete(call);
     if (retrace::doubleBuffer) {
@@ -191,7 +193,7 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
 }
 
 static void retrace_glXDestroyPbuffer(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
 
     if (!drawable) {
         return;
@@ -207,9 +209,10 @@ static void retrace_glXMakeContextCurrent(trace::Call &call) {
         return;
     }
 
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Drawable *new_readable = getDrawable(call.arg(2).toUInt());
     Context *new_context = getContext(call.arg(3).toUIntPtr());
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt(), new_context);
+    glws::Drawable *new_readable = getDrawable(call.arg(2).toUInt(), new_context);
+
 
     glretrace::makeCurrent(call, new_drawable, new_readable, new_context);
 }
