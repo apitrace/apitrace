@@ -503,6 +503,8 @@ if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     endif ()
 endif ()
 
+find_package (GTest)
+
 add_subdirectory (thirdparty)
 
 if (MSVC)
@@ -538,17 +540,10 @@ set (MD5_LIBRARIES md5_bundled)
 # also avoids missing/inconsistent declarations in system headers.
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
-# We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
-add_definitions (-DGTEST_HAS_TR1_TUPLE=0)
-include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/include)
-add_library (gtest ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/src/gtest-all.cc)
-set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest)
-target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
-
 # Convenience macro for adding unit tests
 macro (add_gtest)
     add_executable (${ARGV})
-    target_link_libraries (${ARGV0} gtest)
+    target_link_libraries (${ARGV0} GTest::GTest)
     add_dependencies (check ${ARGV0})
     add_test (NAME ${ARGV0} COMMAND ${ARGV0})
 endmacro ()

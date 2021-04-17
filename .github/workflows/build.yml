@@ -14,7 +14,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt-install
-      run: sudo apt-get install -qq -y --no-install-recommends gcc g++ libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
+      run: sudo apt-get install -qq -y --no-install-recommends gcc g++ libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libprocps-dev libgtest-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
       run: cmake -S$PWD -B$PWD/build -G Ninja -DENABLE_STATIC_SNAPPY=0 -DENABLE_GUI=1
     - name: build
