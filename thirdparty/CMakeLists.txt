@@ -10,7 +10,7 @@ endmacro ()
 
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
     message (STATUS "Using bundled Snappy")
-    add_subdirectory (snappy)
+    include (snappy.cmake)
 endif ()
 
 if (NOT ZLIB_FOUND)
