@@ -58,7 +58,6 @@ target_link_libraries (retrace_common
     image
     common
     ${ZLIB_LIBRARIES}
-    ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
 )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")

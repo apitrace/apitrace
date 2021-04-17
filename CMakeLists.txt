@@ -479,15 +479,10 @@ set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat)
 
 if (NOT ENABLE_STATIC_SNAPPY)
-    find_package (SNAPPY)
+    find_package (Snappy)
 endif ()
-if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
-    message (STATUS "Using bundled SNAPPY")
-    set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
-    set (SNAPPY_LIBRARIES snappy_bundled)
-    add_subdirectory (thirdparty/snappy)
-endif ()
-include_directories (${SNAPPY_INCLUDE_DIRS})
+
+add_subdirectory (thirdparty)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
 add_subdirectory (thirdparty/brotli)

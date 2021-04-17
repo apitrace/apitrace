@@ -31,6 +31,7 @@ target_link_libraries (common
     guids
     highlight
     os
+    Snappy::snappy
     brotli_dec brotli_common
 )
 

@@ -79,7 +79,6 @@ target_link_libraries (trace
     common
     guids
     crc32c
-    ${SNAPPY_LIBRARIES}
 )
 
 # Code shared across all OpenGL variants

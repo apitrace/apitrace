@@ -117,7 +117,6 @@ target_link_libraries (qapitrace
     image
     common
     ${ZLIB_LIBRARIES}
-    ${SNAPPY_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
 

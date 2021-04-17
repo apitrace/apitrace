@@ -1,17 +1,6 @@
 force_release_build ()
 
-add_definitions (
-    -DNDEBUG
-    -DHAVE_CONFIG_H
-)
-
-# Adjust warnings
-if (NOT MSVC)
-    add_compiler_flags (-Wno-unused-function)
-    add_compiler_flags (-fstrict-aliasing)
-endif ()
-
-add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
+add_convenience_library (snappy EXCLUDE_FROM_ALL
     snappy-internal.h
     snappy-stubs-internal.h
     snappy-c.cc
@@ -25,10 +14,25 @@ add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
     snappy-stubs-public.h
     config/config.h
 )
+target_compile_definitions (snappy PRIVATE
+    NDEBUG
+    HAVE_CONFIG_H
+)
+if (NOT MSVC)
+    target_compile_options (snappy PRIVATE
+        -Wno-unused-function
+        -fstrict-aliasing
+    )
+endif ()
 
-target_include_directories (snappy_bundled PRIVATE
+target_include_directories (snappy PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/config
 )
+target_include_directories (snappy PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_library (Snappy::snappy ALIAS snappy)
 
 install (
     FILES COPYING
