@@ -1,4 +1,7 @@
-# TODO: Generate pnglibconf.h from libpng/scripts/pnglibconf.h.prebuilt
+configure_file (
+    ${CMAKE_CURRENT_SOURCE_DIR}/libpng/scripts/pnglibconf.h.prebuilt
+    ${CMAKE_CURRENT_BINARY_DIR}/libpng/pnglibconf.h
+    COPYONLY)
 
 add_convenience_library (png_bundled EXCLUDE_FROM_ALL
     libpng/png.c
@@ -19,8 +22,8 @@ add_convenience_library (png_bundled EXCLUDE_FROM_ALL
 )
 
 target_include_directories (png_bundled PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}/libpng
     ${CMAKE_CURRENT_SOURCE_DIR}/libpng
-    ${CMAKE_CURRENT_SOURCE_DIR}/support/libpng
 )
 
 if (APPLE)
