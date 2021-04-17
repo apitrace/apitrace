@@ -16,16 +16,20 @@ add_convenience_library (os
     os_crtdbg.cpp
 )
 
-target_link_libraries (os
-    ${LIBBACKTRACE_LIBRARIES}
-)
+target_link_libraries (os PUBLIC Threads::Threads)
+
+if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
+    target_compile_definitions (os PRIVATE HAVE_BACKTRACE=1)
+    target_link_libraries (os PUBLIC backtrace)
+endif ()
+
 if (WIN32)
-    target_link_libraries (os
+    target_link_libraries (os PUBLIC
         shell32
     )
 endif ()
 if (APPLE)
-    target_link_libraries (os
+    target_link_libraries (os PUBLIC
         "-framework Foundation"
     )
 endif ()

@@ -1,5 +1,5 @@
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
-    message (STATUS "Using bundled SNAPPY")
+    message (STATUS "Using bundled Snappy")
     add_subdirectory (snappy)
 endif ()
 
@@ -14,11 +14,17 @@ if (NOT PNG_FOUND)
 endif ()
 
 if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
+    message (STATUS "Using bundled Brotli")
     add_subdirectory (brotli)
+endif ()
+
+if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
+    add_subdirectory (libbacktrace)
 endif ()
 
 # We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
 if (NOT GTEST_FOUND)
+    message (STATUS "Using bundled GTest")
     add_library (gtest gtest/src/gtest-all.cc)
     target_compile_definitions (gtest PUBLIC GTEST_HAS_TR1_TUPLE=0)
     target_include_directories (gtest
@@ -28,3 +34,19 @@ if (NOT GTEST_FOUND)
     target_link_libraries (gtest PUBLIC ${CMAKE_THREAD_LIBS_INIT})
     add_library (GTest::GTest ALIAS gtest)
 endif ()
+
+if (MSVC)
+    add_subdirectory (getopt)
+else ()
+    add_library (getopt INTERFACE)
+endif ()
+
+if (WIN32)
+    add_subdirectory (dxerr)
+    add_subdirectory (directxtex)
+    add_subdirectory (devcon)
+    add_subdirectory (mhook)
+endif ()
+
+add_subdirectory (crc32c)
+add_subdirectory (md5)

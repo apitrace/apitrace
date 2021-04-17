@@ -57,7 +57,7 @@ add_library (retrace_common STATIC
 target_link_libraries (retrace_common
     image
     common
-    ${GETOPT_LIBRARIES}
+    getopt
 )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)

@@ -153,11 +153,6 @@ configure_file (backtrace-supported.h.in backtrace-supported.h)
 
 configure_file (config.h.in.cmake config.h)
 
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
-
-include_directories (
-    auxincl
-)
 add_convenience_library (backtrace EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE}
     ${FORMAT_FILE}
@@ -171,15 +166,22 @@ add_convenience_library (backtrace EXCLUDE_FROM_ALL
     sort.c
     testlib.c
 )
+target_include_directories (backtrace
+    PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE auxincl
+)
+target_link_libraries (backtrace PUBLIC ${CMAKE_DL_LIBS})
 
 add_executable (btest btest.c)
 set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_include_directories (btest PRIVATE auxincl)
 target_link_libraries (btest backtrace)
 add_dependencies (check btest)
 add_test (NAME libbacktrace_btest COMMAND btest)
 
 add_executable (stest stest.c)
 set_target_properties (stest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_include_directories (stest PRIVATE auxincl)
 target_link_libraries (stest backtrace)
 add_dependencies (check stest)
 add_test (NAME libbacktrace_stest COMMAND stest)

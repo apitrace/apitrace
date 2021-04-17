@@ -43,7 +43,7 @@ target_link_libraries (apitrace
     common
     PkgConfig::BROTLIDEC
     PkgConfig::BROTLIENC
-    ${GETOPT_LIBRARIES}
+    getopt
     ${CMAKE_DL_LIBS}
 )
 

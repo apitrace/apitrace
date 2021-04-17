@@ -1,7 +1,3 @@
-include_directories (
-    ${MD5_INCLUDE_DIR}
-)
-
 add_library (image STATIC
     image.hpp
     image_bmp.cpp
@@ -12,6 +8,6 @@ add_library (image STATIC
 )
 
 target_link_libraries (image
+    md5
     PNG::PNG
-    ${MD5_LIBRARIES}
 )

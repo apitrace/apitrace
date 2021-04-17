@@ -495,38 +495,11 @@ if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
         pkg_check_modules (BROTLIDEC IMPORTED_TARGET libbrotlidec>=1.0.7)
         pkg_check_modules (BROTLIENC IMPORTED_TARGET libbrotlienc>=1.0.7)
     endif ()
-endif ()
 
-find_package (GTest)
+    find_package (GTest)
+endif ()
 
 add_subdirectory (thirdparty)
-
-if (MSVC)
-    add_subdirectory (thirdparty/getopt)
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
-    set (GETOPT_LIBRARIES getopt_bundled)
-endif ()
-
-if (WIN32)
-    add_subdirectory (thirdparty/dxerr)
-    add_subdirectory (thirdparty/directxtex)
-    add_subdirectory (thirdparty/devcon)
-    add_subdirectory (thirdparty/mhook)
-endif ()
-
-add_subdirectory (thirdparty/crc32c)
-
-if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
-    add_subdirectory (thirdparty/libbacktrace)
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
-    include_directories (${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libbacktrace)
-    set (LIBBACKTRACE_LIBRARIES ${CMAKE_DL_LIBS} backtrace)
-    add_definitions (-DHAVE_BACKTRACE=1)
-endif ()
-
-add_subdirectory (thirdparty/md5)
-set (MD5_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/md5)
-set (MD5_LIBRARIES md5_bundled)
 
 # We use bundled headers for all Khronos APIs, to guarantee support for both
 # OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
