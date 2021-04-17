@@ -20,7 +20,7 @@ endif ()
 
 if (NOT PNG_FOUND)
     message (STATUS "Using bundled PNG")
-    add_subdirectory (libpng)
+    include (libpng.cmake)
 endif ()
 
 if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
