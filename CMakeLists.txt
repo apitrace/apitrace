@@ -478,28 +478,32 @@ set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat)
 
-if (NOT ENABLE_STATIC_SNAPPY)
-    find_package (Snappy)
-endif ()
-
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
+
+    if (NOT ENABLE_STATIC_SNAPPY)
+        find_package (Snappy)
+    endif ()
+
     # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
     # gzip traces (e.g., apitrace-tests/traces/zlib-no-eof.trace).
     find_package (ZLIB 1.2.6)
-endif ()
 
-# FindPNG.cmake will search ZLIB internally (without requiring any particular
-# version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.
-# So if the system's ZLIB was did not meet the our requirements, then there's
-# no safe way to use the system's PNG library.
-if (NOT WIN32 AND NOT APPLE AND NOT ENABLE_STATIC_EXE AND ZLIB_FOUND)
-    find_package (PNG)
+    # FindPNG.cmake will search ZLIB internally (without requiring any particular
+    # version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.
+    # So if the system's ZLIB was did not meet the our requirements, then there's
+    # no safe way to use the system's PNG library.
+    if (NOT APPLE AND ZLIB_FOUND)
+        find_package (PNG)
+    endif ()
+
+    find_package (PkgConfig)
+    if (PKG_CONFIG_FOUND)
+        pkg_check_modules (BROTLIDEC IMPORTED_TARGET libbrotlidec>=1.0.7)
+        pkg_check_modules (BROTLIENC IMPORTED_TARGET libbrotlienc>=1.0.7)
+    endif ()
 endif ()
 
 add_subdirectory (thirdparty)
-
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/brotli/c/include)
-add_subdirectory (thirdparty/brotli)
 
 if (MSVC)
     add_subdirectory (thirdparty/getopt)

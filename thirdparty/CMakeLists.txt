@@ -12,3 +12,7 @@ if (NOT PNG_FOUND)
     message (STATUS "Using bundled PNG")
     add_subdirectory (libpng)
 endif ()
+
+if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
+    add_subdirectory (brotli)
+endif ()

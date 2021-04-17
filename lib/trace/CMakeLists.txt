@@ -33,7 +33,7 @@ target_link_libraries (common
     os
     Snappy::snappy
     ZLIB::ZLIB
-    brotli_dec brotli_common
+    PkgConfig::BROTLIDEC
 )
 
 if (BUILD_TESTING)

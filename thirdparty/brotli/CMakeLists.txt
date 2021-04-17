@@ -12,12 +12,16 @@ add_convenience_library(brotli_common STATIC EXCLUDE_FROM_ALL
     c/common/dictionary.c
     c/common/transform.c
 )
+
+target_include_directories (brotli_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/c/include)
+
 add_convenience_library(brotli_dec STATIC EXCLUDE_FROM_ALL
     c/dec/bit_reader.c
     c/dec/decode.c
     c/dec/huffman.c
     c/dec/state.c
 )
+
 add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
     c/enc/backward_references.c
     c/enc/backward_references_hq.c
@@ -39,8 +43,18 @@ add_convenience_library(brotli_enc STATIC EXCLUDE_FROM_ALL
     c/enc/utf8_util.c
 )
 
+target_link_libraries (brotli_enc PUBLIC brotli_common)
+target_link_libraries (brotli_dec PUBLIC brotli_common)
+
 install (
     FILES LICENSE
     DESTINATION ${DOC_INSTALL_DIR}
     RENAME LICENSE-brotli.txt
 )
+
+if (NOT BROTLIDEC_FOUND)
+    add_library (PkgConfig::BROTLIDEC ALIAS brotli_dec)
+endif ()
+if (NOT BROTLIENC_FOUND)
+    add_library (PkgConfig::BROTLIENC ALIAS brotli_enc)
+endif ()
