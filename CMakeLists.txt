@@ -58,15 +58,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
     if (NOT (ENABLE_STATIC_LIBGCC AND
              ENABLE_STATIC_LIBSTDCXX AND
-             ENABLE_STATIC_SNAPPY))
-        # XXX: Should probably throw a run-time too.
-        message (WARNING
-            "LD_PRELOAD wrappers not statically linked against all "
-            "dependencies, therefore will fail to work with many "
-            "third-party applications built on different Linux "
-            "distributions and that ship their own shared-object "
-            "dependencies."
-        )
+             ENABLE_STATIC_SNAPPY) AND
+        NOT "$ENV{CI}" MATCHES [[^[Tt]rue$]])
+    message (WARNING "Wrapper dependencies not statically linked")
     endif ()
     option (ENABLE_STATIC_EXE "Statically link executables" OFF)
 endif ()
