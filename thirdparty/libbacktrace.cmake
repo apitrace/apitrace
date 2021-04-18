@@ -40,9 +40,9 @@ check_symbol_exists (_Unwind_Backtrace unwind.h HAVE_BACKTRACE)
 check_symbol_exists (_Unwind_GetIPInfo unwind.h HAVE_GETIPINFO)
 
 if (HAVE_BACKTRACE)
-    set (BACKTRACE_FILE backtrace.c simple.c)
+    set (BACKTRACE_FILE libbacktrace/backtrace.c libbacktrace/simple.c)
 else ()
-    set (BACKTRACE_FILE nounwind.c)
+    set (BACKTRACE_FILE libbacktrace/nounwind.c)
     set (BACKTRACE_SUPPORTED 0)
     message (STATUS "libunwind not found. Disabling Backtrace support.")
 endif ()
@@ -80,11 +80,11 @@ else ()
 endif ()
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
-    set (FORMAT_FILE elf.c dwarf.c)
+    set (FORMAT_FILE libbacktrace/elf.c libbacktrace/dwarf.c)
     math (EXPR BACKTRACE_ELF_SIZE 8*${CMAKE_C_SIZEOF_DATA_PTR})
     set (BACKTRACE_SUPPORTS_DATA 1)
 else ()
-    set (FORMAT_FILE unknown.c)
+    set (FORMAT_FILE libbacktrace/unknown.c)
     set (BACKTRACE_SUPPORTED 0)
     message (STATUS "Executable format is not ELF. Disabling Backtrace support.")
     set (BACKTRACE_SUPPORTS_DATA 0)
@@ -93,20 +93,20 @@ endif ()
 check_symbol_exists (mmap sys/mman.h HAVE_MMAP)
 
 if (HAVE_MMAP)
-    set (VIEW_FILE mmapio.c)
+    set (VIEW_FILE libbacktrace/mmapio.c)
     check_symbol_exists (MAP_ANONYMOUS sys/mman.h HAVE_MMAP_ANONYMOUS)
     check_symbol_exists (MAP_ANON sys/mman.h HAVE_MMAP_ANON)
     if (HAVE_MMAP_ANONYMOUS AND HAVE_MMAP_ANON)
-        set (ALLOC_FILE mmap.c)
+        set (ALLOC_FILE libbacktrace/mmap.c)
     else ()
-        set (ALLOC_FILE alloc.c)
+        set (ALLOC_FILE libbacktrace/alloc.c)
     endif ()
 else ()
-    set (VIEW_FILE read.c)
-    set (ALLOC_FILE alloc.c)
+    set (VIEW_FILE libbacktrace/read.c)
+    set (ALLOC_FILE libbacktrace/alloc.c)
 endif ()
 
-if (ALLOC_FILE STREQUAL "alloc.c")
+if (ALLOC_FILE STREQUAL "libbacktrace/alloc.c")
     set (BACKTRACE_USES_MALLOC 1)
 else ()
     set (BACKTRACE_USES_MALLOC 0)
@@ -142,46 +142,44 @@ if (NOT HAVE_LIBDWARF_DWARF_H)
 endif ()
 
 if (NOT HAVE_DWARF_H AND NOT HAVE_LIBDWARF_DWARF_H)
-    set (FORMAT_FILE unknown.c)
+    set (FORMAT_FILE libbacktrace/unknown.c)
     set (BACKTRACE_SUPPORTED 0)
     message (STATUS "libdwarf not found. Disabling Backtrace support.")
 endif ()
 
 check_include_file ("stdint.h" HAVE_STDINT_H)
 
-configure_file (backtrace-supported.h.in backtrace-supported.h)
+configure_file (libbacktrace/backtrace-supported.h.in libbacktrace/backtrace-supported.h)
 
-configure_file (config.h.in.cmake config.h)
+configure_file (support/libbacktrace/config.h.in libbacktrace/config.h)
 
 add_convenience_library (backtrace EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE}
     ${FORMAT_FILE}
     ${VIEW_FILE}
     ${ALLOC_FILE}
-    atomic.c
-    fileline.c
-    posix.c
-    print.c
-    state.c
-    sort.c
-    testlib.c
+    libbacktrace/atomic.c
+    libbacktrace/fileline.c
+    libbacktrace/posix.c
+    libbacktrace/print.c
+    libbacktrace/state.c
+    libbacktrace/sort.c
+    libbacktrace/testlib.c
 )
 target_include_directories (backtrace
-    PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE auxincl
+    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/libbacktrace ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace
+    PRIVATE support/libbacktrace
 )
 target_link_libraries (backtrace PUBLIC ${CMAKE_DL_LIBS})
 
-add_executable (btest btest.c)
+add_executable (btest libbacktrace/btest.c)
 set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
-target_include_directories (btest PRIVATE auxincl)
 target_link_libraries (btest backtrace)
 add_dependencies (check btest)
 add_test (NAME libbacktrace_btest COMMAND btest)
 
-add_executable (stest stest.c)
+add_executable (stest libbacktrace/stest.c)
 set_target_properties (stest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
-target_include_directories (stest PRIVATE auxincl)
 target_link_libraries (stest backtrace)
 add_dependencies (check stest)
 add_test (NAME libbacktrace_stest COMMAND stest)

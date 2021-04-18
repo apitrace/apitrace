@@ -34,7 +34,7 @@ if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
 endif ()
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
-    add_subdirectory (libbacktrace)
+    include_with_scope (libbacktrace.cmake)
 endif ()
 
 # We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
