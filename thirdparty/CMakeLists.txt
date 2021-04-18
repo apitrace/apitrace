@@ -8,24 +8,29 @@ macro (target_optimize TARGET)
     endif ()
 endmacro ()
 
+# Same as include command, but inside a function scope
+function (include_with_scope)
+    include (${ARGV})
+endfunction ()
+
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
     message (STATUS "Using bundled Snappy")
-    include (snappy.cmake)
+    include_with_scope (snappy.cmake)
 endif ()
 
 if (NOT ZLIB_FOUND)
     message (STATUS "Using bundled ZLIB")
-    include (zlib.cmake)
+    include_with_scope (zlib.cmake)
 endif ()
 
 if (NOT PNG_FOUND)
     message (STATUS "Using bundled PNG")
-    include (libpng.cmake)
+    include_with_scope (libpng.cmake)
 endif ()
 
 if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
     message (STATUS "Using bundled Brotli")
-    include (brotli.cmake)
+    include_with_scope (brotli.cmake)
 endif ()
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
@@ -35,7 +40,7 @@ endif ()
 # We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
 if (NOT GTEST_FOUND)
     message (STATUS "Using bundled GTest")
-    include (gtest.cmake)
+    include_with_scope (gtest.cmake)
 endif ()
 
 if (MSVC)

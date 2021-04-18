@@ -1,3 +1,5 @@
+project (Snappy VERSION 1.1.8 LANGUAGES C CXX)
+
 # TODO generate config.h from snappy/cmake/config.h.in
 
 check_include_file ("sys/uio.h" HAVE_SYS_UIO_H)
