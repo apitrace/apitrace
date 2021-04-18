@@ -191,3 +191,9 @@ target_include_directories (stest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/li
 target_link_libraries (stest backtrace)
 add_dependencies (check stest)
 add_test (NAME libbacktrace_stest COMMAND stest)
+
+install (
+    FILES libbacktrace/LICENSE
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE-libbacktrace.txt
+)
