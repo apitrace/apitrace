@@ -210,7 +210,7 @@ class GlTracer(Tracer):
             if function.name in self.fake_function_names:
                 print(function.prototype('_fake_' + function.name) + ';')
         print()
-        print(r'static inline void')
+        print(r'inline void')
         print(r'_fakeStringMarker(const std::string &s) {')
         print(r'    _fake_glStringMarkerGREMEDY(s.length(), s.data());')
         print(r'}')
