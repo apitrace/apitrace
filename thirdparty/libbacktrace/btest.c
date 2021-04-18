@@ -482,17 +482,6 @@ check_open_files (void)
 int
 main (int argc ATTRIBUTE_UNUSED, char **argv)
 {
-  int i;
-
-  /*
-   * If run through ctest, descriptor 3 or 6 will still be open due to
-   * https://gitlab.kitware.com/cmake/cmake/-/issues/18863
-   */
-  for (i = 3; i < 10; i++)
-    {
-      close (i);
-    }
-
   state = backtrace_create_state (argv[0], BACKTRACE_SUPPORTS_THREADS,
 				  error_callback_create, NULL);
 

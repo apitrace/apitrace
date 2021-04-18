@@ -176,7 +176,13 @@ add_executable (btest libbacktrace/btest.c)
 set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
 target_link_libraries (btest backtrace)
 add_dependencies (check btest)
-add_test (NAME libbacktrace_btest COMMAND btest)
+add_test (
+    NAME libbacktrace_btest
+    COMMAND
+        # Workaround https://gitlab.kitware.com/cmake/cmake/-/issues/18863
+        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/support/libbacktrace/closefds.py
+        $<TARGET_FILE:btest>
+)
 
 add_executable (stest libbacktrace/stest.c)
 set_target_properties (stest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
