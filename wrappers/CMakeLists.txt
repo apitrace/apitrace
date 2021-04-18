@@ -71,10 +71,12 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Code shared across all APIs
 add_convenience_library (trace
-    assert.cpp
     memtrace.hpp
     memtrace.cpp
 )
+if (WIN32)
+    target_sources (trace PRIVATE assert.cpp)
+endif ()
 target_link_libraries (trace
     common
     guids

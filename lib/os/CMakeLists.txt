@@ -2,19 +2,19 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
-if (WIN32)
-    set (os os_win32.cpp)
-elseif (APPLE)
-    set (os os_posix.cpp os_osx.mm)
-else ()
-    set (os os_posix.cpp)
-endif ()
-
 add_convenience_library (os
-    ${os}
     os_backtrace.cpp
     os_crtdbg.cpp
 )
+
+if (WIN32)
+    target_sources (os PRIVATE os_win32.cpp)
+else ()
+    target_sources (os PRIVATE os_posix.cpp)
+    if (APPLE)
+        target_sources (os PRIVATE os_osx.mm)
+    endif ()
+endif ()
 
 target_link_libraries (os PUBLIC Threads::Threads)
 
