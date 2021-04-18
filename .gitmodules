@@ -10,6 +10,10 @@
 	path = thirdparty/gtest
 	url = https://github.com/google/googletest
 	shallow = true
+[submodule "thirdparty/libbacktrace"]
+	path = thirdparty/libbacktrace
+	url = https://github.com/ianlancetaylor/libbacktrace
+	shallow = true
 [submodule "thirdparty/libpng"]
 	path = thirdparty/libpng
 	url = https://github.com/apitrace/libpng

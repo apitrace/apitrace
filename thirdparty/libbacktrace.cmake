@@ -149,9 +149,9 @@ endif ()
 
 check_include_file ("stdint.h" HAVE_STDINT_H)
 
-configure_file (libbacktrace/backtrace-supported.h.in libbacktrace/backtrace-supported.h)
+configure_file (libbacktrace/backtrace-supported.h.in support/libbacktrace/backtrace-supported.h)
 
-configure_file (support/libbacktrace/config.h.in libbacktrace/config.h)
+configure_file (support/libbacktrace/config.h.in support/libbacktrace/config.h)
 
 add_convenience_library (backtrace EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE}
@@ -167,13 +167,14 @@ add_convenience_library (backtrace EXCLUDE_FROM_ALL
     libbacktrace/testlib.c
 )
 target_include_directories (backtrace
-    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/libbacktrace ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace
-    PRIVATE support/libbacktrace
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace
 )
 target_link_libraries (backtrace PUBLIC ${CMAKE_DL_LIBS})
 
 add_executable (btest libbacktrace/btest.c)
 set_target_properties (btest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_include_directories (btest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
 target_link_libraries (btest backtrace)
 add_dependencies (check btest)
 add_test (
@@ -186,6 +187,7 @@ add_test (
 
 add_executable (stest libbacktrace/stest.c)
 set_target_properties (stest PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}")
+target_include_directories (stest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
 target_link_libraries (stest backtrace)
 add_dependencies (check stest)
 add_test (NAME libbacktrace_stest COMMAND stest)
