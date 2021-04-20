@@ -1,5 +1,9 @@
 message (STATUS "Using CMake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 cmake_minimum_required (VERSION 3.8.0)
+if (MSVC)
+    cmake_minimum_required (VERSION 3.15.0)
+    cmake_policy (SET CMP0091 NEW)
+endif ()
 
 
 if (CMAKE_GENERATOR STREQUAL "Xcode")
@@ -7,9 +11,9 @@ if (CMAKE_GENERATOR STREQUAL "Xcode")
 endif ()
 
 # http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
-if (POLICY CMP0042)
-    cmake_policy (SET CMP0042 NEW)
-endif()
+cmake_policy (SET CMP0042 NEW)
+# https://cmake.org/cmake/help/v3.20/policy/CMP0048.html
+cmake_policy (SET CMP0048 NEW)
 
 
 project (apitrace)
@@ -81,6 +85,12 @@ macro (add_linker_flags)
     set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${_FLAGS}")
     set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
 endmacro ()
+
+# Use static runtime
+# https://cmake.org/cmake/help/v3.15/variable/CMAKE_MSVC_RUNTIME_LIBRARY.html
+if (MSVC)
+    set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
 
 # Enable Address Sanitizer
 if (ENABLE_ASAN)
@@ -268,17 +278,6 @@ if (MSVC)
     add_compiler_flags (-wd4512) # assignment operator could not be generated
     add_compiler_flags (-wd4577) # 'noexcept' used with no exception handling mode specified
     add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
-    
-    # Use static runtime
-    # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
-    foreach (flag_var
-        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
-        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
-    )
-        if (${flag_var} MATCHES "/MD")
-            string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-        endif ()
-    endforeach (flag_var)
 else ()
     # Adjust warnings
     add_compiler_flags (-Wall)
