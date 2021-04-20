@@ -66,6 +66,8 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
         ${MINGW_GUID}
     )
 
+    set_target_properties (directxtex PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
+
     install (
         FILES MIT.txt
         DESTINATION ${DOC_INSTALL_DIR}
