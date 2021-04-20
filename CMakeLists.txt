@@ -67,6 +67,36 @@ endif ()
 
 
 ##############################################################################
+# Set global build options
+
+macro (add_compiler_flags)
+    string (REPLACE ";" " " _FLAGS "${ARGV}")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_FLAGS}")
+endmacro ()
+
+macro (add_linker_flags)
+    string (REPLACE ";" " " _FLAGS "${ARGV}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${_FLAGS}")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${_FLAGS}")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
+endmacro ()
+
+# Enable Address Sanitizer
+if (ENABLE_ASAN)
+    if (MSVC)
+        # https://docs.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-160
+        # https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
+        add_compiler_flags (/fsanitize=address)
+        # TODO: Replace /incremental with /incremental:no
+    else ()
+        add_compiler_flags (-fsanitize=address)
+        add_linker_flags (-fsanitize=address)
+    endif ()
+endif ()
+
+
+##############################################################################
 # Find dependencies
 
 include (CheckCXXSourceCompiles)
@@ -185,7 +215,7 @@ endif ()
 
 
 ##############################################################################
-# Set global build options
+# Set project build options
 
 set (CMAKE_C_STANDARD 99)
 set (CXX_STANDARD_REQUIRED ON)
@@ -195,26 +225,12 @@ set (CXX_STANDARD_REQUIRED ON)
 include (CheckCXXCompilerFlag)
 include (CheckIncludeFileCXX)
 
-macro (add_compiler_flags)
-    string (REPLACE ";" " " _FLAGS "${ARGV}")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_FLAGS}")
-endmacro ()
-
-macro (add_linker_flags)
-    string (REPLACE ";" " " _FLAGS "${ARGV}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${_FLAGS}")
-    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${_FLAGS}")
-    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
-endmacro ()
-
 add_definitions (
     -D__STDC_LIMIT_MACROS
     -D__STDC_FORMAT_MACROS
 )
 
-if (WIN32)
-else (WIN32)
+if (NOT WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
         add_compiler_flags (-fvisibility=hidden)
@@ -279,12 +295,6 @@ else ()
 
     # Disable C++ exceptions
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
-
-    # Enable Address Sanitizer
-    if (ENABLE_ASAN)
-        add_compiler_flags (-fsanitize=address)
-        add_linker_flags (-fsanitize=address)
-    endif ()
 
     # Enable SSE2 intrinsics on x86
     if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
