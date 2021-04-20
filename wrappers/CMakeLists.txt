@@ -74,9 +74,6 @@ add_convenience_library (trace
     memtrace.hpp
     memtrace.cpp
 )
-if (WIN32)
-    target_sources (trace PRIVATE assert.cpp)
-endif ()
 target_link_libraries (trace
     common
     guids
