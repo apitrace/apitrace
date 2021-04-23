@@ -11,7 +11,7 @@ endif ()
 
 configure_file (
     snappy/snappy-stubs-public.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/snappy/snappy-stubs-public.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/config/snappy/snappy-stubs-public.h)
 
 add_convenience_library (snappy EXCLUDE_FROM_ALL
     snappy/snappy-internal.h
@@ -24,7 +24,7 @@ add_convenience_library (snappy EXCLUDE_FROM_ALL
     snappy/snappy-c.h
     snappy/snappy-sinksource.h
     snappy/snappy.h
-    ${CMAKE_CURRENT_BINARY_DIR}/snappy/snappy-stubs-public.h
+    ${CMAKE_CURRENT_BINARY_DIR}/config/snappy/snappy-stubs-public.h
     ${CMAKE_CURRENT_SOURCE_DIR}/support/snappy/config.h
 )
 target_compile_definitions (snappy PRIVATE
@@ -43,7 +43,7 @@ target_include_directories (snappy PRIVATE
 )
 target_include_directories (snappy PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/snappy
-    ${CMAKE_CURRENT_BINARY_DIR}/snappy
+    ${CMAKE_CURRENT_BINARY_DIR}/config/snappy
 )
 
 target_optimize (snappy)
