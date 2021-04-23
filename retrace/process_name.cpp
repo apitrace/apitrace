@@ -43,7 +43,8 @@
 #include <unistd.h>
 
 
-static std::string g_processName;
+// Must not use std::string to prevent it being destroyed.
+static char g_processName[4097];
 
 extern "C"  {
 
@@ -63,14 +64,13 @@ readlink(const char *pathname, char *buf, size_t bufsiz)
             std::string callerModule(getModuleFromAddress(ReturnAddress()));
             fprintf(stderr, "readlink(\"%s\") from %s\n", pathname, callerModule.c_str());
         }
-        if (!g_processName.empty()) {
-            size_t len = g_processName.length();
+        size_t len = strlen(g_processName);
+        if (len) {
             if (len < bufsiz) {
-                memcpy(buf, g_processName.data(), len);
-                buf[len] = 0;
+                memcpy(buf, g_processName, len + 1);
                 return len;
             } else {
-                memcpy(buf, g_processName.data(), bufsiz);
+                memcpy(buf, g_processName, bufsiz);
                 return bufsiz;
             }
         } else {
@@ -93,7 +93,8 @@ readlink(const char *pathname, char *buf, size_t bufsiz)
 void
 setProcessName(const char *processName)
 {
-    g_processName = processName;
+    strncpy(g_processName, processName, sizeof g_processName - 1);
+    g_processName[sizeof g_processName - 1] = '\0';
 
     char **p__progname_full = (char **)dlsym(RTLD_DEFAULT, "__progname_full");
     if (p__progname_full == nullptr) {
