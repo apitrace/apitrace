@@ -131,7 +131,7 @@ readSize(QDataStream &stream, Marker type)
     case MARKER_INT64: {
         int64_t size = readInt64(stream);
         Q_ASSERT(size >= 0);
-        Q_ASSERT_X(size <= INT_MAX, "qubjson::readSize", "size too large (https://github.com/apitrace/apitrace/issues/343)");
+        Q_ASSERT_X(size <= INT_MAX, "qubjson::readSize", "size too large (https://git.io/JOMRa)");
         return size;
     }
     default:

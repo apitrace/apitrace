@@ -409,7 +409,7 @@ class GlTracer(Tracer):
             print('        static bool warned = false;')
             print('        if (!warned) {')
             print('            warned = true;')
-            print('            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/docs/BUGS.markdown#tracing)\\n", __FUNCTION__);')
+            print('            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://git.io/JOMRv)\\n", __FUNCTION__);')
             print('        }')
             print('        gltrace::Context *_ctx = gltrace::getContext();')
             print('        _ctx->user_arrays = true;')
@@ -467,7 +467,7 @@ class GlTracer(Tracer):
                 print(r'            GLint _size = 0;')
                 print(r'            _%s(%s%s, &_size);' % (getter, extraArg, pname))
                 print(r'            if (_size != GL_BGRA) {')
-                print(r'                os::log("apitrace: warning: %s(%s) does not return GL_BGRA; trace will be incorrect (https://github.com/apitrace/apitrace/issues/261)\n");' % (getter, pname))
+                print(r'                os::log("apitrace: warning: %s(%s) does not return GL_BGRA; trace will be incorrect (https://git.io/JOM0n)\n");' % (getter, pname))
                 print(r'            }')
                 print(r'            _checked = true;')
                 print(r'        }')
@@ -526,7 +526,7 @@ class GlTracer(Tracer):
         if function.name.startswith('glArrayElement'):
             print(r'    gltrace::Context *_ctx = gltrace::getContext();')
             print(r'    if (_ctx->userArraysOnBegin) {')
-            print(r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://github.com/apitrace/apitrace/issues/276)\n");')
+            print(r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://git.io/JOM0l)\n");')
             print(r'        _ctx->userArraysOnBegin = false;')
             print(r'    }')
         

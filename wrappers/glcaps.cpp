@@ -208,7 +208,7 @@ getInteger(const configuration *config,
             GLint numProgramBinaryFormats = 0;
             _glGetIntegerv(pname, &numProgramBinaryFormats);
             if (numProgramBinaryFormats > 0) {
-                os::log("apitrace: warning: hiding program binary formats (https://github.com/apitrace/apitrace/issues/316)\n");
+                os::log("apitrace: warning: hiding program binary formats (https://git.io/JOM0m)\n");
             }
             params[0] = 0;
         }

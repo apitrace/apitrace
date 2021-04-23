@@ -315,7 +315,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
         if (formatDesc.type == GL_NONE) {
             std::cerr << "error: unexpected GL_TEXTURE_BUFFER internal format "
                       << enumToString(desc.internalFormat)
-                      << " (https://github.com/apitrace/apitrace/issues/426)\n";
+                      << " (https://git.io/JOMRy)\n";
             return false;
         }
 
