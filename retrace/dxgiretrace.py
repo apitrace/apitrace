@@ -435,9 +435,8 @@ class D3DRetracer(Retracer):
         if method.name == 'CreateBuffer':
             ppBuffer = method.args[-1]
             print(r'    if (retrace::dumpingState && SUCCEEDED(_result)) {')
-            print(r'       char label[32];')
-            print(r'       _snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
-            print(r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(label)+1, label);' % ppBuffer.name)
+            print(r'       std::string label = os::format("0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
+            print(r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, label.size() + 1, label.c_str());' % ppBuffer.name)
             print(r'    }')
 
     def retraceInterfaceMethodBody(self, interface, method):

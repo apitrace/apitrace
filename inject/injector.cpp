@@ -56,6 +56,7 @@
 #endif
 
 #include "os_version.hpp"
+#include "os_string.hpp"
 #include "devcon.hpp"
 #include "inject.h"
 
@@ -282,11 +283,10 @@ attachDebugger(DWORD dwProcessId)
     SECURITY_ATTRIBUTES sa = { sizeof sa, 0, TRUE };
     HANDLE hEvent = CreateEvent(&sa, FALSE, FALSE, NULL);
 
-    char szDebuggerCommand[1024];
-    _snprintf(szDebuggerCommand, sizeof szDebuggerCommand, szDebugger,
-              dwProcessId, (DWORD)(UINT_PTR)hEvent, NULL);
+    std::string szDebuggerCommand;
+    szDebuggerCommand = os::format(szDebugger, dwProcessId, (DWORD)(UINT_PTR)hEvent, nullptr);
 
-    debugPrintf("%s\n", szDebuggerCommand);
+    debugPrintf("%s\n", szDebuggerCommand.c_str());
 
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof pi);
@@ -297,7 +297,7 @@ attachDebugger(DWORD dwProcessId)
     BOOL bRet = FALSE;
     if (!CreateProcessA(
            NULL,
-           szDebuggerCommand,
+           const_cast<char *>(szDebuggerCommand.c_str()),
            NULL, // process attributes
            NULL, // thread attributes
            TRUE, // inherit (event) handles
@@ -307,7 +307,7 @@ attachDebugger(DWORD dwProcessId)
            &si,
            &pi)) {
         debugPrintf("inject: error: failed to execute \"%s\" with 0x%08lx\n",
-                    szDebuggerCommand,
+                    szDebuggerCommand.c_str(),
                     GetLastError());
     } else {
         HANDLE handles[] = {

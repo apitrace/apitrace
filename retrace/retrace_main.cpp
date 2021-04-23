@@ -238,12 +238,10 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no, bool backBuffer) {
         (snapshot_no % snapshotInterval) == 0)) {
 
         if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
-            char comment[21];
-            snprintf(comment, sizeof comment, "%u",
-                     useCallNos ? call_no : snapshot_no);
+            std::string comment = std::to_string(useCallNos ? call_no : snapshot_no);
             switch (snapshotFormat) {
             case PNM_FMT:
-                src->writePNM(std::cout, comment);
+                src->writePNM(std::cout, comment.c_str());
                 break;
             case RAW_RGB:
                 src->writeRAW(std::cout);

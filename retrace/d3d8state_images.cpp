@@ -33,6 +33,7 @@
 #include "com_ptr.hpp"
 #include "d3d8imports.hpp"
 #include "d3dstate.hpp"
+#include "os_string.hpp"
 
 
 namespace d3dstate {
@@ -195,11 +196,11 @@ dumpTextures(StateWriter &writer, IDirect3DDevice8 *pDevice)
                 image::Image *image;
                 image = getTextureImage(pDevice, pTexture, static_cast<D3DCUBEMAP_FACES>(Face), Level);
                 if (image) {
-                    char label[128];
+                    std::string label;
                     if (Type == D3DRTYPE_CUBETEXTURE) {
-                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_FACE_%lu_LEVEL_%lu", Stage, Face, Level);
+                        label = os::format("PS_RESOURCE_%lu_FACE_%lu_LEVEL_%lu", Stage, Face, Level);
                     } else {
-                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
+                        label = os::format("PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
                     }
                     writer.beginMember(label);
                     writer.writeImage(image);

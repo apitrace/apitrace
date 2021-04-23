@@ -34,6 +34,7 @@
 #include "d3d9state.hpp"
 #include "d3dstate.hpp"
 #include "d3d9size.hpp"
+#include "os_string.hpp"
 
 #include <vector>
 
@@ -462,11 +463,11 @@ dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice)
                 struct StateWriter::ImageDesc imageDesc;
                 image = getTextureImage(pDevice, pTexture, static_cast<D3DCUBEMAP_FACES>(Face), Level, imageDesc);
                 if (image) {
-                    char label[128];
+                    std::string label;
                     if (Type == D3DRTYPE_CUBETEXTURE) {
-                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_FACE_%lu_LEVEL_%lu", Stage, Face, Level);
+                        label = os::format("PS_RESOURCE_%lu_FACE_%lu_LEVEL_%lu", Stage, Face, Level);
                     } else {
-                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
+                        label = os::format("PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
                     }
                     writer.beginMember(label);
                     writer.writeImage(image, imageDesc);
@@ -505,8 +506,7 @@ dumpRenderTargets(StateWriter &writer,
         struct StateWriter::ImageDesc imageDesc;
         image = getRenderTargetImage(pDevice, pRenderTarget, imageDesc);
         if (image) {
-            char label[64];
-            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            std::string label = os::format("RENDER_TARGET_%u", i);
             writer.beginMember(label);
             writer.writeImage(image, imageDesc);
             writer.endMember(); // RENDER_TARGET_*

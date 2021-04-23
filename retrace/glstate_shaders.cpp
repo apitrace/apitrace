@@ -40,6 +40,7 @@
 #include "glstate.hpp"
 #include "glstate_internal.hpp"
 #include "halffloat.hpp"
+#include "os_string.hpp"
 
 
 namespace glstate {
@@ -821,8 +822,7 @@ dumpArbProgramUniforms(StateWriter &writer, Context &context, GLenum target, con
             continue;
         }
 
-        char name[256];
-        snprintf(name, sizeof name, "%sprogram.local[%i]", prefix, index);
+        std::string name = os::format("%sprogram.local[%i]", prefix, index);
 
         writer.beginMember(name);
         writer.beginArray();
@@ -844,8 +844,7 @@ dumpArbProgramUniforms(StateWriter &writer, Context &context, GLenum target, con
             continue;
         }
 
-        char name[256];
-        snprintf(name, sizeof name, "%sprogram.env[%i]", prefix, index);
+        std::string name = os::format("%sprogram.env[%i]", prefix, index);
 
         writer.beginMember(name);
         writer.beginArray();

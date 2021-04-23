@@ -49,6 +49,7 @@ extern "C" _CRTIMP int _vscprintf(const char *format, va_list argptr);
 #endif
 #endif
 
+#include <string>
 #include <vector>
 
 #include "os.hpp"
@@ -81,6 +82,10 @@ namespace os {
  *
  * This class is not, however, a full replacement for std::string, which should
  * be otherwise used whenever possible.
+ *
+ * XXX: C++17's std::string allow to write directly to the buffer via the
+ * front() method, so os::String should be completely replaced by std::string
+ * and std::filesystem::path
  */
 class String {
 protected:
@@ -435,5 +440,50 @@ bool removeFile(const String &fileName);
 
 String getTemporaryDirectoryPath(void);
 
-} /* namespace os */
 
+/*
+ * Create a std::string with printf like formatting.
+ *
+ * XXX: It would be better to use std::format, alas it's not supported by MSVC
+ * till date.
+ */
+inline std::string
+#if defined(__MINGW32__)
+__attribute__ ((format (__MINGW_PRINTF_FORMAT, 1, 2)))
+#elif defined(__GNUC__)
+__attribute__ ((format (printf, 1, 2)))
+#endif
+format(const char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+
+    int length;
+    va_list args_copy;
+    va_copy(args_copy, args);
+#ifdef _WIN32
+    /* We need to use _vscprintf to calculate the length as vsnprintf returns -1
+     * if the number of characters to write is greater than count.
+     */
+    length = _vscprintf(format, args_copy);
+#else
+    char dummy;
+    length = vsnprintf(&dummy, sizeof dummy, format, args_copy);
+#endif
+    va_end(args_copy);
+
+    assert(length >= 0);
+    size_t size = length + 1;
+
+    std::string str(size, '\0');
+
+    va_start(args, format);
+    vsnprintf(&str.front(), size, format, args);
+    va_end(args);
+
+    return str;
+}
+
+
+} /* namespace os */

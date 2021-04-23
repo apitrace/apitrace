@@ -25,7 +25,7 @@
  **************************************************************************/
 
 
-#include <stdio.h>
+#include <string>
 
 #include "d3dshader.hpp"
 #include "os.hpp"
@@ -65,10 +65,16 @@ DisassembleShader(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly)
             for (release = 0; release <= 1; ++release) {
                 /* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */
                 for (version = 41; version >= 0; --version) {
-                    char filename[256];
-                    _snprintf(filename, sizeof(filename),
-                              "d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
-                    hD3DXModule = LoadLibraryA(filename);
+                    std::string filename("d3dx9");
+                    if (!release) {
+                        filename += 'd';
+                    }
+                    if (version) {
+                        filename += '_';
+                        filename += std::to_string(version);
+                    }
+                    filename += ".dll";
+                    hD3DXModule = LoadLibraryA(filename.c_str());
                     if (hD3DXModule)
                         goto found;
                 }
@@ -139,12 +145,13 @@ DisassembleShader(const void *pShaderBytecode, SIZE_T BytecodeLength, IDisassemb
     static bool firsttime = true;
 
     if (firsttime) {
-        char szFilename[MAX_PATH];
         HMODULE hModule = NULL;
         int version;
         for (version = 47; version >= 33; --version) {
-            _snprintf(szFilename, sizeof(szFilename), "d3dcompiler_%i.dll", version);
-            hModule = LoadLibraryA(szFilename);
+            std::string filename = "d3dcompiler_";
+            filename += std::to_string(version);
+            filename += ".dll";
+            hModule = LoadLibraryA(filename.c_str());
             if (hModule) {
                 pfnD3DDisassemble = (PFND3DDISASSEMBLE)
                     GetProcAddress(hModule, "D3DDisassemble");
@@ -155,18 +162,6 @@ DisassembleShader(const void *pShaderBytecode, SIZE_T BytecodeLength, IDisassemb
         }
         if (!pfnD3DDisassemble) {
             os::log("apitrace: warning: failed to load d3dcompiler_xx.dll\n");
-
-            /*
-             * Fallback to D3D10DisassembleShader, which should be always present.
-             */
-            if (GetSystemDirectoryA(szFilename, MAX_PATH)) {
-                strcat(szFilename, "\\d3d10.dll");
-                hModule = LoadLibraryA(szFilename);
-                if (hModule) {
-                    pfnD3D10DisassembleShader = (PFND3D10DISASSEMBLESHADER)
-                        GetProcAddress(hModule, "D3D10DisassembleShader");
-                }
-            }
         }
 
         firsttime = false;

@@ -31,6 +31,7 @@
 #include <algorithm>
 
 #include "os.hpp"
+#include "os_string.hpp"
 #include "state_writer.hpp"
 #include "image.hpp"
 #include "com_ptr.hpp"
@@ -428,10 +429,8 @@ dumpShaderResourceViewImage(StateWriter &writer,
         image::Image *image;
         image = getSubResourceImage(pDevice, pResource, Desc.Format, ArraySlice, MipSlice);
         if (image) {
-            char label[64];
-            _snprintf(label, sizeof label,
-                      "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
-                      shader, stage, ArraySlice, MipSlice);
+            std::string label = os::format("%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
+                                              shader, stage, ArraySlice, MipSlice);
             StateWriter::ImageDesc imgDesc;
             imgDesc.depth = 1;
             imgDesc.format = getDXGIFormatName(Desc.Format);
@@ -628,8 +627,7 @@ dumpFramebuffer(StateWriter &writer, ID3D10Device *pDevice)
         image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
                                          &dxgiFormat);
         if (image) {
-            char label[64];
-            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            std::string label = os::format("RENDER_TARGET_%u", i);
             StateWriter::ImageDesc imgDesc;
             imgDesc.depth = 1;
             imgDesc.format = getDXGIFormatName(dxgiFormat);

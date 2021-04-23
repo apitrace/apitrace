@@ -34,6 +34,7 @@
 #include "d3d10state.hpp"
 #include "dxgistate_so.hpp"
 #include "dxgistate.hpp"
+#include "os_string.hpp"
 
 
 namespace d3dstate {
@@ -269,16 +270,16 @@ dumpBuffers(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
         writer.beginMember("Vertex Buffers");
         writer.beginArray();
         for (UINT i = 0; i < ARRAYSIZE(vertexBuffers); ++i) {
-            char label[64];
+            std::string label;
             std::string name;
 
             if (vertexBuffers[i]) {
                 name = getObjectName(vertexBuffers[i]);
-                _snprintf(label, sizeof label, "%s, stride: %d, offset: %d",
-                          name.c_str(), strides[i], offsets[i]);
+                label = os::format("%s, stride: %d, offset: %d",
+                                      name.c_str(), strides[i], offsets[i]);
                 vertexBuffers[i]->Release();
             } else {
-                _snprintf(label, sizeof label, "null");
+                label = "null";
             }
             writer.writeString(label);
         }
@@ -291,12 +292,12 @@ dumpBuffers(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     UINT iaOffset;
     pDeviceContext->IAGetIndexBuffer(&indexBuffer, &iaFormat, &iaOffset);
     if (indexBuffer) {
-        char label[64];
+        std::string label;
         std::string formatName = d3dstate::getDXGIFormatName(iaFormat);
         std::string name = getObjectName(indexBuffer);
-        _snprintf(label, sizeof label, "%s, format: %s, offset: %d",
-                  name.c_str(), formatName.c_str(), iaOffset);
-        writer.writeStringMember("Index Buffer", label);
+        label = os::format("%s, format: %s, offset: %d",
+                              name.c_str(), formatName.c_str(), iaOffset);
+        writer.writeStringMember("Index Buffer", label.c_str());
         indexBuffer->Release();
     }
     writer.endObject();
