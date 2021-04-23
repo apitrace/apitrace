@@ -207,6 +207,7 @@ ignoredFunctionNames = set([
     'glXGetClientString',
     'glXGetCurrentDisplay',
     'glXGetCurrentContext',
+    'glXGetFBConfigAttrib',
     'glXGetProcAddress',
     'glXGetProcAddressARB',
     'wglGetProcAddress',
