@@ -69,6 +69,15 @@ you have a multilib gcc and 32-bits X11 libraries, by doing:
 The `/usr/lib32` refers to the path where the 32-bits shared objects are may
 differ depending on the actual Linux distribution.
 
+## Obtaining vendored dependencies
+
+If your distribution does not provide some of the dependencies, you can obtain them as git submodules instead.
+
+To fetch them, run this command:
+
+```
+git submodule update --init --recursive
+```
 
 # Mac OS X #
 
