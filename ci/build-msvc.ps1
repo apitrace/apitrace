@@ -101,10 +101,4 @@ Write-Host "Configuring onto $buildRoot ..."
 Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
 
 Write-Host "Building ..."
-Exec { cmake --build $buildRoot --config $config "--" /verbosity:minimal /maxcpucount }
-
-Write-Host "Testing ..."
-Exec { cmake --build $buildRoot --config $config --target check "--" /verbosity:minimal /maxcpucount }
-
-Write-Host "Packaging ..."
-Exec { cmake --build $buildRoot --config $config --target package "--" /verbosity:minimal /maxcpucount }
+Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
