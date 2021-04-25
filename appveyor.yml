@@ -31,6 +31,8 @@ clone_script:
 cache:
  - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86.7z
  - 5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
+ - 5.15.2-0-202011130602qttools-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86.7z
+ - 5.15.2-0-202011130602qttools-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z
 
 # https://www.appveyor.com/docs/windows-images-software/
 image: Visual Studio 2019
