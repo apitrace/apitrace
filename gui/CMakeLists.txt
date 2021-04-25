@@ -187,3 +187,10 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
         ")
     endif ()
 endif ()
+
+add_custom_command (
+    TARGET qapitrace
+    POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_SOURCE_DIR}/cmake/GetRuntimeDeps.cmake" "$<TARGET_FILE:qapitrace>"
+    VERBATIM
+)
