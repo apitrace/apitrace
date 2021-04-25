@@ -100,8 +100,10 @@ jobs:
       id: cache-downloads
       uses: actions/cache@v2
       with:
-        path: "*qtbase-*.7z"
-        key: ${{ runner.os }}-${{ matrix.target }}-5.15.2-0
+        path: |
+          *qtbase-*.7z
+          *qttools-*.7z
+        key: ${{ runner.os }}-${{ matrix.target }}-5.15.2-1
     - name: Build
       run: .\ci\build-msvc.ps1 -target ${{ matrix.target }}
     - name: Upload artifacts
