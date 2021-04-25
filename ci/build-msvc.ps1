@@ -79,6 +79,8 @@ $Env:Path = "$qtBinPath;$Env:Path"
 
 $generator = 'Visual Studio 16 2019'
 
+# XXX
+$config = 'RelWithDebInfo'
 if (!$config) {
     $config = 'Debug'
     # Default to release on master and tag Appveyor builds
