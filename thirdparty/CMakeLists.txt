@@ -13,6 +13,24 @@ function (include_with_scope)
     include (${ARGV})
 endfunction ()
 
+set (SUBMODULES_MISSING FALSE)
+foreach (path IN ITEMS
+    brotli/LICENSE
+    gtest/googletest/LICENSE
+    libbacktrace/LICENSE
+    libpng/LICENSE
+    snappy/COPYING
+    zlib/README
+)
+    if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
+        message (SEND_ERROR "error: ${CMAKE_CURRENT_SOURCE_DIR}/${path} does not exist")
+        set (SUBMODULES_MISSING TRUE)
+    endif ()
+endforeach ()
+if (SUBMODULES_MISSING)
+    message (FATAL_ERROR "Update Git submodules by running\ngit submodule update --init --depth 1 --recursive")
+endif ()
+
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
     message (STATUS "Using bundled Snappy")
     include_with_scope (snappy.cmake)
