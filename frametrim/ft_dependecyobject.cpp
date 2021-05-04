@@ -296,7 +296,7 @@ DependecyObjectMap::callOnBoundObjectWithDep(const trace::Call& call,
 void
 DependecyObjectMap::callOnBoundObjectWithDepBoundTo(const trace::Call& call,
                                                     DependecyObjectMap& other_objects,
-                                                    int bindingpoint, CallSet& out_set, bool recording)
+                                                    int bindingpoint)
 {
     unsigned bindpoint = getBindpointFromCall(call);
     if (!m_bound_object[bindpoint]) {
@@ -309,8 +309,8 @@ DependecyObjectMap::callOnBoundObjectWithDepBoundTo(const trace::Call& call,
     auto dep = other_objects.boundTo(bindingpoint);
     if (dep) {
         m_bound_object[bindpoint]->addDependency(dep);
-        if (recording)
-            dep->emitCallsTo(out_set);
+        if (global_state.emit_dependencies)
+            dep->emitCallsTo(*global_state.out_list);
     }
 
 }
@@ -348,7 +348,7 @@ DependecyObjectMap::callOnNamedObjectWithDep(const trace::Call& call,
 void
 DependecyObjectMap::callOnNamedObjectWithNamedDep(const trace::Call& call,
                                                   DependecyObjectMap& other_objects,
-                                                  int dep_call_param, CallSet& out_set, bool recording)
+                                                  int dep_call_param)
 {
     auto obj = getById(call.arg(0).toUInt());
 
@@ -361,8 +361,8 @@ DependecyObjectMap::callOnNamedObjectWithNamedDep(const trace::Call& call,
     auto dep = other_objects.getById(call.arg(dep_call_param).toUInt());
     if (dep) {
         obj->addDependency(dep);
-        if (recording)
-            dep->emitCallsTo(out_set);
+        if (global_state.emit_dependencies)
+            dep->emitCallsTo(*global_state.out_list);
     }
 }
 
@@ -629,8 +629,7 @@ VertexAttribObjectMap::VertexAttribObjectMap():next_id(1)
 }
 
 void
-VertexAttribObjectMap::bindAVO(const trace::Call& call, BufferObjectMap& buffers,
-                               CallSet &out_list, bool emit_dependencies)
+VertexAttribObjectMap::bindAVO(const trace::Call& call, BufferObjectMap& buffers)
 {
     unsigned id = call.arg(0).toUInt();
     auto obj = std::make_shared<UsedObject>(next_id);
@@ -641,15 +640,14 @@ VertexAttribObjectMap::bindAVO(const trace::Call& call, BufferObjectMap& buffers
     auto buf = buffers.boundToTarget(GL_ARRAY_BUFFER);
     if (buf) {
         obj->addDependency(buf);
-        if (emit_dependencies) {
-            buf->emitCallsTo(out_list);
+        if (global_state.emit_dependencies) {
+            buf->emitCallsTo(*global_state.out_list);
         }
     }
     ++next_id;
 }
 
-void VertexAttribObjectMap::bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers,
-                                       CallSet &out_list, bool emit_dependencies)
+void VertexAttribObjectMap::bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers)
 {
     unsigned id = call.arg(0).toUInt();
     auto obj = std::make_shared<UsedObject>(next_id);
@@ -661,8 +659,8 @@ void VertexAttribObjectMap::bindVAOBuf(const trace::Call& call, BufferObjectMap&
     assert(buf || (call.arg(1).toUInt() == 0));
     if (buf) {
         obj->addDependency(buf);
-        if (emit_dependencies) {
-            buf->emitCallsTo(out_list);
+        if (global_state.emit_dependencies) {
+            buf->emitCallsTo(*global_state.out_list);
         }
     }
     ++next_id;
@@ -977,5 +975,7 @@ void FramebufferObjectMap::oglDrawFromBuffer(const trace::Call& call, BufferObje
         fbo->addCall(trace2call(call));
     }
 }
+
+GlobalState global_state;
 
 }
