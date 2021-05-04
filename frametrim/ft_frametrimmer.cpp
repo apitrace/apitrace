@@ -217,6 +217,10 @@ FrameTrimmeImpl::FrameTrimmeImpl(bool keep_all_states):
     registerQueryCalls();
     registerDrawCalls();
     registerIgnoreHistoryCalls();
+
+    global_state.out_list = &m_required_calls;
+    global_state.emit_dependencies = m_recording_frame;
+
 }
 
 void
@@ -434,9 +438,17 @@ FrameTrimmeImpl::equalChars(const char *l, const char *r)
     m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
                         std::ref(data), param1, param2)))
 
+#define MAP_OBJ_RV(name, obj, call, data, param) \
+    m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
+                        std::ref(data), param)))
+
 #define MAP_OBJ_RVRR(name, obj, call, data1, param, data2, data3) \
     m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
                         std::ref(data1), param, std::ref(data2), std::ref(data3))))
+
+#define MAP_OBJ_R(name, obj, call, data) \
+    m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
+                        std::ref(data))))
 
 #define MAP_OBJ_RR(name, obj, call, data1, data2) \
     m_call_table.insert(std::make_pair(#name, bind(&call, &obj, _1, \
@@ -626,10 +638,10 @@ FrameTrimmeImpl::registerProgramCalls()
     MAP_OBJ(glGenProgramPipelines, m_program_pipelines, ProgramPipelineObjectMap::generate);
     MAP_OBJ(glDeleteProgramPipelines, m_program_pipelines, ProgramPipelineObjectMap::destroy);
     MAP_RV(glBindProgramPipelines, oglBind, m_program_pipelines, 0);
-    MAP_OBJ_RVRR(glUseProgramStages, m_program_pipelines, ProgramPipelineObjectMap::callOnNamedObjectWithNamedDep,
-                 m_programs, 2, m_required_calls, m_recording_frame);
-    MAP_OBJ_RVRR(glActiveShaderProgram, m_program_pipelines, ProgramPipelineObjectMap::callOnNamedObjectWithNamedDep,
-                 m_programs, 1, m_required_calls, m_recording_frame);
+    MAP_OBJ_RV(glUseProgramStages, m_program_pipelines, ProgramPipelineObjectMap::callOnNamedObjectWithNamedDep,
+               m_programs, 2);
+    MAP_OBJ_RV(glActiveShaderProgram, m_program_pipelines, ProgramPipelineObjectMap::callOnNamedObjectWithNamedDep,
+               m_programs, 1);
 }
 
 void FrameTrimmeImpl::registerTextureCalls()
@@ -650,14 +662,14 @@ void FrameTrimmeImpl::registerTextureCalls()
     MAP_OBJ(glTexStorage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage3D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObject);
-    MAP_OBJ_RVRR(glTexSubImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
-                    m_buffers, GL_PIXEL_UNPACK_BUFFER, m_required_calls, m_recording_frame);
-    MAP_OBJ_RVRR(glTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
-                    m_buffers, GL_PIXEL_UNPACK_BUFFER, m_required_calls, m_recording_frame);
-    MAP_OBJ_RVRR(glCompressedTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
-                  m_buffers, GL_PIXEL_UNPACK_BUFFER, m_required_calls, m_recording_frame);
-    MAP_OBJ_RVRR(glTexSubImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
-                  m_buffers, GL_PIXEL_UNPACK_BUFFER, m_required_calls, m_recording_frame);
+    MAP_OBJ_RV(glTexSubImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+                    m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+                    m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glCompressedTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+                  m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTexSubImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+                  m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ(glTexParameter, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ_RVV(glTextureView, m_textures, TextureObjectMap::callOnNamedObjectWithDep,
                    m_textures, 2, true);
@@ -869,13 +881,15 @@ FrameTrimmeImpl::registerVaCalls()
 
     MAP(glDisableVertexAttribArray, recordRequiredCall);
     MAP(glEnableVertexAttribArray, recordRequiredCall);
-    MAP_OBJ_RRR(glVertexAttribPointer, m_vertex_attrib_pointers,
-                   VertexAttribObjectMap::bindAVO, m_buffers,
-                   m_required_calls, m_recording_frame);
+    MAP_OBJ_R(glVertexAttribPointer, m_vertex_attrib_pointers,
+                   VertexAttribObjectMap::bindAVO, m_buffers);
+    MAP_OBJ_R(glVertexAttribIPointer, m_vertex_attrib_pointers,
+                   VertexAttribObjectMap::bindAVO, m_buffers);
+    MAP_OBJ_R(glVertexAttribLPointer, m_vertex_attrib_pointers,
+                   VertexAttribObjectMap::bindAVO, m_buffers);
 
-    MAP_OBJ_RRR(glBindVertexBuffer, m_vertex_buffer_pointers,
-                   VertexAttribObjectMap::bindVAOBuf, m_buffers,
-                   m_required_calls, m_recording_frame);
+    MAP_OBJ_R(glBindVertexBuffer, m_vertex_buffer_pointers,
+                VertexAttribObjectMap::bindVAOBuf, m_buffers);
 
     MAP(glVertexPointer, recordRequiredCall);
     MAP(glTexCoordPointer, recordRequiredCall);

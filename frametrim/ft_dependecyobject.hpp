@@ -81,13 +81,12 @@ public:
 
     void
     callOnBoundObjectWithDepBoundTo(const trace::Call& call, DependecyObjectMap& other_objects,
-                                    int bindingpoint, CallSet &out_set, bool recording);
+                                    int bindingpoint);
 
     void callOnNamedObjectWithDep(const trace::Call& call,
                                   DependecyObjectMap& other_objects, int dep_obj_param, bool reverse_dep_too);
-    void callOnNamedObjectWithNamedDep(const trace::Call& call,
-                                       DependecyObjectMap& other_objects,
-                                       int dep_call_param, CallSet& out_set, bool recording);
+    void callOnNamedObjectWithNamedDep(const trace::Call& call, DependecyObjectMap& other_objects,
+                                       int dep_call_param);
 
     UsedObject::Pointer getById(unsigned id) const;
     void addCall(PTraceCall call);
@@ -186,9 +185,9 @@ private:
 class VertexAttribObjectMap: public DependecyObjectWithDefaultBindPointMap {
 public:
     VertexAttribObjectMap();
-    void bindAVO(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);
-    void bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);    
-    void vaBinding(const trace::Call& call, BufferObjectMap& buffers, CallSet &out_list, bool emit_dependencies);
+    void bindAVO(const trace::Call& call, BufferObjectMap& buffers);
+    void bindVAOBuf(const trace::Call& call, BufferObjectMap& buffers);
+    void vaBinding(const trace::Call& call, BufferObjectMap& buffers);
 private:
     unsigned next_id;
 };
@@ -248,5 +247,14 @@ private:
     bindTarget(unsigned id, unsigned bindpoint) override;
     unsigned getBindpointFromCall(const trace::Call& call) const override;
 };
+
+struct GlobalState {
+    CallSet *out_list = nullptr;
+    bool emit_dependencies = false;
+    UsedObject::Pointer current_vao;
+};
+
+extern GlobalState global_state;
+
 
 }
