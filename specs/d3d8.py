@@ -77,6 +77,8 @@ HRESULT = MAKE_HRESULT(ok = "D3D_OK", errors = [
     "D3DERR_DRIVERINVALIDCALL",
 ])
 
+DWORD_D3DFVF = Polymorphic("Handle & 1", [("0", D3DFVF)], DWORD, contextLess=False)
+
 IDirect3D8 = Interface("IDirect3D8", IUnknown)
 IDirect3DDevice8 = Interface("IDirect3DDevice8", IUnknown)
 IDirect3DSwapChain8 = Interface("IDirect3DSwapChain8", IUnknown)
@@ -196,7 +198,7 @@ IDirect3DDevice8.methods += [
     StdMethod(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertexIndices"), (UINT, "PrimitiveCount"), (Blob(Const(Void), "_indexDataSize(PrimitiveType, PrimitiveCount, IndexDataFormat)"), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (Blob(Const(Void), "(MinVertexIndex + NumVertexIndices)*VertexStreamZeroStride"), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     StdMethod(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (PDIRECT3DVERTEXBUFFER8, "pDestBuffer"), (D3DPV, "Flags")]),
     StdMethod(HRESULT, "CreateVertexShader", [(Array(Const(DWORD), "_declCount(pDeclaration)"), "pDeclaration"), (D3DSHADER8, "pFunction"), Out(Pointer(DWORD), "pHandle"), (D3DUSAGE, "Usage")]),
-    StdMethod(HRESULT, "SetVertexShader", [(DWORD, "Handle")]),
+    StdMethod(HRESULT, "SetVertexShader", [(DWORD_D3DFVF, "Handle")]),
     StdMethod(HRESULT, "GetVertexShader", [Out(Pointer(DWORD), "pHandle")], sideeffects=False),
     StdMethod(HRESULT, "DeleteVertexShader", [(DWORD, "Handle")]),
     StdMethod(HRESULT, "SetVertexShaderConstant", [(DWORD, "Register"), (Blob(Const(Void), "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")]),
