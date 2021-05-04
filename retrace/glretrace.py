@@ -331,17 +331,6 @@ class GlRetracer(Retracer):
             function.name.startswith('glDispatchCompute')
         )
 
-        # Keep track of current program/pipeline
-        if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
-            print(r'    if (currentContext) {')
-            print(r'        currentContext->currentUserProgram = call.arg(0).toUInt();')
-            print(r'        currentContext->currentProgram = %s;' % function.args[0].name)
-            print(r'    }')
-        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
-            print(r'    if (currentContext) {')
-            print(r'        currentContext->currentPipeline = %s;' % function.args[0].name)
-            print(r'    }')
-
         # Only profile if not inside a list as the queries get inserted into list
         if function.name == 'glNewList':
             print(r'    if (currentContext) {')
@@ -421,6 +410,24 @@ class GlRetracer(Retracer):
             print(r'    }')
         else:
             Retracer.invokeFunction(self, function)
+
+        # Keep track of current program/pipeline.  Using glGet as opposed to
+        # the call parameter ensures the cached value stays consistent despite
+        # GL errors.  See also https://github.com/apitrace/apitrace/issues/679
+        if function.name in ('glUseProgram'):
+            print(r'    if (currentContext) {')
+            print(r'        currentContext->currentUserProgram = call.arg(0).toUInt();')
+            print(r'        currentContext->currentProgram = _glGetInteger(GL_CURRENT_PROGRAM);')
+            print(r'    }')
+        if function.name in ('glUseProgramObjectARB',):
+            print(r'    if (currentContext) {')
+            print(r'        currentContext->currentUserProgram = call.arg(0).toUInt();')
+            print(r'        currentContext->currentProgram = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);')
+            print(r'    }')
+        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
+            print(r'    if (currentContext) {')
+            print(r'        currentContext->currentPipeline = pipeline;')
+            print(r'    }')
 
         # Ensure this context flushes before switching to another thread to
         # prevent deadlock.
