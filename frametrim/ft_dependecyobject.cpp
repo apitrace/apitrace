@@ -104,6 +104,11 @@ void UsedObject::setExtraInfo(const std::string& key, unsigned value)
     m_extra_info[key] = value;
 }
 
+void UsedObject::eraseExtraInfo(const std::string& key)
+{
+    m_extra_info.erase(key);
+}
+
 void
 DependecyObjectMap::generate(const trace::Call& call)
 {
@@ -123,8 +128,10 @@ void DependecyObjectMap::destroy(const trace::Call& call)
     for (auto& v : ids->values) {
         assert(m_objects[v->toUInt()]->id() == v->toUInt());
         auto obj_it = m_objects.find(v->toUInt());
-        if (obj_it != m_objects.end())
+        if (obj_it != m_objects.end()) {
             obj_it->second->addCall(c);
+            obj_it->second->eraseExtraInfo("target");
+        }
     }
 }
 
@@ -152,7 +159,10 @@ UsedObject::Pointer
 DependecyObjectMap::bind(const trace::Call& call, unsigned obj_id_param)
 {
     unsigned id = call.arg(obj_id_param).toUInt();
-    setTargetType(id, call.arg(0).toUInt());
+    if (!setTargetType(id, call.arg(0).toUInt()))  {
+        std::cerr << "Texture target type mismatch in call " << call.no << "\n";
+        assert(0);
+    }
     int bindpoint = getBindpointFromCall(call);
     if (bindpoint < 0) {
         std::cerr << "Unknown bindpoint in call "
@@ -162,11 +172,11 @@ DependecyObjectMap::bind(const trace::Call& call, unsigned obj_id_param)
     return bindTarget(id, bindpoint);
 }
 
-void
-DependecyObjectMap::setTargetType(unsigned id, unsigned target)
+bool DependecyObjectMap::setTargetType(unsigned id, unsigned target)
 {
     (void)id;
     (void)target;
+    return true;
 }
 
 UsedObject::Pointer
@@ -705,21 +715,29 @@ TextureObjectMap::oglBindMultitex(const trace::Call& call)
     unsigned unit = call.arg(0).toUInt() - GL_TEXTURE0;
     unsigned target = call.arg(1).toUInt();
     unsigned id = call.arg(2).toUInt();
-    setTargetType(id, target);
+    if (!setTargetType(id, target)) {
+        std::cerr << "Texture target type mismatch in call " << call.no << "\n";
+        assert(0);
+    }
     unsigned bindpoint  = getBindpointFromTargetAndUnit(target, unit);
     return bind(bindpoint, id);
 }
 
-void TextureObjectMap::setTargetType(unsigned id, unsigned target)
+bool TextureObjectMap::setTargetType(unsigned id, unsigned target)
 {
     if (!id)
-        return;
+        return true;
     auto tex = getById(id);
     unsigned old_target = tex->extraInfo("target");
     if (!old_target)
         tex->setExtraInfo("target", target);
-    else
-        assert(old_target == target);
+    else {
+        if (old_target != target) {
+            std::cerr << "Already have target " << old_target  << " != new target " << target << "\n";
+            return false;
+        }
+    }
+    return true;
 }
 
 void TextureObjectMap::copy(const trace::Call& call)

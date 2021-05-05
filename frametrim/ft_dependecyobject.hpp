@@ -50,6 +50,7 @@ public:
 
     unsigned extraInfo(const std::string& key) const;
     void setExtraInfo(const std::string& key, unsigned value);
+    void eraseExtraInfo(const std::string& key);
 
 private:
 
@@ -111,7 +112,7 @@ private:
     virtual UsedObject::Pointer bindTarget(unsigned id, unsigned bindpoint);
     virtual unsigned getBindpointFromCall(const trace::Call& call) const = 0;
     virtual unsigned getBindpoint(unsigned target, unsigned index) const;
-    virtual void setTargetType(unsigned id, unsigned target);
+    virtual bool setTargetType(unsigned id, unsigned target);
 
     ObjectMap m_objects;
     ObjectMap m_bound_object;
@@ -205,7 +206,7 @@ public:
 private:
     void emitBoundObjectsExt(CallSet& out_calls) override;
     unsigned getBindpointFromCall(const trace::Call& call) const override;
-    void setTargetType(unsigned id, unsigned target) override;
+    bool setTargetType(unsigned id, unsigned target) override;
     int getBindpointFromTargetAndUnit(unsigned target, unsigned unit) const;
     unsigned m_active_texture;
     std::unordered_map<unsigned, UsedObject::Pointer> m_bound_images;
