@@ -531,7 +531,7 @@ BufferObjectMap::namedMap(const trace::Call& call)
 }
 
 void
-BufferObjectMap::map_range(const trace::Call& call)
+BufferObjectMap::mapRange(const trace::Call& call)
 {
     unsigned target = getBindpointFromCall(call);
     auto buf = boundAtBinding(target);
