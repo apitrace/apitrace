@@ -658,8 +658,12 @@ void FrameTrimmeImpl::registerTextureCalls()
 
     MAP_OBJ(glCompressedTexImage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glGenerateMipmap, m_textures, TextureObjectMap::callOnBoundObject);
-    MAP_OBJ(glTexImage1D, m_textures, TextureObjectMap::callOnBoundObject);
-    MAP_OBJ(glTexImage2D, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ_RV(glTexImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTexImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ(glTexStorage1D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage3D, m_textures, TextureObjectMap::callOnBoundObject);
