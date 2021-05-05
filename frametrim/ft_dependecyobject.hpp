@@ -154,7 +154,7 @@ public:
 
     void data(const trace::Call& call);
     void map(const trace::Call& call);
-    void map_range(const trace::Call& call);
+    void mapRange(const trace::Call& call);
     void unmap(const trace::Call& call);
     void memcopy(const trace::Call& call, CallSet& out_set, bool recording);
     void namedMap(const trace::Call& call);
