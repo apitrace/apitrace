@@ -635,7 +635,8 @@ VertexAttribObjectMap::bindAVO(const trace::Call& call, BufferObjectMap& buffers
     auto obj = std::make_shared<UsedObject>(next_id);
     addObject(next_id, obj);
     bind(id, next_id);
-    obj->addCall(trace2call(call));
+    auto c = trace2call(call);
+    obj->addCall(c);
 
     auto buf = buffers.boundToTarget(GL_ARRAY_BUFFER);
     if (buf) {
@@ -644,6 +645,10 @@ VertexAttribObjectMap::bindAVO(const trace::Call& call, BufferObjectMap& buffers
             buf->emitCallsTo(*global_state.out_list);
         }
     }
+    if (global_state.current_vao) {
+        global_state.current_vao->addDependency(obj);
+    }
+
     ++next_id;
 }
 

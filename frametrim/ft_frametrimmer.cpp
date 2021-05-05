@@ -117,6 +117,8 @@ struct FrameTrimmeImpl {
 
     void oglBindMultitex(const trace::Call& call);
     void oglDispatchCompute(const trace::Call& call);
+    void oglBindVertexArray(const trace::Call& call);
+    void oglBindBuffer(const trace::Call& call);
 
     void todo(const trace::Call& call);
     void ignoreHistory(const trace::Call& call);
@@ -562,7 +564,7 @@ FrameTrimmeImpl::registerBufferCalls()
     MAP_OBJ(glCreateBuffers, m_buffers, BufferObjectMap::generate);
     MAP_OBJ(glDeleteBuffers, m_buffers, BufferObjectMap::destroy);
 
-    MAP_RV(glBindBuffer, oglBind, m_buffers, 1);
+    MAP(glBindBuffer, oglBindBuffer);
     MAP_RV(glBindBufferRange, oglBind, m_buffers, 2);
 
     /* This will need a bit more to be handled correctly */
@@ -876,7 +878,7 @@ FrameTrimmeImpl::registerVaCalls()
 {
     MAP_OBJ(glGenVertexArrays, m_vertex_arrays, VertexArrayMap::generate);
     MAP_OBJ(glDeleteVertexArrays, m_vertex_arrays, VertexArrayMap::destroy);
-    MAP_RV(glBindVertexArray, oglBind, m_vertex_arrays, 0);
+    MAP(glBindVertexArray, oglBindVertexArray);
     //MAP_OBJ(glVertexAttribBinding, m_vertex_buffer_pointers, VertexAttribObjectMap::vaBinding);
 
     MAP(glDisableVertexAttribArray, recordRequiredCall);
@@ -1035,6 +1037,24 @@ FrameTrimmeImpl::oglBind(const trace::Call& call, DependecyObjectMap& map,
 }
 
 void
+FrameTrimmeImpl::oglBindBuffer(const trace::Call& call)
+{
+    auto bound_obj = m_buffers.bind(call, 1);
+    if (bound_obj) {
+        bound_obj->addCall(trace2call(call));
+        if (call.arg(0).toUInt() == GL_ELEMENT_ARRAY_BUFFER) {
+            if (global_state.current_vao)
+                global_state.current_vao->addDependency(bound_obj);
+        }
+    } else
+        m_buffers.addCall(trace2call(call));
+
+    if (m_recording_frame && bound_obj)
+        bound_obj->emitCallsTo(m_required_calls);
+}
+
+
+void
 FrameTrimmeImpl::oglBindTextures(const trace::Call& call)
 {
     unsigned first = call.arg(0).toUInt();
@@ -1084,7 +1104,7 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
     auto fb = m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
     auto cur_prog = m_programs.boundTo(0, 0);
     if (cur_prog) {
-        for(auto && [key, buf]: m_buffers) {
+        for(auto&& [key, buf]: m_buffers) {
             if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
                 cur_prog->addDependency(buf);
         }
@@ -1100,7 +1120,7 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
 
     auto cur_pipeline = m_program_pipelines.boundTo(0, 0);
     if (cur_pipeline) {
-        for(auto && [key, buf]: m_buffers) {
+        for(auto&& [key, buf]: m_buffers) {
             if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
                 cur_pipeline->addDependency(buf);
         }
@@ -1118,6 +1138,12 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
         fb->addCall(trace2call(call));
 
         m_buffers.addBoundAsDependencyTo(*fb);
+        m_vertex_arrays.addBoundAsDependencyTo(*fb);
+        m_textures.addBoundAsDependencyTo(*fb);
+        m_programs.addBoundAsDependencyTo(*fb);
+        m_legacy_programs.addBoundAsDependencyTo(*fb);
+        m_program_pipelines.addBoundAsDependencyTo(*fb);
+        m_samplers.addBoundAsDependencyTo(*fb);
 
         for(auto&& [key, vbo]: m_vertex_attrib_pointers) {
             if (vbo)
@@ -1131,6 +1157,12 @@ void FrameTrimmeImpl::oglDraw(const trace::Call& call)
     }
 
     if (m_recording_frame) {
+
+        for(auto&& [key, vao]: m_vertex_arrays) {
+            if (vao)
+                vao->emitCallsTo(m_required_calls);
+        }
+
         for(auto&& [key, vbo]: m_vertex_attrib_pointers) {
             if (vbo)
                 vbo->emitCallsTo(m_required_calls);
@@ -1183,10 +1215,10 @@ void
 FrameTrimmeImpl::oglBindFbo(const trace::Call& call, DependecyObjectMap& map,
                          unsigned bind_param)
 {
-    auto bound_obj = map.bind(call, bind_param);
-    bound_obj->addCall(trace2call(call));
-    if (m_recording_frame && bound_obj->id())
-        bound_obj->emitCallsTo(m_required_calls);
+    auto fb = map.bind(call, bind_param);
+    fb->addCall(trace2call(call));
+    if (m_recording_frame && fb->id())
+        fb->emitCallsTo(m_required_calls);
 }
 
 void
@@ -1235,6 +1267,25 @@ FrameTrimmeImpl::recordRequiredCall(const trace::Call& call)
 {
     auto c = trace2call(call);
     m_required_calls.insert(c);
+}
+
+void
+FrameTrimmeImpl::oglBindVertexArray(const trace::Call& call)
+{
+    auto vao = m_vertex_arrays.bind(call, 0);
+    global_state.current_vao = vao;
+    if (vao)
+        vao->addCall(trace2call(call));
+    else
+        m_vertex_arrays.addCall(trace2call(call));
+
+    if (global_state.emit_dependencies)
+        vao->emitCallsTo(*global_state.out_list);
+    else {
+        auto fb = m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
+        if (fb->id())
+            fb->addDependency(vao);
+    }
 }
 
 }
