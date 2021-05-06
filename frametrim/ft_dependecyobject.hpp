@@ -152,6 +152,7 @@ public:
         bt_last,
     };
 
+    void bindBuffer(const trace::Call& call);
     void data(const trace::Call& call);
     void map(const trace::Call& call);
     void mapRange(const trace::Call& call);
@@ -163,7 +164,7 @@ public:
 
     void namedData(const trace::Call& call);
 
-    UsedObject::Pointer boundToTarget(unsigned target, unsigned index = 0);
+    UsedObject::Pointer boundToTarget(unsigned target);
 
     void addSSBODependencies(UsedObject::Pointer dep);
 
