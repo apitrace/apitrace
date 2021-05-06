@@ -427,10 +427,29 @@ DependecyObjectWithDefaultBindPointMap::getBindpointFromCall(const trace::Call& 
     return call.arg(0).toUInt();
 }
 
-UsedObject::Pointer
-BufferObjectMap::boundToTarget(unsigned target, unsigned index)
+void BufferObjectMap::bindBuffer(const trace::Call& call)
 {
-    return boundTo(target, index);
+    unsigned target = call.arg(0).toUInt();
+    unsigned index = call.arg(1).toUInt();
+    unsigned bufid  = call.arg(2).toUInt();
+
+    unsigned bindpoint = getBindpoint(target, 0);
+    auto buf = bind(bindpoint, bufid);
+    if (index != 0) {
+        unsigned bindpoint = getBindpoint(target, index);
+        bind(bindpoint, bufid);
+    }
+    if (buf)
+        buf->addCall(trace2call(call));
+    else
+        addCall(trace2call(call));
+}
+
+
+UsedObject::Pointer
+BufferObjectMap::boundToTarget(unsigned target)
+{
+    return boundTo(target, 0);
 }
 
 unsigned
@@ -440,7 +459,7 @@ BufferObjectMap::getBindpoint(unsigned target, unsigned index) const
     case GL_ARRAY_BUFFER:
         return bt_array;
     case GL_ATOMIC_COUNTER_BUFFER:
-        return bt_atomic_counter + bt_last* index;
+        return bt_atomic_counter + bt_last * index;
     case GL_COPY_READ_BUFFER:
         return bt_copy_read;
     case GL_COPY_WRITE_BUFFER:
@@ -474,12 +493,11 @@ BufferObjectMap::getBindpoint(unsigned target, unsigned index) const
 unsigned
 BufferObjectMap::getBindpointFromCall(const trace::Call& call) const
 {
-    unsigned target = call.arg(0).toUInt();
-    unsigned index = 0;
-    if (!strcmp(call.name(), "glBindBufferRange")) {
-        index = call.arg(1).toUInt();
-    }
-    return getBindpoint(target, index);
+    /* These two calls are handled elsewhere, since they don't touch the  */
+    assert(strcmp(call.name(), "glBindBufferRange"));
+    assert(strcmp(call.name(), "glBindBufferBase"));
+
+    return getBindpoint(call.arg(0).toUInt(), 0);
 }
 
 void

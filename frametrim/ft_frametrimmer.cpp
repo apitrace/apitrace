@@ -565,10 +565,10 @@ FrameTrimmeImpl::registerBufferCalls()
     MAP_OBJ(glDeleteBuffers, m_buffers, BufferObjectMap::destroy);
 
     MAP(glBindBuffer, oglBindBuffer);
-    MAP_RV(glBindBufferRange, oglBind, m_buffers, 2);
+    MAP_OBJ(glBindBufferRange, m_buffers, BufferObjectMap::bindBuffer);
 
     /* This will need a bit more to be handled correctly */
-    MAP_RV(glBindBufferBase, oglBind, m_buffers, 2);
+    MAP_OBJ(glBindBufferBase, m_buffers, BufferObjectMap::bindBuffer);
 
     MAP_OBJ(glBufferData, m_buffers, BufferObjectMap::data);
     MAP_OBJ(glBufferStorage, m_buffers, BufferObjectMap::data);
