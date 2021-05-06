@@ -622,12 +622,15 @@ FrameTrimmeImpl::registerProgramCalls()
     MAP_OBJ(glShaderSource, m_shaders, ShaderStateMap::callOnNamedObject);
 
     MAP_OBJ(glBindAttribLocation, m_programs, ProgramObjectMap::callOnNamedObject);
+    MAP_OBJ(glGetActiveAttrib, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glCreateProgram, m_programs, ProgramObjectMap::create);
     MAP_OBJ(glDeleteProgram, m_programs, ProgramObjectMap::del);
     MAP_OBJ(glDetachShader, m_programs, ProgramObjectMap::callOnNamedObject);
+    MAP_OBJ(glGetAttachedShaders, m_programs, ProgramObjectMap::callOnNamedObject);
 
     MAP_OBJ(glGetAttribLocation, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glGetUniformLocation, m_programs, ProgramObjectMap::callOnNamedObject);
+    MAP_OBJ(glGetUniformBlockIndex, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glBindFragDataLocation, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glLinkProgram, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glProgramBinary, m_programs, ProgramObjectMap::callOnNamedObject);
