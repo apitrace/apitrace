@@ -582,6 +582,11 @@ BufferObjectMap::unmap(const trace::Call& call)
     auto buf = boundAtBinding(target);
     if (buf) {
         m_mapped_buffers[target].erase(buf->id());
+        m_old_buffer_mappings[buf->id()] =
+                std::make_tuple(m_buffer_mappings[buf->id()].first,
+                m_buffer_mappings[buf->id()].second,
+                call.no);
+
         m_buffer_mappings[buf->id()] = std::make_pair(0, 0);
         buf->addCall(trace2call(call));
     }
@@ -593,6 +598,10 @@ BufferObjectMap::namedUnmap(const trace::Call& call)
     auto buf = getById(call.arg(0).toUInt());
     if (buf) {
         m_mapped_buffers[bt_names_access].erase(buf->id());
+        m_old_buffer_mappings[buf->id()] =
+                std::make_tuple(m_buffer_mappings[buf->id()].first,
+                m_buffer_mappings[buf->id()].second,
+                call.no);
         m_buffer_mappings[buf->id()] = std::make_pair(0, 0);
         buf->addCall(trace2call(call));
     }
@@ -603,16 +612,36 @@ void
 BufferObjectMap::memcopy(const trace::Call& call, CallSet& out_set, bool recording)
 {
     uint64_t start = call.arg(0).toUInt();
+    uint64_t data_end = start + call.arg(2).toUInt();
     unsigned buf_id = 0;
     for(auto&& [id, range ]: m_buffer_mappings) {
         if (range.first <= start && start < range.second) {
+            if (data_end > range.second) {
+                std::cerr << "\n:Error "<< call.no << "(memcpy): Mapped target range is ["
+                          << range.first << ", " << range.second << "] but data requires ["
+                          << start << ", " << data_end << "]\n";
+                assert(0);
+            }
+
             buf_id = id;
             break;
         }
     }
     if (!buf_id) {
         std::cerr << "Found no mapping for memcopy to " << start << " in call " << call.no << ": " << call.name() << "\n";
+        std::cerr << "Try old mapping ...";
+        for(auto&& [id, range ]: m_old_buffer_mappings) {
+            auto [begin, end, callid] = range;
+            if (begin <= start && start < end) {
+                buf_id = id;
+                std::cerr << "Range is in buffer " << id << " unmapped in call " << callid << "\n";
+                assert(0);
+                break;
+            }
+        }
+        std::cerr << "no, address " << start << " was never in a mapped buffer range\n";
         assert(0);
+        return;
     }
     auto buf = getById(buf_id);
     buf->addCall(trace2call(call));

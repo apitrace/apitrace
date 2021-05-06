@@ -181,6 +181,7 @@ private:
 
     std::unordered_map<unsigned, unsigned> m_buffer_sizes;
     std::unordered_map<unsigned, std::pair<uint64_t, uint64_t>> m_buffer_mappings;
+    std::unordered_map<unsigned, std::tuple<uint64_t, uint64_t, uint64_t>> m_old_buffer_mappings;
 
 };
 
