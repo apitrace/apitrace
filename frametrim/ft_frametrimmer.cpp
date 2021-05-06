@@ -575,7 +575,9 @@ FrameTrimmeImpl::registerBufferCalls()
     MAP_OBJ(glNamedBufferData, m_buffers, BufferObjectMap::namedData);
     MAP_OBJ(glNamedBufferStorage, m_buffers, BufferObjectMap::namedData);
     MAP_OBJ(glBufferSubData, m_buffers, BufferObjectMap::callOnBoundObject);
+    MAP_OBJ(glGetBufferSubData, m_buffers, BufferObjectMap::callOnBoundObject);
     MAP_OBJ(glNamedBufferSubData, m_buffers, BufferObjectMap::callOnNamedObject);
+    MAP_OBJ(glGetNamedBufferSubData, m_buffers, BufferObjectMap::callOnNamedObject);
     MAP_OBJ(glCopyBufferSubData, m_buffers, BufferObjectMap::copyBufferSubData);
     MAP_OBJ(glCopyNamedBufferSubData, m_buffers, BufferObjectMap::copyNamedBufferSubData);
 
