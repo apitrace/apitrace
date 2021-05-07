@@ -365,7 +365,7 @@ bool
 FrameTrimmeImpl::skipDeleteImpl(unsigned obj_id, DependecyObjectMap& map)
 {
     auto obj = map.getById(obj_id);
-    return !obj->emitted();
+    return !obj || !obj->emitted();
 }
 
 void FrameTrimmeImpl::finalize()
