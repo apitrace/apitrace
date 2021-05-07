@@ -125,6 +125,7 @@ void DependecyObjectMap::destroy(const trace::Call& call)
 {
     auto c = trace2call(call);
     const auto ids = (call.arg(1)).toArray();
+    assert(ids);
     for (auto& v : ids->values) {
         assert(m_objects[v->toUInt()]->id() == v->toUInt());
         auto obj_it = m_objects.find(v->toUInt());
