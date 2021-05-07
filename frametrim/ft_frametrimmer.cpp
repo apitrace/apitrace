@@ -815,6 +815,7 @@ void FrameTrimmeImpl::registerRequiredCalls()
         "glXChooseVisual",
         "glXCreateContext",
         "glXDestroyContext",
+        "glXGetFBConfigAttrib",
         "glXMakeCurrent",
         "glXMakeContextCurrent",
         "glXChooseFBConfig",
