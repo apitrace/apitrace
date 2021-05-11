@@ -776,6 +776,11 @@ bool TextureObjectMap::setTargetType(unsigned id, unsigned target)
     if (!id)
         return true;
     auto tex = getById(id);
+    if (!tex) {
+        tex = std::make_shared<UsedObject>(id);
+        addObject(id, tex);
+    }
+
     unsigned old_target = tex->extraInfo("target");
     if (!old_target)
         tex->setExtraInfo("target", target);
