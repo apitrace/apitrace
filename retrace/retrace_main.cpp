@@ -1101,8 +1101,6 @@ int main(int argc, char **argv)
                 driver = DRIVER_INTEGRATED;
             } else if (strcasecmp(optarg, "sw") == 0) {
                 driver = DRIVER_SOFTWARE;
-            } else if (strcasecmp(optarg, "sw") == 0) {
-                driver = DRIVER_SOFTWARE;
             } else if (strcasecmp(optarg, "ref") == 0) {
                 driver = DRIVER_REFERENCE;
             } else if (strcasecmp(optarg, "null") == 0) {
