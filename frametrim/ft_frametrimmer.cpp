@@ -486,10 +486,6 @@ void FrameTrimmeImpl::registerLegacyCalls()
     MAP(glGenLists, oglGenLists);
     MAP(glNewList, oglNewList);
 
-    MAP(glPushClientAttr, todo);
-    MAP(glPopClientAttr, todo);
-
-
     // shader calls
     MAP_OBJ(glGenPrograms, m_legacy_programs,
                DependecyObjectWithDefaultBindPointMap::generate);
@@ -504,6 +500,11 @@ void FrameTrimmeImpl::registerLegacyCalls()
                LegacyProgrambjectMap::callOnBoundObject);
     MAP_OBJ(glProgramEnvParameter, m_legacy_programs,
                LegacyProgrambjectMap::callOnBoundObject);
+
+    MAP_OBJ(glNamedProgramLocalParameter, m_legacy_programs,
+               LegacyProgrambjectMap::callOnNamedObject);
+    MAP_OBJ(glNamedProgramEnvParameter, m_legacy_programs,
+               LegacyProgrambjectMap::callOnNamedObject);
 
     // Matrix manipulation
     MAP_OBJ(glLoadIdentity, m_matrix_states, AllMatrisStates::loadIdentity);
@@ -750,6 +751,8 @@ FrameTrimmeImpl::registerStateCalls()
         "glPolygonMode",
         "glPolygonOffset",
         "glPolygonStipple",
+        "glPopAttrib",
+        "glPopClientAttrib",
         "glProvokingVertex",
         "glPrimitiveBoundingBox",
         "glSampleCoverage",
@@ -766,6 +769,7 @@ FrameTrimmeImpl::registerStateCalls()
     /* These are state functions with an extra parameter */
 
     const std::vector<const char *> state_calls_1  = {
+        "glActiveStencilFace",
         "glClipPlane",
         "glColorMaskIndexedEXT",
         "glColorMaterial",
@@ -773,9 +777,13 @@ FrameTrimmeImpl::registerStateCalls()
         "glHint",
         "glLight",
         "glPixelTransfer",
+        "glPushAttrib",
+        "glPushClientAttrib",
+        "glRenderMode",
         "glStencilOpSeparate",
         "glStencilFuncSeparate",
         "glVertexAttribDivisor",
+        "glMultiTexCoord",
     };
 
     /* These are state functions with an extra parameter */
