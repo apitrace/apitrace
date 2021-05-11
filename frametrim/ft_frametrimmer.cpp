@@ -1284,18 +1284,15 @@ FrameTrimmeImpl::oglBindVertexArray(const trace::Call& call)
 {
     auto vao = m_vertex_arrays.bind(call, 0);
     global_state.current_vao = vao;
-    if (vao)
+    if (vao) {
         vao->addCall(trace2call(call));
-    else
-        m_vertex_arrays.addCall(trace2call(call));
-
-    if (global_state.emit_dependencies)
-        vao->emitCallsTo(*global_state.out_list);
-    else {
+        if (global_state.emit_dependencies)
+            vao->emitCallsTo(*global_state.out_list);
         auto fb = m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
         if (fb->id())
             fb->addDependency(vao);
-    }
+    } else
+        m_vertex_arrays.addCall(trace2call(call));
 }
 
 }
