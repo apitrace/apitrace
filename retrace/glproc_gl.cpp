@@ -30,8 +30,7 @@
 
 
 #if !defined(_WIN32)
-#include <unistd.h> // for symlink
-#include "dlopen.hpp"
+#include <dlfcn.h>
 #endif
 
 
@@ -52,13 +51,7 @@ void *
 _getPublicProcAddress(const char *procName)
 {
     if (!_libGlHandle) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\opengl32.dll");
+        const char *szDll = "opengl32.dll";
         
         _libGlHandle = LoadLibraryA(szDll);
         if (!_libGlHandle) {
@@ -91,26 +84,8 @@ static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework
  */
 void * _libgl_sym(const char *symbol)
 {
-    void *result;
-
     if (!_libGlHandle) {
-        /* 
-         * Unfortunately we can't just dlopen the true dynamic library because
-         * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
-         * absolute paths.  So we create a temporary symlink, and dlopen that
-         * instead.
-         */
-
-        os::String temp_template = os::getTemporaryDirectoryPath();
-        temp_template.append("tmp.XXXXXX");
-        char *temp_filename = temp_template.buf(temp_template.length() + 1);
-
-        if (mktemp(temp_filename) != NULL) {
-            if (symlink(libgl_filename, temp_filename) == 0) {
-                _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
-                remove(temp_filename);
-            }
-        }
+        _libGlHandle = dlopen(libgl_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
 
         if (!_libGlHandle) {
             os::log("apitrace: error: couldn't load %s\n", libgl_filename);
@@ -119,17 +94,7 @@ void * _libgl_sym(const char *symbol)
         }
     }
 
-    result = dlsym(_libGlHandle, symbol);
-
-#if 0
-    if (result && result == dlsym(RTLD_SELF, symbol)) {
-        os::log("apitrace: error: symbol lookup recursion\n");
-        os::abort();
-        return NULL;
-    }
-#endif
-
-    return result;
+    return dlsym(_libGlHandle, symbol);
 }
 
 
@@ -148,73 +113,23 @@ _getPrivateProcAddress(const char *procName)
 
 #else
 
-#ifndef RTLD_DEEPBIND
-#define RTLD_DEEPBIND 0
-#endif
-
-static inline void
-logSymbol(const char *name, void *ptr) {
-    if (0) {
-        if (ptr) {
-            Dl_info info;
-            if (ptr && dladdr(ptr, &info)) {
-                os::log("apitrace: %s -> \"%s\"\n", name, info.dli_fname);
-            }
-        } else {
-            os::log("apitrace: %s -> NULL\n", name);
-        }
-    }
-}
-
 
 /*
  * Lookup a libGL symbol
  */
 void * _libgl_sym(const char *symbol)
 {
-    void *result;
-
     if (!_libGlHandle) {
-        /*
-         * The app doesn't directly link against libGL.so, nor does it directly
-         * dlopen it.  So we have to load it ourselves.
-         */
+        const char * libgl_filename = "libGL.so.1";
 
-        const char * libgl_filename = getenv("TRACE_LIBGL");
-
-        if (!libgl_filename) {
-            /*
-             * Try to use whatever libGL.so the library is linked against.
-             */
-
-            result = dlsym(RTLD_NEXT, symbol);
-            if (result) {
-                _libGlHandle = RTLD_NEXT;
-                return result;
-            }
-
-            libgl_filename = "libGL.so.1";
-        }
-
-        /*
-         * It would have been preferable to use RTLD_LOCAL to ensure that the
-         * application can never access libGL.so symbols directly, but this
-         * won't work, given libGL.so often loads a driver specific SO and
-         * exposes symbols to it.
-         */
-
-        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY | RTLD_DEEPBIND);
+        _libGlHandle = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
         if (!_libGlHandle) {
             os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
         }
     }
 
-    result = dlsym(_libGlHandle, symbol);
-
-    logSymbol(symbol, result);
-
-    return result;
+    return dlsym(_libGlHandle, symbol);
 }
 
 
