@@ -127,6 +127,8 @@ private:
     bool twoPasses; // profiling in two passes
     bool queryInProgress[QUERY_BOUNDARY_LIST_END];
 
+    GLint timestamp_bits_precision;
+
     unsigned curPass;
 
     std::vector<Metric_opengl> metrics;
