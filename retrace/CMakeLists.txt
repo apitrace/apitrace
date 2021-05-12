@@ -113,6 +113,7 @@ endif ()
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
         ${glws_os}
+        glproc_gl.cpp
     )
 
     add_dependencies (glretrace glproc)
@@ -121,7 +122,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_gl
+        glproc
     )
 
     if (WIN32)
@@ -159,6 +160,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
     add_executable (eglretrace
         glws_xlib.cpp
         glws_egl_xlib.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (eglretrace glproc)
@@ -167,7 +169,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_egl
+        glproc
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
@@ -178,6 +180,7 @@ endif ()
 if (ENABLE_EGL AND ENABLE_WAFFLE)
     add_executable (eglretrace
         glws_waffle.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (eglretrace glproc)
@@ -187,7 +190,7 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_egl
+        glproc
         ${Waffle_LIBRARIES}
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}

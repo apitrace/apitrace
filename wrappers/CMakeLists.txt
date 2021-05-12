@@ -335,12 +335,12 @@ if (WIN32)
     )
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
+        glproc_gl.cpp
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
         gltrace_common
         glproc
-        glproc_gl
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
@@ -368,6 +368,7 @@ elseif (APPLE)
 
     add_library (cgltrace SHARED
         cgltrace.cpp
+        glproc_gl.cpp
     )
 
     add_dependencies (cgltrace glproc)
@@ -383,7 +384,7 @@ elseif (APPLE)
 
     target_link_libraries (cgltrace
         gltrace_common
-        glproc_gl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -409,6 +410,7 @@ elseif (X11_FOUND)
     add_library (glxtrace SHARED
         glxtrace.cpp
         dlsym.cpp
+        glproc_gl.cpp
     )
 
     add_dependencies (glxtrace glproc)
@@ -420,7 +422,7 @@ elseif (X11_FOUND)
 
     target_link_libraries (glxtrace
         gltrace_common
-        glproc_gl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -452,6 +454,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     add_library (egltrace SHARED
         egltrace.cpp
         dlsym.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (egltrace glproc)
@@ -465,7 +468,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (egltrace
         gltrace_common
-        glproc_egl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
