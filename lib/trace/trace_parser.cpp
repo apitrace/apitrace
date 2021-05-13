@@ -642,7 +642,7 @@ void Parser::adjust_call_flags(Call *call) {
 }
 
 void Parser::parse_arg(Call *call, Mode mode) {
-    unsigned index = read_uint();
+    size_t index = (size_t)read_uint();
     Value *value = parse_value(mode);
     if (value) {
         if (index >= call->args.size()) {
