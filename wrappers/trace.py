@@ -116,7 +116,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitBitmask(self, bitmask):
         print('static const trace::BitmaskFlag _bitmask%s_flags[] = {' % (bitmask.tag))
         for value in bitmask.values:
-            print('    {"%s", %s},' % (value, value))
+            print('    {"%s", (unsigned long long)%s},' % (value, value))
         print('};')
         print()
         print('static const trace::BitmaskSig _bitmask%s_sig = {' % (bitmask.tag))
