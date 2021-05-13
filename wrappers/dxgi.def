@@ -1,11 +1,11 @@
 EXPORTS
-	CompatValue
-	CreateDXGIFactory
-	CreateDXGIFactory1
-	CreateDXGIFactory2
-	DXGID3D10CreateDevice
-	DXGID3D10CreateLayeredDevice
-	DXGID3D10GetLayeredDeviceSize
-	DXGID3D10RegisterLayers
-	DXGIGetDebugInterface
-	DXGIGetDebugInterface1
+	CompatValue @3
+	CreateDXGIFactory @10
+	CreateDXGIFactory1 @11
+	CreateDXGIFactory2 @12
+	DXGID3D10CreateDevice @13
+	DXGID3D10CreateLayeredDevice @14
+	DXGID3D10GetLayeredDeviceSize @15
+	DXGID3D10RegisterLayers @16
+	DXGIGetDebugInterface @17
+	DXGIGetDebugInterface1 @18
