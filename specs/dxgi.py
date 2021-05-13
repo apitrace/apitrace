@@ -549,6 +549,7 @@ dxgi.addFunctions([
     StdFunction(SIZE_T,  "DXGID3D10GetLayeredDeviceSize", [(OpaqueArray(Const(Void), "NumLayers"), "pLayers"), (UINT, "NumLayers")], internal=True),
     StdFunction(HRESULT, "DXGID3D10RegisterLayers", [(OpaqueArray(Const(Void), "NumLayers"), "pLayers"), (UINT, "NumLayers")], internal=True),
     StdFunction(HRESULT, "DXGIGetDebugInterface", [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDebug')]),
+    StdFunction(HRESULT, "DXGIGetDebugInterface1", [(UINT, "Flags"), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDebug')]),
 ])
 
 

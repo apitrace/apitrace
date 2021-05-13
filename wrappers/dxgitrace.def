@@ -22,3 +22,4 @@ EXPORTS
 	DXGID3D10GetLayeredDeviceSize
 	DXGID3D10RegisterLayers
 	DXGIGetDebugInterface
+	DXGIGetDebugInterface1
