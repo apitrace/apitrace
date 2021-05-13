@@ -136,11 +136,9 @@ Dumper::visitMembers(Struct *s, const char *sep) {
         if (!memberName || !*memberName) {
             // Anonymous structure
             Struct *memberStruct = memberValue->toStruct();
-            assert(memberStruct);
-            if (memberStruct) {
+            if (memberStruct)
                 sep = visitMembers(memberStruct, sep);
-                continue;
-            }
+            continue;
         }
 
         os << sep << italic << memberName << normal << " = ",
