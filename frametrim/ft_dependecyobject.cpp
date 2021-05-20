@@ -995,14 +995,7 @@ FramebufferObjectMap::FramebufferObjectMap()
 unsigned
 FramebufferObjectMap::getBindpointFromCall(const trace::Call& call) const
 {
-    switch (call.arg(0).toUInt()) {
-    case GL_FRAMEBUFFER:
-    case GL_DRAW_FRAMEBUFFER:
-        return GL_DRAW_FRAMEBUFFER;
-    case GL_READ_FRAMEBUFFER:
-        return GL_READ_FRAMEBUFFER;
-    }
-    return 0;
+    return call.arg(0).toUInt();
 }
 
 UsedObject::Pointer
@@ -1016,8 +1009,9 @@ FramebufferObjectMap::bindTarget(unsigned id, unsigned bindpoint)
     }
 
     if (bindpoint == GL_FRAMEBUFFER ||
-        bindpoint == GL_READ_FRAMEBUFFER)
+        bindpoint == GL_READ_FRAMEBUFFER) {
         obj = bind(GL_READ_FRAMEBUFFER, id);
+    }
 
     return obj;
 }
@@ -1037,7 +1031,12 @@ void
 FramebufferObjectMap::oglReadBuffer(const trace::Call& call)
 {
     auto fbo = boundTo(GL_READ_FRAMEBUFFER);
-    assert(call.arg(0).toUInt() != GL_BACK || fbo->id() == 0);
+    if (call.arg(0).toUInt() == GL_BACK && fbo->id() != 0) {
+        std::cerr << "\nFBO " << fbo->id()
+                  << " bound, but trying to bind GL_BACK as readbuffer in call "
+                  << call.no << "\n";
+        assert(0);
+    }
     callOnObjectBoundTo(call, GL_READ_FRAMEBUFFER);
 }
 
