@@ -485,6 +485,8 @@ BufferObjectMap::getBindpoint(unsigned target, unsigned index) const
         return bt_tf  + bt_last * index;
     case GL_UNIFORM_BUFFER:
         return bt_uniform + bt_last * index;
+    case GL_PARAMETER_BUFFER:
+        return bt_parameter;
     }
     std::cerr << "Unknown buffer binding target=" << target << "\n";
     assert(0);
