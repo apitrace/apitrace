@@ -148,6 +148,7 @@ public:
         bt_texture,
         bt_tf,
         bt_uniform,
+        bt_parameter,
         bt_names_access,
         bt_last,
     };
