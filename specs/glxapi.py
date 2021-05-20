@@ -298,8 +298,8 @@ GLXCommonAttribs = [
     ('GLX_TRANSPARENT_GREEN_VALUE', Int),
     ('GLX_TRANSPARENT_BLUE_VALUE', Int),
     ('GLX_TRANSPARENT_ALPHA_VALUE', Int),
-    ('GLX_SAMPLE_BUFFERS', UInt),
-    ('GLX_SAMPLES', UInt),
+    ('GLX_SAMPLE_BUFFERS', Int),
+    ('GLX_SAMPLES', Int),
 ]
 
 GLXVisualAttribs = AttribArray(GLXEnum, GLXCommonAttribs + [
