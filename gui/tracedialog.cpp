@@ -10,6 +10,7 @@ TraceDialog::TraceDialog(QWidget *parent)
     setupUi(this);
 
     apiComboBox->addItem("GL");
+    apiComboBox->addItem("EGL");
 #ifdef Q_OS_WIN
     apiComboBox->addItem("D3D7");
     apiComboBox->addItem("D3D8");
@@ -17,8 +18,6 @@ TraceDialog::TraceDialog(QWidget *parent)
     apiComboBox->addItem("D3D10");
     apiComboBox->addItem("D3D10_1");
     apiComboBox->addItem("D3D11");
-#else
-    apiComboBox->addItem("EGL");
 #endif
 
     connect(browseButton, SIGNAL(clicked()),
