@@ -51,6 +51,7 @@
 #define GL_TRACE_WRAPPER  "OpenGL.framework/OpenGL"
 #elif defined(_WIN32)
 #define GL_TRACE_WRAPPER  "opengl32.dll"
+#define EGL_TRACE_WRAPPER "libEGL.dll"
 #else
 #define TRACE_VARIABLE "LD_PRELOAD"
 #define GL_TRACE_WRAPPER  "glxtrace.so"
@@ -334,7 +335,7 @@ usage(void)
         "    -v, --verbose       verbose output\n"
         "    -a, --api=API       specify API to trace ("
 #ifdef _WIN32
-                                                      "gl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher) "
+                                                      "gl, egl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher) "
 #else
                                                       "gl or egl"
 #endif

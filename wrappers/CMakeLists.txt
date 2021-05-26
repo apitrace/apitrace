@@ -465,6 +465,13 @@ if (ENABLE_EGL AND NOT APPLE)
         PREFIX ""
     )
 
+    if (WIN32)
+        set_target_properties(egltrace PROPERTIES
+            # match the DLL name used by ANGLE
+            OUTPUT_NAME "libEGL"
+        )
+    endif ()
+
     target_compile_definitions (egltrace PRIVATE -DEGLTRACE=1)
 
     target_link_libraries (egltrace
