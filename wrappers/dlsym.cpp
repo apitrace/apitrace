@@ -27,7 +27,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <libgen.h>
+#endif // _WIN32
 
 #include <memory>
 
