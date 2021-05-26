@@ -34,7 +34,7 @@
 #include <stdint.h>
 #include <KHR/khrplatform.h>
 
-#ifdef _GDI32_
+#ifdef _WIN32
 /* Prevent __declspec(dllimport) attribute */
 #undef KHRONOS_APICALL
 #define KHRONOS_APICALL
