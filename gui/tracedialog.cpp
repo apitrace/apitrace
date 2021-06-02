@@ -28,7 +28,7 @@ TraceDialog::TraceDialog(QWidget *parent)
 
 void TraceDialog::setApi(const QString &api)
 {
-    int index = apiComboBox->findText(api);
+    int index = apiComboBox->findText(api, Qt::MatchFixedString);
     if(index >= 0)
         apiComboBox->setCurrentIndex(index);
 }
