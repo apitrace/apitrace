@@ -1933,6 +1933,7 @@ QList<MainWindow::RecentLaunch> MainWindow::readRecentLaunches() const
         settings.setArrayIndex(i);
 
         RecentLaunch rl;
+        rl.api = settings.value("api").toString();
         rl.execPath = settings.value("exec").toString();
         rl.workingDir = settings.value("working-dir").toString();
         rl.args = settings.value("args").toStringList();
