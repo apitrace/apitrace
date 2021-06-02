@@ -1326,7 +1326,12 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         } else if (stricmp(szNewDllBaseName, "d2d1trace.dll") == 0) {
             registerModuleHooks("d2d1.dll",    g_hHookModule);
             registerModuleHooks("dwrite.dll",  g_hHookModule);
-        } else {
+        }
+        else if (stricmp(szNewDllBaseName, "libEGL.dll") == 0) {
+            registerModuleHooks("libEGL.dll", g_hHookModule);
+            registerModuleHooks("libGLESv2.dll", g_hHookModule);
+        }
+        else {
             registerModuleHooks(szNewDllBaseName, g_hHookModule);
         }
 
