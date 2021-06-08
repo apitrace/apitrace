@@ -395,7 +395,13 @@ static void retrace_CGLGetPBuffer(trace::Call &call) {
     }
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
-    unsigned long long pbuffer = call.arg(1).toUIntPtr();
+    unsigned long long pbuffer;
+    trace::Array *array = call.arg(1).toArray();
+    if (array) {
+        pbuffer = array->values[0]->toUIntPtr();
+    } else {
+        return;
+    }
 
     glws::Drawable *drawable = pbuffer_map[ctx];
 
@@ -614,6 +620,10 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLGetVirtualScreen", &retrace::ignore},
     {"CGLIsEnabled", &retrace::ignore},
     {"CGLLockContext", &retrace::ignore},
+    {"CGLReleaseContext", &retrace::ignore},
+    {"CGLReleasePixelFormat", &retrace::ignore},
+    {"CGLRetainContext", &retrace::ignore},
+    {"CGLRetainPixelFormat", &retrace::ignore},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
     {"CGLSetGlobalOption", &retrace::ignore},
     {"CGLSetOption", &retrace::ignore},
