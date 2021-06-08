@@ -395,7 +395,16 @@ static void retrace_CGLGetPBuffer(trace::Call &call) {
     }
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
-    unsigned long long pbuffer = call.arg(1).toUIntPtr();
+    trace::Array* array = call.arg(1).toArray();
+    unsigned long long pbuffer;
+    if(array) {
+        if(array->values[0]->toNull() != NULL) {
+            return;
+        }
+    }
+    else {
+        pbuffer = call.arg(1).toUIntPtr();
+    }
 
     glws::Drawable *drawable = pbuffer_map[ctx];
 
@@ -624,6 +633,10 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {"CGLUnlockContext", &retrace::ignore},
     {"CGLUpdateContext", &retrace::ignore},
+    {"CGLRetainPixelFormat", &retrace::ignore},
+    {"CGLReleasePixelFormat", &retrace::ignore},
+    {"CGLRetainContext", &retrace::ignore},
+    {"CGLReleaseContext", &retrace::ignore},    
     {NULL, NULL},
 };
 
