@@ -974,7 +974,7 @@ dumpTextures(StateWriter &writer, Context &context)
 
 bool
 getDrawableBounds(GLint *width, GLint *height) {
-#if defined(__linux__)
+#if defined(__linux__) || defined(_WIN32)
     if (_getPublicProcAddress("eglGetCurrentContext")) {
         EGLContext currentContext = eglGetCurrentContext();
         if (currentContext != EGL_NO_CONTEXT) {
@@ -1107,9 +1107,15 @@ getTextureTarget(Context &context, GLuint texture)
     GLDEBUGPROC prevDebugCallbackFunction = 0;
     void *prevDebugCallbackUserParam = 0;
     if (context.KHR_debug) {
-        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
-        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
-        glDebugMessageCallback(NULL, NULL);
+        if (context.ES) {
+            glGetPointervKHR(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid**)&prevDebugCallbackFunction);
+            glGetPointervKHR(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallbackKHR(NULL, NULL);
+        } else {
+            glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid**)&prevDebugCallbackFunction);
+            glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallback(NULL, NULL);
+        }
     }
 
     for (auto target : textureTargets) {
@@ -1132,7 +1138,12 @@ getTextureTarget(Context &context, GLuint texture)
     }
 
     if (context.KHR_debug) {
-        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        if (context.ES) {
+            glDebugMessageCallbackKHR(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        }
+        else {
+            glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        }
     }
 
     return result;

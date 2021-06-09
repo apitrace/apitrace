@@ -199,6 +199,57 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
     install (TARGETS eglretrace RUNTIME DESTINATION bin)
 endif ()
 
+if (ENABLE_EGL AND WIN32)
+    find_package (unofficial-angle CONFIG)
+    if (unofficial-angle_CONFIG)
+        add_executable (eglretrace
+            glws_angle.cpp
+            glproc_egl.cpp
+        )
+
+        add_dependencies (eglretrace glproc)
+
+        target_link_libraries (eglretrace
+            retrace_common
+            glretrace_common
+            glhelpers
+            glproc
+            unofficial::angle::libEGL
+            unofficial::angle::libGLESv2
+        )
+
+        add_custom_command(TARGET eglretrace POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:unofficial::angle::libEGL> $<TARGET_FILE_DIR:eglretrace>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:unofficial::angle::libGLESv2> $<TARGET_FILE_DIR:eglretrace>
+        )
+
+        install (TARGETS eglretrace RUNTIME DESTINATION bin)
+        install_pdb (eglretrace DESTINATION bin)
+        install (FILES
+            $<TARGET_FILE:unofficial::angle::libEGL>
+            $<TARGET_FILE:unofficial::angle::libGLESv2>
+            DESTINATION bin
+        )
+    else ()
+        if (VCPKG_TARGET_TRIPLET)
+            set (VCPKG_TARGET_TRIPLET_inner ${VCPKG_TARGET_TRIPLET})
+        else ()
+            set (VCPKG_TARGET_TRIPLET_inner "${CMAKE_SYSTEM_PROCESSOR}-windows")
+        endif ()
+        message (WARNING "egltrace requires ANGLE on Windows.")
+        message (STATUS "It's by far easiest to build ANGLE via vcpkg.")
+        message (STATUS "")
+        message (STATUS "This can be achived by doing:")
+        message (STATUS "git clone https://github.com/Microsoft/vcpkg.git")
+        message (STATUS "cd vcpkg")
+        message (STATUS ".\\bootstrap-vcpkg")
+        message (STATUS ".\\vcpkg integrate install")
+        message (STATUS ".\\vcpkg install angle:${VCPKG_TARGET_TRIPLET_inner}")
+        message (STATUS "")
+        message (STATUS "Once that finishes, reconfiguring apitrace with CMAKE_TOOLCHAIN_FILE set as described by `vcpkg integrate install` should make egltrace available.")
+    endif ()
+endif ()
+
 if (WIN32)
     if (DirectX_D3D_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})

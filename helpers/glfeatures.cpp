@@ -339,7 +339,7 @@ Features::load(const Profile & profile, const Extensions & ext)
     // Check extensions we use.
     ARB_sampler_objects = ext.has("GL_ARB_sampler_objects");
     ARB_get_program_binary = ext.has("GL_ARB_get_program_binary");
-    KHR_debug = !ES && ext.has("GL_KHR_debug");
+    KHR_debug = ext.has("GL_KHR_debug");
     EXT_debug_label = ext.has("GL_EXT_debug_label");
     ARB_direct_state_access = ext.has("GL_ARB_direct_state_access");
     ARB_shader_image_load_store = ext.has("GL_ARB_shader_image_load_store");

@@ -43,7 +43,7 @@ void *_libGlHandle = NULL;
 
 
 
-if defined(__APPLE__)
+#if defined(__APPLE__)
 
 #error Unsupported
 
@@ -129,7 +129,7 @@ _getPublicProcAddress(const char *procName)
 
         static os::Library libGLESv2 = nullptr;
         if (!libGLESv2) {
-            libGLESv2 = os::openLibrary("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv2 = os::openLibrary("libGLESv2" OS_LIBRARY_EXTENSION);
         }
         if (libGLESv2) {
             proc = os::getLibrarySymbol(libGLESv2, procName);
@@ -140,7 +140,7 @@ _getPublicProcAddress(const char *procName)
 
         static os::Library libGLESv1 = nullptr;
         if (!libGLESv1) {
-            libGLESv1 = os::openLibrary("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv1 = os::openLibrary("libGLESv1_CM" OS_LIBRARY_EXTENSION);
         }
         if (libGLESv1) {
             proc = os::getLibrarySymbol(libGLESv1, procName);

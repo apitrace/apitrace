@@ -420,6 +420,11 @@ getObjectLabel(Context &context, GLenum identifier, GLuint name)
          */
         if (0) {
             glGetObjectLabel(identifier, name, 0, &length, NULL);
+            if (context.ES) {
+                glGetObjectLabelKHR(identifier, name, 0, &length, NULL);
+            } else {
+                glGetObjectLabel(identifier, name, 0, &length, NULL);
+            }
         } else {
             glGetIntegerv(GL_MAX_LABEL_LENGTH, &length);
         }
@@ -437,8 +442,12 @@ getObjectLabel(Context &context, GLenum identifier, GLuint name)
     }
 
     if (context.KHR_debug) {
-        glGetObjectLabel(identifier, name, length + 1, NULL, label);
-    }
+        if (context.ES) {
+            glGetObjectLabelKHR(identifier, name, length + 1, NULL, label);
+        } else {
+            glGetObjectLabel(identifier, name, length + 1, NULL, label);
+        }
+    } 
     if (context.EXT_debug_label) {
         glGetObjectLabelEXT(identifier, name, length + 1, NULL, label);
     }
@@ -625,16 +634,26 @@ void dumpCurrentContext(StateWriter &writer)
     GLDEBUGPROC prevDebugCallbackFunction = 0;
     void *prevDebugCallbackUserParam = 0;
     if (context.KHR_debug) {
-        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
-        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
-        glDebugMessageCallback(NULL, NULL);
+        if (context.ES) {
+            glGetPointervKHR(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid**)&prevDebugCallbackFunction);
+            glGetPointervKHR(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallbackKHR(NULL, NULL);
+        } else {
+            glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid**)&prevDebugCallbackFunction);
+            glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+            glDebugMessageCallback(NULL, NULL);
+        }
     }
 
     dumpParameters(writer, context);
 
     // Use our own debug-message callback.
     if (context.KHR_debug) {
-        glDebugMessageCallback(debugMessageCallback, NULL);
+        if (context.ES) {
+            glDebugMessageCallbackKHR(debugMessageCallback, NULL);
+        } else {
+            glDebugMessageCallback(debugMessageCallback, NULL);
+        }
     }
 
     dumpShadersUniforms(writer, context);
@@ -653,7 +672,11 @@ void dumpCurrentContext(StateWriter &writer)
 
     // Restore debug message callback
     if (context.KHR_debug) {
-        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        if (context.ES) {
+            glDebugMessageCallbackKHR(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        } else {
+            glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+        }
     }
 }
 
