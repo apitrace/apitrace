@@ -283,6 +283,26 @@ struct AttribDesc
     }
 };
 
+struct VertexAttribDesc : AttribDesc
+{
+    VertexAttribDesc()
+    {}
+
+    VertexAttribDesc(GLenum _type,
+                     GLint _size,
+                     GLint _stride)
+    {
+        type = _type;
+        size = 1;
+        elemType = _type;
+        elemStride = _gl_type_size(elemType);
+        numCols = _size;
+        numRows = 1;
+        rowStride = _stride ? _stride : numCols * elemStride;
+        colStride = elemStride;
+        arrayStride = rowStride;
+    }
+};
 
 static void
 dumpAttrib(StateWriter &writer,
@@ -874,7 +894,7 @@ dumpProgramUniformsStage(StateWriter &writer, GLint program, const char *stage)
 
 struct VertexAttrib {
     std::string name;
-    AttribDesc desc;
+    VertexAttribDesc desc;
     GLsizei offset = 0;
     GLsizei stride = 0;
     GLsizei size = 0;
@@ -951,7 +971,7 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
             size = 4;
         }
 
-        AttribDesc desc(type, size);
+        VertexAttribDesc desc(type, size, stride);
         if (!desc) {
             std::cerr << "warning: dumping of packed attribute (" << &name[0] << ") not yet supported\n";
             // TODO: handle
@@ -1010,7 +1030,7 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
     for (unsigned vertex = 0; vertex < count; ++vertex) {
         writer.beginObject();
         for (auto attrib : attribs) {
-            const AttribDesc & desc = attrib.desc;
+            const VertexAttribDesc & desc = attrib.desc;
             assert(desc);
 
             const GLbyte *vertex_data = attrib.map + attrib.stride*vertex + attrib.offset;
