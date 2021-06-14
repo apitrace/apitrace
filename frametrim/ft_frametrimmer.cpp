@@ -745,6 +745,7 @@ FrameTrimmeImpl::registerStateCalls()
         "glFrustum",
         "glLineStipple",
         "glLineWidth",
+        "glMultiTexCoord",
         "glPatchParameteri",
         "glPixelZoom",
         "glPointSize",
@@ -822,6 +823,7 @@ void FrameTrimmeImpl::registerRequiredCalls()
     const std::vector<const char *> required_calls = {
         "glXChooseVisual",
         "glXCreateContext",
+        "glXCreateNewContext",
         "glXDestroyContext",
         "glXGetFBConfigAttrib",
         "glXMakeCurrent",
@@ -829,6 +831,7 @@ void FrameTrimmeImpl::registerRequiredCalls()
         "glXChooseFBConfig",
         "glXQueryExtensionsString",
         "glXSwapIntervalMESA",
+        "glXWaitGL",
 
         "eglInitialize",
         "eglCreatePlatformWindowSurface",
@@ -912,6 +915,7 @@ FrameTrimmeImpl::registerVaCalls()
                 VertexAttribObjectMap::bindVAOBuf, m_buffers);
 
     MAP(glVertexPointer, recordRequiredCall);
+    MAP(glNormalPointer, recordRequiredCall);
     MAP(glTexCoordPointer, recordRequiredCall);
 
     MAP(glVertexAttribBinding, recordRequiredCall);
