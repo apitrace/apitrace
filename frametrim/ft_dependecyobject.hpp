@@ -103,9 +103,9 @@ public:
 
     void addBoundAsDependencyTo(UsedObject& obj);
 
-protected:
-
     UsedObject::Pointer bind(unsigned bindpoint, unsigned id);
+
+protected:
     void addObject(unsigned id, UsedObject::Pointer obj);
     UsedObject::Pointer boundAtBinding(unsigned index);
 
