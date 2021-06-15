@@ -795,7 +795,6 @@ FrameTrimmeImpl::registerStateCalls()
         "glClearStencil",
         "glClipControl",
         "glColorMask",
-        "glColorPointer",
         "glCullFace",
         "glDepthFunc",
         "glDepthMask",
@@ -987,6 +986,7 @@ FrameTrimmeImpl::registerVaCalls()
     MAP_OBJ_R(glBindVertexBuffer, m_vertex_buffer_pointers,
                 VertexAttribObjectMap::bindVAOBuf, m_buffers);
 
+    MAP(glColorPointer, recordRequiredCall);
     MAP(glVertexPointer, recordRequiredCall);
     MAP(glNormalPointer, recordRequiredCall);
     MAP(glTexCoordPointer, recordRequiredCall);
