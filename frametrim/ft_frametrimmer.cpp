@@ -109,6 +109,7 @@ struct FrameTrimmeImpl {
     void oglBindFbo(const trace::Call& call, DependecyObjectMap& map,
                        unsigned bind_param);
     void oglBindTextures(const trace::Call& call);
+    void oglBindSamplers(const trace::Call& call);
     void bindWithCreate(const trace::Call& call, DependecyObjectMap& map,
                         unsigned bind_param);
     void oglWaitSync(const trace::Call& call);
@@ -781,6 +782,7 @@ void FrameTrimmeImpl::registerTextureCalls()
     MAP_OBJ(glDeleteSamplers, m_samplers, SamplerObjectMap::destroy);
     MAP_OBJ(glSamplerParameter, m_samplers, SamplerObjectMap::callOnNamedObject);
     MAP(glBindTextures, oglBindTextures);
+    MAP(glBindSamplers, oglBindSamplers);
 
 }
 
@@ -1212,6 +1214,53 @@ FrameTrimmeImpl::oglBindTextures(const trace::Call& call)
         m_textures.addCall(trace2call(call));
     }
 }
+
+void
+FrameTrimmeImpl::oglBindSamplers(const trace::Call& call)
+{
+    unsigned first = call.arg(0).toUInt();
+    unsigned count  = call.arg(1).toUInt();
+
+    const auto ids = (call.arg(2)).toArray();
+    if (ids) {
+        for (unsigned i = 0; i < count; ++i) {
+            auto v = ids->values[i];
+            unsigned id = v->toUInt();
+            if (id) {
+                auto obj = m_samplers.getById(id);
+                obj->addCall(trace2call(call));
+                m_samplers.bind(first + i, id);
+                if (m_recording_frame)
+                    obj->emitCallsTo(m_required_calls);
+            } else {
+                m_samplers.bind(first + i, 0);
+            }
+        }
+        /* Make all bound textures depend on one-another
+         * so that if this call is issued, then all used
+         * textures are available */
+        for (unsigned i = 0; i < count; ++i) {
+            unsigned id = ids->values[i]->toUInt();
+            if (id) {
+                auto obj = m_samplers.getById(id);
+                for (unsigned j = i + 1; j < count; ++j) {
+                    unsigned id2 = ids->values[j]->toUInt();
+                    if (id2) {
+                        auto dep = m_samplers.getById(id2);
+                        obj->addDependency(dep);
+                        dep->addDependency(obj);
+                    }
+                }
+            }
+        }
+
+    } else {
+        for (unsigned i = 0; i < count; ++i)
+            m_samplers.bind(first + i, 0);
+        m_samplers.addCall(trace2call(call));
+    }
+}
+
 
 void FrameTrimmeImpl::oglDraw(const trace::Call& call)
 {
