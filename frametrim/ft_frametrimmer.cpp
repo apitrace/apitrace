@@ -730,6 +730,20 @@ void FrameTrimmeImpl::registerTextureCalls()
                m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                m_buffers, GL_PIXEL_UNPACK_BUFFER);
+
+    MAP_OBJ_RV(glTextureImage1D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTextureSubImage1D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTextureImage2D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTextureSubImage2D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTextureImage3D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTextureSubImage3D, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+
     MAP_OBJ(glTexStorage1D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage3D, m_textures, TextureObjectMap::callOnBoundObject);
@@ -743,10 +757,13 @@ void FrameTrimmeImpl::registerTextureCalls()
     MAP_OBJ_RV(glTexSubImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                   m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ(glTexParameter, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glTextureParameter, m_textures, TextureObjectMap::callOnNamedObject);
     MAP_OBJ_RVV(glTextureView, m_textures, TextureObjectMap::callOnNamedObjectWithDep,
                    m_textures, 2, true);
 
     MAP_OBJ_RVV(glTexBuffer, m_textures, TextureObjectMap::callOnBoundObjectWithDep,
+                   m_buffers, 2, true);
+    MAP_OBJ_RVV(glTextureBuffer, m_textures, TextureObjectMap::callOnNamedObjectWithDep,
                    m_buffers, 2, true);
 
     /* Should add a dependency on the read fbo */
