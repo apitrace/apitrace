@@ -127,6 +127,8 @@ struct FrameTrimmeImpl {
     bool skipDeleteImpl(unsigned obj_id, DependecyObjectMap& map);
     void finalize();
 
+    bool checkCommonSuffixes(const char *suffix) const;
+
     using CallTable = std::multimap<const char *, ft_callback, string_part_less>;
     CallTable m_call_table;
 
@@ -263,6 +265,10 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
 
             cb->second(call);
             m_call_table_cache[call.name()] = cb->second;
+            if (strcmp(call.name(), cb->first)) {
+                if (!checkCommonSuffixes(call.name() + strlen(cb->first)))
+                    std::cerr << "Handle " << call.name() << " as " << cb->first << "\n";
+            }
         } else {
             /* This should be some debug output only, because we might
          * not handle some calls deliberately */
@@ -298,6 +304,30 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
         }
     }
 }
+
+bool
+FrameTrimmeImpl::checkCommonSuffixes(const char *suffix) const
+{
+    std::vector<const char *> ext = {
+        "ARB", "NV", "EXT", "OES", "SGI",
+        "i", "f", "fv", "iv", "v", "uiv",
+        "1f", "2f", "3f", "4f",
+        "1i", "2i", "3i", "4i",
+        "1fv", "2fv", "3fv", "4fv",
+        "1iv", "2iv", "3iv", "4iv",
+        "2fARB", "3fARB", "4fARB",
+        "fvARB", "1fvARB", "2fvARB", "3fvARB", "4fvARB",
+        "ivARB", "1ivARB", "2ivARB", "3ivARB", "4ivARB",
+        "Nubv"
+    };
+
+    for (const auto& i :  ext) {
+        if (!strcmp(i, suffix))
+            return true;
+    }
+    return false;
+}
+
 
 void FrameTrimmeImpl::startTargetFrame()
 {
@@ -531,16 +561,18 @@ void FrameTrimmeImpl::registerFramebufferCalls()
 {
     MAP_RV(glBindRenderbuffer, oglBind, m_renderbuffers, 1);
     MAP_OBJ(glDeleteRenderbuffers, m_renderbuffers, DependecyObjectWithSingleBindPointMap::destroy);
-    MAP_OBJ(glGenRenderbuffer, m_renderbuffers, DependecyObjectWithSingleBindPointMap::generate);
+    MAP_OBJ(glGenRenderbuffers, m_renderbuffers, DependecyObjectWithSingleBindPointMap::generate);
     MAP_OBJ(glRenderbufferStorage, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
+    MAP_OBJ(glRenderbufferStorageMultisample, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
 
-    MAP_OBJ(glGenFramebuffer, m_fbo, FramebufferObjectMap::generate);
+    MAP_OBJ(glGenFramebuffers, m_fbo, FramebufferObjectMap::generate);
     MAP_OBJ(glDeleteFramebuffers, m_fbo, FramebufferObjectMap::destroy);
     MAP_RV(glBindFramebuffer, oglBindFbo, m_fbo, 1);
     MAP_OBJ_V(glViewport, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
 
     MAP_OBJ(glBlitFramebuffer, m_fbo, FramebufferObjectMap::oglBlit);
     MAP_RVRV(glFramebufferTexture, callOnBoundObjWithDep, m_fbo, 2, m_textures, true);
+    MAP_RVRV(glFramebufferTextureLayer, callOnBoundObjWithDep, m_fbo, 2, m_textures, true);
     MAP_RVRV(glFramebufferTexture1D, callOnBoundObjWithDep, m_fbo,
                             3, m_textures, true);
     MAP_RVRV(glFramebufferTexture2D, callOnBoundObjWithDep, m_fbo,
@@ -548,6 +580,7 @@ void FrameTrimmeImpl::registerFramebufferCalls()
 
     MAP_OBJ(glReadBuffer, m_fbo, FramebufferObjectMap::oglReadBuffer);
     MAP_OBJ_V(glDrawBuffer, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
+    MAP_OBJ_V(glDrawBuffers, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
 
     MAP_OBJ_V(glClearBuffer, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
     MAP_OBJ_V(glClearBufferfi, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
@@ -606,10 +639,15 @@ void FrameTrimmeImpl::registerDrawCalls()
 {
     MAP(glDrawArrays, oglDraw);
     MAP(glDrawElements, oglDraw);
+    MAP(glDrawElementsBaseVertex, oglDraw);
     MAP(glDrawRangeElements, oglDraw);
     MAP(glDrawRangeElementsBaseVertex, oglDraw);
 
     MAP(glDrawArraysInstanced, oglDraw);
+    MAP(glDrawArraysInstancedBaseInstance, oglDraw);
+    MAP(glDrawElementsInstanced, oglDraw);
+    MAP(glDrawElementsInstancedBaseVertex, oglDraw);
+    MAP(glDrawElementsInstancedBaseVertexBaseInstance, oglDraw);
 
     MAP(glDrawElementsIndirect, oglDraw);
     MAP(glMultiDrawArraysIndirect, oglDraw);
@@ -626,12 +664,14 @@ FrameTrimmeImpl::registerProgramCalls()
 
     MAP_OBJ(glCompileShader, m_shaders, ShaderStateMap::callOnNamedObject);
     MAP_OBJ(glCreateShader, m_shaders, ShaderStateMap::create);
+    MAP_OBJ(glCreateShaderObject, m_shaders, ShaderStateMap::create);
     MAP_OBJ(glDeleteShader, m_shaders, ShaderStateMap::del);
     MAP_OBJ(glShaderSource, m_shaders, ShaderStateMap::callOnNamedObject);
 
     MAP_OBJ(glBindAttribLocation, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glGetActiveAttrib, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glCreateProgram, m_programs, ProgramObjectMap::create);
+    MAP_OBJ(glCreateProgramObject, m_programs, ProgramObjectMap::create);
     MAP_OBJ(glDeleteProgram, m_programs, ProgramObjectMap::del);
     MAP_OBJ(glDetachShader, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glGetAttachedShaders, m_programs, ProgramObjectMap::callOnNamedObject);
@@ -645,8 +685,10 @@ FrameTrimmeImpl::registerProgramCalls()
     MAP_OBJ(glProgramUniform, m_programs, ProgramObjectMap::callOnNamedObject);
 
     MAP_OBJ(glUniform, m_programs, ProgramObjectMap::callOnBoundObject);
+    MAP_OBJ(glUniformMatrix, m_programs, ProgramObjectMap::callOnBoundObject);
     MAP_OBJ(glUniformBlockBinding, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_RV(glUseProgram, oglBind, m_programs, 0);
+    MAP_RV(glUseProgramObject, oglBind, m_programs, 0);
     MAP_OBJ(glProgramParameter, m_programs, ProgramObjectMap::callOnNamedObject);
     MAP_OBJ(glShaderStorageBlockBinding, m_programs, ProgramObjectMap::callOnNamedObject);
 
@@ -671,9 +713,12 @@ void FrameTrimmeImpl::registerTextureCalls()
 
     MAP_OBJ(glCompressedTexImage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glGenerateMipmap, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glGenerateTextureMipmap, m_textures, TextureObjectMap::callOnNamedObject);
     MAP_OBJ_RV(glTexImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glTexImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glTexImage2DMultisample, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                m_buffers, GL_PIXEL_UNPACK_BUFFER);
@@ -697,16 +742,15 @@ void FrameTrimmeImpl::registerTextureCalls()
                    m_buffers, 2, true);
 
     /* Should add a dependency on the read fbo */
-    MAP_OBJ(glCopyTexSubImage, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glCopyTexSubImage1D, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glCopyTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObject);
 
+    MAP_OBJ(glCopyTexImage1D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glCopyTexImage2D, m_textures, TextureObjectMap::callOnBoundObject);
 
     MAP_OBJ(glCopyImageSubData, m_textures, TextureObjectMap::copy);
     MAP_OBJ(glBindImageTexture, m_textures, TextureObjectMap::bindToImageUnit);
 
-    /*
-    MAP_GENOBJ(glCopyTexSubImage2D, m_textures, TextureStateMap::copy_sub_data);
-    */
     MAP_RV(glBindSampler, oglBind, m_samplers, 1);
     MAP_OBJ(glGenSamplers, m_samplers, SamplerObjectMap::generate);
     MAP_OBJ(glDeleteSamplers, m_samplers, SamplerObjectMap::destroy);
@@ -735,7 +779,9 @@ FrameTrimmeImpl::registerStateCalls()
         "glAlphaFunc",
         "glBlendColor",
         "glBlendEquation",
+        "glBlendEquationSeparate",
         "glBlendFunc",
+        "glBlendFuncSeparate",
         "glClearColor",
         "glClearDepth",
         "glClearStencil",
@@ -784,11 +830,14 @@ FrameTrimmeImpl::registerStateCalls()
         "glFog",
         "glHint",
         "glLight",
+        "glLightModel",
         "glPixelTransfer",
         "glPushAttrib",
         "glPushClientAttrib",
         "glRenderMode",
+        "glStencilOp",
         "glStencilOpSeparate",
+        "glStencilFunc",
         "glStencilFuncSeparate",
         "glVertexAttribDivisor",
         "glMultiTexCoord",
@@ -830,12 +879,14 @@ void FrameTrimmeImpl::registerRequiredCalls()
     const std::vector<const char *> required_calls = {
         "glXChooseVisual",
         "glXCreateContext",
+        "glXCreateContextAttribs",
         "glXCreateNewContext",
         "glXDestroyContext",
         "glXGetFBConfigAttrib",
         "glXMakeCurrent",
         "glXMakeContextCurrent",
         "glXChooseFBConfig",
+        "glXQueryExtension",
         "glXQueryExtensionsString",
         "glXSwapIntervalMESA",
         "glXWaitGL",
@@ -859,6 +910,10 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
     const std::vector<const char *> ignore_history_calls = {
         "glCheckFramebufferStatus",
         "glGetActiveUniform",
+        "glGetActiveUniforms",
+        "glGetActiveUniformName",
+        "glGetActiveUniformBlockName",
+        "glGetActiveUniformBlock",
         "glGetBoolean",
         "glGetError",
         "glGetFloat",
@@ -868,6 +923,7 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "glGetObjectLabelEXT",
         "glGetObjectParameter",
         "glGetProgram",
+        "glGetProgramInfoLog",
         "glGetShader",
         "glGetString",
         "glGetTexLevelParameter",
@@ -887,7 +943,9 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "glXGetProcAddress",
         "glXGetSwapIntervalMESA",
         "glXGetVisualFromFBConfig",
+        "glXQueryDrawable",
         "glXQueryVersion",
+        "glXSwapIntervalEXT",
         "eglGetProcAddress",
         "eglQueryString",
         "eglGetError",
