@@ -377,6 +377,28 @@ DependecyObjectMap::callOnNamedObjectWithNamedDep(const trace::Call& call,
     }
 }
 
+void
+DependecyObjectMap::callOnNamedObjectWithDepBoundTo(const trace::Call& call,
+                                                    DependecyObjectMap& other_objects,
+                                                    int dep_call_param)
+{
+    auto obj = getById(call.arg(0).toUInt());
+    if (!obj) {
+        std::cerr << "No object named " << call.arg(0).toUInt()
+                  << " in call " << call.no << ":" << call.name() << "\n";
+        assert(0);
+    }
+
+    obj->addCall(trace2call(call));
+
+    auto dep = other_objects.getById(dep_call_param);
+    if (dep) {
+        obj->addDependency(dep);
+        if (global_state.emit_dependencies)
+            dep->emitCallsTo(*global_state.out_list);
+    }
+}
+
 
 void DependecyObjectMap::addCall(PTraceCall call)
 {

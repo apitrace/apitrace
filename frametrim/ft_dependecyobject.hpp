@@ -86,6 +86,9 @@ public:
 
     void callOnNamedObjectWithDep(const trace::Call& call,
                                   DependecyObjectMap& other_objects, int dep_obj_param, bool reverse_dep_too);
+    void callOnNamedObjectWithDepBoundTo(const trace::Call& call,
+                                         DependecyObjectMap& other_objects,
+                                         int dep_call_param);
     void callOnNamedObjectWithNamedDep(const trace::Call& call, DependecyObjectMap& other_objects,
                                        int dep_call_param);
 
