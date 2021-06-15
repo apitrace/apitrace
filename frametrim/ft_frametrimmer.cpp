@@ -130,6 +130,9 @@ struct FrameTrimmeImpl {
     using CallTable = std::multimap<const char *, ft_callback, string_part_less>;
     CallTable m_call_table;
 
+    using CallTableCache =  std::map<const char *, ft_callback>;
+    CallTableCache m_call_table_cache;
+
     CallSet m_required_calls;
     std::set<std::string> m_unhandled_calls;
 
@@ -235,35 +238,39 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
     if (m_recording_frame && (frametype == ft_none))
         endTargetFrame();
 
+    auto icb = m_call_table_cache.find(call.name());
+    if (icb != m_call_table_cache.end())
+        icb->second(call);
+    else {
+        auto cb_range = m_call_table.equal_range(call.name());
+        if (cb_range.first != m_call_table.end() &&
+                std::distance(cb_range.first, cb_range.second) > 0) {
 
-
-    auto cb_range = m_call_table.equal_range(call.name());
-    if (cb_range.first != m_call_table.end() &&
-            std::distance(cb_range.first, cb_range.second) > 0) {
-
-        CallTable::const_iterator cb = cb_range.first;
-        CallTable::const_iterator i = cb_range.first;
-        ++i;
-
-        unsigned max_equal = equalChars(cb->first, call_name);
-
-        while (i != cb_range.second && i != m_call_table.end()) {
-            auto n = equalChars(i->first, call_name);
-            if (n > max_equal) {
-                max_equal = n;
-                cb = i;
-            }
+            CallTable::const_iterator cb = cb_range.first;
+            CallTable::const_iterator i = cb_range.first;
             ++i;
-        }
 
-        cb->second(call);
-    } else {
-        /* This should be some debug output only, because we might
+            unsigned max_equal = equalChars(cb->first, call_name);
+
+            while (i != cb_range.second && i != m_call_table.end()) {
+                auto n = equalChars(i->first, call_name);
+                if (n > max_equal) {
+                    max_equal = n;
+                    cb = i;
+                }
+                ++i;
+            }
+
+            cb->second(call);
+            m_call_table_cache[call.name()] = cb->second;
+        } else {
+            /* This should be some debug output only, because we might
          * not handle some calls deliberately */
-        if (m_unhandled_calls.find(call_name) == m_unhandled_calls.end()) {
-            std::cerr << "Call " << call.no
-                      << " " << call_name << " not handled\n";
-            m_unhandled_calls.insert(call_name);
+            if (m_unhandled_calls.find(call_name) == m_unhandled_calls.end()) {
+                std::cerr << "Call " << call.no
+                          << " " << call_name << " not handled\n";
+                m_unhandled_calls.insert(call_name);
+            }
         }
     }
 
