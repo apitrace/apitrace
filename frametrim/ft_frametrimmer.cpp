@@ -74,7 +74,7 @@ struct FrameTrimmeImpl {
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();
 
-    static unsigned equalChars(const char *l, const char *r);
+    static unsigned equalChars(const char *l, const char *callname);
 
     PTraceCall recordStateCall(const trace::Call& call, unsigned no_param_sel);
 
@@ -263,11 +263,19 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
                 ++i;
             }
 
-            cb->second(call);
-            m_call_table_cache[call.name()] = cb->second;
-            if (strcmp(call.name(), cb->first)) {
-                if (!checkCommonSuffixes(call.name() + strlen(cb->first)))
-                    std::cerr << "Handle " << call.name() << " as " << cb->first << "\n";
+            if (max_equal) {
+                cb->second(call);
+                m_call_table_cache[call.name()] = cb->second;
+                if (strcmp(call.name(), cb->first)) {
+                    if (!checkCommonSuffixes(call.name() + strlen(cb->first)))
+                        std::cerr << "Handle " << call.name() << " as " << cb->first << "\n";
+                }
+            } else {
+                if (m_unhandled_calls.find(call_name) == m_unhandled_calls.end()) {
+                    std::cerr << "Call " << call.no
+                              << " " << call_name << " not handled\n";
+                    m_unhandled_calls.insert(call_name);
+                }
             }
         } else {
             /* This should be some debug output only, because we might
@@ -439,17 +447,17 @@ FrameTrimmeImpl::getSortedCallIds()
 }
 
 unsigned
-FrameTrimmeImpl::equalChars(const char *l, const char *r)
+FrameTrimmeImpl::equalChars(const char *prefix, const char *callname)
 {
     unsigned retval = 0;
-    while (*l && *r && *l == *r) {
+    while (*prefix && *callname && *prefix == *callname) {
         ++retval;
-        ++l; ++r;
+        ++prefix; ++callname;
     }
-    if (!*l && !*r)
+    if (!*prefix && !*callname)
         ++retval;
 
-    return retval;
+    return !*prefix ? retval : 0;
 }
 
 // Map callbacks to call methods of FrameTRimImpl
