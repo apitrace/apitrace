@@ -277,7 +277,7 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
                     m_unhandled_calls.insert(call_name);
                 }
             }
-        } else {
+        } else  if (!(call.flags & trace::CALL_FLAG_END_FRAME)) {
             /* This should be some debug output only, because we might
          * not handle some calls deliberately */
             if (m_unhandled_calls.find(call_name) == m_unhandled_calls.end()) {
