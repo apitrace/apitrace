@@ -163,6 +163,7 @@ probeTextureFormatOES(GLenum target, GLint level,
         GLenum type;
     } info[] = {
         /* internalFormat */        /* type */
+        { GL_RGB,                  GL_UNSIGNED_BYTE },
         { GL_RGBA,                  GL_UNSIGNED_BYTE },
         { GL_DEPTH_STENCIL,         GL_FLOAT_32_UNSIGNED_INT_24_8_REV },
         { GL_DEPTH_STENCIL,         GL_UNSIGNED_INT_24_8 },
