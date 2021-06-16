@@ -897,7 +897,7 @@ void MainWindow::updateSurfacesView(const ApiTraceState &state)
 
     m_ui.surfacesTreeWidget->clear();
     if (textures.isEmpty() && fbos.isEmpty()) {
-        m_ui.surfacesTab->setDisabled(false);
+        m_ui.surfacesTab->setEnabled(false);
     } else {
         m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
         addSurfaces(textures, "Textures");
