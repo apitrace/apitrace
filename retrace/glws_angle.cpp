@@ -6,6 +6,12 @@
 
 #include <EGL/eglext.h>
 
+#ifdef _MSC_VER
+#include <io.h>
+#include <fstream>
+#endif
+
+
 namespace glws {
     static EGLDisplay eglDisplay = EGL_NO_DISPLAY;
     static char const* eglExtensions = NULL;
@@ -186,6 +192,17 @@ namespace glws {
     };
 
     void init(void) {
+        // ANGLE unconditionally logs to stdout. Suppress it and redirect std::cout.
+#ifdef _MSC_VER
+        std::FILE* duplicateStdout = _fdopen(_dup(_fileno(stdout)), "w");
+        auto* duplicateOutbuf = new std::basic_filebuf<char, std::char_traits<char>>(duplicateStdout);
+        std::cout.rdbuf(duplicateOutbuf);
+#endif
+
+        std::FILE* replacedStdout = std::freopen("/dev/null", "w", stdout);
+        if (!replacedStdout) {
+            replacedStdout = std::freopen("NUL", "w", stdout);
+        }
 
         eglExtensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
         eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
