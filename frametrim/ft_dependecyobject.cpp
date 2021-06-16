@@ -114,24 +114,52 @@ DependecyObjectMap::generate(const trace::Call& call)
 {
     auto c = trace2call(call);
     const auto ids = (call.arg(1)).toArray();
+    std::vector<std::shared_ptr<UsedObject> > created_objs;
     for (auto& v : ids->values) {
-        auto obj = std::make_shared<UsedObject>(v->toUInt());
+        auto old_obj = getById(v->toUInt());
+        auto obj = old_obj ? old_obj : std::make_shared<UsedObject>(v->toUInt());
         obj->addCall(c);
+        obj->setExtraInfo("valid", 1);
+        if (old_obj) {
+            obj->setExtraInfo("reused_call", call.no);
+        } else {
+            obj->setExtraInfo("create_call", call.no);
+        }
         addObject(v->toUInt(), obj);
+
+        // make all objects that are created together depend on each other
+        for (auto& o : created_objs) {
+            o->addDependency(obj);
+            obj->addDependency(o);
+        }
+        created_objs.push_back(obj);
     }
 }
 
 void DependecyObjectMap::destroy(const trace::Call& call)
 {
     auto c = trace2call(call);
+    std::vector<std::shared_ptr<UsedObject> > destroyed_objs;
     const auto ids = (call.arg(1)).toArray();
     assert(ids);
     for (auto& v : ids->values) {
-        assert(m_objects[v->toUInt()]->id() == v->toUInt());
-        auto obj_it = m_objects.find(v->toUInt());
+        unsigned obj_id = v->toUInt();
+        auto obj_it = m_objects.find(obj_id);
         if (obj_it != m_objects.end()) {
+            assert(obj_it->second->id() == obj_id);
             obj_it->second->addCall(c);
             obj_it->second->eraseExtraInfo("target");
+            obj_it->second->setExtraInfo("valid", 0);
+            obj_it->second->setExtraInfo("delete_call", call.no);
+
+            // make all objects that are destroyed together depend on each other
+            // to avoid the trimmed trace throwing errors if one buffer was
+            // not needed otherwise
+            for (auto& o : destroyed_objs) {
+                o->addDependency(obj_it->second);
+                obj_it->second->addDependency(o);
+            }
+            destroyed_objs.push_back(obj_it->second);
         }
     }
 }
@@ -142,13 +170,16 @@ void DependecyObjectMap::create(const trace::Call& call)
     addObject(call.ret->toUInt(), obj);
     auto c = trace2call(call);
     obj->addCall(c);
+    obj->setExtraInfo("valid", 1);
 }
 
 void DependecyObjectMap::del(const trace::Call& call)
 {
     auto obj_it = m_objects.find(call.arg(0).toUInt());
-    if (obj_it != m_objects.end())
+    if (obj_it != m_objects.end()) {
         obj_it->second->addCall(trace2call(call));
+        obj_it->second->setExtraInfo("valid", 0);
+    }
 }
 
 void DependecyObjectMap::addObject(unsigned id, UsedObject::Pointer obj)
@@ -169,6 +200,21 @@ DependecyObjectMap::bind(const trace::Call& call, unsigned obj_id_param)
         std::cerr << "Unknown bindpoint in call "
                   << call.no << ":" << call.name() << "\n";
         assert(0);
+    }
+
+    if (id) {
+        if (m_objects[id] && !m_objects[id]->extraInfo("valid")) {
+            std::cerr << "\n" << call.no << ":" << call.name() << "(...) Object " << id
+                      << " not valid, was deleted in "
+                      << m_objects[id]->extraInfo("delete_call")
+                      << " originally created in "
+                      << m_objects[id]->extraInfo("create_call");
+
+            unsigned reused_call = m_objects[id]->extraInfo("reused_call");
+            if (reused_call > 0)
+                std::cerr << " reused in " << reused_call << " ";
+            std::cerr << " \n";
+        }
     }
     return bindTarget(id, bindpoint);
 }
