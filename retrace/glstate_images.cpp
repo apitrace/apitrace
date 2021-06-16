@@ -790,12 +790,13 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         }
     }
     else {
-        // Create a simple image single sample size.
-        image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
-
         if (context.ES) {
-            getTexImageOES(target, level, format, type, desc, image->pixels);
+            // Create a simple image single sample size. glReadPixel does not guarantee GL_RGB, so assume GL_RGBA.
+            image = new image::Image(desc.width, desc.height * desc.depth, 4, true, channelType);
+            getTexImageOES(target, level, GL_RGBA, type, desc, image->pixels);
         } else {
+            // Create a simple image single sample size.
+            image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
             glGetTexImage(target, level, format, type, image->pixels);
         }
 
