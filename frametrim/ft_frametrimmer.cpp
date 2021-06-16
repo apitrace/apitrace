@@ -62,6 +62,15 @@ struct string_part_less {
     }
 };
 
+using DisplayListMap = std::unordered_map<unsigned, UsedObject::Pointer>;
+using LegacyProgrambjectMap = DependecyObjectWithDefaultBindPointMap;
+using ProgramObjectMap = DependecyObjectWithSingleBindPointMap;
+using ProgramPipelineObjectMap = DependecyObjectWithSingleBindPointMap;
+using SamplerObjectMap = DependecyObjectWithDefaultBindPointMap;
+using SyncObjectMap = DependecyObjectWithSingleBindPointMap;
+using ShaderStateMap = DependecyObjectWithDefaultBindPointMap;
+using RenderObjectMap = DependecyObjectWithSingleBindPointMap;
+using VertexArrayMap = DependecyObjectWithDefaultBindPointMap;
 struct FrameTrimmeImpl {
 
     using ObjectMap = std::unordered_map<unsigned, UsedObject::Pointer>;
@@ -138,20 +147,10 @@ struct FrameTrimmeImpl {
 
     CallSet m_required_calls;
     std::set<std::string> m_unhandled_calls;
-
-    std::unordered_map<unsigned, UsedObject::Pointer> m_display_lists;
+    DisplayListMap m_display_lists;
     UsedObject::Pointer m_active_display_list;
 
     AllMatrisStates m_matrix_states;
-
-    using LegacyProgrambjectMap = DependecyObjectWithDefaultBindPointMap;
-    using ProgramObjectMap = DependecyObjectWithSingleBindPointMap;
-    using ProgramPipelineObjectMap = DependecyObjectWithSingleBindPointMap;
-    using SamplerObjectMap = DependecyObjectWithDefaultBindPointMap;
-    using SyncObjectMap = DependecyObjectWithSingleBindPointMap;
-    using ShaderStateMap = DependecyObjectWithDefaultBindPointMap;
-    using RenderObjectMap = DependecyObjectWithSingleBindPointMap;
-    using VertexArrayMap = DependecyObjectWithDefaultBindPointMap;
 
     LegacyProgrambjectMap m_legacy_programs;
     ProgramObjectMap m_programs;
