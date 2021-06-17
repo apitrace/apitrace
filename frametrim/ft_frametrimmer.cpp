@@ -71,6 +71,9 @@ using SyncObjectMap = DependecyObjectWithSingleBindPointMap;
 using ShaderStateMap = DependecyObjectWithDefaultBindPointMap;
 using RenderObjectMap = DependecyObjectWithSingleBindPointMap;
 using VertexArrayMap = DependecyObjectWithDefaultBindPointMap;
+struct PerContextObjects {
+};
+
 struct FrameTrimmeImpl {
 
     using ObjectMap = std::unordered_map<unsigned, UsedObject::Pointer>;
@@ -139,6 +142,9 @@ struct FrameTrimmeImpl {
 
     bool checkCommonSuffixes(const char *suffix) const;
 
+
+    void createContext(const trace::Call& call, int shared_param);
+    void makeCurrent(const trace::Call& call, unsigned param);
     using CallTable = std::multimap<const char *, ft_callback, string_part_less>;
     CallTable m_call_table;
 
@@ -165,6 +171,9 @@ struct FrameTrimmeImpl {
     VertexArrayMap m_vertex_arrays;
     VertexAttribObjectMap m_vertex_attrib_pointers;
     VertexAttribObjectMap m_vertex_buffer_pointers;
+
+    std::map<void *, std::shared_ptr<PerContextObjects>> m_contexts;
+    std::shared_ptr<PerContextObjects> m_current_context;
     QueryObjectMap m_queries;
 
     std::map<std::string, PTraceCall> m_state_calls;
@@ -464,6 +473,10 @@ FrameTrimmeImpl::equalChars(const char *prefix, const char *callname)
 // Additional data is passed by reference (R) or vy value (V)
 
 #define MAP(name, call) m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1)))
+
+#define MAP_V(name, call, param1) \
+    m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1, \
+                        param1)))
 
 #define MAP_RV(name, call, data, param1) \
     m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1, \
@@ -904,14 +917,9 @@ void FrameTrimmeImpl::registerRequiredCalls()
     auto required_func = bind(&FrameTrimmeImpl::recordRequiredCall, this, _1);
     const std::vector<const char *> required_calls = {
         "glXChooseVisual",
-        "glXCreateContext",
-        "glXCreateContextAttribs",
-        "glXCreateNewContext",
         "glXCreatePbuffer",
         "glXDestroyContext",
         "glXGetFBConfigAttrib",
-        "glXMakeCurrent",
-        "glXMakeContextCurrent",
         "glXChooseFBConfig",
         "glXQueryExtension",
         "glXQueryExtensionsString",
@@ -921,13 +929,20 @@ void FrameTrimmeImpl::registerRequiredCalls()
         "eglInitialize",
         "eglCreatePlatformWindowSurface",
         "eglBindAPI",
-        "eglCreateContext",
-        "eglMakeCurrent",
 
         "glPixelStorei", /* Being lazy here, we could track the dependency
                             in the relevant calls */
     };
     updateCallTable(required_calls, required_func);
+
+    MAP_V(glXCreateContext, createContext, -1);
+    MAP_V(glXCreateNewContext, createContext, -1);
+    MAP_V(glXCreateContextAttribs, createContext, 2);
+    MAP_V(eglCreateContext, createContext, 2);
+
+    MAP_V(glXMakeCurrent, makeCurrent, 2);
+    MAP_V(glXMakeContextCurrent, makeCurrent, 3);
+    MAP_V(eglMakeCurrent, makeCurrent, 3);
 }
 
 void FrameTrimmeImpl::registerIgnoreHistoryCalls()
@@ -1445,6 +1460,37 @@ FrameTrimmeImpl::oglBindVertexArray(const trace::Call& call)
             fb->addDependency(vao);
     } else
         m_vertex_arrays.addCall(trace2call(call));
+}
+
+void FrameTrimmeImpl::createContext(const trace::Call& call, int shared_param)
+{
+    if (!m_contexts.empty()) {
+        void *shared_context = nullptr;
+        if (shared_param >= 0) {
+            shared_context = call.arg(shared_param).toPointer();
+            if (m_contexts.find(shared_context) == m_contexts.end())
+                shared_context = nullptr;
+        }
+        if (!shared_context)
+            std::cerr << "\nWarning: Have more than one non-shared context, this is not well supported\n";
+    }
+    m_current_context = make_shared<PerContextObjects>();
+    m_contexts[call.ret->toPointer()] = m_current_context;
+    m_required_calls.insert(trace2call(call));
+}
+
+void FrameTrimmeImpl::makeCurrent(const trace::Call& call, unsigned param)
+{
+    void *ctx_id = call.arg(param).toPointer();
+    auto ictx = m_contexts.find(ctx_id);
+
+    if (ictx != m_contexts.end())
+        m_current_context = ictx->second;
+    else
+        m_current_context = nullptr;
+
+    assert(!ctx_id || m_current_context);
+    m_required_calls.insert(trace2call(call));
 }
 
 }
