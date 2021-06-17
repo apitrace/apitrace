@@ -75,11 +75,13 @@ using VertexArrayMap = DependecyObjectWithDefaultBindPointMap;
 enum ePerContext {
     pc_vertex_array,
     pc_program_pipelines,
+    pc_fbo,
 };
 
 struct PerContextObjects {
     VertexArrayMap m_vertex_arrays;
     ProgramPipelineObjectMap m_program_pipelines;
+    FramebufferObjectMap m_fbo;
 };
 
 struct FrameTrimmeImpl {
@@ -126,8 +128,7 @@ struct FrameTrimmeImpl {
     void oglDeleteLists(const trace::Call& call);
     void oglBind(const trace::Call& call, DependecyObjectMap& map, unsigned bind_param);
     void oglDraw(const trace::Call& call);
-    void oglBindFbo(const trace::Call& call, DependecyObjectMap& map,
-                       unsigned bind_param);
+    void oglBindFbo(const trace::Call& call, unsigned bind_param);
     void oglBindTextures(const trace::Call& call);
     void oglBindSamplers(const trace::Call& call);
     void bindWithCreate(const trace::Call& call, DependecyObjectMap& map,
@@ -155,7 +156,12 @@ struct FrameTrimmeImpl {
 
     void generate(const trace::Call& call, ePerContext map_type);
     void destroy(const trace::Call& call, ePerContext map_type);
+    void callOnObjectBoundTo(const trace::Call& call, ePerContext map_type, unsigned bindpoint);
+    void fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param);
+    void fboBlit(const trace::Call& call);
+    void fboReadBuffer(const trace::Call& call);
     void bindPerContext(const trace::Call& call, ePerContext map_type, unsigned bind_param);
+
 
     DependecyObjectMap& getCurrentMapOfType(ePerContext map_type);
 
@@ -177,7 +183,6 @@ struct FrameTrimmeImpl {
     LegacyProgrambjectMap m_legacy_programs;
     ProgramObjectMap m_programs;
     TextureObjectMap m_textures;
-    FramebufferObjectMap m_fbo;
     BufferObjectMap m_buffers;
     ShaderStateMap m_shaders;
     RenderObjectMap m_renderbuffers;
@@ -376,7 +381,6 @@ void FrameTrimmeImpl::startTargetFrame()
 
     m_programs.emitBoundObjects(m_required_calls);
     m_textures.emitBoundObjects(m_required_calls);
-    m_fbo.emitBoundObjects(m_required_calls);
     m_buffers.emitBoundObjects(m_required_calls);
     m_shaders.emitBoundObjects(m_required_calls);
     m_renderbuffers.emitBoundObjects(m_required_calls);
@@ -386,6 +390,7 @@ void FrameTrimmeImpl::startTargetFrame()
     for (auto& [dummy, context] : m_contexts) {
         context->m_vertex_arrays.emitBoundObjects(m_required_calls);
         context->m_program_pipelines.emitBoundObjects(m_required_calls);
+        context->m_fbo.emitBoundObjects(m_required_calls);
     }
 
     m_vertex_attrib_pointers.emitBoundObjects(m_required_calls);
@@ -414,7 +419,7 @@ FrameTrimmeImpl::skipDeleteObj(const trace::Call& call)
         map = &m_textures;
 
     if (!strcmp(call.name(), "glDeleteFramebuffers"))
-        map = &m_fbo;
+        map = &m_current_context->m_fbo;
 
     if (!strcmp(call.name(), "glDeleteRenderbuffers"))
         map = &m_renderbuffers;
@@ -613,36 +618,34 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_OBJ(glRenderbufferStorage, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
     MAP_OBJ(glRenderbufferStorageMultisample, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
 
-    MAP_OBJ(glGenFramebuffers, m_fbo, FramebufferObjectMap::generate);
-    MAP_OBJ(glDeleteFramebuffers, m_fbo, FramebufferObjectMap::destroy);
-    MAP_RV(glBindFramebuffer, oglBindFbo, m_fbo, 1);
-    MAP_OBJ_V(glViewport, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
+    MAP_V(glGenFramebuffers, generate, pc_fbo);
+    MAP_V(glDeleteFramebuffers, destroy, pc_fbo);
+    MAP_V(glBindFramebuffer, oglBindFbo, 1);
+    MAP_VV(glViewport, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
-    MAP_OBJ(glBlitFramebuffer, m_fbo, FramebufferObjectMap::oglBlit);
-    MAP_RVRV(glFramebufferTexture, callOnBoundObjWithDep, m_fbo, 2, m_textures, true);
-    MAP_RVRV(glFramebufferTextureLayer, callOnBoundObjWithDep, m_fbo, 2, m_textures, true);
-    MAP_RVRV(glFramebufferTexture1D, callOnBoundObjWithDep, m_fbo,
-                            3, m_textures, true);
-    MAP_RVRV(glFramebufferTexture2D, callOnBoundObjWithDep, m_fbo,
-                            3, m_textures, true);
+    MAP(glBlitFramebuffer, fboBlit);
+    MAP_RV(glFramebufferTexture, fboBindAttachment, m_textures, 2);
+    MAP_RV(glFramebufferTextureLayer, fboBindAttachment, m_textures,2);
+    MAP_RV(glFramebufferTexture1D, fboBindAttachment, m_textures,3);
+    MAP_RV(glFramebufferTexture2D, fboBindAttachment, m_textures, 3);
+    MAP_RV(glFramebufferRenderbuffer, fboBindAttachment, m_renderbuffers, 3);
+    MAP(glReadBuffer, fboReadBuffer);
 
-    MAP_OBJ(glReadBuffer, m_fbo, FramebufferObjectMap::oglReadBuffer);
-    MAP_OBJ_V(glDrawBuffer, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
-    MAP_OBJ_V(glDrawBuffers, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glDrawBuffer, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glDrawBuffers, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
-    MAP_OBJ_V(glClearBuffer, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
-    MAP_OBJ_V(glClearBufferfi, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
-    MAP_OBJ_V(glClearBufferfv, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
-    MAP_OBJ_V(glClearBufferiv, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glClearBuffer, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glClearBufferfi, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glClearBufferfv, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
+    MAP_VV(glClearBufferiv, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
 /*    MAP_GENOBJ_DATAREF(glFramebufferTexture3D, m_fbo,
                          FramebufferStateMap::attach_texture3d, m_textures);
       MAP(glReadBuffer, ReadBuffer); */
 
-    MAP_RVRV(glFramebufferRenderbuffer, callOnBoundObjWithDep,
-             m_fbo, 3, m_renderbuffers, true);
 
-    MAP_OBJ_V(glClear, m_fbo, FramebufferObjectMap::callOnObjectBoundTo, GL_DRAW_FRAMEBUFFER);
+
+    MAP_VV(glClear, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
 }
 
@@ -1303,7 +1306,7 @@ FrameTrimmeImpl::oglBindSamplers(const trace::Call& call)
 
 void FrameTrimmeImpl::oglDraw(const trace::Call& call)
 {
-    auto fb = m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
+    auto fb = m_current_context->m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
     auto cur_prog = m_programs.boundTo(0, 0);
     if (cur_prog) {
         for(auto&& [key, buf]: m_buffers) {
@@ -1414,10 +1417,9 @@ FrameTrimmeImpl::oglWaitSync(const trace::Call& call)
 }
 
 void
-FrameTrimmeImpl::oglBindFbo(const trace::Call& call, DependecyObjectMap& map,
-                         unsigned bind_param)
+FrameTrimmeImpl::oglBindFbo(const trace::Call& call, unsigned bind_param)
 {
-    auto fb = map.bind(call, bind_param);
+    auto fb = m_current_context->m_fbo.bind(call, bind_param);
     fb->addCall(trace2call(call));
     if (m_recording_frame && fb->id())
         fb->emitCallsTo(m_required_calls);
@@ -1488,7 +1490,7 @@ FrameTrimmeImpl::oglBindVertexArray(const trace::Call& call)
         vao->addCall(trace2call(call));
         if (global_state.emit_dependencies)
             vao->emitCallsTo(*global_state.out_list);
-        auto fb = m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
+        auto fb = m_current_context->m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
         if (fb->id())
             fb->addDependency(vao);
     } else
@@ -1508,6 +1510,26 @@ void FrameTrimmeImpl::destroy(const trace::Call& call, ePerContext map_type)
 void FrameTrimmeImpl::bindPerContext(const trace::Call& call, ePerContext map_type, unsigned bind_param)
 {
     oglBind(call, getCurrentMapOfType(map_type), bind_param);
+}
+
+void FrameTrimmeImpl::callOnObjectBoundTo(const trace::Call& call, ePerContext map_type, unsigned bindpoint)
+{
+    getCurrentMapOfType(map_type).callOnObjectBoundTo(call, bindpoint);
+}
+
+void FrameTrimmeImpl::fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param)
+{
+    m_current_context->m_fbo.callOnBoundObjectWithDep(call, dep_map, tex_id_param, true);
+}
+
+void FrameTrimmeImpl::fboBlit(const trace::Call& call)
+{
+    m_current_context->m_fbo.oglBlit(call);
+}
+
+void FrameTrimmeImpl::fboReadBuffer(const trace::Call& call)
+{
+    m_current_context->m_fbo.oglReadBuffer(call);
 }
 
 void FrameTrimmeImpl::createContext(const trace::Call& call, int shared_param)
@@ -1546,6 +1568,7 @@ DependecyObjectMap& FrameTrimmeImpl::getCurrentMapOfType(ePerContext map_type)
     switch (map_type) {
     case pc_vertex_array: return m_current_context->m_vertex_arrays;
     case pc_program_pipelines: return m_current_context->m_program_pipelines;
+    case pc_fbo: return m_current_context->m_fbo;
     }
     assert(0);
 }
