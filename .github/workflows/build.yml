@@ -14,6 +14,8 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
+    - name: apt-update
+      run: sudo apt-get update
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends gcc g++ libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libprocps-dev libgtest-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
@@ -47,6 +49,8 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
+    - name: apt-update
+      run: sudo apt-get update
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
