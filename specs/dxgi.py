@@ -1136,6 +1136,7 @@ DXGI_GPU_PREFERENCE = Enum('DXGI_GPU_PREFERENCE', [
 ])
 
 IDXGIFactory6 = Interface('IDXGIFactory6', IDXGIFactory5)
+IDXGIFactory7 = Interface('IDXGIFactory7', IDXGIFactory6)
 IDXGIAdapter4 = Interface('IDXGIAdapter4', IDXGIAdapter3)
 IDXGIOutput6 = Interface('IDXGIOutput6', IDXGIOutput5)
 
@@ -1152,7 +1153,13 @@ IDXGIFactory6.methods += [
     StdMethod(HRESULT, 'EnumAdapterByGpuPreference', [(UINT, 'Adapter'), (DXGI_GPU_PREFERENCE, 'GpuPreference'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvAdapter')]),
 ]
 
+IDXGIFactory7.methods += [
+    StdMethod(HRESULT, 'RegisterAdaptersChangedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(HRESULT, 'UnregisterAdaptersChangedEvent', [(DWORD, 'dwCookie')], sideeffects=False),
+]
+
 dxgi.addInterfaces([
+    IDXGIFactory7,
     IDXGIFactory6,
     IDXGIAdapter4,
     IDXGIOutput6,
