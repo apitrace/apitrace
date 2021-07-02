@@ -231,7 +231,8 @@ def ConstPointer(type):
 
 class Enum(Type):
 
-    __id = 0
+    # IDs 0 and 1 are reserved for milliseconds/bool for WaitForObjects
+    __id = 2
 
     def __init__(self, name, values):
         Type.__init__(self, name)
@@ -380,15 +381,24 @@ def InOut(type, name):
     return Arg(type, name, input=True, output=True)
 
 
+class Variable:
+    def __init__(self, type, name):
+        self.type = type
+        self.name = name
+        self.index = None
+
+    def __str__(self):
+        return '%s %s' % (self.type, self.name)
+
+
 class Function:
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False, overloaded=False):
+    def __init__(self, type, name, args, vars = [], call = '', fail = None, sideeffects=True, internal=False, overloaded=False):
         self.type = type
         self.name = name
 
         self.args = []
-        index = 0
-        for arg in args:
+        for index, arg in enumerate(args):
             if not isinstance(arg, Arg):
                 if isinstance(arg, tuple):
                     arg_type, arg_name = arg
@@ -397,8 +407,19 @@ class Function:
                     arg_name = "arg%u" % index
                 arg = Arg(arg_type, arg_name)
             arg.index = index
-            index += 1
             self.args.append(arg)
+
+        self.vars = []
+        for index, var in enumerate(vars):
+            if not isinstance(var, Variable):
+                if isinstance(var, tuple):
+                    var_type, var_name = var
+                else:
+                    var_type = var
+                    var_name = "var%u" % index
+                var = Variable(var_type, var_name)
+            var.index = index
+            self.vars.append(var)
 
         self.call = call
         self.fail = fail
@@ -449,6 +470,15 @@ class Function:
         for arg in self.args:
             if arg.type is type:
                 return arg
+        return None
+
+    def varNames(self):
+        return [var.name for var in self.vars]
+
+    def getVarByName(self, name):
+        for var in self.vars:
+            if var.name == name:
+                return var
         return None
 
 
@@ -508,9 +538,9 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, call = '', const=False, sideeffects=True, overloaded=False):
+    def __init__(self, type, name, args, vars = [], call = '', const=False, sideeffects=True, overloaded=False):
         assert call == '__stdcall'
-        Function.__init__(self, type, name, args, call = call, sideeffects=sideeffects, overloaded=overloaded)
+        Function.__init__(self, type, name, args, vars = vars, call = call, sideeffects=sideeffects, overloaded=overloaded)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
         self.const = const
@@ -563,7 +593,9 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True):
+    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True, stream=False, streamEnum=None, streamSize=0, streamAlignment=0):
+        if stream:
+            contextLess = False
         if defaultType is None:
             Type.__init__(self, None)
             contextLess = False
@@ -573,6 +605,10 @@ class Polymorphic(Type):
         self.switchTypes = switchTypes
         self.defaultType = defaultType
         self.contextLess = contextLess
+        self.stream          = stream
+        self.streamSize      = streamSize,
+        self.streamAlignment = streamAlignment
+        self.streamEnum      = streamEnum
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitPolymorphic(self, *args, **kwargs)

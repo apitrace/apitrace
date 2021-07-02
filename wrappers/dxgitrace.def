@@ -1,4 +1,5 @@
 EXPORTS
+	CompatValue
 	CreateDXGIFactory
 	CreateDXGIFactory1
 	CreateDXGIFactory2
@@ -8,6 +9,13 @@ EXPORTS
 	D3D10CreateDeviceAndSwapChain1
 	D3D11CreateDevice
 	D3D11CreateDeviceAndSwapChain
+	D3D12CreateDevice
+	D3D12GetDebugInterface
+	D3D12CreateRootSignatureDeserializer
+	D3D12CreateVersionedRootSignatureDeserializer
+	D3D12EnableExperimentalFeatures
+	D3D12SerializeRootSignature
+	D3D12SerializeVersionedRootSignature
 	D3DPERF_BeginEvent
 	D3DPERF_EndEvent
 	D3DPERF_SetMarker
@@ -21,3 +29,13 @@ EXPORTS
 	DXGID3D10CreateLayeredDevice
 	DXGID3D10GetLayeredDeviceSize
 	DXGID3D10RegisterLayers
+	DXGIGetDebugInterface1
+
+    D3D12CreateDevice
+    D3D12GetDebugInterface
+    D3D12CreateRootSignatureDeserializer
+    D3D12CreateVersionedRootSignatureDeserializer
+
+    D3D12EnableExperimentalFeatures
+    D3D12SerializeRootSignature
+    D3D12SerializeVersionedRootSignature

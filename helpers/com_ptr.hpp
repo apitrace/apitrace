@@ -50,6 +50,15 @@ public:
     {
     }
 
+    com_ptr(REFIID riid, void** ppvObject) :
+        p(nullptr)
+    {
+        if (ppvObject != nullptr && *ppvObject != nullptr) {
+            IUnknown* unknownObject = *reinterpret_cast<IUnknown**>(ppvObject);
+            unknownObject->QueryInterface(riid, reinterpret_cast<void**>(&p));
+        }
+    }
+
     com_ptr(T *_p) :
         p(_p)
     {
@@ -73,6 +82,10 @@ public:
     // Implict cast to T*
     operator T * () const {
         return p;
+    }
+
+    operator bool() const {
+        return (p != nullptr);
     }
 
     struct no_ref_count : public T

@@ -207,6 +207,8 @@ protected:
 
     void parse_arg(Call *call, Mode mode);
 
+    void parse_var(Call* call, Mode mode);
+
     Value *parse_value(void);
     void scan_value(void);
     inline Value *parse_value(Mode mode) {

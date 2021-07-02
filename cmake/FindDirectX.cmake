@@ -113,7 +113,7 @@ if (WIN32)
 
     find_winsdk_header  (D3D9    d3d9.h)
 
-    find_winsdk_header  (D3D11_4 d3d11_4.h)
+    find_winsdk_header  (D3D12 d3d12.h)
 
     find_winsdk_header  (D2D1_1  d2d1_1.h)
 

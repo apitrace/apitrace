@@ -99,4 +99,3 @@ random(void) {
 }
 
 } /* namespace os */
-

@@ -117,7 +117,6 @@ addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned 
 
     if (!address) {
         // Ignore NULL pointer
-        assert(buffer == nullptr);
         return;
     }
 

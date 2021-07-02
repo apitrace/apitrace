@@ -261,6 +261,17 @@ Parser::parse_function_sig(void) {
             arg_names[i] = read_string();
         }
         sig->arg_names = arg_names;
+        sig->num_vars = read_uint();
+        if (sig->num_vars > 0) {
+            const char** var_names = new const char* [sig->num_vars];
+            for (unsigned i = 0; i < sig->num_vars; ++i) {
+                var_names[i] = read_string();
+            }
+            sig->var_names = var_names;
+        }
+        else {
+            sig->var_names = nullptr;
+        }
         sig->flags = lookupCallFlags(sig->name);
         sig->fileOffset = file->currentOffset();
         functions[id] = sig;
@@ -515,6 +526,12 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
             }
             parse_arg(call, mode);
             break;
+        case trace::CALL_VAR:
+            if (TRACE_VERBOSE) {
+                std::cerr << "\tCALL_VAR\n";
+            }
+            parse_var(call, mode);
+            break;
         case trace::CALL_RET:
             if (TRACE_VERBOSE) {
                 std::cerr << "\tCALL_RET\n";
@@ -649,6 +666,17 @@ void Parser::parse_arg(Call *call, Mode mode) {
             call->args.resize(index + 1);
         }
         call->args[index].value = value;
+    }
+}
+
+void Parser::parse_var(Call* call, Mode mode) {
+    unsigned index = read_uint();
+    Value* value = parse_value(mode);
+    if (value) {
+        if (index >= call->vars.size()) {
+            call->vars.resize(index + 1);
+        }
+        call->vars[index].value = value;
     }
 }
 

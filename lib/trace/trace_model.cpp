@@ -54,6 +54,16 @@ Call::argByName(const char *argName) {
     return null;
 }
 
+Value&
+Call::varByName(const char* varName) {
+    for (unsigned i = 0; i < sig->num_vars; ++i) {
+        if (strcmp(sig->var_names[i], varName) == 0) {
+            return var(i);
+        }
+    }
+    return null;
+}
+
 
 String::~String() {
     delete [] value;

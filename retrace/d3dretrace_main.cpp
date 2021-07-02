@@ -32,6 +32,93 @@
 #include "retrace.hpp"
 #include "d3dretrace.hpp"
 
+#ifdef HAVE_DXGI
+#include <mutex>
+
+extern std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;
+extern std::mutex g_D3D12FenceEventMapMutex;
+
+namespace d3dretrace {
+
+    static void retrace_WaitForSingleObject(trace::Call& call) {
+        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
+        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
+
+        {
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto iter = g_D3D12FenceEventMap.find(hHandle);
+            hHandle = iter->second;
+            g_D3D12FenceEventMap.erase(iter);
+        }
+        WaitForSingleObject(hHandle, dwMilliseconds);
+    }
+
+    static void retrace_WaitForSingleObjectEx(trace::Call &call) {
+        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
+        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
+        BOOL   bAlertable     = static_cast     <BOOL>  (call.arg(2).toUInt());
+
+        {
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            auto iter = g_D3D12FenceEventMap.find(hHandle);
+            hHandle = iter->second;
+            g_D3D12FenceEventMap.erase(iter);
+        }
+        WaitForSingleObjectEx(hHandle, dwMilliseconds, bAlertable);
+    }
+
+    static void retrace_WaitForMultipleObjects(trace::Call& call) {
+        retrace::ScopedAllocator allocator;
+
+        DWORD   nCount         = static_cast<DWORD>           (call.arg(0).toUInt());
+        HANDLE* lpHandles      = allocator.allocArray<HANDLE>(&call.arg(1));
+        BOOL    bWaitAll       = static_cast<BOOL>            (call.arg(2).toUInt());
+        DWORD   dwMilliseconds = static_cast<DWORD>           (call.arg(3).toUInt());
+
+        {
+            const trace::Array* traceHandles = (call.arg(2)).toArray();
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            for (size_t i = 0; i < traceHandles->values.size(); i++) {
+                auto iter = g_D3D12FenceEventMap.find(traceHandles->values[i]);
+                lpHandles[i] = iter->second;
+                g_D3D12FenceEventMap.erase(iter);
+            }
+        }
+
+        WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
+    }
+
+    static void retrace_WaitForMultipleObjectsEx(trace::Call& call) {
+        retrace::ScopedAllocator allocator;
+
+        DWORD   nCount         = static_cast<DWORD>           (call.arg(0).toUInt());
+        HANDLE* lpHandles      = allocator.allocArray<HANDLE>(&call.arg(1));
+        BOOL    bWaitAll       = static_cast<BOOL>            (call.arg(2).toUInt());
+        DWORD   dwMilliseconds = static_cast<DWORD>           (call.arg(3).toUInt());
+        BOOL    bAlertable     = static_cast<BOOL>            (call.arg(4).toUInt());
+
+        {
+            const trace::Array* traceHandles = (call.arg(2)).toArray();
+            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            for (size_t i = 0; i < traceHandles->values.size(); i++) {
+                auto iter = g_D3D12FenceEventMap.find(traceHandles->values[i]);
+                lpHandles[i] = iter->second;
+                g_D3D12FenceEventMap.erase(iter);
+            }
+        }
+
+        WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
+    }
+
+    const retrace::Entry event_callbacks[] = {
+        {"WaitForSingleObject",   &retrace_WaitForSingleObject},
+        {"WaitForSingleObjectEx", &retrace_WaitForSingleObjectEx},
+        {"WaitForMultipleObjects", &retrace_WaitForMultipleObjects},
+        {"WaitForMultipleObjectsEx", &retrace_WaitForMultipleObjectsEx},
+        {NULL, NULL}
+    };
+}
+#endif
 
 void
 retrace::setFeatureLevel(const char *featureLevel) {
@@ -52,6 +139,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
     retracer.addCallbacks(d3dretrace::d3d9_callbacks);
 #ifdef HAVE_DXGI
     retracer.addCallbacks(d3dretrace::dxgi_callbacks);
+    retracer.addCallbacks(d3dretrace::event_callbacks);
 #endif
 }
 
