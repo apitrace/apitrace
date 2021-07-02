@@ -56,9 +56,9 @@ contains(RegionMap::iterator &it, unsigned long long address) {
 
 static inline bool
 intersects(RegionMap::iterator &it, unsigned long long start, unsigned long long size) {
-    unsigned long it_start = it->first;
-    unsigned long it_stop  = it->first + it->second.size;
-    unsigned long stop = start + size;
+    unsigned long long it_start = it->first;
+    unsigned long long it_stop  = it->first + it->second.size;
+    unsigned long long stop = start + size;
     return it_start < stop && start < it_stop;
 }
 
