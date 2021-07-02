@@ -467,7 +467,7 @@ class D3DCommonTracer(DllTracer):
             # Needs GPU VAs in buffers and such.
             if method.name == 'CheckFeatureSupport':
                 print('    if (Feature == D3D12_FEATURE_D3D12_OPTIONS5) {')
-                #print('        reinterpret_cast<D3D12_FEATURE_DATA_D3D12_OPTIONS5*>(pFeatureSupportData)->RaytracingTier = D3D12_RAYTRACING_TIER_NOT_SUPPORTED;')
+                print('        reinterpret_cast<D3D12_FEATURE_DATA_D3D12_OPTIONS5*>(pFeatureSupportData)->RaytracingTier = D3D12_RAYTRACING_TIER_NOT_SUPPORTED;')
                 print('    }')
 
         # When D2D is used on top of WARP software rasterizer it seems to do
