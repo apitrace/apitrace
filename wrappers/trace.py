@@ -979,7 +979,7 @@ class Tracer:
         print()
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        self.implementWrapperInterfaceMethodBodyEx(self, interface, base, method, '_result')
+        self.implementWrapperInterfaceMethodBodyEx(interface, base, method, '_result')
 
     def implementWrapperInterfaceMethodBodyEx(self, interface, base, method, result_override):
         assert not method.internal
