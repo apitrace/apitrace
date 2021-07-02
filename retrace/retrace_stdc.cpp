@@ -110,7 +110,7 @@ retrace_memcpy(trace::Call &call)
         retrace::warning(call) << "src buffer overflow of " << n - srcRange.len << " bytes\n";
     }
 
-    n = std::min(n, destRange.len);
+    //n = std::min(n, destRange.len);
     n = std::min(n, srcRange.len);
 
     memcpy(destRange.ptr, srcRange.ptr, n);
