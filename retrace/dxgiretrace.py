@@ -213,6 +213,22 @@ class D3DRetracer(Retracer):
             print(r'    }')
             return
 
+        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapterByLuid'):
+            print(r'    retrace::warning(call) << "ignoring adapter LUID, returning adapter 0\n";')
+            print(r'    if (retrace::driver != retrace::DRIVER_DEFAULT) {')
+            print(r'        _result = d3dretrace::createAdapter(_this, riid, ppvAdapter);')
+            print(r'    } else {')
+            print(r'        if (ppvAdapter)')
+            print(r'            *ppvAdapter = nullptr;')
+            print(r'        IDXGIAdapter1 *_temp_adapter;')
+            print(r'        _result = _this->EnumAdapters1(0, &_temp_adapter);')
+            print(r'        if (SUCCEEDED(_result)) {')
+            print(r'            _result = _temp_adapter->QueryInterface(riid, ppvAdapter);')
+            print(r'            _temp_adapter->Release();')
+            print(r'        }')
+            print(r'    }')
+            return
+
         if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapterByGpuPreference'):
             print(r'    if (Adapter != 0) {')
             print(r'        retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";')
