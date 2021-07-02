@@ -118,10 +118,8 @@ namespace trace {
     void fakeMemcpy(const void *ptr, size_t size);
     void fakeMalloc(const void *ptr, size_t size);
 
-    DWORD fakeWaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
-    DWORD fakeWaitForSingleObjectEx(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable);
-    DWORD fakeWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
-    DWORD fakeWaitForMultipleObjectsEx(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAll, DWORD dwMilliseconds, BOOL bAlertable);
+    NTSTATUS fakeZwWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+    NTSTATUS fakeZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
 
 } /* namespace trace */
 

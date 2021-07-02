@@ -38,11 +38,19 @@
 extern std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;
 extern std::mutex g_D3D12FenceEventMapMutex;
 
+using _ZwWaitForSingleObject = NTSTATUS(*)(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+static _ZwWaitForSingleObject TrueZwWaitForSingleObject = (_ZwWaitForSingleObject) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForSingleObject");
+
+using _ZwWaitForMultipleObjects = NTSTATUS(*)(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+static _ZwWaitForMultipleObjects TrueZwWaitForMultipleObjects = (_ZwWaitForMultipleObjects) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForMultipleObjects");
+
 namespace d3dretrace {
 
-    static void retrace_WaitForSingleObject(trace::Call& call) {
-        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
-        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
+    static void retrace_ZwWaitForSingleObject(trace::Call &call) {
+        HANDLE         hHandle    = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
+        BOOL           bAlertable = static_cast     <BOOL>  (call.arg(1).toUInt());
+        LONGLONG       TimeoutVal = call.arg(2).toArray() ? call.arg(2).toArray()->values[0]->toSInt() : 0;
+        PLARGE_INTEGER pTimeout   = call.arg(2).toNull()  ? nullptr : reinterpret_cast<PLARGE_INTEGER>(&TimeoutVal);
 
         {
             auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
@@ -50,71 +58,37 @@ namespace d3dretrace {
             hHandle = iter->second;
             g_D3D12FenceEventMap.erase(iter);
         }
-        WaitForSingleObject(hHandle, dwMilliseconds);
+        TrueZwWaitForSingleObject(hHandle, bAlertable, pTimeout);
     }
 
-    static void retrace_WaitForSingleObjectEx(trace::Call &call) {
-        HANDLE hHandle        = reinterpret_cast<HANDLE>(call.arg(0).toUInt());
-        DWORD  dwMilliseconds = static_cast     <DWORD> (call.arg(1).toUInt());
-        BOOL   bAlertable     = static_cast     <BOOL>  (call.arg(2).toUInt());
+    static void retrace_ZwWaitForMultipleObjects(trace::Call& call) {
+        HANDLE Handles[MAXIMUM_WAIT_OBJECTS];
 
-        {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
-            auto iter = g_D3D12FenceEventMap.find(hHandle);
-            hHandle = iter->second;
-            g_D3D12FenceEventMap.erase(iter);
+        DWORD   nCount          = static_cast<DWORD> (call.arg(0).toUInt());
+        if (call.arg(1).toArray()) {
+            for (DWORD i = 0; i < nCount; i++)
+                Handles[i] = static_cast<HANDLE>(call.arg(1).toArray()->values[i]->toPointer());
         }
-        WaitForSingleObjectEx(hHandle, dwMilliseconds, bAlertable);
-    }
-
-    static void retrace_WaitForMultipleObjects(trace::Call& call) {
-        retrace::ScopedAllocator allocator;
-
-        DWORD   nCount         = static_cast<DWORD>           (call.arg(0).toUInt());
-        HANDLE* lpHandles      = allocator.allocArray<HANDLE>(&call.arg(1));
-        BOOL    bWaitAll       = static_cast<BOOL>            (call.arg(2).toUInt());
-        DWORD   dwMilliseconds = static_cast<DWORD>           (call.arg(3).toUInt());
+        BOOL    bWaitAny        = static_cast<BOOL> (call.arg(2).toUInt());
+        BOOL    bAlertable      = static_cast<BOOL> (call.arg(3).toUInt());
+        LONGLONG TimeoutVal     = call.arg(4).toArray() ? call.arg(4).toArray()->values[0]->toSInt() : 0;
+        PLARGE_INTEGER pTimeout = call.arg(4).toNull()  ? nullptr : reinterpret_cast<PLARGE_INTEGER>(&TimeoutVal);
 
         {
-            const trace::Array* traceHandles = (call.arg(2)).toArray();
             auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
-            for (size_t i = 0; i < traceHandles->values.size(); i++) {
-                auto iter = g_D3D12FenceEventMap.find(traceHandles->values[i]);
-                lpHandles[i] = iter->second;
+            for (DWORD i = 0; i < nCount; i++) {
+                auto iter = g_D3D12FenceEventMap.find(Handles[i]);
+                Handles[i] = iter->second;
                 g_D3D12FenceEventMap.erase(iter);
             }
         }
 
-        WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
-    }
-
-    static void retrace_WaitForMultipleObjectsEx(trace::Call& call) {
-        retrace::ScopedAllocator allocator;
-
-        DWORD   nCount         = static_cast<DWORD>           (call.arg(0).toUInt());
-        HANDLE* lpHandles      = allocator.allocArray<HANDLE>(&call.arg(1));
-        BOOL    bWaitAll       = static_cast<BOOL>            (call.arg(2).toUInt());
-        DWORD   dwMilliseconds = static_cast<DWORD>           (call.arg(3).toUInt());
-        BOOL    bAlertable     = static_cast<BOOL>            (call.arg(4).toUInt());
-
-        {
-            const trace::Array* traceHandles = (call.arg(2)).toArray();
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
-            for (size_t i = 0; i < traceHandles->values.size(); i++) {
-                auto iter = g_D3D12FenceEventMap.find(traceHandles->values[i]);
-                lpHandles[i] = iter->second;
-                g_D3D12FenceEventMap.erase(iter);
-            }
-        }
-
-        WaitForMultipleObjectsEx(nCount, lpHandles, bWaitAll, dwMilliseconds, bAlertable);
+        TrueZwWaitForMultipleObjects(nCount, Handles, bWaitAny, bAlertable, pTimeout);
     }
 
     const retrace::Entry event_callbacks[] = {
-        {"WaitForSingleObject",   &retrace_WaitForSingleObject},
-        {"WaitForSingleObjectEx", &retrace_WaitForSingleObjectEx},
-        {"WaitForMultipleObjects", &retrace_WaitForMultipleObjects},
-        {"WaitForMultipleObjectsEx", &retrace_WaitForMultipleObjectsEx},
+        {"ZwWaitForSingleObject", &retrace_ZwWaitForSingleObject},
+        {"ZwWaitForMultipleObjects", &retrace_ZwWaitForMultipleObjects},
         {NULL, NULL}
     };
 }

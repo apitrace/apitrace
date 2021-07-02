@@ -50,6 +50,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/lib/guids
     ${CMAKE_SOURCE_DIR}/thirdparty/crc32c
+    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
 if (NOT WIN32 AND NOT APPLE)

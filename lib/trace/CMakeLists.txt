@@ -2,6 +2,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/lib/guids
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/thirdparty
+    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
 add_convenience_library (common
@@ -34,6 +35,7 @@ target_link_libraries (common
     Snappy::snappy
     ZLIB::ZLIB
     PkgConfig::BROTLIDEC
+    mhook
 )
 
 if (BUILD_TESTING)
