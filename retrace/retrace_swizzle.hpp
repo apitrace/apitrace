@@ -115,6 +115,9 @@ setRegionPitch(unsigned long long address, unsigned dimensions, int tracePitch, 
 void
 delRegionByPointer(void *ptr);
 
+void
+delRegionByPointerAndSize(void* ptr, size_t size);
+
 struct Range
 {
     void * ptr;

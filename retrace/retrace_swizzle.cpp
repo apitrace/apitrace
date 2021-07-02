@@ -204,6 +204,17 @@ delRegionByPointer(void *ptr) {
     assert(0);
 }
 
+void
+delRegionByPointerAndSize(void *ptr, size_t size) {
+    for (RegionMap::iterator it = regionMap.begin(); it != regionMap.end(); ++it) {
+        if (it->second.buffer == ptr && it->second.size == size) {
+            regionMap.erase(it);
+            return;
+        }
+    }
+    assert(0);
+}
+
 static void
 lookupAddress(unsigned long long address, Range &range) {
     RegionMap::const_iterator it = lookupRegion(address);
