@@ -585,8 +585,9 @@ class D3DRetracer(Retracer):
 
         if method.name == 'Unmap':
             if interface.name.startswith('ID3D12'):
-                print('    if (_pbData && --_desc.RefCount == 0) {')
-                print('        retrace::delRegionByPointerAndSize(_pbData, size_t(_getMapSize(_this)));')
+                print('    if (_desc.RefCount && --_desc.RefCount == 0) {')
+                print('        if (_pbData)')
+                print('            retrace::delRegionByPointerAndSize(_pbData, size_t(_getMapSize(_this)));')
             else:
                 print('    if (_pbData) {')
                 print('        retrace::delRegionByPointer(_pbData);')
