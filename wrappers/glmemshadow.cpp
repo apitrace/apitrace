@@ -49,7 +49,7 @@ static bool sInitialized = false;
 static std::unordered_map<size_t, GLMemoryShadow*> sPages;
 static size_t sPageSize;
 
-static std::mutex mutex;
+static os::mutex mutex;
 
 enum class MemProtection {
 #ifdef _WIN32
@@ -111,7 +111,7 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
         const uintptr_t addr = static_cast<uintptr_t>(pExceptionRecord->ExceptionInformation[1]);
         const size_t page = addr / sPageSize;
 
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         const auto it = sPages.find(page);
         if (it != sPages.end()) {
@@ -133,7 +133,7 @@ void PageGuardExceptionHandler(int sig, siginfo_t *si, void *context) {
         const uintptr_t addr = reinterpret_cast<uintptr_t>(si->si_addr);
         const size_t page = addr / sPageSize;
 
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         const auto it = sPages.find(page);
         if (it != sPages.end()) {
@@ -179,7 +179,7 @@ void initializeGlobals()
 
 GLMemoryShadow::~GLMemoryShadow()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    os::unique_lock<os::mutex> lock(mutex);
 
     const size_t startPage = reinterpret_cast<uintptr_t>(shadowMemory) / sPageSize;
     for (size_t i = 0; i < nPages; i++) {
@@ -221,7 +221,7 @@ bool GLMemoryShadow::init(const void *data, size_t size)
     memProtect(shadowMemory, adjustedSize, MemProtection::NO_ACCESS);
 
     {
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         const size_t startPage = reinterpret_cast<uintptr_t>(shadowMemory) / sPageSize;
         for (size_t i = 0; i < nPages; i++) {
@@ -263,12 +263,12 @@ void *GLMemoryShadow::map(gltrace::Context *_ctx, void *_glMemory, GLbitfield _f
 void GLMemoryShadow::unmap(Callback callback)
 {
     if (isDirty) {
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
         commitWrites(callback);
     }
 
     {
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         shared_context_res_ptr_t res = sharedRes.lock();
         if (res) {
@@ -407,7 +407,7 @@ void GLMemoryShadow::updateForReads()
 void GLMemoryShadow::commitAllWrites(gltrace::Context *_ctx, Callback callback)
 {
     if (!_ctx->sharedRes->dirtyShadows.empty()) {
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         for (GLMemoryShadow *memoryShadow : _ctx->sharedRes->dirtyShadows) {
             memoryShadow->commitWrites(callback);
@@ -420,7 +420,7 @@ void GLMemoryShadow::commitAllWrites(gltrace::Context *_ctx, Callback callback)
 void GLMemoryShadow::syncAllForReads(gltrace::Context *_ctx)
 {
     if (!_ctx->sharedRes->bufferToShadowMemory.empty()) {
-        std::unique_lock<std::mutex> lock(mutex);
+        os::unique_lock<os::mutex> lock(mutex);
 
         for (auto& it : _ctx->sharedRes->bufferToShadowMemory) {
             GLMemoryShadow* memoryShadow = it.second.get();

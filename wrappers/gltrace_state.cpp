@@ -39,7 +39,7 @@ namespace gltrace {
 
 typedef std::shared_ptr<Context> context_ptr_t;
 static std::map<uintptr_t, context_ptr_t> context_map;
-static std::recursive_mutex context_map_mutex;
+static os::recursive_mutex context_map_mutex;
 
 class ThreadState {
 public:

@@ -67,7 +67,7 @@ namespace trace {
          * be done outside the beginEnter/endEnter and beginLeave/endLeave
          * pairs. Preferably between these two pairs.
          */
-        std::recursive_mutex mutex;
+        os::recursive_mutex mutex;
         int acquired;
 
         /**

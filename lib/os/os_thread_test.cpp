@@ -30,7 +30,7 @@
 
 TEST(os_thread, hardware_concurrency)
 {
-    EXPECT_GT(std::thread::hardware_concurrency(), 0);
+    EXPECT_GT(os::thread::hardware_concurrency(), 0);
 }
 
 
@@ -51,15 +51,15 @@ static void f2(int a2, int a3) {
 
 TEST(os_thread, thread)
 {
-    std::thread t0(&f0);
+    os::thread t0(&f0);
     t0.join();
     EXPECT_TRUE(b0);
 
-    std::thread t1(&f1, 1);
+    os::thread t1(&f1, 1);
     t1.join();
     EXPECT_TRUE(b1);
 
-    std::thread t2(&f2, 2, 3);
+    os::thread t2(&f2, 2, 3);
     t2.join();
     EXPECT_TRUE(b2);
 }
@@ -70,18 +70,18 @@ TEST(os_thread, thread)
 struct Data
 {
     bool notified[NUM_THREADS];
-    std::condition_variable cv;
-    std::mutex mutex;
+    os::condition_variable cv;
+    os::mutex mutex;
     bool notify = false;
     volatile unsigned waiting = 0;
     volatile unsigned c = 0;
 };
 
 #if 0
-    static std::mutex cerr_mutex;
+    static os::mutex cerr_mutex;
 #   define WITH_CERR_MUTEX(_stmts) \
         { \
-            std::unique_lock<std::mutex> cerr_lock(cerr_mutex); \
+            os::unique_lock<os::mutex> cerr_lock(cerr_mutex); \
             _stmts \
         }
 #else
@@ -94,14 +94,14 @@ static void cvf(Data *data, unsigned idx)
     WITH_CERR_MUTEX( std::cerr << idx << " started.\n"; )
 
     {
-        std::unique_lock<std::mutex> l(data->mutex);
+        os::unique_lock<os::mutex> l(data->mutex);
         data->waiting += 1;
     }
 
     WITH_CERR_MUTEX( std::cerr << idx << " waiting...\n"; )
 
     {
-        std::unique_lock<std::mutex> lock(data->mutex);
+        os::unique_lock<os::mutex> lock(data->mutex);
         while (!data->notify) {
             data->cv.wait(lock);
         }
@@ -114,13 +114,13 @@ static void cvf(Data *data, unsigned idx)
 
 TEST(os_thread, condition_variable)
 {
-    std::thread t[NUM_THREADS];
+    os::thread t[NUM_THREADS];
     Data data;
     unsigned i;
 
     for (i = 0; i < NUM_THREADS; ++i) {
         data.notified[i] = false;
-        t[i] = std::thread(cvf, &data, i);
+        t[i] = os::thread(cvf, &data, i);
     }
 
     for (i = 0; i < NUM_THREADS; ++i) {
@@ -130,7 +130,7 @@ TEST(os_thread, condition_variable)
     WITH_CERR_MUTEX( std::cerr << "M waiting...\n"; )
 
     do {
-        std::unique_lock<std::mutex> l(data.mutex);
+        os::unique_lock<os::mutex> l(data.mutex);
         if (data.waiting == NUM_THREADS) {
             break;
         }
@@ -139,7 +139,7 @@ TEST(os_thread, condition_variable)
     WITH_CERR_MUTEX( std::cerr << "M notifying...\n"; )
 
     {
-        std::unique_lock<std::mutex> l(data.mutex);
+        os::unique_lock<os::mutex> l(data.mutex);
         data.notify = true;
     }
 
