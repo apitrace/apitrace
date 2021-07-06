@@ -85,11 +85,18 @@ _getMapSize(ID3D12Resource* pResource)
 {
     D3D12_RESOURCE_DESC Desc = pResource->GetDesc();
 
+    if (Desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+        return Desc.Width;
+
     com_ptr<ID3D12Device> pDevice;
     pResource->GetDevice(IID_ID3D12Device, (void **) &pDevice);
 
+    D3D12_FEATURE_DATA_FORMAT_INFO formatInfo = { Desc.Format, 0 };
+    if (FAILED(pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &formatInfo, sizeof(formatInfo))))
+        return 0;
+
     UINT64 TotalBytes = 0;
-    pDevice->GetCopyableFootprints(&Desc, 0, Desc.MipLevels * Desc.DepthOrArraySize, 0, nullptr, nullptr, nullptr, &TotalBytes);
+    pDevice->GetCopyableFootprints(&Desc, 0, formatInfo.PlaneCount * Desc.MipLevels * Desc.DepthOrArraySize, 0, nullptr, nullptr, nullptr, &TotalBytes);
 
     return TotalBytes;
 }
