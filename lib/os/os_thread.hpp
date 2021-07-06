@@ -32,6 +32,19 @@
 #pragma once
 
 
+/* XXX: We still use our own implementation:
+ *
+ * - MinGW's C++11 threads implementation is often either missing or relies on
+ *   winpthreads
+ */
+
+#if !defined(__MINGW32__)
+#define HAVE_CXX11_THREADS
+#endif
+
+
+#ifdef HAVE_CXX11_THREADS
+
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -46,6 +59,251 @@ namespace os {
     using thread [[deprecated("use std::thread instead")]] = std::thread;
 
 } /* namespace os */
+
+
+#else /* !HAVE_CXX11_THREADS */
+
+
+#include <assert.h>
+#include <process.h>
+#include <windows.h>
+
+#include <functional>
+
+
+namespace os {
+
+
+    /**
+     * Base class for mutex and recursive_mutex.
+     */
+    class _base_mutex
+    {
+    public:
+        typedef CRITICAL_SECTION native_handle_type;
+
+    protected:
+        _base_mutex(void) {
+        }
+
+    public:
+        ~_base_mutex() {
+            DeleteCriticalSection(&_native_handle);
+        }
+
+        inline void
+        lock(void) {
+            EnterCriticalSection(&_native_handle);
+        }
+
+        inline void
+        unlock(void) {
+            LeaveCriticalSection(&_native_handle);
+        }
+
+        native_handle_type & native_handle() {
+            return _native_handle;
+        }
+
+    protected:
+        native_handle_type _native_handle;
+    };
+
+
+    /**
+     * Same interface as std::mutex.
+     */
+    class mutex : public _base_mutex
+    {
+    public:
+        inline
+        mutex(void) {
+            InitializeCriticalSection(&_native_handle);
+        }
+    };
+
+
+    /**
+     * Same interface as std::recursive_mutex.
+     */
+    class recursive_mutex : public _base_mutex
+    {
+    public:
+        inline
+        recursive_mutex(void) {
+            InitializeCriticalSection(&_native_handle);
+        }
+    };
+
+
+    /**
+     * Same interface as std::unique_lock;
+     */
+    template< class Mutex >
+    class unique_lock
+    {
+    public:
+        typedef Mutex mutex_type;
+
+        inline explicit
+        unique_lock(mutex_type &m) :
+            _mutex(m)
+        {
+            _mutex.lock();
+        }
+
+        inline
+        ~unique_lock() {
+            _mutex.unlock();
+        }
+
+        inline void
+        lock() {
+            _mutex.lock();
+        }
+
+        inline void
+        unlock() {
+            _mutex.unlock();
+        }
+
+        mutex_type *
+        mutex() const {
+            return &_mutex;
+        }
+
+    protected:
+        mutex_type &_mutex;
+    };
+
+
+    /**
+     * Same interface as std::condition_variable
+     */
+    class condition_variable
+    {
+    private:
+        // Supported on Vista an higher.
+        typedef CONDITION_VARIABLE native_handle_type;
+        native_handle_type _native_handle;
+
+    public:
+        condition_variable() {
+            InitializeConditionVariable(&_native_handle);
+        }
+
+        ~condition_variable() {
+            /* No-op */
+        }
+
+        inline void
+        notify_one(void) {
+            WakeConditionVariable(&_native_handle);
+        }
+
+        inline void
+        notify_all(void) {
+            WakeAllConditionVariable(&_native_handle);
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock) {
+            mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
+            SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock, std::function<bool()> pred) {
+            while (!pred) {
+                wait(lock);
+            }
+        }
+    };
+
+
+    /**
+     * Same interface as std::thread
+     */
+    class thread {
+    public:
+        typedef HANDLE native_handle_type;
+
+        inline
+        thread() :
+            _native_handle(0)
+        {
+        }
+
+        inline
+        thread(thread &&other) :
+            _native_handle(other._native_handle)
+        {
+            other._native_handle = 0;
+        }
+
+        thread(const thread &other) = delete;
+
+        inline
+        ~thread() {
+        }
+
+        static unsigned
+        hardware_concurrency(void) {
+            SYSTEM_INFO si;
+            GetSystemInfo(&si);
+            return si.dwNumberOfProcessors;
+        }
+
+        template< class Function, class... Args >
+        explicit thread(Function &&f, Args&&... args) {
+            auto bound = std::bind(std::forward<Function>(f), std::forward<Args>(args)...);
+            auto data = new decltype(bound) (std::move(bound));
+            _native_handle = _create(data);
+        }
+
+        inline thread &
+        operator =(thread &&other) {
+            assert(_native_handle == 0);
+            _native_handle = other._native_handle;
+            other._native_handle = 0;
+            return *this;
+        }
+
+        inline bool
+        joinable(void) const {
+            return _native_handle != 0;
+        }
+
+        inline void
+        join() {
+            WaitForSingleObject(_native_handle, INFINITE);
+        }
+
+    private:
+        native_handle_type _native_handle;
+
+        template< typename Param >
+        static
+        unsigned __stdcall
+        _callback(void *lpParameter) {
+            Param *pParam = static_cast<Param *>(lpParameter);
+            (*pParam)();
+            delete pParam;
+            return 0;
+        }
+
+        template< typename Param >
+        static inline native_handle_type
+        _create(Param *function) {
+            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, function, 0, NULL);
+            return reinterpret_cast<HANDLE>(handle);
+        }
+    };
+
+} /* namespace os */
+
+
+#endif  /* !HAVE_CXX11_THREADS */
 
 
 /**
