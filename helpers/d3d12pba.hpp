@@ -283,41 +283,46 @@ _unmap_resource(SIZE_T key)
     if (iter == g_D3D12AddressMappings.end())
         return;
 
-    auto& mapping = iter->second;
-    
-    if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
-    {
-        // WriteWatch mappings.
-        _flush_mapping_watch_memcpys(mapping);
+    assert(iter->second.RefCount);
+    iter->second.RefCount--;
 
-        // TODO(Josh): Is this the right thing to do for aliased resources??? :<<<<<<
-        // I think this won't work for buffers
-        // Not enabling this for now... It'll probably work everywhere
-        // But what about the funny edge case with
-        // [buffer1       ]
-        // [buffer2       XXXXXX]
-        // and buffer 1 gets unmapped
-        // but XXXXX is in buffer 1's page boundaries but
-        // then it's unmapped after that watch will be destroyed
-        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        // THIS API SUCKS!!!!!!!!!!!!!!!!!!!!!!
-        //_reset_writewatch(mapping);
-    }
-    else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
-    {
-        // Exception mappings.
-        _flush_mapping_exception_memcpys(mapping);
+    // If this is going to release the mapping, then flush memcpys here.
+    if (iter->second.RefCount == 0) {
+        auto& mapping = iter->second;
 
-        // No need to re-apply the guard as we are unmapping now.
-    }
-    else
-    {
-        os::log("apitrace: Unhandled mapping type\n");
-        assert(false);
-    }
+        if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+        {
+            // WriteWatch mappings.
+            _flush_mapping_watch_memcpys(mapping);
 
-    if (--iter->second.RefCount == 0)
+            // TODO(Josh): Is this the right thing to do for aliased resources??? :<<<<<<
+            // I think this won't work for buffers
+            // Not enabling this for now... It'll probably work everywhere
+            // But what about the funny edge case with
+            // [buffer1       ]
+            // [buffer2       XXXXXX]
+            // and buffer 1 gets unmapped
+            // but XXXXX is in buffer 1's page boundaries but
+            // then it's unmapped after that watch will be destroyed
+            // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+            // THIS API SUCKS!!!!!!!!!!!!!!!!!!!!!!
+            //_reset_writewatch(mapping);
+        }
+        else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
+        {
+            // Exception mappings.
+            _flush_mapping_exception_memcpys(mapping);
+
+            // No need to re-apply the guard as we are unmapping now.
+        }
+        else
+        {
+            os::log("apitrace: Unhandled mapping type\n");
+            assert(false);
+        }
+
         g_D3D12AddressMappings.erase(iter);
+    }
 }
 
 static inline void
@@ -343,6 +348,7 @@ _flush_mappings()
     for (auto& element : g_D3D12AddressMappings)
     {
         auto& mapping = element.second;
+        assert(mapping.RefCount);
 
         if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
         {
