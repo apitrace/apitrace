@@ -1267,3 +1267,13 @@ _glGetDebugMessageLog_length(const Char * string, const GLsizei *lengths, GLuint
     return size;
 }
 
+static inline size_t
+_glMultiDrawArraysIndirect_size(GLsizei drawcount, GLsizei stride)
+{
+    if (stride == 0) {
+        return size_t(drawcount) * sizeof(unsigned int) * 4;
+    } else {
+        return size_t(drawcount * stride);
+    }
+}
+
