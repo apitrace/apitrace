@@ -338,7 +338,7 @@ if (MINGW)
         ERROR_QUIET
     )
     if (NOT STATUS_CXX11_THREADS EQUAL 0)
-        message (SEND_ERROR "MinGW builds require WIN32 threads.")
+        message (WARNING "MinGW with POSIX threads detected; Win32 threads recommended.")
     else ()
         # TODO: Consider https://github.com/meganz/mingw-std-threads
         include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
