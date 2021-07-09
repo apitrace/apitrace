@@ -988,11 +988,11 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
         }
 
         attrib.desc = desc;
-        GLsizei attribSize = attrib.desc.arrayStride;
+        GLsizei attribSize = attrib.desc.numCols * attrib.desc.colStride;
 
         if (stride == 0) {
             // tightly packed
-            stride = attribSize;
+            stride = attrib.desc.arrayStride;
         }
 
         attrib.offset = offset;
