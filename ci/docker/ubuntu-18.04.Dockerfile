@@ -2,7 +2,14 @@ FROM ubuntu:18.04
 MAINTAINER "Jose Fonseca" <jfonseca@vmware.com>
 ENV container docker
 
+# See also:
+# - https://apt.kitware.com/
+
 RUN \
+ apt-get update && apt-get install -y \
+  gpg wget && \
+ wget -q -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor - > /usr/share/keyrings/kitware-archive-keyring.gpg && \
+ echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' > /etc/apt/sources.list.d/kitware.list && \
  apt-get update && apt-get install -y --no-install-recommends \
   g++-8 \
   zlib1g-dev \
