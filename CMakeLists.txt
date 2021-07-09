@@ -1,19 +1,17 @@
 message (STATUS "Using CMake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
-cmake_minimum_required (VERSION 3.8.0)
-if (MSVC)
-    cmake_minimum_required (VERSION 3.15.0)
-    cmake_policy (SET CMP0091 NEW)
-endif ()
 
+cmake_minimum_required (VERSION 3.15.0)
 
-if (CMAKE_GENERATOR STREQUAL "Xcode")
-    message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
-endif ()
-
+# Enable CMAKE_MSVC_RUNTIME_LIBRARY
+cmake_policy (SET CMP0091 NEW)
 # http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
 cmake_policy (SET CMP0042 NEW)
 # https://cmake.org/cmake/help/v3.20/policy/CMP0048.html
 cmake_policy (SET CMP0048 NEW)
+
+if (CMAKE_GENERATOR STREQUAL "Xcode")
+    message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
+endif ()
 
 
 project (apitrace)
