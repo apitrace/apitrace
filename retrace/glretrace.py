@@ -307,6 +307,8 @@ class GlRetracer(Retracer):
             print(r'    if (currentContext && currentContext->features().ARB_direct_state_access) {')
             print(r'        for (GLsizei i = 0; i < n; ++i) {')
             print(r'            GLvoid *ptr = nullptr;')
+            print(r'            if (!buffers[i])')
+            print(r'                   continue;')
             print(r'            glGetNamedBufferPointerv(buffers[i], GL_BUFFER_MAP_POINTER, &ptr);')
             print(r'            if (ptr) {')
             print(r'                retrace::delRegionByPointer(ptr);')
