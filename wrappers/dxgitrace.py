@@ -273,8 +273,8 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
-                print('    if (SUCCEEDED(_result) && ppData && *ppData)')
-                print('        _map_resource(m_pInstance, *ppData);')
+                print('    if (SUCCEEDED(_result))')
+                print('        _map_resource(m_pInstance, ppData ? *ppData : nullptr);')
             else:
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')
@@ -297,7 +297,7 @@ class D3DCommonTracer(DllTracer):
             print('        trace::fakeMalloc(pAddress, _d3d12_AllocationSize(pAddress));')
             print('        trace::fakeMemcpy(pAddress, _d3d12_AllocationSize(pAddress));')
             print('        auto *pHeap = *reinterpret_cast<WrapID3D12Heap**>(ppvHeap);')
-            print('        _map_resource(pHeap->m_pInstance, (void *) pAddress);')
+            print('        _map_resource(pHeap->m_pInstance, (void *)pAddress);')
             print('        pHeap->m_UserPointer = pAddress;')
             print('    }')
 

@@ -559,14 +559,10 @@ class D3DRetracer(Retracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    size_t _MappedSize = size_t(_getMapSize(_this));')
-                print('    if (_desc.RefCount) {')
-                print('        ppData = nullptr;')
-                print('        _MappedSize = 0;')
-                print('    }')
-                print('    else')
+                print('    if (ppData && !_pbData)')
                 print('        _pbData = *ppData;')
                 print('    _desc.RefCount++;')
-                print('    if (!ppData)')
+                print('    if (!_pbData)')
                 print('        return;')
             else:
                 print('    _MAP_DESC _MapDesc;')

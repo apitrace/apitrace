@@ -89,6 +89,9 @@ _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
 static inline void
 _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 {
+    if (!mapping.pData)
+        return;
+
     static std::vector<uintptr_t> s_addresses;
 
     constexpr size_t PageSize = 4096;
@@ -116,7 +119,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         uintptr_t base_address = s_addresses[i];
 
         // Combine contiguous pages into a single memcpy!
-#if 1
+#if 0
         ULONG_PTR contiguous_pages = 1;
         while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + PageSize)
         {
@@ -223,8 +226,11 @@ _map_resource(ID3D12Resource* pResource, void* pData)
     // TODO(Josh) : Placed resources.
     assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
     auto iter = g_D3D12AddressMappings.find(key);
-    if (iter != g_D3D12AddressMappings.end())
+    if (iter != g_D3D12AddressMappings.end()) {
+        if (!iter->second.pData && pData)
+            iter->second.pData = pData;
         iter->second.RefCount++;
+    }
     else
         g_D3D12AddressMappings.try_emplace(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource)));
 }
