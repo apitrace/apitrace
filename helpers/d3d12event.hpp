@@ -27,7 +27,7 @@
 #pragma once
 
 #include <windows.h>
-#include <map>
+#include <set>
 #include <mutex>
 #include "mhook.h"
 
@@ -37,8 +37,8 @@ namespace trace
     NTSTATUS fakeZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER Timeout);
 }
 
-extern std::mutex g_D3D12FenceEventMapMutex;
-extern std::map<HANDLE, HANDLE> g_D3D12FenceEventMap;
+extern std::mutex g_D3D12FenceEventSetMutex;
+extern std::set<HANDLE> g_D3D12FenceEventSet;
 
 using _ZwWaitForSingleObject = NTSTATUS(*)(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER Timeout);
 static _ZwWaitForSingleObject TrueZwWaitForSingleObject = (_ZwWaitForSingleObject) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForSingleObject");
@@ -50,14 +50,14 @@ namespace D3D12EventHooks
 {
     NTSTATUS D3D12ZwWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER Timeout)
     {
+
         bool shouldFake = false;
         {
-            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventMapMutex };
-
-            auto elem = g_D3D12FenceEventMap.find(hHandle);
-            if (elem != g_D3D12FenceEventMap.end()) {
+            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventSetMutex };
+            auto elem = g_D3D12FenceEventSet.find(hHandle);
+            if (elem != g_D3D12FenceEventSet.end()) {
                 shouldFake = true;
-                g_D3D12FenceEventMap.erase(elem);
+                g_D3D12FenceEventSet.erase(elem);
             }
         }
 
@@ -70,18 +70,17 @@ namespace D3D12EventHooks
     DWORD D3D12ZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER Timeout)
     {
         HANDLE fakeHandles[MAXIMUM_WAIT_OBJECTS];
+        assert(nCount < MAXIMUM_WAIT_OBJECTS);
 
         DWORD fakeCount = 0;
         {
-            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventMapMutex };
-
+            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventSetMutex };
             for (DWORD i = 0; i < nCount; i++)
             {
-                auto elem = g_D3D12FenceEventMap.find(lpHandles[i]);
-                if (elem != g_D3D12FenceEventMap.end()) {
-                    fakeHandles[fakeCount] = lpHandles[i];
-                    fakeCount++;
-                    g_D3D12FenceEventMap.erase(elem);
+                auto elem = g_D3D12FenceEventSet.find(lpHandles[i]);
+                if (elem != g_D3D12FenceEventSet.end()) {
+                    fakeHandles[fakeCount++] = lpHandles[i];
+                    g_D3D12FenceEventSet.erase(elem);
                 }
             }
         }
