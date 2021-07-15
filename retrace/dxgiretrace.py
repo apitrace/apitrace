@@ -462,7 +462,7 @@ class D3DRetracer(Retracer):
 
             if method.name == 'SetEventOnCompletion':
                 print('     {')
-                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
+                print('         std::unique_lock<std::mutex> lock(g_D3D12FenceEventMapMutex);')
                 print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
                 print('         if (_fence_event_iter == g_D3D12FenceEventMap.end()) {')
                 print('             HANDLE event = CreateEventEx(NULL, FALSE, FALSE, EVENT_ALL_ACCESS);')

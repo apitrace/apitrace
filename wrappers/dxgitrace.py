@@ -167,7 +167,7 @@ class D3DCommonTracer(DllTracer):
                     if isinstance(arg.type, stdapi.ObjPointer) and arg.type.type in (d3d12.ID3D12Fence, d3d12.ID3D12Fence1):
                         has_fence = True
             if has_fence:
-                print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12FenceOrderingMutex);')
+                print('    std::unique_lock<std::mutex> _ordering_lock{ g_D3D12FenceOrderingMutex };')
 
             if method.name == 'GetCPUDescriptorHandleForHeapStart':
                 print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
@@ -186,7 +186,7 @@ class D3DCommonTracer(DllTracer):
                 result_name = '_fake_result'
 
             if method.name in ('Map', 'Unmap', 'ExecuteCommandLists'):
-                print('    std::unique_lock<std::mutex> _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+                print('    std::unique_lock<std::mutex> _ordering_lock{ g_D3D12AddressMappingsMutex };')
 
             if method.name == 'ExecuteCommandLists':
                 print('    _flush_mappings();')
@@ -202,11 +202,11 @@ class D3DCommonTracer(DllTracer):
                 if method.name == 'AddRef':
                     # Need to lock here to avoid another thread potentially
                     # releasing while we are flushing.
-                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
+                    print('    std::unique_lock<std::mutex> _lock{ m_RefCountMutex };')
                 if method.name == 'Release':
                     # Need to lock here to avoid another thread potentially
                     # releasing while we are flushing.
-                    print('    std::unique_lock<std::mutex> _lock = std::unique_lock<std::mutex>(m_RefCountMutex);')
+                    print('    std::unique_lock<std::mutex> _lock{ m_RefCountMutex };')
                     # TODO(Josh): Make this less... hacky to get the reference.
                     print('    m_pInstance->AddRef();')
                     print('    ULONG _current_ref = m_pInstance->Release();')
@@ -218,7 +218,7 @@ class D3DCommonTracer(DllTracer):
                     if interface in (d3d12.ID3D12Heap, d3d12.ID3D12Heap1):
                         print('    if (m_UserPointer != nullptr)')
                     print('        {')
-                    print('            _ordering_lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);')
+                    print('            _ordering_lock = std::unique_lock<std::mutex>{ g_D3D12AddressMappingsMutex };')
                     print('            /* If Heap with a funny ptr, we should free here */')
                     print('            _unmap_resource(m_pInstance);')
                     print('        }')
@@ -389,7 +389,7 @@ class D3DCommonTracer(DllTracer):
         if interface.name.startswith('ID3D12'):
             if method.name == 'SetEventOnCompletion':
                 print('     {')
-                print('         auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);')
+                print('         std::unique_lock<std::mutex> lock{ g_D3D12FenceEventMapMutex };')
                 print('         auto _fence_event_iter = g_D3D12FenceEventMap.find(hEvent);')
                 print('         if (_fence_event_iter == g_D3D12FenceEventMap.end())')
                 print('             g_D3D12FenceEventMap.insert(std::make_pair(hEvent, hEvent));')
