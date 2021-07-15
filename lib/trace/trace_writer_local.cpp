@@ -356,20 +356,20 @@ NTSTATUS fakeZwWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEG
     return _result;
 }
 
-NTSTATUS fakeZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout)
+NTSTATUS fakeZwWaitForMultipleObjects(DWORD nRealCount, const HANDLE* lpRealHandles, DWORD nFakeCount, const HANDLE* lpFakeHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout)
 {
     unsigned _call = localWriter.beginEnter(&ZwWaitForMultipleObjects_sig, true);
 
     localWriter.beginArg(0);
-    localWriter.writeUInt(nCount);
+    localWriter.writeUInt(nFakeCount);
     localWriter.endArg();
 
     localWriter.beginArg(1);
-    localWriter.beginArray(nCount);
-    for (DWORD i = 0; i < nCount; i++)
+    localWriter.beginArray(nFakeCount);
+    for (DWORD i = 0; i < nFakeCount; i++)
     {
         localWriter.beginElement();
-        localWriter.writePointer((uintptr_t)lpHandles[i]);
+        localWriter.writePointer((uintptr_t)lpFakeHandles[i]);
         localWriter.endElement();
     }
     localWriter.endArray();
@@ -398,7 +398,7 @@ NTSTATUS fakeZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOO
 
     localWriter.endEnter();
 
-    DWORD _result = TrueZwWaitForMultipleObjects(nCount, lpHandles, bWaitAny, bAlertable, pTimeout);
+    DWORD _result = TrueZwWaitForMultipleObjects(nRealCount, lpRealHandles, bWaitAny, bAlertable, pTimeout);
 
     localWriter.beginLeave(_call);
     localWriter.beginReturn();

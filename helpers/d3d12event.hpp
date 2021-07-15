@@ -52,7 +52,7 @@ namespace D3D12EventHooks
     {
         bool shouldFake = false;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventMapMutex };
 
             auto elem = g_D3D12FenceEventMap.find(hHandle);
             if (elem != g_D3D12FenceEventMap.end()) {
@@ -73,7 +73,7 @@ namespace D3D12EventHooks
 
         DWORD fakeCount = 0;
         {
-            auto lock = std::unique_lock<std::mutex>(g_D3D12FenceEventMapMutex);
+            std::unique_lock<std::mutex> lock{ g_D3D12FenceEventMapMutex };
 
             for (DWORD i = 0; i < nCount; i++)
             {
@@ -87,7 +87,7 @@ namespace D3D12EventHooks
         }
 
         if (fakeCount != 0)
-            return trace::fakeZwWaitForMultipleObjects(nCount, lpHandles, bWaitAny, bAlertable, Timeout);
+            return trace::fakeZwWaitForMultipleObjects(nCount, lpHandles, fakeCount, fakeHandles, bWaitAny, bAlertable, Timeout);
         else
             return TrueZwWaitForMultipleObjects(nCount, lpHandles, bWaitAny, bAlertable, Timeout);
     }

@@ -119,7 +119,7 @@ namespace trace {
     void fakeMalloc(const void *ptr, size_t size);
 
     NTSTATUS fakeZwWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
-    NTSTATUS fakeZwWaitForMultipleObjects(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+    NTSTATUS fakeZwWaitForMultipleObjects(DWORD nRealCount, const HANDLE* lpRealHandles, DWORD nFakeCount, const HANDLE* lpFakeHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
 
 } /* namespace trace */
 
