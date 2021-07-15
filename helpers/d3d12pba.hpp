@@ -116,7 +116,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         uintptr_t base_address = s_addresses[i];
 
         // Combine contiguous pages into a single memcpy!
-#if 0
+#if 1
         ULONG_PTR contiguous_pages = 1;
         while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + PageSize)
         {
