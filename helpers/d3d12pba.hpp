@@ -119,6 +119,9 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         uintptr_t base_address = s_addresses[i];
 
         // Combine contiguous pages into a single memcpy!
+        // TODO: Why is this broken in Ghostrunner?
+        // is this spilling to unmarked pages somehow?
+        // maybe max size calc is wrong here... hmmm
 #if 1
         ULONG_PTR contiguous_pages = 1;
         while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + PageSize)
@@ -297,7 +300,7 @@ _map_resource(ID3D12Heap* pResource, void* pData)
 }
 
 static inline void
-_unmap_resource(SIZE_T key, UINT subresource)
+_unmap_resource(SIZE_T key, UINT subresource, bool forceUnmap)
 {
     auto resource = g_D3D12AddressMappings.find(key);
     if (resource == g_D3D12AddressMappings.end())
@@ -311,7 +314,7 @@ _unmap_resource(SIZE_T key, UINT subresource)
     iter->second.RefCount--;
 
     // If this is going to release the mapping, then flush memcpys here.
-    if (iter->second.RefCount == 0) {
+    if (iter->second.RefCount == 0 || forceUnmap) {
         auto& mapping = iter->second;
 
         if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
@@ -353,20 +356,20 @@ _unmap_resource(SIZE_T key, UINT subresource)
 }
 
 static inline void
-_unmap_resource(ID3D12Resource* pResource, UINT Subresource)
+_unmap_resource(ID3D12Resource* pResource, UINT Subresource, bool forceUnmap = false)
 {
     D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
 
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), Subresource);
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), Subresource, forceUnmap);
 }
 
 static inline void
-_unmap_resource(ID3D12Heap* pResource)
+_unmap_resource(ID3D12Heap* pResource, bool forceUnmap = false)
 {
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0);
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0, forceUnmap);
 }
 
 static inline void
@@ -383,14 +386,18 @@ _fully_unmap_resource(ID3D12Resource* pResource)
     if (resource == g_D3D12AddressMappings.end())
         return;
 
+    std::vector<UINT> subresources_to_unmap;
     for (auto& subresource : resource->second)
-        _unmap_resource(key, subresource.first);
+        subresources_to_unmap.push_back(subresource.first);
+
+    for (UINT subresource : subresources_to_unmap)
+        _unmap_resource(key, subresource, true);
 }
 
 static inline void
 _fully_unmap_resource(ID3D12Heap* pResource)
 {
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0);
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0, true);
 }
 
 static inline void
