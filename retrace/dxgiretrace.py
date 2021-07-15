@@ -53,7 +53,7 @@ class D3DRetracer(Retracer):
         print('typedef std::pair< IUnknown *, UINT > SubresourceKey;')
         print('static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;')
         print('struct _D3D12_MAP_REPLAY_DESC { uint32_t RefCount = 0; void* pData = nullptr; };')
-        print('static std::map< IUnknown *, _D3D12_MAP_REPLAY_DESC > g_MapsD3D12;')
+        print('static std::map< IUnknown *, std::map<UINT, _D3D12_MAP_REPLAY_DESC> > g_MapsD3D12;')
         print()
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -546,7 +546,7 @@ class D3DRetracer(Retracer):
 
         if method.name in ('Map', 'Unmap'):
             if interface.name.startswith('ID3D12'):
-                print('    _D3D12_MAP_REPLAY_DESC & _desc = g_MapsD3D12[_this];')
+                print('    _D3D12_MAP_REPLAY_DESC & _desc = g_MapsD3D12[_this][Subresource];')
                 print('    void * & _pbData = _desc.pData;')
             elif interface.name.startswith('ID3D11DeviceContext'):
                 print('    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];')
@@ -558,7 +558,7 @@ class D3DRetracer(Retracer):
 
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
-                print('    size_t _MappedSize = size_t(_getMapSize(_this));')
+                print('    size_t _MappedSize = size_t(_getMapSize(_this, Subresource));')
                 print('    if (ppData && !_pbData)')
                 print('        _pbData = *ppData;')
                 print('    _desc.RefCount++;')
@@ -584,7 +584,7 @@ class D3DRetracer(Retracer):
             if interface.name.startswith('ID3D12'):
                 print('    if (_desc.RefCount && --_desc.RefCount == 0) {')
                 print('        if (_pbData)')
-                print('            retrace::delRegionByPointerAndSize(_pbData, size_t(_getMapSize(_this)));')
+                print('            retrace::delRegionByPointerAndSize(_pbData, size_t(_getMapSize(_this, Subresource)));')
             else:
                 print('    if (_pbData) {')
                 print('        retrace::delRegionByPointer(_pbData);')

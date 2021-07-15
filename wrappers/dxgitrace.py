@@ -220,7 +220,7 @@ class D3DCommonTracer(DllTracer):
                     print('        {')
                     print('            _ordering_lock = std::unique_lock<std::mutex>{ g_D3D12AddressMappingsMutex };')
                     print('            /* If Heap with a funny ptr, we should free here */')
-                    print('            _unmap_resource(m_pInstance);')
+                    print('            _fully_unmap_resource(m_pInstance);')
                     print('        }')
                     print('    }')
 
@@ -248,7 +248,7 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'Unmap':
             if interface.name.startswith('ID3D12'):
-                print('    _unmap_resource(m_pInstance);')
+                print('    _unmap_resource(m_pInstance, Subresource);')
             else:
                 print('    if (_MapDesc.Size && _MapDesc.pData) {')
                 print('        if (_shouldShadowMap(pResourceInstance)) {')
@@ -274,7 +274,7 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    if (SUCCEEDED(_result))')
-                print('        _map_resource(m_pInstance, ppData ? *ppData : nullptr);')
+                print('        _map_resource(m_pInstance, Subresource, ppData ? *ppData : nullptr);')
             else:
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')
@@ -530,7 +530,7 @@ if __name__ == '__main__':
     print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
 
     print('std::mutex g_D3D12AddressMappingsMutex;')
-    print('std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;')
+    print('std::map<SIZE_T, std::map<UINT, _D3D12_MAP_DESC>> g_D3D12AddressMappings;')
 
     print('std::set<HANDLE> g_D3D12FenceEventSet;')
     print('std::mutex g_D3D12FenceEventSetMutex;')

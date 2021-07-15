@@ -75,7 +75,7 @@ struct _D3D12_MAP_DESC
     {}
 };
 
-extern std::map<SIZE_T, _D3D12_MAP_DESC> g_D3D12AddressMappings;
+extern std::map<SIZE_T, std::map<UINT, _D3D12_MAP_DESC>> g_D3D12AddressMappings;
 extern std::mutex g_D3D12AddressMappingsMutex;
 
 static inline bool
@@ -214,7 +214,7 @@ _get_heap_flags(ID3D12Resource* pResource)
 }
 
 static inline void
-_map_resource(ID3D12Resource* pResource, void* pData)
+_map_resource(ID3D12Resource* pResource, UINT Subresource, void* pData)
 {
     D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
@@ -225,14 +225,21 @@ _map_resource(ID3D12Resource* pResource, void* pData)
     // Assert we're page aligned... If we aren't we need to do more work here.
     // TODO(Josh) : Placed resources.
     assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
-    auto iter = g_D3D12AddressMappings.find(key);
-    if (iter != g_D3D12AddressMappings.end()) {
-        if (!iter->second.pData && pData)
-            iter->second.pData = pData;
-        iter->second.RefCount++;
+
+    // Ensure we have a resource mapping.
+    auto resource_iter = g_D3D12AddressMappings.find(key);
+    if (resource_iter == g_D3D12AddressMappings.end())
+        g_D3D12AddressMappings.try_emplace(key);
+    resource_iter = g_D3D12AddressMappings.find(key);
+
+    auto subresource_iter = resource_iter->second.find(Subresource);
+    if (subresource_iter != resource_iter->second.end()) {
+        if (!subresource_iter->second.pData && pData)
+            subresource_iter->second.pData = pData;
+        subresource_iter->second.RefCount++;
     }
     else
-        g_D3D12AddressMappings.try_emplace(key, _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource)));
+        resource_iter->second[Subresource] = _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource, Subresource));
 }
 
 static inline size_t _d3d12_AllocationSize(const void *pAddress)
@@ -275,18 +282,29 @@ _map_resource(ID3D12Heap* pResource, void* pData)
     // Assert we're page aligned... If we aren't we need to do more work here.
     // TODO(Josh) : Placed resources.
     assert(reinterpret_cast<uintptr_t>(pData) % 4096 == 0);
-    auto iter = g_D3D12AddressMappings.find(key);
-    if (iter != g_D3D12AddressMappings.end())
-        iter->second.RefCount++;
+
+    // Ensure we have a resource mapping.
+    auto resource_iter = g_D3D12AddressMappings.find(key);
+    if (resource_iter == g_D3D12AddressMappings.end())
+        g_D3D12AddressMappings[key] = std::map<UINT, _D3D12_MAP_DESC>();
+    resource_iter = g_D3D12AddressMappings.find(key);
+
+    auto subresource_iter = resource_iter->second.find(0);
+    if (subresource_iter != resource_iter->second.end())
+        subresource_iter->second.RefCount++;
     else
-        g_D3D12AddressMappings.try_emplace(key, _D3D12_MAPPING_WRITE_WATCH, pData, allocation_size);
+        resource_iter->second[0] = _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, allocation_size);
 }
 
 static inline void
-_unmap_resource(SIZE_T key)
+_unmap_resource(SIZE_T key, UINT subresource)
 {
-    auto iter = g_D3D12AddressMappings.find(key);
-    if (iter == g_D3D12AddressMappings.end())
+    auto resource = g_D3D12AddressMappings.find(key);
+    if (resource == g_D3D12AddressMappings.end())
+        return;
+
+    auto iter = resource->second.find(key);
+    if (iter == resource->second.end())
         return;
 
     assert(iter->second.RefCount);
@@ -327,56 +345,86 @@ _unmap_resource(SIZE_T key)
             assert(false);
         }
 
-        g_D3D12AddressMappings.erase(iter);
+        resource->second.erase(iter);
     }
+
+    if (resource->second.empty())
+        g_D3D12AddressMappings.erase(resource);
 }
 
 static inline void
-_unmap_resource(ID3D12Resource* pResource)
+_unmap_resource(ID3D12Resource* pResource, UINT Subresource)
 {
     D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
 
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)));
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), Subresource);
 }
 
 static inline void
 _unmap_resource(ID3D12Heap* pResource)
 {
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)));
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0);
+}
+
+static inline void
+_fully_unmap_resource(ID3D12Resource* pResource)
+{
+    D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
+
+    if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
+        return;
+
+    SIZE_T key = static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource));
+
+    auto resource = g_D3D12AddressMappings.find(key);
+    if (resource == g_D3D12AddressMappings.end())
+        return;
+
+    for (auto& subresource : resource->second)
+        _unmap_resource(key, subresource.first);
+}
+
+static inline void
+_fully_unmap_resource(ID3D12Heap* pResource)
+{
+    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0);
 }
 
 static inline void
 _flush_mappings()
 {
-    for (auto& element : g_D3D12AddressMappings)
+    for (auto& resource : g_D3D12AddressMappings)
     {
-        auto& mapping = element.second;
-        assert(mapping.RefCount);
+        for (auto& element : resource.second)
+        {
+            auto& mapping = element.second;
+            assert(mapping.RefCount);
 
-        if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
-        {
-            // WriteWatch mappings.
-            _flush_mapping_watch_memcpys(mapping);
-        }
-        else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
-        {
-            // Exception mappings.
-            _flush_mapping_exception_memcpys(mapping);
-            mapping.ExceptionPath.DirtyPages.clear();
+            if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+            {
+                // WriteWatch mappings.
+                _flush_mapping_watch_memcpys(mapping);
+            }
+            else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
+            {
+                // Exception mappings.
+                _flush_mapping_exception_memcpys(mapping);
+                mapping.ExceptionPath.DirtyPages.clear();
 
-            DWORD old_protection;
-            // Re-apply page guard given we came from ExecuteCommandLists
-            bool result = _guard_mapped_memory(mapping, &old_protection);
-            os::log("apitrace: Failed to guard memory\n");
-            assert(result);
-        }
-        else
-        {
-            os::log("apitrace: Unhandled mapping type\n");
-            assert(false);
+                DWORD old_protection;
+                // Re-apply page guard given we came from ExecuteCommandLists
+                bool result = _guard_mapped_memory(mapping, &old_protection);
+                os::log("apitrace: Failed to guard memory\n");
+                assert(result);
+            }
+            else
+            {
+                os::log("apitrace: Unhandled mapping type\n");
+                assert(false);
+            }
         }
     }
 
@@ -404,20 +452,23 @@ _setup_seh()
 
             auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
 
-            for (auto& element : g_D3D12AddressMappings) {
-                auto& mapping = element.second;
-                uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.pData);
-                uintptr_t mapping_end = mapping_base + mapping.Size;
-                if (address >= mapping_base && address < mapping_end) {
-                    constexpr DWORD page_size = 4096;
+            for (auto& resource : g_D3D12AddressMappings) {
+                for (auto& element : resource.second)
+                {
+                    auto& mapping = element.second;
+                    uintptr_t mapping_base = reinterpret_cast<uintptr_t>(mapping.pData);
+                    uintptr_t mapping_end = mapping_base + mapping.Size;
+                    if (address >= mapping_base && address < mapping_end) {
+                        constexpr DWORD page_size = 4096;
 
-                    uintptr_t offset = address - mapping_base;
-                    DWORD page_start = DWORD(offset / page_size);
-                    DWORD page_end = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
+                        uintptr_t offset = address - mapping_base;
+                        DWORD page_start = DWORD(offset / page_size);
+                        DWORD page_end = (offset + 64) / page_size != page_start ? page_start + 2 : page_start + 1;
 
-                    mapping.ExceptionPath.DirtyPages.push_back({ page_start, page_end });
+                        mapping.ExceptionPath.DirtyPages.push_back({ page_start, page_end });
 
-                    return EXCEPTION_CONTINUE_EXECUTION;
+                        return EXCEPTION_CONTINUE_EXECUTION;
+                    }
                 }
             }
 
