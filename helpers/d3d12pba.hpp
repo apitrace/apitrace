@@ -86,24 +86,37 @@ _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
     return vp_result;
 }
 
+constexpr size_t PageSize = 4096;
+
+static inline uintptr_t
+get_offset_from_page(void* address) {
+    return reinterpret_cast<uintptr_t>(address) & (PageSize - 1);
+}
+
+static inline void*
+align_to_page(void* address) {
+    return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(address) - get_offset_from_page(address));
+}
+
+
 static inline void
 _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
 {
+    static std::vector<void*> s_addresses;
+
     if (!mapping.pData)
         return;
 
-    static std::vector<uintptr_t> s_addresses;
+    size_t page_offset     = get_offset_from_page(mapping.pData);
+    void*  aligned_address = align_to_page(mapping.pData);
+    SIZE_T watch_size      = align(mapping.Size + page_offset, PageSize);
+    ULONG_PTR count        = ULONG_PTR(watch_size / PageSize);
+    DWORD  granularity     = 0;
 
-    constexpr size_t PageSize = 4096;
-    size_t watch_size = align(mapping.Size, PageSize);
-    size_t address_count = watch_size / PageSize;
-    s_addresses.resize(address_count);
-
-    DWORD granularity = DWORD(PageSize);
-    ULONG_PTR count = ULONG_PTR(address_count);
+    s_addresses.resize(size_t(count));
 
     // Find out addresses that have changed
-    if (GetWriteWatch(WRITE_WATCH_FLAG_RESET, mapping.pData, watch_size, reinterpret_cast<void**>(s_addresses.data()), &count, &granularity) != 0)
+    if (GetWriteWatch(WRITE_WATCH_FLAG_RESET, aligned_address, watch_size, s_addresses.data(), &count, &granularity) != 0)
     {
 #ifndef NDEBUG
         MEMORY_BASIC_INFORMATION info;
@@ -114,32 +127,41 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         return;
     }
 
+    uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
     for (ULONG_PTR i = 0; i < count; i++)
     {
-        uintptr_t base_address = s_addresses[i];
+        uintptr_t base_address = reinterpret_cast<uintptr_t>(s_addresses[i]);
 
         // Combine contiguous pages into a single memcpy!
-        // TODO: Why is this broken in Ghostrunner?
-        // is this spilling to unmarked pages somehow?
-        // maybe max size calc is wrong here... hmmm
 #if 1
-        ULONG_PTR contiguous_pages = 1;
-        while (i + 1 != count && s_addresses[i + 1] == s_addresses[i] + PageSize)
+        SIZE_T contiguous_pages = 1;
+        while (i + 1 != count && reinterpret_cast<uintptr_t>(s_addresses[i + 1]) == reinterpret_cast<uintptr_t>(s_addresses[i]) + PageSize)
         {
             contiguous_pages++;
             i++;
         }
 
-        // Clip to this resource's region
-        uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
-        size_t size = contiguous_pages * PageSize;
-        size = std::min<size_t>(base_address + size, resource_start + mapping.Size) - base_address;
+        uintptr_t start_copy_range = std::max(base_address,                               resource_start);
+        uintptr_t end_copy_range   = std::min(base_address + PageSize * contiguous_pages, resource_start + mapping.Size);
 
-        trace::fakeMemcpy(reinterpret_cast<void*>(base_address), size);
+        if (end_copy_range <= start_copy_range) {
+            os::log("end_copy_range <= start_copy_range: %llu <= %llu\n", end_copy_range, start_copy_range);
+            continue;
+        }
+
+        size_t size = size_t(end_copy_range - start_copy_range);
+        trace::fakeMemcpy(reinterpret_cast<void*>(start_copy_range), size);
 #else
-        uintptr_t resource_start = reinterpret_cast<uintptr_t>(mapping.pData);
-        size_t size = std::min(base_address + PageSize, resource_start + mapping.Size) - base_address;
-        trace::fakeMemcpy(reinterpret_cast<void*>(base_address), size);
+        uintptr_t start_copy_range = std::max(base_address,                               resource_start);
+        uintptr_t end_copy_range   = std::min(base_address + PageSize * contiguous_pages, resource_start + mapping.Size);
+
+        if (end_copy_range <= start_copy_range) {
+            os::log("end_copy_range <= start_copy_range: %llu <= %llu\n", end_copy_range, start_copy_range);
+            continue;
+        }
+
+        size_t size = size_t(end_copy_range - start_copy_range);
+        trace::fakeMemcpy(start_copy_range, size);
 #endif
     }
 }
