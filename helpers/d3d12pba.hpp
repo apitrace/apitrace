@@ -427,6 +427,14 @@ _flush_mappings()
 {
     for (auto& resource : g_D3D12AddressMappings)
     {
+#ifndef NDEBUG
+        ID3D12Resource* resource_ptr = reinterpret_cast<ID3D12Resource*>(resource.first);
+        D3D12_RESOURCE_DESC desc = resource_ptr->GetDesc();
+        D3D12_HEAP_PROPERTIES heap_properties;
+        D3D12_HEAP_FLAGS heap_flags;
+        HRESULT hr = resource_ptr->GetHeapProperties(&heap_properties, &heap_flags);
+#endif
+
         for (auto& element : resource.second)
         {
             auto& mapping = element.second;
