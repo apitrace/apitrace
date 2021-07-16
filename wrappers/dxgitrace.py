@@ -203,6 +203,10 @@ class D3DCommonTracer(DllTracer):
                     # Need to lock here to avoid another thread potentially
                     # releasing while we are flushing.
                     print('    std::unique_lock<std::mutex> _lock{ m_RefCountMutex };')
+                if method.name == 'QueryInterface':
+                    # Need to lock here to avoid another thread potentially
+                    # releasing while we are flushing.
+                    print('    std::unique_lock<std::mutex> _lock{ m_RefCountMutex };')
                 if method.name == 'Release':
                     # Need to lock here to avoid another thread potentially
                     # releasing while we are flushing.
