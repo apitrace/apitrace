@@ -219,6 +219,9 @@ class GlRetracer(Retracer):
            print(r'    }')
 
         # Post-snapshots
+        if self.bind_framebuffer_function_regex.match(function.name):
+            print('    if (!framebuffer && target != GL_READ_FRAMEBUFFER)')
+            print('        glretrace::updateDrawable(-1, -1);')
         if function.name in ('glFlush', 'glFinish'):
             print('    if (!retrace::doubleBuffer) {')
             print('        glretrace::frame_complete(call);')
