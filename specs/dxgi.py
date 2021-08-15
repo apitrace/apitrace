@@ -1153,7 +1153,7 @@ IDXGIFactory6.methods += [
 ]
 
 IDXGIFactory7.methods += [
-    StdMethod(HRESULT, 'RegisterAdaptersChangedEvent', [(HANDLE, 'hEvent'), (Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(HRESULT, 'RegisterAdaptersChangedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
     StdMethod(HRESULT, 'UnregisterAdaptersChangedEvent', [(DWORD, 'dwCookie')], sideeffects=False),
 ]
 
