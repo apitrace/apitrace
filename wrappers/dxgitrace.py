@@ -182,11 +182,14 @@ class D3DCommonTracer(DllTracer):
             if method.name == 'GetDescriptorHandleIncrementSize':
                 print('    UINT _fake_result = _DescriptorIncrementSize;')
 
+            if method.name == 'Unmap':
+                result_name = ''
+
             if method.name in ('GetCPUDescriptorHandleForHeapStart', 'GetGPUDescriptorHandleForHeapStart', 'GetGPUVirtualAddress', 'GetDescriptorHandleIncrementSize'):
                 result_name = '_fake_result'
 
-            if method.name in ('Map', 'Unmap', 'ExecuteCommandLists'):
-                print('    std::unique_lock<std::mutex> _ordering_lock{ g_D3D12AddressMappingsMutex };')
+            if method.name in ('Map', 'ExecuteCommandLists', 'CreateCommittedResource', 'CreateCommittedResource1', 'CreatePlacedResource', 'CreatePlacedResource1'):
+                print('    std::unique_lock<std::recursive_mutex> _ordering_lock{ g_D3D12AddressMappingsMutex };')
 
             if method.name == 'ExecuteCommandLists':
                 print('    _flush_mappings();')
@@ -217,12 +220,12 @@ class D3DCommonTracer(DllTracer):
                     # If the current ref is 1, then the next one with be 0,
                     # therefore we need to unmap the resource here to
                     # avoid a dangling ptr.
-                    print('    std::unique_lock<std::mutex> _ordering_lock;')
+                    print('    std::unique_lock<std::recursive_mutex> _ordering_lock;')
                     print('    if (_current_ref == 1) {')
                     if interface in (d3d12.ID3D12Heap, d3d12.ID3D12Heap1):
                         print('    if (m_UserPointer != nullptr)')
                     print('        {')
-                    print('            _ordering_lock = std::unique_lock<std::mutex>{ g_D3D12AddressMappingsMutex };')
+                    print('            _ordering_lock = std::unique_lock<std::recursive_mutex>{ g_D3D12AddressMappingsMutex };')
                     print('            /* If Heap with a funny ptr, we should free here */')
                     print('            _fully_unmap_resource(m_pInstance);')
                     print('        }')
@@ -250,17 +253,14 @@ class D3DCommonTracer(DllTracer):
                 print('    MemoryShadow & _MapShadow = m_MapShadows[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type)
                 print('    Wrap%spResourceInstance = static_cast<Wrap%s>(%s);' % (resourceArg.type, resourceArg.type, resourceArg.name))
 
-        if method.name == 'Unmap':
-            if interface.name.startswith('ID3D12'):
-                print('    _unmap_resource(m_pInstance, Subresource);')
-            else:
-                print('    if (_MapDesc.Size && _MapDesc.pData) {')
-                print('        if (_shouldShadowMap(pResourceInstance)) {')
-                print('            _MapShadow.update(trace::fakeMemcpy);')
-                print('        } else {')
-                self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
-                print('        }')
-                print('    }')
+        if method.name == 'Unmap' and not interface.name.startswith('ID3D12'):
+            print('    if (_MapDesc.Size && _MapDesc.pData) {')
+            print('        if (_shouldShadowMap(pResourceInstance)) {')
+            print('            _MapShadow.update(trace::fakeMemcpy);')
+            print('        } else {')
+            self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
+            print('        }')
+            print('    }')
 
         if interface.hasBase(d3d11.ID3D11VideoContext) and \
            method.name == 'ReleaseDecoderBuffer':
@@ -278,7 +278,7 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'Map':
             if interface.name.startswith('ID3D12'):
                 print('    if (SUCCEEDED(_result))')
-                print('        _map_resource(m_pInstance, Subresource, ppData ? *ppData : nullptr);')
+                print('        _map_subresource(m_pInstance, Subresource, ppData ? *ppData : nullptr);')
             else:
                 # NOTE: recursive locks are explicitely forbidden
                 print('    if (SUCCEEDED(_result)) {')
@@ -301,7 +301,7 @@ class D3DCommonTracer(DllTracer):
             print('        trace::fakeMalloc(pAddress, _d3d12_AllocationSize(pAddress));')
             print('        trace::fakeMemcpy(pAddress, _d3d12_AllocationSize(pAddress));')
             print('        auto *pHeap = *reinterpret_cast<WrapID3D12Heap**>(ppvHeap);')
-            print('        _map_resource(pHeap->m_pInstance, (void *)pAddress);')
+            print('        _map_heap(pHeap->m_pInstance, (void *)pAddress);')
             print('        pHeap->m_UserPointer = pAddress;')
             print('    }')
 
@@ -320,18 +320,23 @@ class D3DCommonTracer(DllTracer):
                 print('        _descriptor_heap_wrap->m_DescriptorSlab = g_D3D12DescriptorSlabs.RegisterSlab(_descriptor_heap_wrap->m_pInstance->GetCPUDescriptorHandleForHeapStart(), _descriptor_heap_wrap->m_pInstance->GetGPUDescriptorHandleForHeapStart(), m_pInstance->GetDescriptorHandleIncrementSize(pDescriptorHeapDesc->Type));')
                 print('    }')
 
-            if method.name in ('CreateCommittedResource', 'CreateCommittedResource1'):
+            if method.name in ('CreateCommittedResource', 'CreateCommittedResource1', 'CreatePlacedResource', 'CreatePlacedResource1'):
+                if method.name in ('CreatePlacedResource', 'CreatePlacedResource1'):
+                    print('    const D3D12_RESOURCE_DESC *pResourceDesc = pDesc;')
                 # Create a fake GPU VA for buffers.
-                print('    if (SUCCEEDED(_result) && pResourceDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
-                print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
-                print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
-                print('    }')
-
-            if method.name in ('CreatePlacedResource', 'CreatePlacedResource1'):
-                # Create a fake GPU VA for buffers.
-                print('    if (SUCCEEDED(_result) && pDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
-                print('        WrapID3D12Resource* _resource_wrap = (*reinterpret_cast<WrapID3D12Resource**>(ppvResource));')
-                print('        _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
+                print('    if (SUCCEEDED(_result)) {')
+                print('        WrapID3D12Resource* _resource_wrap = *reinterpret_cast<WrapID3D12Resource**>(ppvResource);')
+                print('        if (pResourceDesc->Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {')
+                print('            _resource_wrap->m_FakeAddress = g_D3D12AddressSlabs.RegisterSlab(_resource_wrap->m_pInstance->GetGPUVirtualAddress());')
+                print('        }')
+                # Map ahead of time to avoid suballocation/zero-ing and stuff breaking our write watch
+                print('        if (_get_heap_flags(_resource_wrap->m_pInstance) & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH) {') 
+                print('            UINT _subresource_count = _getSubresourceCount(_resource_wrap->m_pInstance);')
+                print('            for (UINT i = 0; i < _subresource_count; i++) {')
+                print('                void* _pData = NULL;')
+                print('                _resource_wrap->Map(i, NULL, &_pData);')
+                print('            }') 
+                print('        }') 
                 print('    }')
 
             if method.name in ('CopyTileMappings', 'UpdateTileMappings'):
@@ -533,7 +538,7 @@ if __name__ == '__main__':
     print('_D3D12_DESCRIPTOR_TRACER g_D3D12DescriptorSlabs;')
     print('_D3D12_ADDRESS_SLAB_TRACER<D3D12_GPU_VIRTUAL_ADDRESS> g_D3D12AddressSlabs;')
 
-    print('std::mutex g_D3D12AddressMappingsMutex;')
+    print('std::recursive_mutex g_D3D12AddressMappingsMutex;')
     print('std::map<SIZE_T, std::map<UINT, _D3D12_MAP_DESC>> g_D3D12AddressMappings;')
 
     print('std::set<HANDLE> g_D3D12FenceEventSet;')

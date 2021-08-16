@@ -79,7 +79,6 @@ _calcSubresourceSize12(ID3D12Resource *pDstResource, UINT DstSubresource, const 
     return _calcDataSize(Desc.Format, Width, Height, SrcRowPitch, Depth, SrcDepthPitch);
 }
 
-
 static inline UINT64
 _getMapSize(ID3D12Resource* pResource, UINT Subresource)
 {
@@ -95,6 +94,32 @@ _getMapSize(ID3D12Resource* pResource, UINT Subresource)
     pDevice->GetCopyableFootprints(&Desc, Subresource, 1, 0, nullptr, nullptr, nullptr, &TotalBytes);
 
     return TotalBytes;
+}
+
+static inline UINT
+_getLayerCount(D3D12_RESOURCE_DESC* pDesc)
+{
+    return pDesc->Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D ? pDesc->DepthOrArraySize : 1;
+}
+
+static inline UINT
+_getSubresourceCount(ID3D12Resource* pResource)
+{
+    D3D12_RESOURCE_DESC desc = pResource->GetDesc();
+
+    UINT planeCount = 1;
+    if (desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER) {
+        com_ptr<ID3D12Device> pDevice;
+        pResource->GetDevice(IID_ID3D12Device, (void**)&pDevice);
+
+        D3D12_FEATURE_DATA_FORMAT_INFO formatInfo{};
+        formatInfo.Format = desc.Format;
+        pDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &formatInfo, sizeof(formatInfo));
+
+        planeCount = formatInfo.PlaneCount;
+    }
+
+    return _getLayerCount(&desc) * desc.MipLevels * planeCount;
 }
 
 static inline D3D12_PIPELINE_STATE_SUBOBJECT_TYPE

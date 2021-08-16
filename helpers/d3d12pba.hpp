@@ -49,7 +49,6 @@ struct _D3D12_MAP_DESC
     void* pData;
     SIZE_T Size;
     _D3D12_MAPPING_TYPE MappingType;
-    uint32_t RefCount;
  
     struct
     {
@@ -62,7 +61,6 @@ struct _D3D12_MAP_DESC
         pData(pData),
         Size(Size),
         MappingType(Type),
-        RefCount(1),
         ExceptionPath({ {}, OldProtect })
     {}
 
@@ -70,13 +68,12 @@ struct _D3D12_MAP_DESC
         pData(nullptr),
         Size(0),
         MappingType(_D3D12_MAPPING_INVALID),
-        RefCount(1),
         ExceptionPath({ {}, 0 })
     {}
 };
 
 extern std::map<SIZE_T, std::map<UINT, _D3D12_MAP_DESC>> g_D3D12AddressMappings;
-extern std::mutex g_D3D12AddressMappingsMutex;
+extern std::recursive_mutex g_D3D12AddressMappingsMutex;
 
 static inline bool
 _guard_mapped_memory(const _D3D12_MAP_DESC& Desc, DWORD* OldProtect)
@@ -150,6 +147,7 @@ _flush_mapping_watch_memcpys(_D3D12_MAP_DESC& mapping)
         }
 
         size_t size = size_t(end_copy_range - start_copy_range);
+        assert(size <= mapping.Size);
         trace::fakeMemcpy(reinterpret_cast<void*>(start_copy_range), size);
 #else
         uintptr_t start_copy_range = std::max(base_address,                               resource_start);
@@ -239,7 +237,7 @@ _get_heap_flags(ID3D12Resource* pResource)
 }
 
 static inline void
-_map_resource(ID3D12Resource* pResource, UINT Subresource, void* pData)
+_map_subresource(ID3D12Resource* pResource, UINT Subresource, void* pData)
 {
     D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
@@ -258,12 +256,7 @@ _map_resource(ID3D12Resource* pResource, UINT Subresource, void* pData)
     resource_iter = g_D3D12AddressMappings.find(key);
 
     auto subresource_iter = resource_iter->second.find(Subresource);
-    if (subresource_iter != resource_iter->second.end()) {
-        if (!subresource_iter->second.pData && pData)
-            subresource_iter->second.pData = pData;
-        subresource_iter->second.RefCount++;
-    }
-    else
+    if (subresource_iter == resource_iter->second.end())
         resource_iter->second[Subresource] = _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, _getMapSize(pResource, Subresource));
 }
 
@@ -297,7 +290,7 @@ static inline size_t _d3d12_AllocationSize(const void *pAddress)
 
 
 static inline void
-_map_resource(ID3D12Heap* pResource, void* pData)
+_map_heap(ID3D12Heap* pResource, void* pData)
 {
     SIZE_T allocation_size = _d3d12_AllocationSize(pData);
     if (!allocation_size)
@@ -315,14 +308,12 @@ _map_resource(ID3D12Heap* pResource, void* pData)
     resource_iter = g_D3D12AddressMappings.find(key);
 
     auto subresource_iter = resource_iter->second.find(0);
-    if (subresource_iter != resource_iter->second.end())
-        subresource_iter->second.RefCount++;
-    else
+    if (subresource_iter == resource_iter->second.end())
         resource_iter->second[0] = _D3D12_MAP_DESC(_D3D12_MAPPING_WRITE_WATCH, pData, allocation_size);
 }
 
 static inline void
-_unmap_resource(SIZE_T key, UINT subresource, bool forceUnmap)
+_unmap_subresource(SIZE_T key, UINT subresource)
 {
     auto resource = g_D3D12AddressMappings.find(key);
     if (resource == g_D3D12AddressMappings.end())
@@ -332,66 +323,54 @@ _unmap_resource(SIZE_T key, UINT subresource, bool forceUnmap)
     if (iter == resource->second.end())
         return;
 
-    assert(iter->second.RefCount);
-    iter->second.RefCount--;
-
     // If this is going to release the mapping, then flush memcpys here.
-    if (iter->second.RefCount == 0 || forceUnmap) {
-        auto& mapping = iter->second;
+    auto& mapping = iter->second;
 
-        if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
-        {
-            // WriteWatch mappings.
-            _flush_mapping_watch_memcpys(mapping);
+    assert(_getMapSize((ID3D12Resource*)key, subresource) == mapping.Size);
 
-            // TODO(Josh): Is this the right thing to do for aliased resources??? :<<<<<<
-            // I think this won't work for buffers
-            // Not enabling this for now... It'll probably work everywhere
-            // But what about the funny edge case with
-            // [buffer1       ]
-            // [buffer2       XXXXXX]
-            // and buffer 1 gets unmapped
-            // but XXXXX is in buffer 1's page boundaries but
-            // then it's unmapped after that watch will be destroyed
-            // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-            // THIS API SUCKS!!!!!!!!!!!!!!!!!!!!!!
-            //_reset_writewatch(mapping);
-        }
-        else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
-        {
-            // Exception mappings.
-            _flush_mapping_exception_memcpys(mapping);
+    if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
+    {
+        // WriteWatch mappings.
+        _flush_mapping_watch_memcpys(mapping);
 
-            // No need to re-apply the guard as we are unmapping now.
-        }
-        else
-        {
-            os::log("apitrace: Unhandled mapping type\n");
-            assert(false);
-        }
+        // TODO(Josh): Is this the right thing to do for aliased resources??? :<<<<<<
+        // I think this won't work for buffers
+        // Not enabling this for now... It'll probably work everywhere
+        // But what about the funny edge case with
+        // [buffer1       ]
+        // [buffer2       XXXXXX]
+        // and buffer 1 gets unmapped
+        // but XXXXX is in buffer 1's page boundaries but
+        // then it's unmapped after that watch will be destroyed
+        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        // THIS API SUCKS!!!!!!!!!!!!!!!!!!!!!!
+        //_reset_writewatch(mapping);
+    }
+    else if (mapping.MappingType == _D3D12_MAPPING_EXCEPTION)
+    {
+        // Exception mappings.
+        _flush_mapping_exception_memcpys(mapping);
 
-        resource->second.erase(iter);
+        // No need to re-apply the guard as we are unmapping now.
+    }
+    else
+    {
+        os::log("apitrace: Unhandled mapping type\n");
+        assert(false);
     }
 
-    if (resource->second.empty())
-        g_D3D12AddressMappings.erase(resource);
+    resource->second.erase(iter);
 }
 
 static inline void
-_unmap_resource(ID3D12Resource* pResource, UINT Subresource, bool forceUnmap = false)
+_unmap_subresource(ID3D12Resource* pResource, UINT Subresource)
 {
     D3D12_HEAP_FLAGS flags = _get_heap_flags(pResource);
 
     if (!(flags & D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH))
         return;
 
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), Subresource, forceUnmap);
-}
-
-static inline void
-_unmap_resource(ID3D12Heap* pResource, bool forceUnmap = false)
-{
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0, forceUnmap);
+    _unmap_subresource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), Subresource);
 }
 
 static inline void
@@ -411,15 +390,17 @@ _fully_unmap_resource(ID3D12Resource* pResource)
     std::vector<UINT> subresources_to_unmap;
     for (auto& subresource : resource->second)
         subresources_to_unmap.push_back(subresource.first);
-
+    
     for (UINT subresource : subresources_to_unmap)
-        _unmap_resource(key, subresource, true);
+        _unmap_subresource(key, subresource);
+
+    g_D3D12AddressMappings.erase(resource);
 }
 
 static inline void
 _fully_unmap_resource(ID3D12Heap* pResource)
 {
-    _unmap_resource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0, true);
+    _unmap_subresource(static_cast<SIZE_T>(reinterpret_cast<uintptr_t>(pResource)), 0);
 }
 
 static inline void
@@ -438,7 +419,8 @@ _flush_mappings()
         for (auto& element : resource.second)
         {
             auto& mapping = element.second;
-            assert(mapping.RefCount);
+
+            assert(_getMapSize((ID3D12Resource*)resource.first, resource.first) == mapping.Size);
 
             if (mapping.MappingType == _D3D12_MAPPING_WRITE_WATCH)
             {
@@ -487,7 +469,7 @@ _setup_seh()
             bool wasWrite     = static_cast<bool>     (pException->ExceptionRecord->ExceptionInformation[0]);
             uintptr_t address = static_cast<uintptr_t>(pException->ExceptionRecord->ExceptionInformation[1]);
 
-            auto lock = std::unique_lock<std::mutex>(g_D3D12AddressMappingsMutex);
+            auto lock = std::unique_lock<std::recursive_mutex>(g_D3D12AddressMappingsMutex);
 
             for (auto& resource : g_D3D12AddressMappings) {
                 for (auto& element : resource.second)
