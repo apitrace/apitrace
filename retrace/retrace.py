@@ -275,7 +275,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 print(r'        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
-                print(r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,))
+                #print(r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,))
                 print(r'        break;')
             print(r'    }')
             if polymorphic.stream:
