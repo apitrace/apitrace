@@ -34,7 +34,7 @@
 #include "os.hpp"
 
 
-#if defined(__GLIBC__) && !defined(__UCLIBC__)
+#if defined(__GLIBC__) && !defined(__UCLIBC__) && __GLIBC__ == 2 && __GLIBC_MINOR__ < 34
 
 
 #include <dlfcn.h>
