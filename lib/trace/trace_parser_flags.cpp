@@ -139,6 +139,7 @@ callFlagTable[] = {
     { "eglGetConfigAttrib",                            CALL_FLAG_VERBOSE },
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
+    { "eglSetDamageRegionKHR",                         CALL_FLAG_NO_SIDE_EFFECTS },
     { "eglSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },
     { "eglSwapBuffersWithDamageEXT",                   CALL_FLAG_SWAPBUFFERS },
     { "eglSwapBuffersWithDamageKHR",                   CALL_FLAG_SWAPBUFFERS },
