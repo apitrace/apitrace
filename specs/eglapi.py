@@ -281,6 +281,9 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreatePlatformWindowSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLIntArray([]), "attrib_list")]),
     GlFunction(EGLSurface, "eglCreatePlatformPixmapSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLIntArray([]), "attrib_list")]),
 
+    # EGL_KHR_partial_update
+    GlFunction(EGLBoolean, "eglSetDamageRegionKHR", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
+
     # EGL_EXT_swap_buffers_with_damage
     GlFunction(EGLBoolean, "eglSwapBuffersWithDamageEXT", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
 
