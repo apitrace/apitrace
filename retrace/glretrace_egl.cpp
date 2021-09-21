@@ -118,6 +118,23 @@ static void createDrawable(unsigned long long orig_config, unsigned long long or
     drawable_map[orig_surface] = drawable;
 }
 
+static void retrace_eglSetDamageRegionKHR(trace::Call &call)
+{
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
+    trace::Array *rects_array = call.arg(2).toArray();
+    EGLint nrects = call.arg(3).toUInt();
+
+    if (!drawable)
+        return;
+
+    int *rects = new int[nrects*4];
+    for (size_t i = 0; i < (size_t)nrects*4; i++)
+        rects[i] = rects_array->values[i]->toSInt();
+
+    drawable->setDamageRegion(rects, nrects);
+    delete [] rects;
+}
+
 static void retrace_eglChooseConfig(trace::Call &call) {
     if (!call.ret->toSInt()) {
         return;
@@ -326,7 +343,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglWaitGL", &retrace::ignore},
     {"eglWaitNative", &retrace::ignore},
     {"eglReleaseThread", &retrace::ignore},
-    {"eglSetDamageRegionKHR", &retrace::ignore},
+    {"eglSetDamageRegionKHR", &retrace_eglSetDamageRegionKHR},
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
     {"eglSwapBuffersWithDamageEXT", &retrace_eglSwapBuffers},  // ignores additional params
     {"eglSwapBuffersWithDamageKHR", &retrace_eglSwapBuffers},  // ignores additional params

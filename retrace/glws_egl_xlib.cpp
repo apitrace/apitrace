@@ -130,6 +130,16 @@ public:
     }
 
     void
+    setDamageRegion(int *rects, int nrects) override {
+        if (!checkExtension("EGL_KHR_partial_update", eglExtensions))
+            return;
+
+        EGLint value;
+        eglQuerySurface(eglDisplay, surface, EGL_BUFFER_AGE_KHR, &value);
+        eglSetDamageRegionKHR(eglDisplay, surface, rects, nrects);
+    }
+
+    void
     recreate(void) {
         EGLContext currentContext = eglGetCurrentContext();
         EGLSurface currentDrawSurface = eglGetCurrentSurface(EGL_DRAW);
