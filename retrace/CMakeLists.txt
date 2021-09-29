@@ -222,6 +222,12 @@ if (ENABLE_EGL AND WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:unofficial::angle::libEGL> $<TARGET_FILE_DIR:eglretrace>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:unofficial::angle::libGLESv2> $<TARGET_FILE_DIR:eglretrace>
         )
+        if(TARGET unofficial::angle::angle_compression_utils)
+            find_package(ZLIB REQUIRED)
+            add_custom_command(TARGET eglretrace POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:unofficial::angle::libEGL>/zlib$<$<CONFIG:Debug>:d>1.dll $<TARGET_FILE_DIR:eglretrace>
+            )
+        endif()
 
         install (TARGETS eglretrace RUNTIME DESTINATION bin)
         install_pdb (eglretrace DESTINATION bin)
@@ -230,6 +236,12 @@ if (ENABLE_EGL AND WIN32)
             $<TARGET_FILE:unofficial::angle::libGLESv2>
             DESTINATION bin
         )
+        if(TARGET unofficial::angle::angle_compression_utils)
+            install (FILES
+                $<TARGET_FILE_DIR:unofficial::angle::libEGL>/zlib$<$<CONFIG:Debug>:d>1.dll
+                DESTINATION bin
+            )
+        endif()
     else ()
         if (VCPKG_TARGET_TRIPLET)
             set (VCPKG_TARGET_TRIPLET_inner ${VCPKG_TARGET_TRIPLET})
