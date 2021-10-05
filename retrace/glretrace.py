@@ -165,16 +165,6 @@ class GlRetracer(Retracer):
             
             print('    }')
 
-        # When no pack buffer object is bound, the pack functions are no-ops.
-        if self.pack_function_regex.match(function.name):
-            print(r'    GLint _pack_buffer = 0;')
-            print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
-            print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
-            print(r'    }')
-            print(r'    if (!_pack_buffer) {')
-            print(r'        return;')
-            print(r'    }')
-
         # When no query buffer object is bound, and we don't request that glGetQueryObject
         # is run than glGetQueryObject is a no-op.
         if function.name.startswith('glGetQueryObject'):
@@ -218,6 +208,7 @@ class GlRetracer(Retracer):
            print(r'        }')
            print(r'    }')
 
+
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
             print('    if (!retrace::doubleBuffer) {')
@@ -225,6 +216,41 @@ class GlRetracer(Retracer):
             print('    }')
         if is_draw_arrays or is_draw_elements or is_misc_draw:
             print('    assert(call.flags & trace::CALL_FLAG_RENDER);')
+
+    def overrideArgs(self, function):
+        if not self.pack_function_regex.match(function.name):
+            return
+
+        print(r'    GLint _pack_buffer = 0;')
+        print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
+        print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
+        print(r'    }')
+        print(r'     std::vector<char> buffer;')
+        print(r'    if (!_pack_buffer) {')
+        # if no pack buffer is bound we have to read back
+        data_param_name = "pixels"
+        if function.name == "glGetTexImage":
+            print(r'     GLint max_tex_size;')
+            print(r'     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);')
+            print(r'     buffer.resize(max_tex_size * max_tex_size * max_tex_size);');
+        elif function.name == "glGetTexnImage":
+            print(r'     buffer.resize(call.arg(4).toUInt());');
+        elif function.name == "glGetTextureImage":
+            print(r'     buffer.resize(call.arg(4).toUInt());');
+        elif function.name == "glReadPixels":
+            print(r'     GLsizei _w = call.arg(2).toSInt();')
+            print(r'     GLsizei _h = call.arg(3).toSInt();')
+            print(r'     buffer.resize(_w * _h * 64);')
+        elif function.name == "glReadnPixels":
+            print(r'     buffer.resize(call.arg(6).toSInt());')
+            data_param_name = "data"
+        else:
+            print(r'    return;')
+            print(r'    }')
+            return
+
+        print(r'    }')
+        print('    {} = buffer.data();'.format(data_param_name))
 
 
     def invokeFunction(self, function):
