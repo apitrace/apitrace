@@ -400,11 +400,16 @@ class Retracer:
             self.checkOrigResult(function)
 
         self.deserializeArgs(function)
+
+        self.overrideArgs(function)
         
         self.declareRet(function)
         self.invokeFunction(function)
 
         self.swizzleValues(function)
+
+    def overrideArgs(self, function):
+        pass
 
     def retraceInterfaceMethodBody(self, interface, method):
         assert method.sideeffects
