@@ -53,6 +53,25 @@ void *_libGlHandle = NULL;
 #define RTLD_DEEPBIND 0
 #endif
 
+#ifdef WIN32
+#include <filesystem>
+#include <vector>
+#include <Psapi.h>
+
+namespace
+{
+    HMODULE getCurrentModule()
+    {
+        HMODULE currentModule;
+        GetModuleHandleExA(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            reinterpret_cast<LPCTSTR>(getCurrentModule),
+            &currentModule);
+        return currentModule;
+    }
+}
+#endif
+
 /*
  * Lookup a public EGL/GL/GLES symbol
  *
@@ -64,7 +83,7 @@ void *_libGlHandle = NULL;
 void *
 _getPublicProcAddress(const char *procName)
 {
-    void *proc;
+    void *proc = nullptr;
 
 #ifndef _WIN32
     /*
@@ -94,6 +113,40 @@ _getPublicProcAddress(const char *procName)
             if (!libEGL) {
                 return nullptr;
             }
+#ifdef WIN32
+            static os::Library thisDll = getCurrentModule();
+            if (libEGL == thisDll)
+            {
+                // avoid infinite recursion by picking the real libEGL
+                std::vector<HMODULE> dlls(1024, nullptr);
+                DWORD bytesReturned;
+                if (EnumProcessModules(
+                    GetCurrentProcess(),
+                    dlls.data(),
+                    dlls.size() * sizeof(HMODULE),
+                    &bytesReturned)) {
+                    dlls.resize(bytesReturned / sizeof(HMODULE));
+
+                    for (HMODULE dll : dlls) {
+                        if (dll == thisDll) {
+                            continue;
+                        }
+                        char moduleName[MAX_PATH];
+                        if (GetModuleFileNameA(dll, moduleName, sizeof(moduleName) / sizeof(char))) {
+                            std::filesystem::path path(moduleName);
+                            if (_stricmp(path.filename().string().c_str(), "libEGL" OS_LIBRARY_EXTENSION) == 0) {
+                                libEGL = dll;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else {
+                    return nullptr;
+                }
+
+            }
+#endif
         }
         return os::getLibrarySymbol(libEGL, procName);
     }
