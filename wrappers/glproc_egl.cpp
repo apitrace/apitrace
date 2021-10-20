@@ -145,6 +145,69 @@ _getPublicProcAddress(const char *procName)
                     return nullptr;
                 }
 
+                if (libEGL == thisDll) {
+                    // the real libEGL hasn't been loaded yet
+                    // work through the standard dynamic link library search order
+                    // 1. The directory from which the application loaded.
+                    {
+                        char processName[MAX_PATH];
+                        if (GetModuleFileNameA(nullptr, processName, sizeof(processName) / sizeof(char))) {
+                            std::filesystem::path path(processName);
+                            path = path.replace_filename("libEGL.dll");
+                            if (std::filesystem::exists(path)) {
+                                libEGL = LoadLibraryA(path.string().c_str());
+                            }
+                        }
+                    }
+                    // 2. The current directory. (Assumes SafeDllSearchMode is off.)
+                    if (libEGL == thisDll && std::filesystem::exists(std::filesystem::current_path() / "libEGL.dll")) {
+                        libEGL = LoadLibraryA(".\\libEGL.dll");
+                    }
+                    // 3. The system directory.
+                    if (libEGL == thisDll) {
+                        char systemDirectory[MAX_PATH];
+                        if (GetSystemDirectoryA(systemDirectory, sizeof(systemDirectory) / sizeof(char))) {
+                            std::filesystem::path path(systemDirectory);
+                            path /= "libEGL.dll";
+                            if (std::filesystem::exists(path)) {
+                                libEGL = LoadLibraryA(path.string().c_str());
+                            }
+                        }
+                    }
+                    // 4.The 16-bit system directory.
+                    if (libEGL == thisDll) {
+                        std::filesystem::path path("C:\\Windows\\System\\libEGL.dll");
+                        if (std::filesystem::exists(path)) {
+                            libEGL = LoadLibraryA(path.string().c_str());
+                        }
+                    }
+                    // 5. The Windows directory.
+                    if (libEGL == thisDll) {
+                        char windowsDirectory[MAX_PATH];
+                        if (GetWindowsDirectoryA(windowsDirectory, sizeof(windowsDirectory) / sizeof(char))) {
+                            std::filesystem::path path(windowsDirectory);
+                            path /= "libEGL.dll";
+                            if (std::filesystem::exists(path)) {
+                                libEGL = LoadLibraryA(path.string().c_str());
+                            }
+                        }
+                    }
+                    // 6. The directories that are listed in the PATH environment variable.
+                    if (libEGL == thisDll) {
+                        char foundDll[MAX_PATH];
+                        if (SearchPathA(nullptr, "libEGL.dll", nullptr, sizeof(foundDll) / sizeof(char), foundDll, nullptr)) {
+                            std::filesystem::path path(foundDll);
+                            if (std::filesystem::exists(path)) {
+                                libEGL = LoadLibraryA(path.string().c_str());
+                            }
+                        }
+                    }
+                    // Give up
+                    if (libEGL == thisDll) {
+                        return nullptr;
+                    }
+                }
+
             }
 #endif
         }
