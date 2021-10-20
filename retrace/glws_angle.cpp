@@ -83,7 +83,10 @@ namespace glws {
 
         ~EglDrawable() {
             eglDestroySurface(eglDisplay, surface);
-            eglWaitClient();
+            // should be a no-op with no current context, but crashes due to https://bugs.chromium.org/p/angleproject/issues/detail?id=6594
+            if (eglGetCurrentContext()) {
+                eglWaitClient();
+            }
             DestroyWindow(window);
             eglWaitNative(EGL_CORE_NATIVE_ENGINE);
         }
