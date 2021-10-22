@@ -40,7 +40,7 @@
 #include "glstate.hpp"
 #include "glstate_internal.hpp"
 #include "halffloat.hpp"
-
+#include "floating_point_conversion.hpp"
 
 namespace glstate {
 
@@ -373,6 +373,18 @@ dumpAttrib(StateWriter &writer,
                 break;
             case GL_BOOL:
                 writer.writeBool(*u.uivalue);
+                break;
+            case GL_INT_2_10_10_10_REV:
+            case GL_UNSIGNED_INT_2_10_10_10_REV:
+                writer.writeInt(*u.ivalue & 0x3ff);
+                writer.writeInt((*u.ivalue >> 10) & 0x3ff);
+                writer.writeInt((*u.ivalue >> 20) & 0x3ff);
+                writer.writeInt((*u.ivalue >> 30) & 0x3);
+                break;
+            case GL_UNSIGNED_INT_10F_11F_11F_REV:
+                writer.writeFloat(uint11ToFLoat(*u.ivalue & 0x7ff));
+                writer.writeFloat(uint11ToFLoat((*u.ivalue >> 11) & 0x7ff));
+                writer.writeFloat(uint10ToFLoat((*u.ivalue >> 21) & 0x3ff));
                 break;
             default:
                 assert(0);
