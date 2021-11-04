@@ -228,6 +228,15 @@ public:
         eglSwapBuffers(eglDisplay, surface);
         processKeys(window);
     }
+
+    void swapBuffersWithDamage(int *rects, int nrects) override {
+        if (!checkExtension("EGL_KHR_swap_buffers_with_damage", eglExtensions))
+            return;
+
+        bindAPI(api);
+        eglSwapBuffersWithDamageEXT(eglDisplay, surface, rects, nrects);
+        processKeys(window);
+    }
 };
 
 
