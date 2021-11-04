@@ -155,6 +155,8 @@ public:
     virtual void copySubBuffer(int x, int y, int width, int height);
 
     virtual void swapBuffers(void) = 0;
+
+    virtual void swapBuffersWithDamage(int *rects, int nrects) {}
 };
 
 

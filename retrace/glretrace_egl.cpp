@@ -135,6 +135,33 @@ static void retrace_eglSetDamageRegionKHR(trace::Call &call)
     delete [] rects;
 }
 
+static void retrace_eglSwapBuffersWithDamage(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
+    trace::Array *rects_array = call.arg(2).toArray();
+    EGLint nrects = call.arg(3).toUInt();
+
+    frame_complete(call);
+
+    if (retrace::doubleBuffer) {
+        if (drawable) {
+            int *rects = new int[nrects*4];
+            for (size_t i = 0; i < (size_t)nrects*4; i++)
+                rects[i] = rects_array->values[i]->toSInt();
+
+            drawable->swapBuffersWithDamage(rects, nrects);
+            delete [] rects;
+        }
+    } else {
+        glFlush();
+    }
+
+    if (retrace::profilingFrameTimes) {
+        // Wait for presentation to finish
+        glFinish();
+        std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
+}
+
 static void retrace_eglChooseConfig(trace::Call &call) {
     if (!call.ret->toSInt()) {
         return;
@@ -345,8 +372,8 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglReleaseThread", &retrace::ignore},
     {"eglSetDamageRegionKHR", &retrace_eglSetDamageRegionKHR},
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
-    {"eglSwapBuffersWithDamageEXT", &retrace_eglSwapBuffers},  // ignores additional params
-    {"eglSwapBuffersWithDamageKHR", &retrace_eglSwapBuffers},  // ignores additional params
+    {"eglSwapBuffersWithDamageEXT", &retrace_eglSwapBuffersWithDamage},
+    {"eglSwapBuffersWithDamageKHR", &retrace_eglSwapBuffersWithDamage},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
     {"eglCreateImageKHR", &retrace::ignore},
