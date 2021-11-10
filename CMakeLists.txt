@@ -343,7 +343,7 @@ if (MINGW)
     endif ()
 
     # Avoid depending on MinGW runtime DLLs
-    add_linker_flags (-static-libgcc -static-libstdc++)
+    add_linker_flags (-static -static-libgcc -static-libstdc++)
 elseif (ENABLE_STATIC_EXE)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
