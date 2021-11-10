@@ -190,14 +190,6 @@ setProcessName(const char *processName)
     if (!bHooked) {
         bHooked = TRUE;
 
-        // XXX: mhook doesn't work reliably on Wine
-        // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        HMODULE hNtDll = GetModuleHandleA("ntdll");
-        if (hNtDll &&
-            GetProcAddress(hNtDll, "wine_get_version") != nullptr) {
-            return;
-        }
-
         LPVOID lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetModuleFileNameA");
         if (lpOrigAddress) {
             LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameA;
