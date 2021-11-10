@@ -4,15 +4,8 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
 
     include_directories (BEFORE
         ${DirectX_D3D11_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/thirdparty/directxmath/Inc
     )
-
-    check_include_file_cxx (directxmath.h HAVE_DIRECTXMATH)
-    if (NOT HAVE_DIRECTXMATH)
-        include_directories (BEFORE
-            ${CMAKE_CURRENT_SOURCE_DIR}/XNAMath
-        )
-        add_definitions (-DUSE_XNAMATH)
-    endif ()
 
     if (MINGW)
         # Several MinGW headers are lacking.  Use our own.
@@ -29,6 +22,7 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
             --include ${CMAKE_CURRENT_SOURCE_DIR}/mingw/tweaks.h
 
             -D_XM_NO_INTRINSICS_
+            -D_XM_NO_XMVECTOR_OVERLOADS_
             -DXMINLINE=inline
             -DXM_NO_ALIGNMENT
 

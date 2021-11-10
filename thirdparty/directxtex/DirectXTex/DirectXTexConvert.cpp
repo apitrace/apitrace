@@ -1308,13 +1308,13 @@ _Use_decl_annotations_ bool _LoadScanline( XMVECTOR* pDestination, size_t count,
 
                 // http://msdn.microsoft.com/en-us/library/windows/desktop/dd206750.aspx
 
-                // Y’  = Y - 16
-                // Cb’ = Cb - 128
-                // Cr’ = Cr - 128
+                // Yï¿½  = Y - 16
+                // Cbï¿½ = Cb - 128
+                // Crï¿½ = Cr - 128
 
-                // R = 1.1644Y’ + 1.5960Cr’
-                // G = 1.1644Y’ - 0.3917Cb’ - 0.8128Cr’
-                // B = 1.1644Y’ + 2.0172Cb’
+                // R = 1.1644Yï¿½ + 1.5960Crï¿½
+                // G = 1.1644Yï¿½ - 0.3917Cbï¿½ - 0.8128Crï¿½
+                // B = 1.1644Yï¿½ + 2.0172Cbï¿½
 
                 int r = (298 * y +           409 * v + 128) >> 8;
                 int g = (298 * y - 100 * u - 208 * v + 128) >> 8;
@@ -1344,13 +1344,13 @@ _Use_decl_annotations_ bool _LoadScanline( XMVECTOR* pDestination, size_t count,
 
                 // http://msdn.microsoft.com/en-us/library/windows/desktop/bb970578.aspx
 
-                // Y’  = Y - 64
-                // Cb’ = Cb - 512
-                // Cr’ = Cr - 512
+                // Yï¿½  = Y - 64
+                // Cbï¿½ = Cb - 512
+                // Crï¿½ = Cr - 512
 
-                // R = 1.1678Y’ + 1.6007Cr’
-                // G = 1.1678Y’ - 0.3929Cb’ - 0.8152Cr’
-                // B = 1.1678Y’ + 2.0232Cb’
+                // R = 1.1678Yï¿½ + 1.6007Crï¿½
+                // G = 1.1678Yï¿½ - 0.3929Cbï¿½ - 0.8152Crï¿½
+                // B = 1.1678Yï¿½ + 2.0232Cbï¿½
 
                 int r = static_cast<int>( (76533 * y +              104905 * v + 32768) >> 16 );
                 int g = static_cast<int>( (76533 * y -  25747 * u -  53425 * v + 32768) >> 16 );
@@ -1380,13 +1380,13 @@ _Use_decl_annotations_ bool _LoadScanline( XMVECTOR* pDestination, size_t count,
 
                 // http://msdn.microsoft.com/en-us/library/windows/desktop/bb970578.aspx
 
-                // Y’  = Y - 4096
-                // Cb’ = Cb - 32768
-                // Cr’ = Cr - 32768
+                // Yï¿½  = Y - 4096
+                // Cbï¿½ = Cb - 32768
+                // Crï¿½ = Cr - 32768
 
-                // R = 1.1689Y’ + 1.6023Cr’
-                // G = 1.1689Y’ - 0.3933Cb’ - 0.8160Cr’
-                // B = 1.1689Y’+ 2.0251Cb’
+                // R = 1.1689Yï¿½ + 1.6023Crï¿½
+                // G = 1.1689Yï¿½ - 0.3933Cbï¿½ - 0.8160Crï¿½
+                // B = 1.1689Yï¿½+ 2.0251Cbï¿½
 
                 int r = static_cast<int>( (76607 * y +              105006 * v + 32768) >> 16 );
                 int g = static_cast<int>( (76607 * y -  25772 * u -  53477 * v + 32768) >> 16 );
@@ -3625,7 +3625,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 if ( norm && clampzero ) v = XMVectorSaturate( v ) ; \
                 else if ( clampzero ) v = XMVectorClamp( v, g_XMZero, scalev ); \
                 else if ( norm ) v = XMVectorClamp( v, g_XMNegativeOne, g_XMOne ); \
-                else v = XMVectorClamp( v, -scalev + g_XMOne, scalev ); \
+                else v = XMVectorClamp( v, XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ), scalev ); \
                 v = XMVectorAdd( v, vError ); \
                 if ( norm ) v = XMVectorMultiply( v, scalev ); \
                 \
@@ -3637,9 +3637,9 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                     if (norm) vError = XMVectorDivide( vError, scalev ); \
                     \
                     /* Distribute error to next scanline and next pixel */ \
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError ); \
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError ); \
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError ); \
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) ); \
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) ); \
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) ); \
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 ); \
                 } \
                 else \
@@ -3650,7 +3650,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 } \
                 \
                 target = XMVectorMin( scalev, target ); \
-                target = XMVectorMax( (clampzero) ? g_XMZero : ( -scalev + g_XMOne ), target ); \
+                target = XMVectorMax( (clampzero) ? g_XMZero : ( XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ) ), target ); \
                 \
                 XMFLOAT4A tmp; \
                 XMStoreFloat4A( &tmp, target ); \
@@ -3679,7 +3679,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 if ( norm && clampzero ) v = XMVectorSaturate( v ) ; \
                 else if ( clampzero ) v = XMVectorClamp( v, g_XMZero, scalev ); \
                 else if ( norm ) v = XMVectorClamp( v, g_XMNegativeOne, g_XMOne ); \
-                else v = XMVectorClamp( v, -scalev + g_XMOne, scalev ); \
+                else v = XMVectorClamp( v, XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ), scalev ); \
                 v = XMVectorAdd( v, vError ); \
                 if ( norm ) v = XMVectorMultiply( v, scalev ); \
                 \
@@ -3691,9 +3691,9 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                     if (norm) vError = XMVectorDivide( vError, scalev ); \
                     \
                     /* Distribute error to next scanline and next pixel */ \
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError ); \
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError ); \
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError ); \
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) ); \
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) ); \
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) ); \
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 ); \
                 } \
                 else \
@@ -3704,7 +3704,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 } \
                 \
                 target = XMVectorMin( scalev, target ); \
-                target = XMVectorMax( (clampzero) ? g_XMZero : ( -scalev + g_XMOne ), target ); \
+                target = XMVectorMax( (clampzero) ? g_XMZero : ( XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ) ), target ); \
                 \
                 XMFLOAT4A tmp; \
                 XMStoreFloat4A( &tmp, target ); \
@@ -3731,7 +3731,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 if ( norm && clampzero ) v = XMVectorSaturate( v ) ; \
                 else if ( clampzero ) v = XMVectorClamp( v, g_XMZero, scalev ); \
                 else if ( norm ) v = XMVectorClamp( v, g_XMNegativeOne, g_XMOne ); \
-                else v = XMVectorClamp( v, -scalev + g_XMOne, scalev ); \
+                else v = XMVectorClamp( v, XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ), scalev ); \
                 v = XMVectorAdd( v, vError ); \
                 if ( norm ) v = XMVectorMultiply( v, scalev ); \
                 \
@@ -3743,9 +3743,9 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                     if (norm) vError = XMVectorDivide( vError, scalev ); \
                     \
                     /* Distribute error to next scanline and next pixel */ \
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError ); \
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError ); \
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError ); \
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) ); \
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) ); \
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) ); \
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 ); \
                 } \
                 else \
@@ -3756,7 +3756,7 @@ static const XMVECTORF32 g_ErrorWeight7 = { 7.f/16.f, 7.f/16.f, 7.f/16.f, 7.f/16
                 } \
                 \
                 target = XMVectorMin( scalev, target ); \
-                target = XMVectorMax( (clampzero) ? g_XMZero : ( -scalev + g_XMOne ), target ); \
+                target = XMVectorMax( (clampzero) ? g_XMZero : ( XMVectorAdd( XMVectorNegate( scalev ), g_XMOne ) ), target ); \
                 \
                 dest[ index ] = static_cast<type>( (selectw) ? XMVectorGetW( target ) : XMVectorGetX( target ) ) & mask; \
             } \
@@ -3858,9 +3858,9 @@ bool _StoreScanlineDither( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                     vError = XMVectorDivide( vError, Scale );
 
                     // Distribute error to next scanline and next pixel
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError );
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError );
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError );
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) );
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) );
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) );
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 );
                 }
                 else
@@ -3936,9 +3936,9 @@ bool _StoreScanlineDither( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                     vError = XMVectorDivide( vError, Scale );
 
                     // Distribute error to next scanline and next pixel
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError );
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError );
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError );
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) );
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) );
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) );
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 );
                 }
                 else
@@ -4023,9 +4023,9 @@ bool _StoreScanlineDither( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                     vError = XMVectorDivide( vError, g_Scale565pc );
 
                     // Distribute error to next scanline and next pixel
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError );
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError );
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError );
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) );
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) );
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) );
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 );
                 }
                 else
@@ -4071,9 +4071,9 @@ bool _StoreScanlineDither( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                     vError = XMVectorDivide( vError, g_Scale5551pc );
 
                     // Distribute error to next scanline and next pixel
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError );
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError );
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError );
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) );
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) );
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) );
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 );
                 }
                 else
@@ -4125,9 +4125,9 @@ bool _StoreScanlineDither( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                     vError = XMVectorDivide( vError, g_Scale8pc );
 
                     // Distribute error to next scanline and next pixel
-                    pDiffusionErrors[ index-delta ]   += XMVectorMultiply( g_ErrorWeight3, vError );
-                    pDiffusionErrors[ index+1 ]       += XMVectorMultiply( g_ErrorWeight5, vError );
-                    pDiffusionErrors[ index+2+delta ] += XMVectorMultiply( g_ErrorWeight1, vError );
+                    pDiffusionErrors[ index-delta ]   = XMVectorAdd( pDiffusionErrors[ index-delta ], XMVectorMultiply( g_ErrorWeight3, vError ) );
+                    pDiffusionErrors[ index+1 ]       = XMVectorAdd( pDiffusionErrors[ index+1 ], XMVectorMultiply( g_ErrorWeight5, vError ) );
+                    pDiffusionErrors[ index+2+delta ] = XMVectorAdd( pDiffusionErrors[ index+2+delta ], XMVectorMultiply( g_ErrorWeight1, vError ) );
                     vError = XMVectorMultiply( vError, g_ErrorWeight7 );
                 }
                 else
