@@ -7,7 +7,7 @@ if (DirectX_D3D11_4_INCLUDE_FOUND)
     )
 
     check_include_file_cxx (directxmath.h HAVE_DIRECTXMATH)
-    if (NOT HAVE_DIRECTXMATH)
+    if (NOT HAVE_DIRECTXMATH OR MINGW)
         include_directories (BEFORE
             ${CMAKE_CURRENT_SOURCE_DIR}/XNAMath
         )
