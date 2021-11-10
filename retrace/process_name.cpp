@@ -132,6 +132,9 @@ setProcessName(const char *processName)
 typedef DWORD (WINAPI *PFNGETMODULEFILENAMEA)(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
 static PFNGETMODULEFILENAMEA pfnGetModuleFileNameA = &GetModuleFileNameA;
 
+typedef DWORD (WINAPI *PFNGETMODULEFILENAMEW)(HMODULE hModule, LPWSTR lpFilename, DWORD nSize);
+static PFNGETMODULEFILENAMEW pfnGetModuleFileNameW = &GetModuleFileNameW;
+
 static inline HMODULE
 GetModuleFromAddress(PVOID pAddress)
 {
@@ -180,6 +183,39 @@ MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
     return pfnGetModuleFileNameA(hModule, lpFilename, nSize);
 }
 
+static DWORD WINAPI
+MyGetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
+{
+    if (hModule == nullptr) {
+        if (0) {
+            void *pCallerAddr = ReturnAddress();
+            HMODULE hCallerModule = GetModuleFromAddress(pCallerAddr);
+            WCHAR szCaller[MAX_PATH];
+            DWORD dwRet = pfnGetModuleFileNameW(hCallerModule, szCaller, sizeof szCaller);
+            assert(dwRet > 0);
+
+            std::cerr << "GetModuleFileNameW(" << hModule << ") from " << szCaller << "\n";
+        }
+
+        assert(!g_processName.empty());
+        assert(nSize != 0);
+
+        size_t len = g_processName.length();
+        if (len < nSize) {
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName.data(), -1, lpFilename, len);
+            lpFilename[len] = 0;
+            SetLastError(ERROR_SUCCESS);
+            return len;
+        } else {
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName.data(), -1, lpFilename, nSize - 1);
+            lpFilename[nSize - 1] = L'\0';
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return nSize;
+        }
+    }
+
+    return pfnGetModuleFileNameW(hModule, lpFilename, nSize);
+}
 
 void
 setProcessName(const char *processName)
@@ -198,6 +234,16 @@ setProcessName(const char *processName)
                 std::cerr << "error: failed to GetModuleFileNameA\n";
             }
             pfnGetModuleFileNameA = (PFNGETMODULEFILENAMEA)lpRealAddress;
+        }
+
+        lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetModuleFileNameW");
+        if (lpOrigAddress) {
+            LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameW;
+            LPVOID lpRealAddress = lpOrigAddress;
+            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+                std::cerr << "error: failed to GetModuleFileNameW\n";
+            }
+            pfnGetModuleFileNameW = (PFNGETMODULEFILENAMEW)lpRealAddress;
         }
     }
 }
