@@ -26,3 +26,6 @@
 	path = thirdparty/zlib
 	url = https://github.com/madler/zlib
 	shallow = true
+[submodule "thirdparty/DirectXMath"]
+	path = thirdparty/DirectXMath
+	url = https://github.com/microsoft/DirectXMath
