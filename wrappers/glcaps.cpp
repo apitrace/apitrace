@@ -273,6 +273,18 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
                 params[0] = 4096;
             }
             break;
+        case GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
+            if (config->ubo_offset_alignment > params[0])
+                params[0] = config->ubo_offset_alignment;
+            break;
+        case GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
+            if (config->tbo_offset_alignment > params[0])
+                params[0] = config->tbo_offset_alignment;
+            break;
+        case GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT:
+            if (config->ssbo_offset_alignment > params[0])
+                params[0] = config->ssbo_offset_alignment;
+            break;
         }
     }
 }

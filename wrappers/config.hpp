@@ -45,6 +45,9 @@ struct configuration
     int maxTextureSize;  // 2D texture size
     int numExtensions;
     char **extensionsList;
+    int ubo_offset_alignment;
+    int tbo_offset_alignment;
+    int ssbo_offset_alignment;
 
     inline
     configuration() :
@@ -53,7 +56,10 @@ struct configuration
         profileMask(0),
         maxTextureSize(0),
         numExtensions(0),
-        extensionsList(0)
+        extensionsList(0),
+        ubo_offset_alignment(0),
+        tbo_offset_alignment(0),
+        ssbo_offset_alignment(0)
     {}
 };
 
