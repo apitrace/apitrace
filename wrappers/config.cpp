@@ -390,15 +390,15 @@ getConfigString(const configuration *config, GLenum pname)
 
     switch (pname) {
     case GL_VERSION:
-        return (const GLubyte *) config->version.c_str();
+        return !config->version.empty() ? (const GLubyte *) config->version.c_str() : NULL;
     case GL_VENDOR:
-        return (const GLubyte *) config->vendor.c_str();
+        return !config->vendor.empty() ? (const GLubyte *) config->vendor.c_str() : NULL;
     case GL_EXTENSIONS:
-        return (const GLubyte *) config->extensions.c_str();
+        return !config->extensions.empty() ? (const GLubyte *) config->extensions.c_str() : NULL;
     case GL_RENDERER:
-        return (const GLubyte *) config->renderer.c_str();
+        return !config->renderer.empty() ? (const GLubyte *) config->renderer.c_str() : NULL;
     case GL_SHADING_LANGUAGE_VERSION:
-        return (const GLubyte *) config->glslVersion.c_str();
+        return !config->glslVersion.empty() ? (const GLubyte *) config->glslVersion.c_str() : NULL;
     default:
         return NULL;
     }
