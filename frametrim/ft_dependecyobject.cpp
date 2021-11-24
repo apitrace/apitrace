@@ -808,7 +808,36 @@ TextureObjectMap::TextureObjectMap():
 void
 TextureObjectMap::oglActiveTexture(const trace::Call& call)
 {
-    m_active_texture = call.arg(0).toUInt() - GL_TEXTURE0;
+    unsigned target = call.arg(0).toUInt();
+    switch (target) {
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_PROXY_TEXTURE_1D:
+    case GL_TEXTURE_1D:
+    case GL_PROXY_TEXTURE_2D:
+    case GL_TEXTURE_2D:
+    case GL_PROXY_TEXTURE_3D:
+    case GL_TEXTURE_3D:
+    case GL_TEXTURE_CUBE_MAP_ARRAY:
+    case GL_TEXTURE_1D_ARRAY:
+    case GL_TEXTURE_2D_ARRAY:
+    case GL_TEXTURE_2D_MULTISAMPLE:
+    case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
+    case GL_TEXTURE_BUFFER:
+    case GL_TEXTURE_RECTANGLE:
+        break;
+    default:
+        std::cerr << "Invalid texture target in call " << call.no
+                  << ":" << call.name() << "\n";
+        return;
+    }
+
+    m_active_texture = target - GL_TEXTURE0;
     addCall(trace2call(call));
 }
 
