@@ -27,11 +27,13 @@
 
 
 #include <string.h>
+#include <atomic>
 #include <limits.h> // for CHAR_MAX
 #include <memory> // for unique_ptr
 #include <iostream>
 #include <regex>
 #include <getopt.h>
+#include <time.h>
 #ifndef _WIN32
 #include <unistd.h> // for isatty()
 #endif
@@ -89,6 +91,7 @@ bool snapshotAlpha = false;
 bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
+bool watchdogEnabled = false;
 
 bool ignoreCalls = false;
 trace::CallSet callsToIgnore;
@@ -135,6 +138,86 @@ long long minFrameDurationUsec = 0;
 static void
 takeSnapshot(unsigned call_no, bool backBuffer);
 
+/**
+ * Retrace watchdog.
+ *
+ * Retrace watchdog triggers abort() if retrace of a single api call
+ * will take more than {TimeoutInSec} seconds.
+ */
+class RetraceWatchdog
+{
+public:
+    enum {
+        // This is high because loading sequences can cause very expensive
+        // frames with shader compiles, etc, and we do not want flaky results
+        // on occasionally slow lab devices.
+        TimeoutInSec = 300,
+        RunnerSleepInMills = 1000,
+    };
+
+    static uint32_t get_time_u32() {
+        return static_cast<uint32_t>(time(NULL));
+    }
+
+    static uint32_t get_duration_u32(uint32_t from, uint32_t to) {
+        if (to <= from) return 0;
+        return to - from;
+    }
+
+private:
+    typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
+
+    RetraceWatchdog()
+    : last_call_mark(get_time_u32()), want_exit(false) {
+        thread = os::thread(runnerThread, this);
+    }
+
+    std::thread thread;
+    std::atomic<uint64_t> last_call_mark;
+    std::atomic<bool> want_exit;
+
+    static void runnerThread(RetraceWatchdog* rw) {
+        while(!rw->want_exit) {
+            // Once a second check if progress has been made.
+            uint64_t mark = rw->last_call_mark;
+            uint32_t dur = get_duration_u32(
+                    static_cast<uint32_t>(mark&0xFFFFFFFF),
+                    get_time_u32()
+                );
+
+            if (dur >= static_cast<uint32_t>(TimeoutInSec)) {
+                fprintf(
+                    stderr,
+                    "Exception: Retrace watchdog timeout has occured at call %u!\n",
+                    static_cast<uint32_t>(mark >> 32));
+                abort();
+            }
+            os::sleep(RunnerSleepInMills * 1000);
+        }
+    }
+
+public:
+    ~RetraceWatchdog() {
+        want_exit = true;
+        if (thread.joinable()) {
+           thread.join();
+        }
+    }
+    // Assuming we use C++ 11 or newer therefore the following singleton
+    // implementation is thread safe
+    static RetraceWatchdog& Instance() {
+        static RetraceWatchdog inst;
+        return inst;
+    }
+
+	  void CallProcessed(uint32_t call_no) {
+      // Record time and monotonic number/id of last trace call.
+      last_call_mark = (static_cast<uint64_t>(call_no) << 32) | get_time_u32();
+    }
+
+    RetraceWatchdog(RetraceWatchdog const&) = delete;
+    void operator=(RetraceWatchdog const&) = delete;
+};
 
 /**
  * Called when we are about to present.
@@ -476,6 +559,8 @@ public:
             assert(call->thread_id == leg);
 
             retraceCall(call);
+            if (watchdogEnabled)
+              RetraceWatchdog::Instance().CallProcessed(call->no);
             if (!call->reuse_call)
                 delete call;
             call = parser->parse_call();
@@ -649,6 +734,8 @@ mainLoop() {
         trace::Call *call;
         while ((call = parser->parse_call())) {
             retraceCall(call);
+            if (watchdogEnabled)
+                RetraceWatchdog::Instance().CallProcessed(call->no);
             if (!call->reuse_call)
                 delete call;
         }
@@ -724,6 +811,7 @@ usage(const char *argv0) {
         "      --per-frame-delay=MICROSECONDS   add extra delay after each frame (in addition to min-frame-duration)\n"
         "  -w, --wait              waitOnFinish on final frame\n"
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
+        "      --watchdog          invokes abort() if retrace of a single api call will take more than " << retrace::RetraceWatchdog::TimeoutInSec << " seconds\n"
         "      --singlethread      use a single thread to replay command stream\n"
         "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
@@ -752,6 +840,7 @@ enum {
     GENPASS_OPT,
     MSAA_NO_RESOLVE_OPT,
     SB_OPT,
+    WATCHDOG_OPT,
     MIN_FRAME_DURATION_OPT,
     PER_FRAME_DELAY_OPT,
     LOOP_OPT,
@@ -812,6 +901,7 @@ longOptions[] = {
     {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
+    {"watchdog", no_argument, 0, WATCHDOG_OPT},
     {"min-frame-duration", required_argument, 0, MIN_FRAME_DURATION_OPT},
     {"per-frame-delay", required_argument, 0, PER_FRAME_DELAY_OPT},
     {"loop", optional_argument, 0, LOOP_OPT},
@@ -1194,6 +1284,9 @@ int main(int argc, char **argv)
             break;
         case MIN_FRAME_DURATION_OPT:
             minFrameDurationUsec = trace::intOption(optarg, 0);
+            break;
+        case WATCHDOG_OPT:
+            retrace::watchdogEnabled = true;
             break;
         case PER_FRAME_DELAY_OPT:
             perFrameDelayUsec = trace::intOption(optarg, 0);
