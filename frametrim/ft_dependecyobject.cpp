@@ -808,8 +808,16 @@ TextureObjectMap::TextureObjectMap():
 void
 TextureObjectMap::oglActiveTexture(const trace::Call& call)
 {
-    m_active_texture = call.arg(0).toUInt() - GL_TEXTURE0;
-    addCall(trace2call(call));
+    unsigned active_texture = call.arg(0).toUInt() - GL_TEXTURE0;
+
+    if (active_texture < GL_TEXTURE31 - GL_TEXTURE0) {
+        m_active_texture = active_texture;
+        addCall(trace2call(call));
+    } else {
+        std::cerr << call.no << ": " << call.name()
+                  << " Invalid texture unit " << call.arg(0).toUInt()
+                  << " specified, ignoring call\n";
+    }
 }
 
 enum TexTypes {
