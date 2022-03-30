@@ -515,13 +515,14 @@ void Retracer::run()
 
                 for (int headerLine = 0; headerLine < headerLines; ++headerLine) {
                     qint64 headerRead = io.readLine(&header[headerSize], sizeof(header) - headerSize);
+                    if (headerRead > 0) {
+                        // if header actually contains optional comment line, ...
+                        if (headerLine == 1 && header[headerSize] == '#') {
+                            ++headerLines;
+                        }
 
-                    // if header actually contains optional comment line, ...
-                    if (headerLine == 1 && header[headerSize] == '#') {
-                        ++headerLines;
+                        headerSize += headerRead;
                     }
-
-                    headerSize += headerRead;
                 }
 
                 const char *headerEnd = image::readPNMHeader(header, headerSize, info);
