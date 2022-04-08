@@ -12,6 +12,7 @@ add_definitions (-DQT_FORCE_ASSERTS)
 add_library (qubjson STATIC
     qubjson.cpp
 )
+target_link_libraries (qubjson Qt5::Widgets)
 
 if (BUILD_TESTING)
     add_gtest (qubjson_test qubjson_test.cpp)
@@ -98,21 +99,9 @@ include_directories (
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-# Avoid qt5_use_modules. See also:
-# - https://bugreports.qt.io/browse/QTBUG-39457
-# - http://doc.qt.io/qt-5/cmake-manual.html
-# - http://www.kdab.com/using-cmake-with-qt-5/
-if (Qt5Core_VERSION_STRING VERSION_LESS 5.2.0)
-    qt5_use_modules (qubjson Widgets)
-    qt5_use_modules (qubjson_test Widgets)
-    qt5_use_modules (qapitrace Widgets Network)
-else ()
-    target_link_libraries (qubjson Qt5::Widgets)
-    target_link_libraries (qubjson_test Qt5::Widgets)
-    target_link_libraries (qapitrace Qt5::Widgets Qt5::Network)
-endif ()
-
 target_link_libraries (qapitrace
+    Qt5::Widgets
+    Qt5::Network
     qubjson
     image
     common
