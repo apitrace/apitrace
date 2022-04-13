@@ -29,7 +29,7 @@ if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
 If you have Qt in a non-standard directory, you'll need to set
-[`-DCMAKE_PREFIX_PATH`](http://doc.qt.io/qt-5/cmake-manual.html).
+[`-DCMAKE_PREFIX_PATH`](https://doc.qt.io/qt-5/cmake-manual.html).
 
 
 The code also depends on snappy libraries, but the bundled sources are always
@@ -142,7 +142,7 @@ After you've successfully configured, you can start the build by invoking CMake 
 ### Deployment ###
 
 To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the system path, or use
-[Qt's Windows deployment tool](http://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
+[Qt's Windows deployment tool](https://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
     set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2017\bin;%Path%
@@ -162,10 +162,10 @@ bet is to user an [older version of the code](https://github.com/apitrace/apitra
 
 Additional requirements:
 
-* [MinGW-w64](http://mingw-w64.sourceforge.net/) (tested with mingw-w64's gcc version 4.9)
+* [MinGW-w64](https://www.mingw-w64.org/) (tested with mingw-w64's gcc version 4.9)
 
 * [DirectX headers](https://github.com/apitrace/dxsdk)
 
 It's also possible to cross-compile Windows binaries from Linux with
-[MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
+[MinGW cross compilers](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/cross_compiling/Mingw).
 

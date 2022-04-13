@@ -137,7 +137,7 @@ paste the URL into the issue description.
 
 Trace files are only slightly compressed (for performance reasons).  You can
 further reduce their size when attaching/uploading by compressing with
-[XZ](http://tukaani.org/xz/) or [7-Zip](http://www.7-zip.org/).
+[XZ](https://tukaani.org/xz/) or [7-Zip](https://www.7-zip.org/).
 
 
 # Bugs on tracing #
@@ -183,13 +183,11 @@ To trace an application inside GDB invoke apitrace as:
 
 See also more detailed and Distro specific instructions:
 
-* http://wiki.debian.org/HowToGetABacktrace
+* https://wiki.debian.org/HowToGetABacktrace
 
 * https://wiki.ubuntu.com/Backtrace
 
-* http://fedoraproject.org/wiki/StackTraces
-
-* http://live.gnome.org/GettingTraces
+* https://fedoraproject.org/wiki/StackTraces
 
 
 ## Mac OS X ##

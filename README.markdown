@@ -11,7 +11,7 @@ About **apitrace**
 
 * visualize and edit trace files.
 
-See the [apitrace homepage](http://apitrace.github.io/) for more details.
+See the [apitrace homepage](https://apitrace.github.io/) for more details.
 
 
 Status
@@ -27,7 +27,7 @@ Obtaining **apitrace**
 ======================
 
 To obtain apitrace either [download the latest
-binaries](http://apitrace.github.io/#download) for your platform if available,
+binaries](https://apitrace.github.io/#download) for your platform if available,
 or follow [these instructions](docs/INSTALL.markdown) to build and install it
 yourself.
 
