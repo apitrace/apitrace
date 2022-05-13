@@ -628,6 +628,7 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_RV(glFramebufferTextureLayer, fboBindAttachment, m_textures,2);
     MAP_RV(glFramebufferTexture1D, fboBindAttachment, m_textures,3);
     MAP_RV(glFramebufferTexture2D, fboBindAttachment, m_textures, 3);
+    MAP_RV(glFramebufferTexture3D, fboBindAttachment, m_textures, 3);
     MAP_RV(glFramebufferRenderbuffer, fboBindAttachment, m_renderbuffers, 3);
     MAP(glReadBuffer, fboReadBuffer);
 
@@ -703,6 +704,7 @@ void FrameTrimmeImpl::registerDrawCalls()
     MAP(glDrawElementsIndirect, oglDraw);
     MAP(glMultiDrawArraysIndirect, oglDraw);
     MAP(glMultiDrawElementsIndirect, oglDraw);
+    MAP(glMultiDrawElements, oglDraw);
 }
 
 void
