@@ -174,6 +174,7 @@ WGLContextAttribs = AttribArray(Const(WGLenum), [
         'WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB',
         'WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB',
     ])),
+    ("WGL_CONTEXT_OPENGL_NO_ERROR_ARB", BOOL),
 ])
 
 WGLPixelFormatAttribsList = [
