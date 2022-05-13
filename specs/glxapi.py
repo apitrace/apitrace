@@ -167,6 +167,7 @@ GLXEnum = FakeEnum(Int, [
     "GLX_GPU_NUM_SIMD_AMD",		# 0x21A6
     "GLX_GPU_NUM_RB_AMD",		# 0x21A7
     "GLX_GPU_NUM_SPI_AMD",		# 0x21A8
+    "GLX_CONTEXT_OPENGL_NO_ERROR_ARB",		# 0x31B3
     "GLX_NONE",		# 0x8000
     "GLX_SLOW_CONFIG",		# 0x8001
     "GLX_TRUE_COLOR",		# 0x8002
@@ -350,6 +351,7 @@ GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
         'GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB',
         'GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB',
     ])),
+    ('GLX_CONTEXT_OPENGL_NO_ERROR_ARB', Bool),
 ])
 
 GLXPixmapAttribs = AttribArray(Const(GLXEnum), [
