@@ -44,7 +44,7 @@ namespace glws {
 static EGLDisplay eglDisplay = EGL_NO_DISPLAY;
 static char const *eglExtensions = NULL;
 static bool has_EGL_KHR_create_context = false;
-
+static bool has_EXT_create_context_robustness = false;
 
 static EGLenum
 translateAPI(glfeatures::Profile profile)
@@ -302,6 +302,7 @@ init(void) {
 
     eglExtensions = eglQueryString(eglDisplay, EGL_EXTENSIONS);
     has_EGL_KHR_create_context = checkExtension("EGL_KHR_create_context", eglExtensions);
+    has_EXT_create_context_robustness = checkExtension("EXT_create_context_robustness", eglExtensions);
 }
 
 void
@@ -480,6 +481,10 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         assert(0);
         return NULL;
     }
+
+    if (profile.notifyLostContext && has_EXT_create_context_robustness)
+        attribs.add(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT,
+                    EGL_LOSE_CONTEXT_ON_RESET_EXT);
 
     if (debug) {
         contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;

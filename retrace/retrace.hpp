@@ -124,6 +124,12 @@ extern int verbosity;
 extern int debug;
 
 /**
+ * Create robust context and check for lost context
+ */
+extern bool notifyLostContext;
+
+
+/**
  * Call no markers.
  */
 extern bool markers;

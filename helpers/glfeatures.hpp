@@ -53,6 +53,7 @@ struct Profile {
     unsigned api:1;
     unsigned core:1;
     unsigned forwardCompatible:1;
+    bool notifyLostContext:1;
 
     inline
     Profile(
@@ -68,6 +69,7 @@ struct Profile {
         samples = 1;
         core = _core;
         forwardCompatible = _forwardCompatible;
+        notifyLostContext = false;
     }
 
     inline bool
