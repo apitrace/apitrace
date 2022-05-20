@@ -194,7 +194,13 @@ public:
             os.put(BINSTRING);
             putInt32(length);
         }
-        os.write(s, length);
+
+        /* FIXME: handle non-ASCII better */
+        for (size_t i = 0; i < length; ++i) {
+            char c = s[i];
+            c = c >= 0 && c < 0x80 ? c : '?';
+            os.put(c);
+        }
 
         os.put(BINPUT);
         os.put(1);
