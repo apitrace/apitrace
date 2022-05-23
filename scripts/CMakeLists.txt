@@ -1,7 +1,6 @@
 install (
     PROGRAMS
         convert.py
-        history.py
         jsondiff.py
         jsonextractimages.py
         leaks.py
