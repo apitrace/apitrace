@@ -44,7 +44,7 @@ static bool has_GLX_EXT_create_context_es2_profile = false;
 static bool has_GLX_EXT_swap_control = false;
 static bool has_GLX_MESA_swap_control = false;
 static bool has_GLX_OML_swap_method = false;
-
+static bool has_GLX_ARB_robustness = false;
 
 class GlxVisual : public Visual
 {
@@ -245,6 +245,7 @@ init(void) {
     CHECK_EXTENSION(GLX_EXT_swap_control);
     CHECK_EXTENSION(GLX_MESA_swap_control);
     CHECK_EXTENSION(GLX_OML_swap_method);
+    CHECK_EXTENSION(GLX_ARB_robustness);
 
 #undef CHECK_EXTENSION
 }
@@ -386,6 +387,10 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         }
         if (contextFlags) {
             attribs.add(GLX_CONTEXT_FLAGS_ARB, contextFlags);
+        }
+        if (profile.notifyLostContext && has_GLX_ARB_robustness) {
+            attribs.add(GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB,
+                        GLX_LOSE_CONTEXT_ON_RESET_ARB);
         }
         attribs.end();
 

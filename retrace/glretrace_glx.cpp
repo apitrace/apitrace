@@ -159,6 +159,16 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
         glFlush();
     }
 
+    if (retrace::notifyLostContext &&
+        glretrace::getCurrentContext()->features().support_reset_notification) {
+        if (glGetGraphicsResetStatus() != GL_NO_ERROR) {
+            std::cerr << "Context was lost, aborting rendering." << std::endl;
+            exit(-2);
+        }
+    }
+
+
+
     if (retrace::profilingFrameTimes) {
         // Wait for presentation to finish
         glFinish();
