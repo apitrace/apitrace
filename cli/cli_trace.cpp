@@ -332,13 +332,13 @@ usage(void)
         "    with other apitrace utilities for replay or analysis.\n"
         "\n"
         "    -v, --verbose       verbose output\n"
-        "    -a, --api=API       specify API to trace ("
+        "    -a, --api=API       specify API to trace: "
 #ifdef _WIN32
-                                                      "gl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher) "
+                                                      "gl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher)"
 #else
-                                                      "gl or egl"
+                                                      "gl (for glx or cgl) or egl"
 #endif
-                                                      ");\n"
+                                                      ";\n"
         "                        default is `gl`\n"
         "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n"
