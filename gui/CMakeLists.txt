@@ -95,7 +95,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
+    ${CMAKE_BINARY_DIR}
 )
+
+add_dependencies(apitrace version)
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 

@@ -564,6 +564,17 @@ endif ()
 
 
 ##############################################################################
+# Versioning
+
+find_package(Git)
+add_custom_target(version
+  ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/version.h.in
+		   -D DST=${CMAKE_BINARY_DIR}/version.h
+		   -D GIT_EXECUTABLE=${GIT_EXECUTABLE}
+		   -P ${CMAKE_MODULE_PATH}/GenerateVersion.cmake
+  )
+
+##############################################################################
 # Packaging
 
 install (
@@ -579,16 +590,6 @@ install (
     DESTINATION ${DOC_INSTALL_DIR}
     RENAME LICENSE.txt
 )
-
-set (CPACK_PACKAGE_VERSION "latest")
-# https://www.appveyor.com/docs/environment-variables/
-if (($ENV{APPVEYOR}) AND ($ENV{APPVEYOR_REPO_TAG}))
-    set (CPACK_PACKAGE_VERSION "$ENV{APPVEYOR_REPO_TAG_NAME}")
-endif ()
-# https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-if ("$ENV{GITHUB_ACTIONS}" STREQUAL "true" AND "$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
-    set (CPACK_PACKAGE_VERSION "${CMAKE_MATCH_1}")
-endif ()
 
 # cpack mistakenly detects Mingw-w64 as win32
 if (MINGW)

@@ -1,0 +1,2 @@
+#pragma once
+#define APITRACE_VERSION "@APITRACE_VERSION@"
