@@ -8,6 +8,8 @@
 #include "os_string.hpp"
 #include "os_process.hpp"
 
+#include "version.h"
+
 #include <QApplication>
 #include <QMetaType>
 #include <QVariant>
@@ -22,10 +24,15 @@ Q_DECLARE_METATYPE(ImageHash);
 
 static void usage(void)
 {
-    qWarning("usage: qapitrace [options] [TRACE] [CALLNO]\n"
+    qInfo("usage: qapitrace [options] [TRACE] [CALLNO]\n"
              "Valid options include:\n"
              "    -h, --help            Print this help message\n"
+             "    -v, --version         Print version\n"
              "    --remote-target HOST  Replay trace on remote target HOST\n");
+}
+static void version(void)
+{
+    qInfo("qapitrace %s", APITRACE_VERSION);
 }
 
 int main(int argc, char **argv)
@@ -72,6 +79,10 @@ int main(int argc, char **argv)
         } else if (arg == QLatin1String("-h") ||
                    arg == QLatin1String("--help")) {
             usage();
+            exit(0);
+        } else if (arg == QLatin1String("-v") ||
+                   arg == QLatin1String("--version")) {
+            version();
             exit(0);
         } else {
             usage();

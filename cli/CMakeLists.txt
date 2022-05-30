@@ -17,6 +17,7 @@ endif ()
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/thirdparty
+    ${CMAKE_BINARY_DIR}
 )
 
 add_executable (apitrace
@@ -46,6 +47,8 @@ target_link_libraries (apitrace
     getopt
     ${CMAKE_DL_LIBS}
 )
+
+add_dependencies(apitrace version)
 
 if (NOT CMAKE_CROSSCOMPILING)
     # On debug builds tell where the source is so that scripts can be found
