@@ -240,8 +240,10 @@ static void retrace_glXChooseFBConfig(trace::Call &call) {
 
     if (samples > 0) {
         const auto ids = call.ret->toArray();
-        for (auto& v : ids->values)
-            fbconfig_map[v->toUInt()] = samples;
+        if (ids) {
+            for (auto& v : ids->values)
+                fbconfig_map[v->toUInt()] = samples;
+        }
     }
 }
 
