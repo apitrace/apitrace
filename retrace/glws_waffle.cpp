@@ -266,7 +266,7 @@ createContext(const Visual *visual, Context *shareContext,
 
     context = waffle_context_create(waffleVisual->config, share_context);
     if (!context) {
-        std::cerr << "error: waffle_context_create failed\n";
+        std::cerr << "error: failed to create " << waffleVisual->profile << " context.\n";
         exit(1);
         return NULL;
     }
