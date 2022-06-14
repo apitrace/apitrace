@@ -1301,6 +1301,10 @@ int main(int argc, char **argv)
         }
     }
 
+    if (loopCount) {
+        std::cerr << "warning: --loop blindly repeats the last frame calls, therefore frames might not necessarily render correctly (https://github.com/apitrace/apitrace/issues/800)" << std::endl;
+    }
+
 #ifndef _WIN32
     if (!isatty(STDOUT_FILENO)) {
         dumpFlags |= trace::DUMP_FLAG_NO_COLOR;
