@@ -74,6 +74,8 @@ class GlRetracer(Retracer):
         "glFogCoordPointerEXT",
         "glSecondaryColorPointerEXT",
 
+        "glMultiTexCoordPointerEXT",
+
         "glVertexAttribPointer",
         "glVertexAttribPointerARB",
         "glVertexAttribPointerNV",
