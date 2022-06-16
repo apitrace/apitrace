@@ -221,7 +221,16 @@ OpenGLImpl::skipDeleteObj(const trace::Call& call)
         map = &m_textures;
 
     if (!strcmp(call.name(), "glDeleteFramebuffers"))
-        map = &m_current_context->m_fbo;
+    {
+        if (m_current_context)
+        {
+            map = &m_current_context->m_fbo;
+        }
+        else
+        {
+            std::cerr << "[OpenGLImpl::skipDeleteObj] m_current_context is empty " << std::endl;
+        }
+    }
 
     if (!strcmp(call.name(), "glDeleteRenderbuffers"))
         map = &m_renderbuffers;
@@ -777,13 +786,16 @@ void OpenGLImpl::registerRequiredCalls()
         "eglDestroyContext",
         "eglDestroySurface",
         "eglBindAPI",
-        "eglSwapInterval", 
+        "eglSwapInterval",
         "eglTerminate",
-        
-        "wglChoosePixelFormat", 
-        "wglSetPixelFormat", 
-        "wglSwapIntervalEXT", 
-        
+
+        "wglChoosePixelFormat",
+        "wglSetPixelFormat",
+        "wglSwapIntervalEXT",
+        "wglDeleteContext",
+        "wglCreatePbufferARB",
+        "wglShareLists",
+
         "glPixelStorei", /* Being lazy here, we could track the dependency
                             in the relevant calls */
     };
@@ -795,6 +807,7 @@ void OpenGLImpl::registerRequiredCalls()
     MAP_V(eglCreateContext, createContext, 2);
     MAP_V(wglCreateContext, createContext, -1);
     MAP_V(wglCreateContextAttribs, createContext, 1);
+    MAP_V(wglCreateLayerContext, createContext, 1);
 
     MAP_V(glXMakeCurrent, makeCurrent, 2);
     MAP_V(glXMakeContextCurrent, makeCurrent, 3);
@@ -868,9 +881,11 @@ void OpenGLImpl::registerIgnoreHistoryCalls()
         "wglGetCurrentContext",
         "wglGetProcAddress",
         "wglGetExtensionsString",
-        "wglGetPixelFormat", 
-        "wglDeleteContext", 
-        "wglDescribePixelFormat"
+        "wglGetPixelFormat",
+        "wglDeleteContext",
+        "wglDescribePixelFormat",
+        "wglGetExtensionsStringARB",
+        "wglGetPbufferDCARB",
      };
     auto ignore_history_func = bind(&OpenGLImpl::ignoreHistory, this, _1);
     updateCallTable(ignore_history_calls, ignore_history_func);
@@ -1444,6 +1459,13 @@ void OpenGLImpl::createContext(const trace::Call& call, int shared_param)
 void OpenGLImpl::makeCurrent(const trace::Call& call, unsigned param)
 {
     void *ctx_id = call.arg(param).toPointer();
+
+    if (ctx_id == nullptr)
+    {
+        std::cerr << "\nWarning: Trace sets null context in makeCurrent(). Skipping as a workaround for bugs!\n";
+        return;
+    }
+
     auto ictx = m_contexts.find(ctx_id);
     uint32_t context_id = 0;
 
@@ -1451,8 +1473,10 @@ void OpenGLImpl::makeCurrent(const trace::Call& call, unsigned param)
         m_current_context = ictx->second;
         m_thread_active_context[call.thread_id] = ictx->second;
         context_id = m_current_context->m_id;
-    } else
+    } else {
+        std::cerr << "\nWarning: Could not find the context in makeCurrent(). Was it created?\n";
         m_current_context = nullptr;
+    }
 
     assert(!ctx_id || m_current_context);
     m_required_calls.insert(trace2call(call));
