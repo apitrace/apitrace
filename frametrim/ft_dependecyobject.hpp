@@ -52,6 +52,8 @@ public:
     void setExtraInfo(const std::string& key, unsigned value);
     void eraseExtraInfo(const std::string& key);
 
+    bool createdBefore(unsigned callno) const;
+
 private:
 
     std::vector<PTraceCall> m_calls;

@@ -109,6 +109,14 @@ void UsedObject::eraseExtraInfo(const std::string& key)
     m_extra_info.erase(key);
 }
 
+bool UsedObject::createdBefore(unsigned callno) const
+{
+    if (m_calls.empty())
+        return false;
+
+    return callno > 0 && m_calls[0]->callNo() < callno;
+}
+
 void
 DependecyObjectMap::generate(const trace::Call& call)
 {
@@ -450,7 +458,6 @@ void DependecyObjectMap::addCall(PTraceCall call)
 {
     m_calls.push_back(call);
 }
-
 
 UsedObject::Pointer
 DependecyObjectMap::getById(unsigned id) const

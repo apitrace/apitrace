@@ -141,6 +141,8 @@ static int trim_to_frame(const char *filename,
     unsigned ncalls2 = 0;
 
     unsigned calls_in_this_frame = 0;
+    bool start_last_frame = false;
+
     while (call) {
         /* There's no use doing any work past the last call and frame
         * requested by the user. */
@@ -151,8 +153,13 @@ static int trim_to_frame(const char *filename,
         Frametype ft = ft_none;
         if (options.setupframes.contains(frame, call->flags))
             ft = ft_key_frame;
-        if (options.frames.contains(frame, call->flags))
+        if (options.frames.contains(frame, call->flags)) {
             ft = ft_retain_frame;
+            if (!start_last_frame && frame == options.frames.getLast()) {
+                start_last_frame = true;
+                trimmer.start_last_frame(call->no);
+            }
+        }
 
         trimmer.call(*call, ft);
 
