@@ -202,6 +202,7 @@ struct FrameTrimmeImpl {
 
     PTraceCall m_last_swap;
     bool m_keep_all_state_calls;
+    unsigned m_last_frame_start;
 };
 
 FrameTrimmer::FrameTrimmer(bool keep_all_states)
@@ -212,6 +213,12 @@ FrameTrimmer::FrameTrimmer(bool keep_all_states)
 FrameTrimmer::~FrameTrimmer()
 {
     delete impl;
+}
+
+void FrameTrimmer::start_last_frame(uint32_t callno)
+{
+    std::cerr << "\n---> Start last frame at call no " << callno << "\n";
+    impl->m_last_frame_start = callno;
 }
 
 void
@@ -239,7 +246,8 @@ void FrameTrimmer::finalize()
 
 FrameTrimmeImpl::FrameTrimmeImpl(bool keep_all_states):
     m_recording_frame(false),
-    m_keep_all_state_calls(keep_all_states)
+    m_keep_all_state_calls(keep_all_states),
+    m_last_frame_start(0)
 {
     registerStateCalls();
     registerLegacyCalls();
@@ -267,6 +275,13 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
         startTargetFrame();
     if (m_recording_frame && (frametype == ft_none))
         endTargetFrame();
+
+    /* Skip delete calls for objects that have never been emitted, or
+     * if we are in the last frame and the object was created in an earlier frame.
+     * By not deleting such objects looping the last frame will work in more cases */
+    if (skipDeleteObj(call)) {
+        return;
+    }
 
     auto icb = m_call_table_cache.find(call.name());
     if (icb != m_call_table_cache.end())
@@ -307,7 +322,7 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
             }
         } else  if (!(call.flags & trace::CALL_FLAG_END_FRAME)) {
             /* This should be some debug output only, because we might
-         * not handle some calls deliberately */
+             * not handle some calls deliberately */
             if (m_unhandled_calls.find(call_name) == m_unhandled_calls.end()) {
                 std::cerr << "Call " << call.no
                           << " " << call_name << " not handled\n";
@@ -322,10 +337,6 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
         if (call.flags & trace::CALL_FLAG_END_FRAME)
             m_last_swap = c;
     } else {
-        /* Skip delete calls for objects that have never been emitted */
-        if (skipDeleteObj(call))
-            return;
-
         if (!(call.flags & trace::CALL_FLAG_END_FRAME)) {
             m_required_calls.insert(c);
         } else {
@@ -442,7 +453,7 @@ bool
 FrameTrimmeImpl::skipDeleteImpl(unsigned obj_id, DependecyObjectMap& map)
 {
     auto obj = map.getById(obj_id);
-    return !obj || !obj->emitted();
+    return !obj || (m_recording_frame && !obj->emitted()) || obj->createdBefore(m_last_frame_start);
 }
 
 void FrameTrimmeImpl::finalize()

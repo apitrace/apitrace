@@ -46,6 +46,7 @@ public:
     FrameTrimmer(bool keep_all_states);
     ~FrameTrimmer();
 
+    void start_last_frame(uint32_t callno);
     void call(const trace::Call& call, Frametype target_frame_type);
 
     void finalize();
