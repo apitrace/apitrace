@@ -974,6 +974,8 @@ void FrameTrimmeImpl::registerRequiredCalls()
 
         "eglInitialize",
         "eglCreatePlatformWindowSurface",
+        "eglDestroyContext",
+        "eglDestroySurface",
         "eglBindAPI",
 
         "glPixelStorei", /* Being lazy here, we could track the dependency
@@ -1040,6 +1042,9 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "eglGetPlatformDisplay",
         "eglGetConfigs",
         "eglGetConfigAttrib",
+        "eglGetCurrentContext",
+        "eglGetCurrentDisplay",
+        "eglGetCurrentSurface",
         "eglQuerySurface",
      };
     auto ignore_history_func = bind(&FrameTrimmeImpl::ignoreHistory, this, _1);
