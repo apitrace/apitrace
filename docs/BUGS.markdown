@@ -125,8 +125,6 @@ issue.
 
 # Attachments #
 
-github issue tracker doesn't support attachments.
-
 Please attach long logs to https://gist.github.com/ and paste the URL into the
 issue description.
 
