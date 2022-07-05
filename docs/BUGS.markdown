@@ -137,7 +137,8 @@ paste the URL into the issue description.
 
 Trace files are only slightly compressed (for performance reasons).  You can
 further reduce their size when attaching/uploading by compressing with
-[XZ](https://tukaani.org/xz/) or [7-Zip](https://www.7-zip.org/).
+`apitrace repack -b`.
+If the hosting service requires archives (for example, Github), you can use gzip on Linux/Mac or zip on Windows, preferably with the weakest compression.
 
 
 # Bugs on tracing #
