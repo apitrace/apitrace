@@ -150,7 +150,7 @@ public:
     enum {
         // This is high because loading sequences can cause very expensive
         // frames with shader compiles, etc, and we do not want flaky results
-        // on occasionally slow lab devices.
+        // on occasionally devices.
         TimeoutInSec = 300,
         RunnerSleepInMills = 1000,
     };
@@ -210,7 +210,7 @@ public:
         return inst;
     }
 
-	  void CallProcessed(uint32_t call_no) {
+    void CallProcessed(uint32_t call_no) {
       // Record time and monotonic number/id of last trace call.
       last_call_mark = (static_cast<uint64_t>(call_no) << 32) | get_time_u32();
     }
