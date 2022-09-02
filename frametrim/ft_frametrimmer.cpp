@@ -888,6 +888,8 @@ FrameTrimmeImpl::registerStateCalls()
         "glClipControl",
         "glColorMask",
         "glCullFace",
+        "glDebugMessageCallback",
+        "glDebugMessageControl",
         "glDepthFunc",
         "glDepthMask",
         "glDepthRange",
@@ -995,7 +997,11 @@ void FrameTrimmeImpl::registerRequiredCalls()
         "eglDestroyContext",
         "eglDestroySurface",
         "eglBindAPI",
-
+        
+        "wglChoosePixelFormat", 
+        "wglSetPixelFormat", 
+        "wglSwapIntervalEXT", 
+        
         "glPixelStorei", /* Being lazy here, we could track the dependency
                             in the relevant calls */
     };
@@ -1005,10 +1011,13 @@ void FrameTrimmeImpl::registerRequiredCalls()
     MAP_V(glXCreateNewContext, createContext, -1);
     MAP_V(glXCreateContextAttribs, createContext, 2);
     MAP_V(eglCreateContext, createContext, 2);
+    MAP_V(wglCreateContext, createContext, -1);
+    MAP_V(wglCreateContextAttribs, createContext, 1);
 
     MAP_V(glXMakeCurrent, makeCurrent, 2);
     MAP_V(glXMakeContextCurrent, makeCurrent, 3);
     MAP_V(eglMakeCurrent, makeCurrent, 3);
+    MAP_V(wglMakeCurrent, makeCurrent, 1);
 }
 
 void FrameTrimmeImpl::registerIgnoreHistoryCalls()
@@ -1064,6 +1073,13 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "eglGetCurrentDisplay",
         "eglGetCurrentSurface",
         "eglQuerySurface",
+        "wglGetCurrentDC",
+        "wglGetCurrentContext",
+        "wglGetProcAddress",
+        "wglGetExtensionsString",
+        "wglGetPixelFormat", 
+        "wglDeleteContext", 
+        "wglDescribePixelFormat"
      };
     auto ignore_history_func = bind(&FrameTrimmeImpl::ignoreHistory, this, _1);
     updateCallTable(ignore_history_calls, ignore_history_func);
