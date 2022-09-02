@@ -829,7 +829,7 @@ TextureObjectMap::oglActiveTexture(const trace::Call& call)
 {
     unsigned active_texture = call.arg(0).toUInt() - GL_TEXTURE0;
 
-    if (active_texture <= GL_TEXTURE31 - GL_TEXTURE0) {
+    if (call.arg(0).toUInt() >= GL_TEXTURE0) {
         m_active_texture = active_texture;
         addCall(trace2call(call));
     } else {
