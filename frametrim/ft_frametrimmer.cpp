@@ -156,9 +156,13 @@ struct FrameTrimmeImpl {
 
     void generate(const trace::Call& call, ePerContext map_type);
     void destroy(const trace::Call& call, ePerContext map_type);
+    void callOnBoundObject(const trace::Call& call, ePerContext map_type); 
+    void callOnNamedObject(const trace::Call& call, ePerContext map_type); 
     void callOnObjectBoundTo(const trace::Call& call, ePerContext map_type, unsigned bindpoint);
     void fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param);
+    void fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map); 
     void fboBlit(const trace::Call& call);
+    void fboBlitNamed(const trace::Call& call); 
     void fboReadBuffer(const trace::Call& call);
     void bindPerContext(const trace::Call& call, ePerContext map_type, unsigned bind_param);
 
@@ -520,6 +524,10 @@ FrameTrimmeImpl::equalChars(const char *prefix, const char *callname)
     m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1, \
                         param1, std::ref(data), param2)))
 
+#define MAP_R(name, call, data) \
+    m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1, \
+                        std::ref(data))))
+
 #define MAP_RV(name, call, data, param1) \
     m_call_table.insert(std::make_pair(#name, bind(&FrameTrimmeImpl:: call, this, _1, \
                         std::ref(data), param1)))
@@ -630,12 +638,15 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_OBJ(glRenderbufferStorageMultisample, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
 
     MAP_V(glGenFramebuffers, generate, pc_fbo);
+    MAP_V(glCreateFramebuffers, generate, pc_fbo);
     MAP_V(glDeleteFramebuffers, destroy, pc_fbo);
     MAP_V(glBindFramebuffer, oglBindFbo, 1);
     MAP_VV(glViewport, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
     MAP(glBlitFramebuffer, fboBlit);
+    MAP(glBlitNamedFramebuffer, fboBlitNamed);
     MAP_RV(glFramebufferTexture, fboBindAttachment, m_textures, 2);
+    MAP_R(glNamedFramebufferTexture, fboNamedBindAttachment, m_textures);
     MAP_RV(glFramebufferTextureLayer, fboBindAttachment, m_textures,2);
     MAP_RV(glFramebufferTexture1D, fboBindAttachment, m_textures,3);
     MAP_RV(glFramebufferTexture2D, fboBindAttachment, m_textures, 3);
@@ -651,6 +662,9 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_VV(glClearBufferfv, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
     MAP_VV(glClearBufferiv, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
+    MAP_V(glCheckNamedFramebufferStatus, callOnBoundObject, pc_fbo); 
+    MAP_V(glCheckNamedFramebufferStatus, callOnNamedObject, pc_fbo); 
+    
 /*    MAP_GENOBJ_DATAREF(glFramebufferTexture3D, m_fbo,
                          FramebufferStateMap::attach_texture3d, m_textures);
       MAP(glReadBuffer, ReadBuffer); */
@@ -695,6 +709,7 @@ FrameTrimmeImpl::registerBufferCalls()
     MAP_OBJ(glFlushMappedNamedBufferRange, m_buffers, BufferObjectMap::callOnNamedObject);
     MAP_OBJ(glUnmapBuffer, m_buffers, BufferObjectMap::unmap);
     MAP_OBJ(glClearBufferData, m_buffers, BufferObjectMap::callOnBoundObject);
+    MAP_OBJ(glClearNamedBufferData, m_buffers, BufferObjectMap::callOnNamedObject);
     MAP_OBJ(glInvalidateBufferData, m_buffers, BufferObjectMap::callOnNamedObject);
 }
 
@@ -766,6 +781,7 @@ FrameTrimmeImpl::registerProgramCalls()
 void FrameTrimmeImpl::registerTextureCalls()
 {
     MAP_OBJ(glGenTextures, m_textures, TextureObjectMap::generate);
+    MAP_OBJ(glCreateTextures, m_textures, TextureObjectMap::generateWithTarget);
     MAP_OBJ(glDeleteTextures, m_textures, TextureObjectMap::destroy);
 
     MAP_OBJ(glActiveTexture, m_textures, TextureObjectMap::oglActiveTexture);
@@ -800,6 +816,7 @@ void FrameTrimmeImpl::registerTextureCalls()
 
     MAP_OBJ(glTexStorage1D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage2D, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glTextureStorage2D, m_textures, TextureObjectMap::callOnNamedObject);
     MAP_OBJ(glTexStorage3D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ_RV(glTexSubImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
@@ -850,6 +867,7 @@ void FrameTrimmeImpl::registerQueryCalls()
     MAP_OBJ(glEndQueryIndexed, m_queries, QueryObjectMap::oglEndQueryIndexed);
     MAP_OBJ(glGetQueryObject, m_queries, QueryObjectMap::callOnNamedObject);
     MAP_OBJ(glGetQueryiv, m_queries, QueryObjectMap::callOnBoundObject);
+    MAP_OBJ(glQueryCounter, m_queries, QueryObjectMap::callOnNamedObject); 
 }
 
 void
@@ -1540,14 +1558,34 @@ void FrameTrimmeImpl::callOnObjectBoundTo(const trace::Call& call, ePerContext m
     getCurrentMapOfType(map_type).callOnObjectBoundTo(call, bindpoint);
 }
 
+void FrameTrimmeImpl::callOnBoundObject(const trace::Call& call, ePerContext map_type)
+{
+    getCurrentMapOfType(map_type).callOnBoundObject(call);
+}
+
+void FrameTrimmeImpl::callOnNamedObject(const trace::Call& call, ePerContext map_type)
+{
+    getCurrentMapOfType(map_type).callOnNamedObject(call);
+}
+
 void FrameTrimmeImpl::fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param)
 {
     m_current_context->m_fbo.callOnBoundObjectWithDep(call, dep_map, tex_id_param, true);
 }
 
+void FrameTrimmeImpl::fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map)
+{
+    m_current_context->m_fbo.callOnNamedObjectWithDep(call, dep_map, 2, true); 
+}
+
 void FrameTrimmeImpl::fboBlit(const trace::Call& call)
 {
     m_current_context->m_fbo.oglBlit(call);
+}
+
+void FrameTrimmeImpl::fboBlitNamed(const trace::Call& call)
+{
+    m_current_context->m_fbo.oglBlitNamed(call);
 }
 
 void FrameTrimmeImpl::fboReadBuffer(const trace::Call& call)
