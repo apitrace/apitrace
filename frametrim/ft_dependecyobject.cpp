@@ -345,14 +345,16 @@ DependecyObjectMap::callOnBoundObjectWithDep(const trace::Call& call,
                                              int dep_obj_param,
                                              bool reverse_dep_too)
 {
+    unsigned obj_id = call.arg(dep_obj_param).toUInt();
     unsigned bindpoint = getBindpointFromCall(call);
     if (!m_bound_object[bindpoint]) {
-        std::cerr << "No object bound in call " << call.no << ":" << call.name() << "\n";
-        assert(0);
+        if (obj_id)
+            std::cerr << "No object bound in call " << call.no << ":" << call.name() << "\n";
+        return nullptr; 
     }
 
     UsedObject::Pointer obj = nullptr;
-    unsigned obj_id = call.arg(dep_obj_param).toUInt();
+    
     if (obj_id) {
         obj = other_objects.getById(obj_id);
         assert(obj);
@@ -371,7 +373,6 @@ DependecyObjectMap::callOnBoundObjectWithDepBoundTo(const trace::Call& call,
 {
     unsigned bindpoint = getBindpointFromCall(call);
     if (!m_bound_object[bindpoint]) {
-        std::cerr << "No object bound in call " << call.no << ":" << call.name() << "\n";
         return;
     }
     m_bound_object[bindpoint]->addCall(trace2call(call));
