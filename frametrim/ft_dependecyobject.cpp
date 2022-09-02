@@ -118,10 +118,10 @@ bool UsedObject::createdBefore(unsigned callno) const
 }
 
 void
-DependecyObjectMap::generate(const trace::Call& call)
+DependecyObjectMap::generate_internal(const trace::Call& call, int array_id)
 {
     auto c = trace2call(call);
-    const auto ids = (call.arg(1)).toArray();
+    const auto ids = (call.arg(array_id)).toArray();
     std::vector<std::shared_ptr<UsedObject> > created_objs;
     for (auto& v : ids->values) {
         auto old_obj = getById(v->toUInt());
@@ -142,6 +142,12 @@ DependecyObjectMap::generate(const trace::Call& call)
         }
         created_objs.push_back(obj);
     }
+}
+
+void
+DependecyObjectMap::generate(const trace::Call& call)
+{
+    generate_internal(call, 1); 
 }
 
 void DependecyObjectMap::destroy(const trace::Call& call)
@@ -812,6 +818,11 @@ TextureObjectMap::TextureObjectMap():
 
 }
 
+void TextureObjectMap::generateWithTarget(const trace::Call& call)
+{
+    generate_internal(call, 2); 
+}
+
 void
 TextureObjectMap::oglActiveTexture(const trace::Call& call)
 {
@@ -1111,6 +1122,18 @@ FramebufferObjectMap::oglBlit(const trace::Call& call)
     dest->addDependency(src);
     dest->addCall(trace2call(call));
 }
+
+void
+FramebufferObjectMap::oglBlitNamed(const trace::Call& call)
+{
+    auto dest = getById(call.arg(0).toUInt()); 
+    auto src = getById(call.arg(1).toUInt()); 
+    assert(dest);
+    assert(src);
+    dest->addDependency(src);
+    dest->addCall(trace2call(call));
+}
+
 
 void
 FramebufferObjectMap::oglReadBuffer(const trace::Call& call)

@@ -110,7 +110,7 @@ public:
 protected:
     void addObject(unsigned id, UsedObject::Pointer obj);
     UsedObject::Pointer boundAtBinding(unsigned index);
-
+    void generate_internal(const trace::Call& call, int array_id);    
 private:
 
     virtual void emitBoundObjectsExt(CallSet& out_calls);
@@ -211,6 +211,7 @@ public:
     void bindFromTextureTarget(unsigned unit, UsedObject::Pointer obj);
     void addImageDependencies(UsedObject::Pointer dep);
     void unbindUnits(unsigned first, unsigned count);
+    void generateWithTarget(const trace::Call& call); 
 private:
     void emitBoundObjectsExt(CallSet& out_calls) override;
     unsigned getBindpointFromCall(const trace::Call& call) const override;
@@ -249,6 +250,7 @@ class FramebufferObjectMap: public DependecyObjectMap {
 public:
     FramebufferObjectMap();
     void oglBlit(const trace::Call& call);
+    void oglBlitNamed(const trace::Call& call);
     void oglReadBuffer(const trace::Call& call);
     void oglDrawFromBuffer(const trace::Call& call, BufferObjectMap &buffers);
 private:
