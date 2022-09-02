@@ -160,7 +160,7 @@ struct FrameTrimmeImpl {
     void callOnNamedObject(const trace::Call& call, ePerContext map_type); 
     void callOnObjectBoundTo(const trace::Call& call, ePerContext map_type, unsigned bindpoint);
     void fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param);
-    void fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map); 
+    void fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, int obj_param_pos); 
     void fboBlit(const trace::Call& call);
     void fboBlitNamed(const trace::Call& call); 
     void fboReadBuffer(const trace::Call& call);
@@ -634,7 +634,9 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_RV(glBindRenderbuffer, oglBind, m_renderbuffers, 1);
     MAP_OBJ(glDeleteRenderbuffers, m_renderbuffers, DependecyObjectWithSingleBindPointMap::destroy);
     MAP_OBJ(glGenRenderbuffers, m_renderbuffers, DependecyObjectWithSingleBindPointMap::generate);
+    MAP_OBJ(glCreateRenderbuffers, m_renderbuffers, DependecyObjectWithSingleBindPointMap::generate);
     MAP_OBJ(glRenderbufferStorage, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
+    MAP_OBJ(glNamedRenderbufferStorage, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnNamedObject);
     MAP_OBJ(glRenderbufferStorageMultisample, m_renderbuffers, DependecyObjectWithSingleBindPointMap::callOnBoundObject);
 
     MAP_V(glGenFramebuffers, generate, pc_fbo);
@@ -646,12 +648,17 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP(glBlitFramebuffer, fboBlit);
     MAP(glBlitNamedFramebuffer, fboBlitNamed);
     MAP_RV(glFramebufferTexture, fboBindAttachment, m_textures, 2);
-    MAP_R(glNamedFramebufferTexture, fboNamedBindAttachment, m_textures);
-    MAP_RV(glFramebufferTextureLayer, fboBindAttachment, m_textures,2);
+    MAP_RV(glNamedFramebufferTexture, fboNamedBindAttachment, m_textures, 2);
+    MAP_RV(glNamedFramebufferTextureLayer, fboNamedBindAttachment, m_textures, 2);
+    MAP_RV(glFramebufferTextureLayer, fboBindAttachment, m_textures, 2);
     MAP_RV(glFramebufferTexture1D, fboBindAttachment, m_textures,3);
     MAP_RV(glFramebufferTexture2D, fboBindAttachment, m_textures, 3);
     MAP_RV(glFramebufferTexture3D, fboBindAttachment, m_textures, 3);
     MAP_RV(glFramebufferRenderbuffer, fboBindAttachment, m_renderbuffers, 3);
+    MAP_RV(glNamedFramebufferRenderbuffer, fboNamedBindAttachment, m_renderbuffers, 3);
+    MAP_V(glNamedFramebufferDrawBuffer, callOnNamedObject, pc_fbo); 
+    MAP_V(glNamedFramebufferDrawBuffers, callOnNamedObject, pc_fbo); 
+    MAP_V(glNamedFramebufferReadBuffer, callOnNamedObject, pc_fbo); 
     MAP(glReadBuffer, fboReadBuffer);
 
     MAP_VV(glDrawBuffer, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
@@ -663,7 +670,13 @@ void FrameTrimmeImpl::registerFramebufferCalls()
     MAP_VV(glClearBufferiv, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
     MAP_V(glCheckNamedFramebufferStatus, callOnBoundObject, pc_fbo); 
-    MAP_V(glCheckNamedFramebufferStatus, callOnNamedObject, pc_fbo); 
+    
+    MAP_V(glInvalidateFramebuffer, callOnBoundObject, pc_fbo); 
+    MAP_V(glInvalidateNamedFramebufferData, callOnNamedObject, pc_fbo); 
+    MAP_V(glInvalidateNamedFramebufferSubData, callOnNamedObject, pc_fbo); 
+    
+    MAP_V(glClearNamedFramebuffer, callOnNamedObject, pc_fbo);
+    MAP_V(glClearNamedFramebufferfi, callOnNamedObject, pc_fbo);
     
 /*    MAP_GENOBJ_DATAREF(glFramebufferTexture3D, m_fbo,
                          FramebufferStateMap::attach_texture3d, m_textures);
@@ -1049,6 +1062,8 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "glGetFramebufferParameteriv",
         "glGetInfoLog",
         "glGetInteger",
+        "glGetNamedFramebufferAttachmentParameteriv", 
+        "glGetNamedFramebufferParameteriv",
         "glGetObjectLabelEXT",
         "glGetObjectParameter",
         "glGetProgram",
@@ -1604,9 +1619,9 @@ void FrameTrimmeImpl::fboBindAttachment(const trace::Call& call, DependecyObject
     m_current_context->m_fbo.callOnBoundObjectWithDep(call, dep_map, tex_id_param, true);
 }
 
-void FrameTrimmeImpl::fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map)
+void FrameTrimmeImpl::fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, int obj_param_pos)
 {
-    m_current_context->m_fbo.callOnNamedObjectWithDep(call, dep_map, 2, true); 
+    m_current_context->m_fbo.callOnNamedObjectWithDep(call, dep_map, obj_param_pos, true); 
 }
 
 void FrameTrimmeImpl::fboBlit(const trace::Call& call)
