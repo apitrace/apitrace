@@ -326,8 +326,8 @@ DependecyObjectMap::callOnNamedObject(const trace::Call& call)
         if (call.arg(0).toUInt()) {
             std::cerr << "Named object " << call.arg(0).toUInt()
                       << " doesn't exists in call " << call.no << ": "
-                      << call.name() << "\n";
-            assert(0);
+                      << call.name() << " ... ignoring\n";
+            return;
         }
     } else
         obj->addCall(trace2call(call));
