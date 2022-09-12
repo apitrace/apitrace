@@ -25,7 +25,5 @@ if (NOT DEFINED APITRACE_VERSION)
   message(WARNING "Failed to determine APITRACE_VERSION. Using default version \"${APITRACE_VERSION}\".")
 endif ()
 
-# propagate version into header and cpack
+# propagate version into header
 configure_file(${SRC} ${DST} @ONLY)
-
-set (CPACK_PACKAGE_VERSION "${APITRACE_VERSION}")

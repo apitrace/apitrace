@@ -591,6 +591,18 @@ install (
     RENAME LICENSE.txt
 )
 
+# External scripts rely upon CPACK_PACKAGE_VERSION=latest for determining URLs
+# for the latest artifacts.
+set (CPACK_PACKAGE_VERSION "latest")
+# https://www.appveyor.com/docs/environment-variables/
+if (($ENV{APPVEYOR}) AND ($ENV{APPVEYOR_REPO_TAG}))
+    set (CPACK_PACKAGE_VERSION "$ENV{APPVEYOR_REPO_TAG_NAME}")
+endif ()
+# https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+if ("$ENV{GITHUB_ACTIONS}" STREQUAL "true" AND "$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
+    set (CPACK_PACKAGE_VERSION "${CMAKE_MATCH_1}")
+endif ()
+
 # cpack mistakenly detects Mingw-w64 as win32
 if (MINGW)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
