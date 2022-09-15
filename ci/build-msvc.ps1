@@ -96,7 +96,7 @@ if (!$config) {
 }
 
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
 
 Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
