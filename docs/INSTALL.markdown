@@ -106,7 +106,7 @@ To build with Visual Studio first open a Command Prompt window (*not* Visual
 Studio Command Prompt window), change into the Apitrace source, and invoke
 CMake GUI as:
 
-    cmake-gui -S. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
+    cmake-gui -S. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2019
 
 and press the _Configure_ button.
 
@@ -129,11 +129,7 @@ generators are available on your system:
 
 At the end of the output, choose a generator and start configuring the project:
 
-    cmake -S. -Bbuild -G "Visual Studio 16 2019" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2017
-
-Note as off Qt version 5.9.1 there's no `msvc2019` directory, only `msvc2017`
-and `msvc2017_64`, but `msvc2017` should work as MSVC 2019 is binary backwards
-compatible with MSVC 2017.
+    cmake -S. -Bbuild -G "Visual Studio 17 2022" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2019
 
 After you've successfully configured, you can start the build by invoking CMake as:
 
@@ -145,13 +141,13 @@ To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the 
 [Qt's Windows deployment tool](https://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
-    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2017\bin;%Path%
+    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2019\bin;%Path%
     windeployqt build\qapitrace.exe
 
 ### 64-bits ###
 
 The steps to build 64-bits version are similar, but choosing `-A x64` instead
-of `-A Win32`, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2017_64` for Qt path.
+of `-A Win32`, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2019_64` for Qt path.
 
 ### Windows XP ###
 

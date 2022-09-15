@@ -91,7 +91,7 @@ jobs:
     - run: ci/build-mingw.sh mingw32
 
   msvc:
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         target: ["win32", "win64"]

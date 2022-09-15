@@ -79,7 +79,7 @@ $qtBinPath = Resolve-Path "$qtToolchainPath\bin"
 Write-Host "Adding $qtBinPath to environment path."
 $Env:Path = "$qtBinPath;$Env:Path"
 
-$generator = 'Visual Studio 16 2019'
+$generator = 'Visual Studio 17 2022'
 
 if (!$config) {
     $config = 'Debug'
