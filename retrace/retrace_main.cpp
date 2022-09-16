@@ -916,7 +916,7 @@ longOptions[] = {
 
 static void exceptionCallback(void)
 {
-    std::cerr << retrace::callNo << ": error: caught an unhandled exception\n";
+    std::cerr << retrace::callNo << ": error: caught an unhandled exception" << std::endl;
 }
 
 
