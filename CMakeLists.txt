@@ -40,6 +40,8 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
+option (ENABLE_SSP "Enable Stack Smashing Protection" OFF)
+
 option (BUILD_TESTING "Enable unit tests" ON)
 
 option (ENABLE_TESTS "Enable additional tests" OFF)
@@ -100,6 +102,24 @@ if (ENABLE_ASAN)
     else ()
         add_compiler_flags (-fsanitize=address)
         add_linker_flags (-fsanitize=address)
+    endif ()
+endif ()
+
+# Enable stack protection
+if (ENABLE_SSP)
+    if (MSVC)
+        add_compiler_flags (/GS)
+    else ()
+        add_compiler_flags (-fstack-protector-all)
+        # MinGW doesn't link against libssp automatically, and furthermore
+        # we want static linking.
+        if (MINGW)
+            set (SSP_LIBRARY "-Wl,-Bstatic -lssp -Wl,-Bdynamic")
+            set (CMAKE_C_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_C_STANDARD_LIBRARIES}")
+            set (CMAKE_CXX_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_CXX_STANDARD_LIBRARIES}")
+        else ()
+            add_linker_flags (-fstack-protector-all)
+        endif ()
     endif ()
 endif ()
 
