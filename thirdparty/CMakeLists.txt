@@ -3,6 +3,9 @@ macro (target_optimize TARGET)
     target_compile_definitions (${TARGET} PRIVATE -DNDEBUG)
     if (MSVC)
         # TODO: MSVC makes it impossible to override early options.
+        if (ENABLE_ASAN)
+            target_compile_options (${TARGET} PRIVATE -wd5072) # ASan enabled without debug info
+        endif ()
     else ()
         target_compile_options (${TARGET} PRIVATE -O3)
     endif ()
