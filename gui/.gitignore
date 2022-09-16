@@ -1,5 +1,6 @@
 moc_*.cpp
 qapitrace.qrc.depends
+qapitrace_autogen
 qapitrace_automoc.cpp
 qrc_qapitrace.cpp
 qrc_qapitrace.cxx
