@@ -96,18 +96,18 @@ strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource)
 
 //--------------------------------------------------------------------------------------
 #define  CHK_ERR(hrchk, strOut) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return strOut;
 
 #define  CHK_ERRA(hrchk) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return #hrchk;
 
 #define HRESULT_FROM_WIN32b(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 
 #define  CHK_ERR_WIN32A(hrchk) \
         case HRESULT_FROM_WIN32b(hrchk): \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return #hrchk;
 
 #define  CHK_ERR_WIN32_ONLY(hrchk, strOut) \
@@ -3502,12 +3502,12 @@ const char* WINAPI DXGetErrorStringA( HRESULT hr )
 #undef CHK_ERR_WIN32_ONLY
 
 #define  CHK_ERRA(hrchk) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              strcpy_s( desc, count, #hrchk ); \
              break;
 
 #define  CHK_ERR(hrchk, strOut) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              strcpy_s( desc, count, strOut ); \
              break;
 
