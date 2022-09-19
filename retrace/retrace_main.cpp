@@ -169,7 +169,7 @@ private:
 
     RetraceWatchdog()
     : last_call_mark(get_time_u32()), want_exit(false) {
-        thread = os::thread(runnerThread, this);
+        thread = std::thread(runnerThread, this);
     }
 
     std::thread thread;
