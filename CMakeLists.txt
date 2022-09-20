@@ -42,6 +42,8 @@ option (ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
 option (ENABLE_SSP "Enable Stack Smashing Protection" OFF)
 
+option (ENABLE_LLVM_PDB "Enable PDB with LLVM" OFF)
+
 option (BUILD_TESTING "Enable unit tests" ON)
 
 option (ENABLE_TESTS "Enable additional tests" OFF)
@@ -373,16 +375,24 @@ if (MINGW)
         add_linker_flags (-static -static-libgcc -static-libstdc++)
     endif ()
 
-    # Generate DWARF aranges debugging information.
-    # https://github.com/jrfonseca/drmingw/issues/42
-    if (CMAKE_C_COMPILER_ID MATCHES Clang)
-        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-aranges")
-        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
-    endif ()
     if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-aranges")
-        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+        if (ENABLE_LLVM_PDB)
+            # https://github.com/mstorsjo/llvm-mingw#pdb-support
+            set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gcodeview")
+            set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gcodeview")
+            set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gcodeview")
+            set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gcodeview")
+            add_linker_flags (-Wl,-pdb=)
+        else ()
+            # Generate DWARF aranges debugging information.
+            # https://github.com/jrfonseca/drmingw/issues/42
+            set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-aranges")
+            set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+            set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-aranges")
+            set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+        endif ()
     endif ()
+
 elseif (ENABLE_STATIC_EXE)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
