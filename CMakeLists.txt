@@ -306,6 +306,10 @@ else ()
     # assumptions are violated.  Above all, the benefit is not worth the risk.
     add_compiler_flags (-fno-strict-aliasing)
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+        add_compiler_flags (-Wno-pointer-bool-conversion)
+    endif ()
+
     # No RTTI required
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
@@ -347,23 +351,38 @@ if (APPLE)
 endif ()
 
 if (MINGW)
-    # We use our C++11 threads implementation to avoid depending on winpthreads
-    execute_process (
-        COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_HAS_GTHREADS\n#error _GLIBCXX_HAS_GTHREADS\n#endif"
-        COMMAND "${CMAKE_CXX_COMPILER}" -x c++ -E -
-        RESULT_VARIABLE STATUS_CXX11_THREADS
-        OUTPUT_QUIET
-        ERROR_QUIET
-    )
-    if (NOT STATUS_CXX11_THREADS EQUAL 0)
-        message (WARNING "MinGW with POSIX threads detected; Win32 threads recommended.")
-    else ()
-        # TODO: Consider https://github.com/meganz/mingw-std-threads
-        include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+    if (NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
+        # We use our C++11 threads implementation to avoid depending on winpthreads
+        execute_process (
+            COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_HAS_GTHREADS\n#error _GLIBCXX_HAS_GTHREADS\n#endif"
+            COMMAND "${CMAKE_CXX_COMPILER}" -x c++ -E -
+            RESULT_VARIABLE STATUS_CXX11_THREADS
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+        if (NOT STATUS_CXX11_THREADS EQUAL 0)
+            message (WARNING "MinGW with POSIX threads detected; Win32 threads recommended.")
+        else ()
+            # TODO: Consider https://github.com/meganz/mingw-std-threads
+            include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+        endif ()
     endif ()
 
     # Avoid depending on MinGW runtime DLLs
-    add_linker_flags (-static -static-libgcc -static-libstdc++)
+    if (NOT ENABLE_ASAN)
+        add_linker_flags (-static -static-libgcc -static-libstdc++)
+    endif ()
+
+    # Generate DWARF aranges debugging information.
+    # https://github.com/jrfonseca/drmingw/issues/42
+    if (CMAKE_C_COMPILER_ID MATCHES Clang)
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-aranges")
+        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+    endif ()
+    if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-aranges")
+        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+    endif ()
 elseif (ENABLE_STATIC_EXE)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
@@ -381,7 +400,7 @@ if (WIN32)
     # Increase number of sections in obj files
     if (MSVC)
         add_compiler_flags (-bigobj)
-    else ()
+    elseif (NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
         add_compiler_flags (-Wa,-mbig-obj)
     endif ()
 

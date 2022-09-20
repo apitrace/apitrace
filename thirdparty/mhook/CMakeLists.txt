@@ -13,6 +13,9 @@ if (NOT MSVC)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-value")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
 endif ()
+if (CMAKE_C_COMPILER_ID MATCHES Clang)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-security")
+endif ()
 
 
 add_convenience_library (mhook
