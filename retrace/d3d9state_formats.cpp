@@ -28,7 +28,7 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <sstream>
+#include <stdio.h>
 
 #include "image.hpp"
 #include "halffloat.hpp"
@@ -118,19 +118,29 @@ formatToString(D3DFORMAT fmt)
     case D3DFMT_AYUV: return "D3DFMT_AYUV";
     case D3DFMT_RAWZ: return "D3DFMT_RAWZ";
     default:
-        std::ostringstream oss;
+        static char buf[12];
 
         if (fmt > 255) {
             char ch0 = fmt;
             char ch1 = fmt >> 8;
             char ch2 = fmt >> 16;
             char ch3 = fmt >> 24;
-            oss << "D3DFMT_" << ch0 << ch1 << ch2 << ch3;
+            buf[ 0] = 'D';
+            buf[ 1] = '3';
+            buf[ 2] = 'D';
+            buf[ 3] = 'F';
+            buf[ 4] = 'M';
+            buf[ 5] = 'T';
+            buf[ 6] = '_';
+            buf[ 7] = ch0;
+            buf[ 8] = ch1;
+            buf[ 9] = ch2;
+            buf[10] = ch3;
+            // buf[11] always '\0';
         } else {
-            oss << (unsigned)fmt;
+            _snprintf(buf, sizeof buf, "%u", fmt);
         }
-        return oss.str().c_str();
-        break;
+        return buf;
     }
 
     return "Unknown";
