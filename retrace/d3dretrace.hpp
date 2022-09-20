@@ -56,7 +56,7 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n, bool backBuffer) {
+    getSnapshot(int n, bool backBuffer) override {
         if ((n != 0) || !pLastDevice) {
             return NULL;
         }
@@ -64,12 +64,12 @@ public:
     }
 
     bool
-    canDump(void) {
+    canDump(void) override {
         return pLastDevice;
     }
 
     void
-    dumpState(StateWriter &writer) {
+    dumpState(StateWriter &writer) override {
         d3dstate::dumpDevice(writer, pLastDevice);
     }
 
