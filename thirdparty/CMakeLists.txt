@@ -24,6 +24,7 @@ foreach (path IN ITEMS
     libpng/LICENSE
     snappy/COPYING
     zlib/README
+    directxmath/LICENSE
 )
     if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
         message (SEND_ERROR "error: ${CMAKE_CURRENT_SOURCE_DIR}/${path} does not exist")
