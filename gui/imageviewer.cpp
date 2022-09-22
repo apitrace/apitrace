@@ -38,7 +38,7 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     p.fillRect(16, 16, 16, 16, QColor(193, 193, 193));
     p.end();
     QPalette pal = scrollAreaWidgetContents->palette();
-    pal.setBrush(QPalette::Background,
+    pal.setBrush(QPalette::Window,
                  QBrush(px));
     pal.setBrush(QPalette::Base,
                  QBrush(px));
