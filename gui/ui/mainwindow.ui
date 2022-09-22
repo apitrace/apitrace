@@ -139,7 +139,7 @@
   </widget>
   <widget class="QDockWidget" name="stateDock">
    <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetFloatable</set>
    </property>
    <property name="windowTitle">
     <string>Current State</string>
@@ -537,7 +537,7 @@
   </widget>
   <widget class="QDockWidget" name="errorsDock">
    <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetFloatable</set>
    </property>
    <property name="windowTitle">
     <string>Errors</string>
