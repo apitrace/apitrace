@@ -19,7 +19,8 @@ RUN \
   libwaffle-dev \
   python3 \
   ninja-build \
-  cmake && \
+  cmake \
+  git && \
  rm -rf /var/lib/apt/lists/* && \
  update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 60 \
                      --slave /usr/bin/g++ g++ /usr/bin/g++-8 \

@@ -20,6 +20,8 @@ docker_run () {
         --rm \
         -i=$interactive \
         --tty=$interactive \
+        -e GITHUB_ACTIONS \
+        -e GITHUB_REF \
         -v "$PWD:$PWD" \
         -w "$PWD" \
         -u "$uid" \
