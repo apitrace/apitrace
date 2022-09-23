@@ -96,7 +96,7 @@ plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false
     }
 
     if (quote && !forceNoQuote) {
-        return QLatin1Literal("\"") + rich + QLatin1Literal("\"");
+        return QLatin1String("\"") + rich + QLatin1String("\"");
     }
 
     return rich;
@@ -362,7 +362,7 @@ QString ApiStruct::toString(bool multiLine) const
     str += QLatin1String("{");
     for (unsigned i = 0; i < m_members.count(); ++i) {
         str += m_sig.memberNames[i] %
-               QLatin1Literal(" = ") %
+               QLatin1String(" = ") %
                apiVariantToString(m_members[i], multiLine);
         if (i < m_members.count() - 1)
             str += QLatin1String(", ");
@@ -991,10 +991,10 @@ QStaticText ApiTraceCall::staticText() const
         richText += QLatin1String(")");
         if (m_returnValue.isValid()) {
             richText +=
-                QLatin1Literal(" = ") %
-                QLatin1Literal("<span style=\"color:#0000ff\">") %
+                QLatin1String(" = ") %
+                QLatin1String("<span style=\"color:#0000ff\">") %
                 apiVariantToString(m_returnValue) %
-                QLatin1Literal("</span>");
+                QLatin1String("</span>");
         }
     }
 
@@ -1052,10 +1052,10 @@ QString ApiTraceCall::toHtml() const
             QLatin1String("<span class=\"arg-name\">") +
             argNames[i] +
             QLatin1String("</span>") +
-            QLatin1Literal(" = ") +
-            QLatin1Literal("<span class=\"arg-value\">") +
+            QLatin1String(" = ") +
+            QLatin1String("<span class=\"arg-value\">") +
             apiVariantToString(argValues[i], true) +
-            QLatin1Literal("</span>");
+            QLatin1String("</span>");
         if (i < argNames.count() - 1)
             m_richText += QLatin1String(", ");
     }
@@ -1096,11 +1096,11 @@ QString ApiTraceCall::searchText() const
         return m_searchText;
 
     QVector<QVariant> argValues = arguments();
-    m_searchText = m_signature->name() + QLatin1Literal("(");
+    m_searchText = m_signature->name() + QLatin1String("(");
     QStringList argNames = m_signature->argNames();
     for (int i = 0; i < argNames.count(); ++i) {
         m_searchText += argNames[i] +
-                        QLatin1Literal(" = ") +
+                        QLatin1String(" = ") +
                         apiVariantToString(argValues[i]);
         if (i < argNames.count() - 1)
             m_searchText += QLatin1String(", ");
@@ -1108,7 +1108,7 @@ QString ApiTraceCall::searchText() const
     m_searchText += QLatin1String(")");
 
     if (m_returnValue.isValid()) {
-        m_searchText += QLatin1Literal(" = ") +
+        m_searchText += QLatin1String(" = ") +
                         apiVariantToString(m_returnValue);
     }
     m_searchText.squeeze();
