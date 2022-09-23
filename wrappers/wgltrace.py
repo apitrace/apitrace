@@ -230,6 +230,9 @@ class WglTracer(GlTracer):
             print(r'        free(bmi);')
 
             print(r'    } // _result')
+
+            print(r'    (void)_wglUseFontBitmapsA_sig;')
+
             return
 
         GlTracer.traceFunctionImplBody(self, function)
