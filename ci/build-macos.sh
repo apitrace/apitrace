@@ -24,10 +24,16 @@ fi
 
 popd
 
+if which ninja > /dev/null
+then
+    cmakeGenerator="Ninja"
+else
+    cmakeGenerator="Unix Makefiles"
+fi
 
 export CMAKE_BUILD_PARALLEL_LEVEL=$(getconf _NPROCESSORS_ONLN)
 
 
-cmake -S. -Bbuild -DCMAKE_PREFIX_PATH=$qtToolchainPath -DENABLE_GUI=ON
+cmake -S. -Bbuild -G "$cmakeGenerator" -DCMAKE_PREFIX_PATH=$qtToolchainPath -DENABLE_GUI=ON
 cmake --build build --use-stderr
 cmake --build build --use-stderr --target check
