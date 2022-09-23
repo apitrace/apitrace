@@ -2,6 +2,8 @@
 #include "profiledialog.h"
 #include "profiling.h"
 
+#include <algorithm>
+
 #include <QLocale>
 
 typedef trace::Profile::Call Call;
@@ -322,6 +324,6 @@ private:
 void ProfileTableModel::sort(int column, Qt::SortOrder order) {
     m_sortColumn = column;
     m_sortOrder = order;
-    qSort(m_rowData.begin(), m_rowData.end(), ProgramSorter(column, order));
+    std::sort(m_rowData.begin(), m_rowData.end(), ProgramSorter(column, order));
     emit dataChanged(createIndex(0, 0), createIndex(m_rowData.size(), MAX_COLUMN));
 }
