@@ -137,9 +137,6 @@ static int trim_to_frame(const char *filename,
     std::unique_ptr<trace::Call> call(p.parse_call());
     std::priority_queue<std::pair<unsigned, unsigned>> calls_in_frame;
 
-    unsigned ncalls = 0;
-    unsigned ncalls2 = 0;
-
     unsigned calls_in_this_frame = 0;
     bool start_last_frame = false;
 
@@ -165,8 +162,6 @@ static int trim_to_frame(const char *filename,
 
         if (call->flags & trace::CALL_FLAG_END_FRAME) {
             if (options.top_frame_call_counts > 0) {
-                ncalls += calls_in_this_frame;
-                ncalls2 += calls_in_this_frame * calls_in_this_frame;
                 calls_in_frame.push(std::make_pair(calls_in_this_frame, frame));
             }
             calls_in_this_frame = 0;
