@@ -8,7 +8,7 @@ on:
 
 jobs:
   ubuntu64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -19,16 +19,16 @@ jobs:
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends gcc g++ libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libprocps-dev libgtest-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
-      run: cmake -S$PWD -B$PWD/build -G Ninja -DENABLE_STATIC_SNAPPY=0 -DENABLE_GUI=1
+      run: cmake -S. -Bbuild -G Ninja -DENABLE_STATIC_SNAPPY=0 -DENABLE_GUI=1
     - name: build
-      run: cmake --build $PWD/build --use-stderr
+      run: cmake --build build --use-stderr
     - name: check
-      run: cmake --build $PWD/build --use-stderr --target check
+      run: cmake --build build --use-stderr --target check
     - name: package
-      run: cmake --build $PWD/build --use-stderr --target package
+      run: cmake --build build --use-stderr --target package
 
   ubuntu32:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -37,13 +37,13 @@ jobs:
     - run: sudo dpkg --add-architecture i386
     - run: sudo apt-get update
     - run: sudo apt-get install -qq -y --no-install-recommends gcc-multilib g++-multilib python3 ninja-build cmake libx11-dev:i386
-    - run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DENABLE_GUI=0
+    - run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DENABLE_STATIC_EXE=1 -DENABLE_GUI=0
     - run: cmake --build build --use-stderr
     - run: cmake --build build --use-stderr --target check
     - run: test -x build/glretrace -a -x build/wrappers/glxtrace.so
 
   ubuntu64-clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -54,14 +54,14 @@ jobs:
     - name: apt-install
       run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev libprocps-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
     - name: cmake
-      run: cmake -S$PWD -B$PWD/build -G Ninja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DENABLE_GUI=1
+      run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_GUI=1
     - name: build
-      run: cmake --build $PWD/build --use-stderr
+      run: cmake --build build --use-stderr
     - name: check
-      run: cmake --build $PWD/build --use-stderr --target check
+      run: cmake --build build --use-stderr --target check
 
   ubuntu-18_04:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
@@ -80,7 +80,7 @@ jobs:
         if-no-files-found: error
 
   mingw32:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
