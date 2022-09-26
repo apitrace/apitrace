@@ -220,7 +220,7 @@ class D3DRetracer(Retracer):
             return
 
         if interface.name.startswith('IDXGIFactory') and method.name == 'CreateSoftwareAdapter':
-            print(r'    const char *szSoftware = NULL;')
+            print(r'    const char *szSoftware = nullptr;')
             print(r'    switch (retrace::driver) {')
             print(r'    case retrace::DRIVER_REFERENCE:')
             print(r'        szSoftware = "d3d11ref.dll";')
@@ -233,7 +233,7 @@ class D3DRetracer(Retracer):
             print(r'        szSoftware = "d3d10warp.dll";')
             print(r'        break;')
             print(r'    }')
-            print(r'    Module = LoadLibraryA("d3d10warp");')
+            print(r'    Module = LoadLibraryA(szSoftware);')
             print(r'    if (!Module) {')
             print(r'        retrace::warning(call) << "failed to load " << szSoftware << "\n";')
             print(r'    }')
