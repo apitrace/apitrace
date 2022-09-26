@@ -19,7 +19,7 @@ endfunction ()
 set (SUBMODULES_MISSING FALSE)
 foreach (path IN ITEMS
     brotli/LICENSE
-    gtest/googletest/LICENSE
+    gtest/LICENSE
     libbacktrace/LICENSE
     libpng/LICENSE
     snappy/COPYING
