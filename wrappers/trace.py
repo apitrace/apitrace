@@ -894,11 +894,6 @@ class Tracer:
         assert not method.internal
 
         sigName = interface.name + '::' + method.sigName()
-        if method.overloaded:
-            # Once the method signature name goes into a trace, we'll need to
-            # support it indefinetely, so log them so one can make sure nothing
-            # weird gets baked in
-            sys.stderr.write('note: overloaded method %s\n' % (sigName,))
 
         numArgs = len(method.args) + 1
         print('    static const char * _args[%u] = {%s};' % (numArgs, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args])))
