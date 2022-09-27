@@ -1,5 +1,11 @@
 remove_definitions (-DNOMINMAX)
 
+if (MINGW)
+    # mhook uses MSVC format specifiers
+    remove_definitions (-D__USE_MINGW_ANSI_STDIO=1)
+    add_definitions (-D__USE_MINGW_ANSI_STDIO=0)
+endif ()
+
 add_definitions (
     -DUNICODE -D_UNICODE
     -DMINGW_HAS_SECURE_API=1

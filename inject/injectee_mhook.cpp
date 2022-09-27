@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2016 VMware, Inc.
+ * Copyright 2016-2022 VMware, Inc.
  * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
@@ -123,6 +123,11 @@ static PFNCREATEPROCESSASUSERW RealCreateProcessAsUserW = CreateProcessAsUserW;
 
 
 static void
+#if defined(__MINGW32__)
+    __attribute__ ((format (__MINGW_PRINTF_FORMAT, 1, 2)))
+#elif  defined(__GNUC__)
+    __attribute__ ((format (printf, 1, 2)))
+#endif
 debugPrintf(const char *format, ...)
 {
     char buf[512];

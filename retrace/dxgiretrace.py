@@ -464,7 +464,7 @@ class D3DRetracer(Retracer):
             ppBuffer = method.args[-1]
             print(r'    if (retrace::dumpingState && SUCCEEDED(_result)) {')
             print(r'       char label[32];')
-            print(r'       _snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
+            print(r'       snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
             print(r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(label)+1, label);' % ppBuffer.name)
             print(r'    }')
 

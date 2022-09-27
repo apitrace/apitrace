@@ -35,12 +35,6 @@
 #include <string.h>
 
 #ifdef _WIN32
-#ifndef snprintf
-#define snprintf _snprintf
-#endif
-#ifndef vsnprintf
-#define vsnprintf _vsnprintf
-#endif
 #ifndef strcasecmp
 #define strcasecmp stricmp
 #endif
