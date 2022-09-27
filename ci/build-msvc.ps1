@@ -83,12 +83,6 @@ $generator = 'Visual Studio 17 2022'
 
 if (!$config) {
     $config = 'Debug'
-    # Default to release on master and tags for Appveyor builds
-    if ((Test-Path Env:APPVEYOR) -And
-        ((Test-Path Env:APPVEYOR_REPO_TAG_NAME) -Or
-         (($Env:APPVEYOR_REPO_BRANCH -eq 'master') -And !(Test-Path Env:APPVEYOR_PULL_REQUEST_NUMBER)))) {
-        $config = 'RelWithDebInfo'
-    }
     # Default to release on master and tags for GitHub builds
     if ($Env:GITHUB_EVENT_NAME -eq "push" -And ($Env:GITHUB_REF -eq 'refs/heads/master' -Or $Env:GITHUB_REF.StartsWith('refs/tags/'))) {
         $config = 'RelWithDebInfo'

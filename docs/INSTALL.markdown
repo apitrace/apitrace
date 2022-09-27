@@ -1,5 +1,4 @@
 [![Build Status](https://github.com/apitrace/apitrace/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/apitrace/apitrace/actions/workflows/build.yml)
-[![Build status](https://ci.appveyor.com/api/projects/status/5da6kauyfvclv6y0/branch/master?svg=true)](https://ci.appveyor.com/project/jrfonseca/apitrace/branch/master)
 
 
 # Requirements #

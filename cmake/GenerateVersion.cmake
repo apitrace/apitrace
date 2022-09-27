@@ -1,8 +1,5 @@
-# https://www.appveyor.com/docs/environment-variables/
-if (($ENV{APPVEYOR}) AND ($ENV{APPVEYOR_REPO_TAG}))
-    set (APITRACE_VERSION "$ENV{APPVEYOR_REPO_TAG_NAME}")
 # https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-elseif ("$ENV{GITHUB_ACTIONS}" STREQUAL "true" AND "$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
+if ("$ENV{GITHUB_ACTIONS}" STREQUAL "true" AND "$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
     set (APITRACE_VERSION "${CMAKE_MATCH_1}")
 # git
 elseif (GIT_EXECUTABLE)
