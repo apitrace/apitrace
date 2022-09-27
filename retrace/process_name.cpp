@@ -43,7 +43,7 @@
 #include <unistd.h>
 
 
-// Must not use std::string to prevent it being destroyed.
+// Must not use std::string to prevent it from being destroyed.
 static char g_processName[4097];
 
 extern "C"  {
@@ -146,7 +146,8 @@ GetModuleFromAddress(PVOID pAddress)
     return bRet ? hModule : nullptr;
 }
 
-static std::string g_processName;
+// Must not use std::string to prevent it from being destroyed.
+static char g_processName[4097];
 
 
 static DWORD WINAPI
@@ -163,17 +164,17 @@ MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
             std::cerr << "GetModuleFileNameA(" << hModule << ") from " << szCaller << "\n";
         }
 
-        assert(!g_processName.empty());
+        assert(*g_processName);
         assert(nSize != 0);
 
-        size_t len = g_processName.length();
+        size_t len = strlen(g_processName);
         if (len < nSize) {
-            memcpy(lpFilename, g_processName.data(), len);
+            memcpy(lpFilename, g_processName, len);
             lpFilename[len] = 0;
             SetLastError(ERROR_SUCCESS);
             return len;
         } else {
-            memcpy(lpFilename, g_processName.data(), nSize - 1);
+            memcpy(lpFilename, g_processName, nSize - 1);
             lpFilename[nSize - 1] = 0;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return nSize;
@@ -197,17 +198,17 @@ MyGetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
             std::cerr << "GetModuleFileNameW(" << hModule << ") from " << szCaller << "\n";
         }
 
-        assert(!g_processName.empty());
+        assert(*g_processName);
         assert(nSize != 0);
 
-        size_t len = g_processName.length();
+        size_t len = strlen(g_processName);
         if (len < nSize) {
-            ::MultiByteToWideChar(CP_UTF8, 0, g_processName.data(), -1, lpFilename, len);
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName, -1, lpFilename, len);
             lpFilename[len] = 0;
             SetLastError(ERROR_SUCCESS);
             return len;
         } else {
-            ::MultiByteToWideChar(CP_UTF8, 0, g_processName.data(), -1, lpFilename, nSize - 1);
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName, -1, lpFilename, nSize - 1);
             lpFilename[nSize - 1] = L'\0';
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return nSize;
@@ -220,7 +221,8 @@ MyGetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
 void
 setProcessName(const char *processName)
 {
-    g_processName = processName;
+    strncpy(g_processName, processName, sizeof g_processName - 1);
+    g_processName[sizeof g_processName - 1] = '\0';
 
     static BOOL bHooked = FALSE;
     if (!bHooked) {
