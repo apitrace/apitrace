@@ -1,7 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
- * Copyright 2010 VMware, Inc.
+ * Copyright 2010-2022 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,6 +29,7 @@
 #include <string.h>
 
 #include <memory>
+#include <regex>
 
 #include "trace_file.hpp"
 #include "trace_dump.hpp"
@@ -108,7 +108,8 @@ void Parser::close(void) {
 
     properties.clear();
 
-    deleteAll(calls);
+    deleteAll(completedCalls);
+    deleteAll(pendingCalls);
 
     // Delete all signature data.  Signatures are mere structures which don't
     // own their own memory, so we need to destroy all data we created here.
@@ -174,7 +175,9 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
     next_call_no = bookmark.next_call_no;
     
     // Simply ignore all pending calls
-    deleteAll(calls);
+    deleteAll(completedCalls);
+    deleteAll(pendingCalls);
+    pendingPriorityCalls = 0;
 }
 
 void Parser::parseProperties(void)
@@ -195,6 +198,14 @@ void Parser::parseProperties(void)
 Call *Parser::parse_call(Mode mode) {
     do {
         Call *call;
+
+        if (!pendingPriorityCalls &&
+            !completedCalls.empty()) {
+            call = completedCalls.front();
+            completedCalls.pop_front();
+            return call;
+        }
+
         int c = read_byte();
         switch (c) {
         case trace::EVENT_ENTER:
@@ -209,7 +220,6 @@ Call *Parser::parse_call(Mode mode) {
             }
             call = parse_leave(mode);
             if (call) {
-                adjust_call_flags(call);
                 return call;
             }
             break;
@@ -217,10 +227,9 @@ Call *Parser::parse_call(Mode mode) {
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
         case -1:
-            if (!calls.empty()) {
-                call = calls.front();
+            if (!pendingCalls.empty()) {
+                call = delPendingCall(pendingCalls.begin());
                 call->flags |= CALL_FLAG_INCOMPLETE;
-                calls.pop_front();
                 adjust_call_flags(call);
                 return call;
             }
@@ -262,6 +271,20 @@ Parser::parse_function_sig(void) {
         }
         sig->arg_names = arg_names;
         sig->flags = lookupCallFlags(sig->name);
+
+        // Prioritize IUnknown::Release calls.  An application might call
+        // Release() on one object on one thread, and receive a newly created
+        // object with the same point on another thread, _before_ the Release
+        // call completes.  In such cases, replaying calls by any static order
+        // (either enter or leave) is bound to lead to spurious use-after-free
+        // bugs.  However this can be avoided by prioritizing Release calls, so
+        // they are always executed before creation, as the opposite can never
+        // be intended by a race-free application.
+        //
+        // XXX We should probably do the same for OpenGL objects.
+        static const std::regex re_priority("\\w*::Release$");
+        sig->priority = std::regex_match(sig->name, re_priority);
+
         sig->fileOffset = file->currentOffset();
         functions[id] = sig;
 
@@ -462,7 +485,10 @@ void Parser::parse_enter(Mode mode) {
     call->no = next_call_no++;
 
     if (parse_call_details(call, mode)) {
-        calls.push_back(call);
+        pendingCalls.push_back(call);
+        if (sig->priority) {
+            ++pendingPriorityCalls;
+        }
     } else {
         delete call;
     }
@@ -472,10 +498,9 @@ void Parser::parse_enter(Mode mode) {
 Call *Parser::parse_leave(Mode mode) {
     unsigned call_no = read_uint();
     Call *call = NULL;
-    for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
+    for (CallList::iterator it = pendingCalls.begin(); it != pendingCalls.end(); ++it) {
         if ((*it)->no == call_no) {
-            call = *it;
-            calls.erase(it);
+            call = delPendingCall(it);
             break;
         }
     }
@@ -492,7 +517,14 @@ Call *Parser::parse_leave(Mode mode) {
     }
 
     if (parse_call_details(call, mode)) {
-        return call;
+        adjust_call_flags(call);
+        if (!pendingPriorityCalls ||
+            callHasPriority(call)) {
+            return call;
+        } else {
+            completedCalls.push_back(call);
+            return NULL;
+        }
     } else {
         delete call;
         return NULL;
