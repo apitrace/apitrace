@@ -8,6 +8,7 @@ on:
 
 jobs:
   ubuntu64:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -28,6 +29,7 @@ jobs:
       run: cmake --build $PWD/build --use-stderr --target package
 
   ubuntu32:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -43,6 +45,7 @@ jobs:
     - run: test -x build/glretrace -a -x build/wrappers/glxtrace.so
 
   ubuntu64-clang:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -61,6 +64,7 @@ jobs:
       run: cmake --build $PWD/build --use-stderr --target check
 
   ubuntu-18_04:
+    if: false
     runs-on: ubuntu-latest
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
@@ -80,6 +84,7 @@ jobs:
         if-no-files-found: error
 
   mingw32:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -91,6 +96,7 @@ jobs:
     - run: ci/build-mingw.sh mingw32
 
   msvc:
+    if: false
     runs-on: windows-2022
     strategy:
       matrix:
