@@ -101,7 +101,8 @@ StringPrefixes::StringPrefixes() {
     char *list = getenv("APITRACE_BACKTRACE");
     if (!list)
         return;
-    for (char *t = strdup(list); ; t = NULL) {
+    list = strdup(list);
+    for (char *t = list; ; t = NULL) {
         char *tok = strtok(t, " \t\r\n");
         if (!tok)
             break;
@@ -112,6 +113,7 @@ StringPrefixes::StringPrefixes() {
         else
             addPrefix(tok, strlen(tok) + 1);
     }
+    free(list);
 }
 
 
