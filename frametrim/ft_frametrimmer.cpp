@@ -1678,6 +1678,7 @@ DependecyObjectMap& FrameTrimmeImpl::getCurrentMapOfType(ePerContext map_type)
     case pc_fbo: return m_current_context->m_fbo;
     }
     assert(0);
+    abort();
 }
 
 }
