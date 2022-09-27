@@ -80,10 +80,13 @@ _getPrivateProcAddress(const char *procName) {
 #elif defined(__APPLE__)
 
 
+#include <sys/stat.h>
+
+
 /*
  * Path to the true OpenGL framework
  */
-static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
+static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL";
 
 
 /*
@@ -97,37 +100,56 @@ void * _libgl_sym(const char *symbol)
         /* 
          * Unfortunately we can't just dlopen the true dynamic library because
          * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
-         * absolute paths.  So we create a temporary symlink, and dlopen that
-         * instead.
+         * absolute paths.
+         *
+         * We used to overcome this by creating a temporary symlink, and dlopen'ing
+         * that instead.
+         *
+         * However on newer macOS versions the OpenGL framework and dynamic
+         * libraries don't exist on the filesystem, but rather in the dyld
+         * shared system cache, so this trick no longer works.
          */
 
-        os::String temp_template = os::getTemporaryDirectoryPath();
-        temp_template.append("tmp.XXXXXX");
-        char *temp_filename = temp_template.buf(temp_template.length() + 1);
-
-        if (mktemp(temp_filename) != NULL) {
-            if (symlink(libgl_filename, temp_filename) == 0) {
-                _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
-                remove(temp_filename);
-            }
-        }
-
-        if (!_libGlHandle) {
-            os::log("apitrace: error: couldn't load %s\n", libgl_filename);
+        struct stat st;
+        int err = stat(libgl_filename, &st);
+        if (err != 0) {
+            os::log("apitrace: error: %s does not exist;"
+                    " see https://github.com/apitrace/apitrace/issues/826\n",
+                    libgl_filename);
             os::abort();
-            return NULL;
+        } else {
+            os::String temp_template = os::getTemporaryDirectoryPath();
+            temp_template.append("tmp.XXXXXX");
+            char *temp_filename = temp_template.buf(temp_template.length() + 1);
+
+            if (mktemp(temp_filename) == NULL) {
+                os::log("apitrace: error: mktemp failed\n");
+                os::abort();
+            }
+
+            if (symlink(libgl_filename, temp_filename) != 0) {
+                os::log("apitrace: error: symlink failed\n");
+                remove(temp_filename);
+                os::abort();
+            }
+
+            _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+            if (!_libGlHandle) {
+                os::log("apitrace: error: couldn't load %s -> %s\n", temp_filename, libgl_filename);
+                os::abort();
+            }
+
+            remove(temp_filename);
         }
     }
 
     result = dlsym(_libGlHandle, symbol);
 
-#if 0
     if (result && result == dlsym(RTLD_SELF, symbol)) {
         os::log("apitrace: error: symbol lookup recursion\n");
         os::abort();
         return NULL;
     }
-#endif
 
     return result;
 }
