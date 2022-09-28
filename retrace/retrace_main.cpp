@@ -57,6 +57,7 @@
 #include "state_writer.hpp"
 #include "ws.hpp"
 #include "process_name.hpp"
+#include "version.h"
 
 
 static bool waitOnFinish = false;
@@ -817,6 +818,7 @@ usage(const char *argv0) {
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
         "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
+        "      --version           display version information and exit\n"
     ;
 }
 
@@ -857,6 +859,7 @@ enum {
     QUERY_HANDLING_OPT,
     QUERY_CHECK_TOLARANCE_OPT,
     IGNORE_CALLS_OPT,
+    VERSION_OPT,
 };
 
 const static char *
@@ -910,6 +913,7 @@ longOptions[] = {
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
     {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
+    {"version", no_argument, 0, VERSION_OPT},
     {0, 0, 0, 0}
 };
 
@@ -1387,6 +1391,9 @@ int main(int argc, char **argv)
 
             retrace::callsToIgnore.merge(optarg);
             break;
+        case VERSION_OPT:
+            std::cout << "apitrace " << APITRACE_VERSION << std::endl;
+            return 0;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);

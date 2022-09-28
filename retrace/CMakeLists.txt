@@ -3,6 +3,7 @@
 
 include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR} # for version.h
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
@@ -65,6 +66,7 @@ endif ()
 if (WIN32)
     target_link_libraries (retrace_common dxerr mhook winmm psapi)
 endif ()
+add_dependencies (retrace_common version)
 
 
 add_library (glretrace_common STATIC
