@@ -276,6 +276,10 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = parser.parse_call())) {
+            if (call->no > calls.getLast()) {
+                delete call;
+                break;
+            }
             if (calls.contains(*call)) {
                 writer.begin();
                 visitor.visit(call);
