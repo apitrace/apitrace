@@ -198,7 +198,7 @@ public:
         /* FIXME: handle non-ASCII better */
         for (size_t i = 0; i < length; ++i) {
             char c = s[i];
-            c = c >= 0 && c <= 0x79 ? c : '?';
+            c = c >= 0 && c <= 0x7f ? c : '?';
             os.put(c);
         }
 
