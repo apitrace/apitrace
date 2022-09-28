@@ -76,40 +76,11 @@ protected:
     Properties properties;
 
     typedef std::list<Call *> CallList;
-
-    // List of calls pending, ie, calls whose enter event has been parsed, but
-    // not the leave event.
-    CallList pendingCalls;
-
-    // Number of high priority pending calls
-    unsigned pendingPriorityCalls = 0;
-
-    // List of completed calls with low priority
-    CallList completedCalls;
+    CallList calls;
 
     struct FunctionSigFlags : public FunctionSig {
-        CallFlags flags = 0;
-        bool priority = true;
+        CallFlags flags;
     };
-
-    static bool
-    callHasPriority(const Call *call)
-    {
-        auto sig = static_cast<const FunctionSigFlags *>(call->sig);
-        return sig->priority;
-    }
-
-    Call *
-    delPendingCall(CallList::iterator it)
-    {
-        Call *call = *it;
-        pendingCalls.erase(it);
-        if (callHasPriority(call)) {
-            assert(pendingPriorityCalls > 0);
-            --pendingPriorityCalls;
-        }
-        return call;
-    }
 
     // Helper template that extends a base signature structure, with additional
     // parsing information.
