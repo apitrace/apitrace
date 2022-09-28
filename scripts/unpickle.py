@@ -201,11 +201,13 @@ class Rebuilder(Visitor):
 class Call:
 
     def __init__(self, callTuple):
-        self.no, self.functionName, self.args, self.ret, self.flags = callTuple
+        self.no, self.threadId, self.functionName, self.args, self.ret, self.flags = callTuple
         self._hash = None
 
     def __str__(self):
         s = self.functionName
+        if self.threadId is not None:
+            s = '@' + str(self.threadId) + ' ' + s
         if self.no is not None:
             s = str(self.no) + ' ' + s
         dumper = Dumper()

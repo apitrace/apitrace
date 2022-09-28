@@ -172,6 +172,8 @@ public:
 
         writer.writeInt(call->no);
 
+        writer.writeInt(call->thread_id);
+
         writer.writeString(call->name());
 
         writer.beginList();
