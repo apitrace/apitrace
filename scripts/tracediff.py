@@ -198,7 +198,7 @@ class ExternalDiffer(Differ):
 # Python diff
 #
 
-from unpickle import Unpickler, Dumper, Rebuilder
+from unpickle import Unpickler, Dumper, Rebuilder, pickleTrace
 from highlight import PlainHighlighter, LessHighlighter
 
 
@@ -280,17 +280,7 @@ class PythonDiffer(Differ):
         self.b = self.readTrace(srcTrace, src_calls)
 
     def readTrace(self, trace, calls):
-        p = subprocess.Popen(
-            args = [
-                self.apitrace,
-                'pickle',
-                '--symbolic',
-                '--calls=' + calls,
-                trace
-            ],
-            stdout=subprocess.PIPE,
-        )
-
+        stream = pickleTrace(trace, apitrace=self.apitrace, symbolic=True, calls=calls)
         parser = Loader(p.stdout)
         parser.parse()
         return parser.calls
