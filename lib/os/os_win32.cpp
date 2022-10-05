@@ -288,21 +288,6 @@ static void (*gCallback)(void) = NULL;
 static LONG CALLBACK
 unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    /*
-     * Before Vista KiUserExceptionDispatcher does not clear the direction
-     * flag.
-     *
-     * See also:
-     * - https://bugs.chromium.org/p/nativeclient/issues/detail?id=1495
-     */
-#ifdef _MSC_VER
-#ifndef _WIN64
-    __asm cld;
-#endif
-#else
-    asm("cld");
-#endif
-
     PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
     DWORD ExceptionCode = pExceptionRecord->ExceptionCode;
 
