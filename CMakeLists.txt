@@ -150,6 +150,11 @@ endif ()
 # Check whether we're targeting Intel X86 architecture
 check_cxx_source_compiles ("#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)\nint main() { return 0; }\n#else\n#error\n#endif" HAVE_X86)
 
+# CMake fails to detect we're crosscompiling when using MSVC Arm cross compilation toolchain
+if (MSVC AND NOT HAVE_X86)
+    set (CMAKE_CROSSCOMPILING TRUE)
+endif ()
+
 list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include (ConvenienceLibrary)
 include (InstallPDB)
@@ -665,6 +670,15 @@ endif ()
 if (MINGW)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
         set (CPACK_SYSTEM_NAME win64)
+    endif ()
+endif ()
+
+# distinguish the Windows Arm packages
+if (WIN32 AND NOT HAVE_X86)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set (CPACK_SYSTEM_NAME win64-arm)
+    else ()
+        set (CPACK_SYSTEM_NAME win32-arm)
     endif ()
 endif ()
 
