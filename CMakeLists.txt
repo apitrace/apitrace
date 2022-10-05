@@ -147,6 +147,9 @@ if (NOT WIN32)
     endif ()
 endif ()
 
+# Check whether we're targeting Intel X86 architecture
+check_cxx_source_compiles ("#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)\nint main() { return 0; }\n#else\n#error\n#endif" HAVE_X86)
+
 list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include (ConvenienceLibrary)
 include (InstallPDB)
@@ -318,27 +321,29 @@ else ()
     # Disable C++ exceptions
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
-    # Enable SSE2 intrinsics on x86
-    if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-        add_compiler_flags (-msse2 -mfpmath=sse)
+    if (HAVE_X86)
+        # Enable SSE2 intrinsics on x86
+        if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+            add_compiler_flags (-msse2 -mfpmath=sse)
 
-        # And tell GCC to assume 4 bytes alignment, many Linux/Windows
-        # applications only guarantee that, but not on systems where ABI
-        # clearly states otherwise.
-        #
-        # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
-        if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-            add_compiler_flags (-mstackrealign)
-        else ()
-            add_compiler_flags (-mincoming-stack-boundary=2)
+            # And tell GCC to assume 4 bytes alignment, many Linux/Windows
+            # applications only guarantee that, but not on systems where ABI
+            # clearly states otherwise.
+            #
+            # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
+            if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+                add_compiler_flags (-mstackrealign)
+            else ()
+                add_compiler_flags (-mincoming-stack-boundary=2)
+            endif ()
         endif ()
-    endif ()
 
-    if (ENABLE_SSE42)
-        if (MINGW)
-            add_compiler_flags (-msse4.2)
+        if (ENABLE_SSE42)
+            if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+                add_compiler_flags (-msse4.2)
+            endif ()
+            add_definitions (-DHAVE_SSE42)
         endif ()
-        add_definitions (-DENABLE_SSE42)
     endif ()
 
     # Be nice to Eclipse

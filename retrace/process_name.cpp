@@ -124,7 +124,7 @@ setProcessName(const char *processName)
 }
 
 
-#elif defined(_WIN32)
+#elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64))
 
 #include <windows.h>
 #include "mhook.h"

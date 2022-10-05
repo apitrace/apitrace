@@ -26,7 +26,7 @@ target_include_directories (png_bundled PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/libpng
 )
 
-if (APPLE)
+if (NOT HAVE_X86)
     # https://github.com/apitrace/apitrace/issues/711
     target_compile_definitions (png_bundled PRIVATE PNG_ARM_NEON_OPT=0)
 endif ()
