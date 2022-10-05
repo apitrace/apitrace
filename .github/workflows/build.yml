@@ -92,6 +92,7 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
+        arch: ["x86", "arm"]
         target: ["win32", "win64"]
     steps:
     - uses: actions/checkout@v2
@@ -105,13 +106,13 @@ jobs:
         path: |
           *qtbase-*.7z
           *qttools-*.7z
-        key: ${{ runner.os }}-${{ matrix.target }}-5.15.2-1
+        key: ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-5.15.2-1
     - name: Build
-      run: .\ci\build-msvc.ps1 -target ${{ matrix.target }}
+      run: .\ci\build-msvc.ps1 -arch ${{ matrix.arch }} -target ${{ matrix.target }}
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: apitrace-${{ matrix.target }}
+        name: apitrace-${{ matrix.target }}-${{ matrix.arch }}
         path: build/apitrace-*.7z
         if-no-files-found: error
 

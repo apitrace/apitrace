@@ -1,4 +1,5 @@
 param (
+    [ValidateSet('x86','arm')][string]$arch = 'x86',
     [ValidateSet('win64','win32')][string]$target = 'win64',
     [string]$config,
     [string]$buildRoot = 'build',
@@ -22,62 +23,75 @@ function Exec {
 $qtVersion = '5.15.2'
 $qtVersionDotless = $qtVersion -replace '\.'
 
-if ($target -eq 'win64') {
-    $toolchain = 'msvc2019_64'
-    $arch = 'X86_64'
-    $toolset = 'x64'
-} else {
-    $toolchain = 'msvc2019'
-    $arch = 'X86'
-    $toolset = 'Win32'
-}
-
-$baseUrl = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_$qtVersionDotless"
-
-$packageUrl = "$baseUrl/qt.qt5.$qtVersionDotless.${target}_$toolchain"
-
-$tag = "0-202011130602"
-
-$suffix = "Windows-Windows_10-MSVC2019-Windows-Windows_10"
-
-$modules = @('qtbase', 'qttools')
-
-$qtToolchainPath = "$qtRoot\$qtVersion\$toolchain"
-if (!(Test-Path $qtToolchainPath -PathType Container)) {
-
-    foreach ($module in $modules) {
-        $archive = "$qtVersion-${tag}${module}-${suffix}-$arch.7z"
-        $archiveUrl = "$packageUrl/$archive"
-
-        if (!(Test-Path $archive -PathType Leaf)) {
-            Write-Host "Downloading $archiveUrl ..."
-            # https://github.com/PowerShell/PowerShell/issues/2896
-            do {
-                try {
-                    Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UserAgent NativeHost
-                    $retry = $false
-                }
-                catch {
-                    if (($_.Exception.GetType() -match "HttpResponseException") -and ($_.Exception -match "302")) {
-                        $archiveUrl = $_.Exception.Response.Headers.Location.AbsoluteUri
-                        Write-Host "Redirected to $archiveUrl ..."
-                        $retry = $true
-                    }
-                    else {
-                        throw $_
-                                                                                }
-                }
-            } while ($retry)
-        }
-
-        Write-Host "Extracting $archive to $qtToolchainPath ..."
-        Exec { 7z x -y "-o$qtRoot" $archive | Out-Null }
+if ($arch -eq 'x86') {
+    if ($target -eq 'win64') {
+        $qtToolchain = 'msvc2019_64'
+        $qtArch = 'X86_64'
+        $toolset = 'x64'
+    } else {
+        $qtToolchain = 'msvc2019'
+        $qtArch = 'X86'
+        $toolset = 'Win32'
     }
-}
 
-$qtBinPath = Resolve-Path "$qtToolchainPath\bin"
-Write-Host "Adding $qtBinPath to environment path."
-$Env:Path = "$qtBinPath;$Env:Path"
+    $baseUrl = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_$qtVersionDotless"
+
+    $packageUrl = "$baseUrl/qt.qt5.$qtVersionDotless.${target}_$qtToolchain"
+
+    $tag = "0-202011130602"
+
+    $suffix = "Windows-Windows_10-MSVC2019-Windows-Windows_10"
+
+    $modules = @('qtbase', 'qttools')
+
+    $qtToolchainPath = "$qtRoot\$qtVersion\$qtToolchain"
+    if (!(Test-Path $qtToolchainPath -PathType Container)) {
+
+        foreach ($module in $modules) {
+            $archive = "$qtVersion-${tag}${module}-${suffix}-$qtArch.7z"
+            $archiveUrl = "$packageUrl/$archive"
+
+            if (!(Test-Path $archive -PathType Leaf)) {
+                Write-Host "Downloading $archiveUrl ..."
+                # https://github.com/PowerShell/PowerShell/issues/2896
+                do {
+                    try {
+                        Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UserAgent NativeHost
+                        $retry = $false
+                    }
+                    catch {
+                        if (($_.Exception.GetType() -match "HttpResponseException") -and ($_.Exception -match "302")) {
+                            $archiveUrl = $_.Exception.Response.Headers.Location.AbsoluteUri
+                            Write-Host "Redirected to $archiveUrl ..."
+                            $retry = $true
+                        }
+                        else {
+                            throw $_
+                                                                                    }
+                    }
+                } while ($retry)
+            }
+
+            Write-Host "Extracting $archive to $qtToolchainPath ..."
+            Exec { 7z x -y "-o$qtRoot" $archive | Out-Null }
+        }
+    }
+
+    $qtBinPath = Resolve-Path "$qtToolchainPath\bin"
+    Write-Host "Adding $qtBinPath to environment path."
+    $Env:Path = "$qtBinPath;$Env:Path"
+
+    $gui = 'ON'
+} else {
+    # $arch = 'arm'
+    if ($target -eq 'win64') {
+        $toolset = 'ARM64'
+    } else {
+        $toolset = 'ARM'
+    }
+    $qtToolchainPath = ''
+    $gui = 'OFF'
+}
 
 $generator = 'Visual Studio 17 2022'
 
@@ -90,7 +104,7 @@ if (!$config) {
 }
 
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=ON" }
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" }
 
 Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
