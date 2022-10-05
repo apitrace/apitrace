@@ -8,6 +8,9 @@ include_directories (
 add_library (injectee_iat MODULE
     injectee_iat.cpp
 )
+target_link_libraries (injectee_iat
+    advapi32
+)
 set_target_properties (injectee_iat PROPERTIES
     PREFIX ""
 )
@@ -40,6 +43,7 @@ if (HAVE_X86)
         endif ()
     endif ()
     target_link_libraries (injectee_mhook
+        advapi32
         mhook
     )
     install (TARGETS injectee_mhook LIBRARY DESTINATION bin)
@@ -56,6 +60,7 @@ target_link_libraries (injector
     getopt
     devcon
     psapi
+    advapi32
 )
 install (TARGETS injector RUNTIME DESTINATION bin)
 install_pdb (injector DESTINATION bin)

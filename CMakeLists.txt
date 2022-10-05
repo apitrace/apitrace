@@ -279,6 +279,11 @@ if (MSVC)
     string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
 
+    # Avoid error LNK1322: cannot avoid potential ARM hazard
+    if (NOT HAVE_X86)
+        add_compiler_flags (/Gy)
+    endif ()
+
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
 

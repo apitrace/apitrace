@@ -341,6 +341,7 @@ if (WIN32)
     target_link_libraries (wgltrace
         gltrace_common
         glproc
+        gdi32
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""

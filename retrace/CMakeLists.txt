@@ -106,6 +106,9 @@ endif ()
 
 if (WIN32)
     set (glws_os glws_wgl.cpp)
+    target_link_libraries (glretrace_common
+        gdi32
+    )
 else ()
     if (APPLE)
         set (glws_os glws_cocoa.mm)
@@ -341,6 +344,7 @@ if (WIN32)
     target_link_libraries (d3dretrace
         retrace_common
         d3dhelpers
+        ole32
     )
     if (DirectX_D3D11_4_INCLUDE_FOUND)
         target_link_libraries (d3dretrace directxtex)
