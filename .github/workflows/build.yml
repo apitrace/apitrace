@@ -84,6 +84,7 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
+    - run: sudo apt-get update
     - run: sudo apt-get install -qq -y --no-install-recommends g++-mingw-w64-i686 ninja-build cmake
     - run: wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz
     - run: ci/build-mingw.sh mingw32
