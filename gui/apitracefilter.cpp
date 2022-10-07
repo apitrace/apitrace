@@ -43,7 +43,7 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
 
     QString function = call->name();
 
-    if (!m_regexp.isEmpty() && m_regexp.isValid()) {
+    if (!m_regexp.pattern().isEmpty() && m_regexp.isValid()) {
         return function.contains(m_regexp);
     }
 
@@ -86,7 +86,7 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
 }
 
 
-void ApiTraceFilter::setFilterRegexp(const QRegExp &regexp)
+void ApiTraceFilter::setFilterRegexp(const QRegularExpression &regexp)
 {
     if (regexp != m_regexp) {
         m_regexp = regexp;
@@ -115,14 +115,14 @@ QModelIndex ApiTraceFilter::indexForCall(ApiTraceCall *call) const
     return mapFromSource(index);
 }
 
-QRegExp ApiTraceFilter::filterRegexp() const
+QRegularExpression ApiTraceFilter::filterRegexp() const
 {
     return m_regexp;
 }
 
 void ApiTraceFilter::setCustomFilterRegexp(const QString &str)
 {
-    m_customRegexp = QRegExp(str);
+    m_customRegexp = QRegularExpression(str);
 }
 
 QString ApiTraceFilter::customFilterRegexp() const

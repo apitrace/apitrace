@@ -11,6 +11,7 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
+#include <QRegularExpression>
 
 #include "qubjson.h"
 
@@ -590,14 +591,15 @@ void Retracer::run()
 
     QList<ApiTraceError> errors;
     process.setReadChannel(QProcess::StandardError);
-    QRegExp regexp("(^\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
+    QRegularExpression regexp("^(\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
     while (!process.atEnd()) {
         QString line = process.readLine();
-        if (regexp.indexIn(line) != -1) {
+        QRegularExpressionMatch match = regexp.match(line);
+        if (match.hasMatch()) {
             ApiTraceError error;
-            error.callIndex = regexp.cap(1).toInt();
-            error.type = regexp.cap(2);
-            error.message = regexp.cap(3);
+            error.callIndex = match.captured(1).toInt();
+            error.type = match.captured(2);
+            error.message = match.captured(3);
             errors.append(error);
         } else if (!errors.isEmpty()) {
             // Probably a multiligne message
