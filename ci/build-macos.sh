@@ -1,11 +1,14 @@
 #!/bin/sh
 
-qtVersion=5.12.10
+set -eu
+
+qtVersion=5.15.2
+qtTag=0-202011130601
 qtVersionDotless=$(echo $qtVersion | sed -e 's/\.//g')
-qtArchive=5.12.10-0-202011040843qtbase-MacOS-MacOS_10_13-Clang-MacOS-MacOS_10_13-X86_64.7z
+qtArchive=$qtVersion-${qtTag}qtbase-MacOS-MacOS_10_13-Clang-MacOS-MacOS_10_13-X86_64.7z
 qtArchiveUrl=https://download.qt.io/online/qtsdkrepository/mac_x64/desktop/qt5_$qtVersionDotless/qt.qt5.$qtVersionDotless.clang_64/$qtArchive
 
-set -ex
+set -x
 
 mkdir -p qt
 pushd qt

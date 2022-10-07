@@ -129,6 +129,6 @@ jobs:
       uses: actions/cache@v2
       with:
         path: "qt/*qtbase-*.7z"
-        key: ${{ runner.os }}-5.15.10-0
+        key: ${{ runner.os }}-5.15.2-1
     - name: cmake
       run: ci/build-macos.sh
