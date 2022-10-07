@@ -28,7 +28,6 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDir>
 #include <QFileDialog>
 #include <QLineEdit>

@@ -5,7 +5,6 @@
 #include "image.hpp"
 
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QPainter>
 #include <QPixmap>
 #include <QScrollBar>
