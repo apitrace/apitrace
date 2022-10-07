@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QScrollBar>
 #include <QSettings>
+#include <QScreen>
 
 ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     : QDialog(parent),
@@ -127,7 +128,7 @@ QSize ImageViewer::sizeHint() const
     QSize optimalWindowSize(m_convertedImage.width() + vScrollWidth,
                             m_convertedImage.height() + hScrollHeight);
 
-    QRect screenRect = QApplication::desktop()->availableGeometry();
+    QRect screenRect = QApplication::primaryScreen()->availableGeometry();
     const float maxPercentOfDesktopSpace = 0.8f;
     QSize maxAvailableSize(maxPercentOfDesktopSpace * screenRect.width(),
                            maxPercentOfDesktopSpace * screenRect.height());

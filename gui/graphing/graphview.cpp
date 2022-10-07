@@ -80,7 +80,7 @@ void GraphView::wheelEvent(QWheelEvent *e)
     /* Zoom view by adjusting width */
     double dt = m_viewWidth;
     double size = dt;
-    size *= -e->delta();
+    size *= -e->angleDelta().y();
 
     /* Zoom deltas normally come in increments of 120 */
     size /= 120 * (100 / zoomPercent);
@@ -90,7 +90,7 @@ void GraphView::wheelEvent(QWheelEvent *e)
 
     /* Scroll view to zoom around mouse */
     dt -= m_viewWidth;
-    dt *= e->x();
+    dt *= e->position().x();
     dt /= width();
 
     m_viewLeft = dt + m_viewLeft;
