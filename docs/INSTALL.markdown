@@ -21,7 +21,7 @@ Optional dependencies:
 
 The GUI also dependends on:
 
-* Qt version 5.2.1 or higher (tested with version 5.4.0 and 5.3.0)
+* Qt version 5.15
 
 Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
 if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
