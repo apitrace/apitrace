@@ -49,7 +49,7 @@ void TimeAxisWidget::paintEvent(QPaintEvent *)
         }
     } else {
         int axisWidth = width() - 1;
-        int fontWidth = painter.fontMetrics().width("0.000 ns");
+        int fontWidth = painter.fontMetrics().boundingRect("0.000 ns").width();
         int fontHeight= painter.fontMetrics().height();
         int ticks     = axisWidth / (fontWidth * 2);
 
