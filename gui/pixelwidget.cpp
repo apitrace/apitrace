@@ -47,7 +47,6 @@
 #include "pixelwidget.h"
 
 #include <qapplication.h>
-#include <qdesktopwidget.h>
 #include <qapplication.h>
 #ifndef QT_NO_CLIPBOARD
 #include <qclipboard.h>
