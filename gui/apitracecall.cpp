@@ -10,6 +10,7 @@
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
 #include <QTextDocument>
+#include <QRegularExpression>
 
 const char * const styleSheet =
     ".call {\n"
@@ -1125,8 +1126,14 @@ bool ApiTraceCall::contains(const QString &str,
                             bool useRegex) const
 {
     QString txt = searchText();
-    return useRegex ? txt.contains(QRegExp(str, sensitivity))
-                    : txt.contains(str, sensitivity);
+    if (useRegex) {
+        QRegularExpression::PatternOptions options = sensitivity == Qt::CaseInsensitive
+                                                   ? QRegularExpression::CaseInsensitiveOption
+                                                   : QRegularExpression::NoPatternOption;
+        return txt.contains(QRegularExpression(str, options));
+    } else {
+        return txt.contains(str, sensitivity);
+    }
 }
 
 void ApiTraceCall::missingThumbnail()
