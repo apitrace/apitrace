@@ -638,7 +638,7 @@ add_custom_target (version
         ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/version.h.in
                          -D DST=${CMAKE_BINARY_DIR}/version.h
                          -D GIT_EXECUTABLE=${GIT_EXECUTABLE}
-                         -P ${CMAKE_MODULE_PATH}/GenerateVersion.cmake
+                         -P ${CMAKE_SOURCE_DIR}/cmake/GenerateVersion.cmake
 )
 
 ##############################################################################
