@@ -7,12 +7,12 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     )
 endif ()
 
-add_definitions (-DQT_FORCE_ASSERTS)
+add_definitions (-DQT_FORCE_ASSERTS -DQT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
 add_library (qubjson STATIC
     qubjson.cpp
 )
-target_link_libraries (qubjson Qt5::Widgets)
+target_link_libraries (qubjson Qt::Widgets)
 
 if (BUILD_TESTING)
     add_gtest (qubjson_test qubjson_test.cpp)
@@ -57,7 +57,7 @@ set(qapitrace_SRCS
    graphing/timeaxiswidget.cpp
  )
 
-qt5_add_resources(qapitrace_SRCS qapitrace.qrc)
+qt_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
    ui/argumentseditor.ui
@@ -83,8 +83,8 @@ set (CMAKE_AUTOMOC ON)
 # Silence `Note: No relevant classes found. No output generated.`
 set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
 
-QT5_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+QT_WRAP_UI (qapitrace_UIS_H ${qapitrace_UIS})
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 include_directories (
@@ -98,8 +98,8 @@ add_dependencies(apitrace version)
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
 target_link_libraries (qapitrace
-    Qt5::Widgets
-    Qt5::Network
+    Qt::Widgets
+    Qt::Network
     qubjson
     image
     common
@@ -133,7 +133,7 @@ install_pdb (qapitrace RUNTIME DESTINATION bin)
 # CMake 3.1.
 if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
     # http://stackoverflow.com/a/24676432
-    get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+    get_target_property (QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
     get_filename_component (QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program (QT_WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
     if (QT_WINDEPLOYQT_EXECUTABLE)
