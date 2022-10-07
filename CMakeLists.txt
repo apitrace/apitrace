@@ -25,6 +25,7 @@ project (apitrace)
 # still providing a mechanism to force/disable these optional dependencies, as
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
+option (ENABLE_QT6 "Use Qt6 support." OFF)
 
 option (ENABLE_CLI "Enable command Line interface." ON)
 
@@ -177,7 +178,11 @@ if (ENABLE_GUI)
     if (POLICY CMP0020)
         cmake_policy (SET CMP0020 NEW)
     endif()
-    find_package (Qt5 5.15 COMPONENTS Widgets Network ${REQUIRE_GUI})
+    if (ENABLE_QT6)
+        find_package (Qt6 COMPONENTS Widgets Network ${REQUIRE_GUI})
+    else ()
+        find_package (Qt5 5.15 COMPONENTS Widgets Network ${REQUIRE_GUI})
+    endif ()
 endif ()
 
 if (WIN32)
@@ -600,7 +605,7 @@ endif ()
 ##############################################################################
 # GUI
 
-if (ENABLE_GUI AND Qt5Widgets_FOUND AND Qt5Network_FOUND)
+if (ENABLE_GUI AND (Qt6_FOUND OR Qt5_FOUND))
   add_subdirectory (gui)
 endif ()
 
