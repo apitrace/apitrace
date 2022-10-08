@@ -80,13 +80,8 @@ endif()
 
 set (CMAKE_AUTOMOC ON)
 
-# Workaround https://github.com/apitrace/apitrace/issues/528
-if (${CMAKE_VERSION} VERSION_LESS 3.9.0 OR
-    ${CMAKE_VERSION} VERSION_EQUAL 3.9.5 OR
-    ${CMAKE_VERSION} VERSION_GREATER 3.9.5)
-    # Silence `Note: No relevant classes found. No output generated.`
-    set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
-endif ()
+# Silence `Note: No relevant classes found. No output generated.`
+set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
 
 QT5_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -136,7 +131,7 @@ install_pdb (qapitrace RUNTIME DESTINATION bin)
 # XXX: windeployqt can fail if there's weird stuff in the Path env var, so we
 # invoke it with a sanitized Path, via `cmake -E env` that was introduced in
 # CMake 3.1.
-if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
+if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
     # http://stackoverflow.com/a/24676432
     get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
     get_filename_component (QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
