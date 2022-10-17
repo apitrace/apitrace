@@ -95,6 +95,7 @@ extern void * _libGlHandle;
 enum LibClass {
     LIB_UNKNOWN = 0,
     LIB_GL,
+    LIB_GLX,
     LIB_EGL,
     LIB_GLES1,
     LIB_GLES2,
@@ -112,6 +113,11 @@ classifyLibrary(const char *pathname)
     if (strcmp(filename, "libGL.so") == 0 ||
         strcmp(filename, "libGL.so.1") == 0) {
         return LIB_GL;
+    }
+
+    if (strcmp(filename, "libGLX.so") == 0 ||
+        strcmp(filename, "libGLX.so.0") == 0) {
+        return LIB_GLX;
     }
 
 #ifdef EGLTRACE

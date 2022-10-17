@@ -134,6 +134,10 @@ ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
 
+_NOTE: This `LD_LIBRARY_PATH` approach will not work with applications which
+call [glvnd](https://gitlab.freedesktop.org/glvnd/libglvnd#architecture)
+components directly._
+
 If you are an application developer, you can avoid this either by linking with
 `-Bsymbolic` flag, or by using some unique prefix for your function pointers.
 
