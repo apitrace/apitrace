@@ -713,7 +713,7 @@ class GlTracer(Tracer):
             print(r'        auto memoryShadow = std::make_unique<GLMemoryShadow>();')
             print(r'        const bool success = memoryShadow->init(data, size);')
             print(r'        if (success) {')
-            print(r'            _ctx->sharedRes->bufferToShadowMemory.insert(std::make_pair(buffer, std::move(memoryShadow)));')
+            print(r'            _ctx->sharedRes->bufferToShadowMemory.insert_or_assign(buffer, std::move(memoryShadow));')
             print(r'        } else {')
             print(r'            os::log("apitrace: error: %s: cannot create memory shadow\n", __FUNCTION__);')
             print(r'        }')
