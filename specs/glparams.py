@@ -998,7 +998,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS"),	# 0x8264
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_ATOMIC_COUNTERS"),	# 0x8265
     ("glGet",	I,	1,	"GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS"),	# 0x8266
-    ("",	X,	1,	"GL_COMPUTE_WORK_GROUP_SIZE"),	# 0x8267
+    ("glGetProgram",	I,	3,	"GL_COMPUTE_WORK_GROUP_SIZE"),	# 0x8267
     ("",	X,	1,	"GL_DEBUG_TYPE_MARKER"),	# 0x8268
     ("",	X,	1,	"GL_DEBUG_TYPE_PUSH_GROUP"),	# 0x8269
     ("",	X,	1,	"GL_DEBUG_TYPE_POP_GROUP"),	# 0x826A
