@@ -19,5 +19,6 @@
     <file>resources/media-record.png</file>
     <file>resources/script-error.png</file>
     <file>resources/glreference.tsv</file>
+    <file>resources/qapitrace.png</file>
 </qresource>
 </RCC>
