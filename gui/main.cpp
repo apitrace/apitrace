@@ -38,6 +38,8 @@ static void version(void)
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/resources/qapitrace.png"));
+
     QCoreApplication::setOrganizationName("ApiTrace");
     QCoreApplication::setApplicationName("QApiTrace");
 
