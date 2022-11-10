@@ -74,7 +74,16 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
     source[0] = 0;
     glGetShaderSource(shader, source_length, &length, source);
 
-    shaderMap[enumToString(shader_type)] += source;
+    // https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_magic_number
+    // 0x07230203
+    if (length >= 4 &&
+        ((source[0] == 0x03 && source[1] == 0x02 && source[2] == 0x23 && source[3] == 0x07) ||
+         (source[0] == 0x07 && source[1] == 0x23 && source[2] == 0x02 && source[3] == 0x03))) {
+        // TODO: Disassemble with SPIRV-Tools' spvBinaryToText()
+        std::cerr << "warning: dumping of SPIR-V shader binaries not yet supported\n";
+    } else {
+        shaderMap[enumToString(shader_type)] += source;
+    }
 
     delete [] source;
 }
