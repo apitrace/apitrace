@@ -77,7 +77,11 @@ HRESULT = MAKE_HRESULT(ok = "D3D_OK", errors = [
     "D3DERR_DRIVERINVALIDCALL",
 ])
 
-DWORD_D3DFVF = Polymorphic("Handle & 1", [("0", D3DFVF)], DWORD, contextLess=False)
+# Shader handles
+DWORD_VERTEX_SHADER = Handle("vertexShader", DWORD)
+DWORD_PIXEL_SHADER = Handle("pixelShader", DWORD)
+
+DWORD_D3DFVF = Polymorphic("Handle & 1", [("0", D3DFVF)], DWORD_VERTEX_SHADER, contextLess=False)
 
 IDirect3D8 = Interface("IDirect3D8", IUnknown)
 IDirect3DDevice8 = Interface("IDirect3DDevice8", IUnknown)
@@ -197,25 +201,25 @@ IDirect3DDevice8.methods += [
     StdMethod(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (Blob(Const(Void), "_vertexDataSize(PrimitiveType, PrimitiveCount, VertexStreamZeroStride)"), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     StdMethod(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertexIndices"), (UINT, "PrimitiveCount"), (Blob(Const(Void), "_indexDataSize(PrimitiveType, PrimitiveCount, IndexDataFormat)"), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (Blob(Const(Void), "(MinVertexIndex + NumVertexIndices)*VertexStreamZeroStride"), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     StdMethod(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (PDIRECT3DVERTEXBUFFER8, "pDestBuffer"), (D3DPV, "Flags")]),
-    StdMethod(HRESULT, "CreateVertexShader", [(Array(Const(DWORD), "_declCount(pDeclaration)"), "pDeclaration"), (D3DSHADER8, "pFunction"), Out(Pointer(DWORD), "pHandle"), (D3DUSAGE, "Usage")]),
+    StdMethod(HRESULT, "CreateVertexShader", [(Array(Const(DWORD), "_declCount(pDeclaration)"), "pDeclaration"), (D3DSHADER8, "pFunction"), Out(Pointer(DWORD_VERTEX_SHADER), "pHandle"), (D3DUSAGE, "Usage")]),
     StdMethod(HRESULT, "SetVertexShader", [(DWORD_D3DFVF, "Handle")]),
-    StdMethod(HRESULT, "GetVertexShader", [Out(Pointer(DWORD), "pHandle")], sideeffects=False),
-    StdMethod(HRESULT, "DeleteVertexShader", [(DWORD, "Handle")]),
+    StdMethod(HRESULT, "GetVertexShader", [Out(Pointer(DWORD_VERTEX_SHADER), "pHandle")], sideeffects=False),
+    StdMethod(HRESULT, "DeleteVertexShader", [(DWORD_VERTEX_SHADER, "Handle")]),
     StdMethod(HRESULT, "SetVertexShaderConstant", [(DWORD, "Register"), (Blob(Const(Void), "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")]),
     StdMethod(HRESULT, "GetVertexShaderConstant", [(DWORD, "Register"), Out(OpaqueBlob(Void, "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")], sideeffects=False),
-    StdMethod(HRESULT, "GetVertexShaderDeclaration", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
-    StdMethod(HRESULT, "GetVertexShaderFunction", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetVertexShaderDeclaration", [(DWORD_VERTEX_SHADER, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetVertexShaderFunction", [(DWORD_VERTEX_SHADER, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "SetStreamSource", [(UINT, "StreamNumber"), (PDIRECT3DVERTEXBUFFER8, "pStreamData"), (UINT, "Stride")]),
     StdMethod(HRESULT, "GetStreamSource", [(UINT, "StreamNumber"), Out(Pointer(PDIRECT3DVERTEXBUFFER8), "ppStreamData"), Out(Pointer(UINT), "pStride")]),
     StdMethod(HRESULT, "SetIndices", [(PDIRECT3DINDEXBUFFER8, "pIndexData"), (UINT, "BaseVertexIndex")]),
     StdMethod(HRESULT, "GetIndices", [Out(Pointer(PDIRECT3DINDEXBUFFER8), "ppIndexData"), Out(Pointer(UINT), "pBaseVertexIndex")]),
-    StdMethod(HRESULT, "CreatePixelShader", [(D3DSHADER8, "pFunction"), Out(Pointer(DWORD), "pHandle")]),
-    StdMethod(HRESULT, "SetPixelShader", [(DWORD, "Handle")]),
-    StdMethod(HRESULT, "GetPixelShader", [Out(Pointer(DWORD), "pHandle")], sideeffects=False),
-    StdMethod(HRESULT, "DeletePixelShader", [(DWORD, "Handle")]),
+    StdMethod(HRESULT, "CreatePixelShader", [(D3DSHADER8, "pFunction"), Out(Pointer(DWORD_PIXEL_SHADER), "pHandle")]),
+    StdMethod(HRESULT, "SetPixelShader", [(DWORD_PIXEL_SHADER, "Handle")]),
+    StdMethod(HRESULT, "GetPixelShader", [Out(Pointer(DWORD_PIXEL_SHADER), "pHandle")], sideeffects=False),
+    StdMethod(HRESULT, "DeletePixelShader", [(DWORD_PIXEL_SHADER, "Handle")]),
     StdMethod(HRESULT, "SetPixelShaderConstant", [(DWORD, "Register"), (Blob(Const(Void), "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")]),
     StdMethod(HRESULT, "GetPixelShaderConstant", [(DWORD, "Register"), Out(OpaqueBlob(Void, "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")], sideeffects=False),
-    StdMethod(HRESULT, "GetPixelShaderFunction", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPixelShaderFunction", [(DWORD_PIXEL_SHADER, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "DrawRectPatch", [(UINT, "Handle"), (ConstPointer(Float), "pNumSegs"), (ConstPointer(D3DRECTPATCH_INFO), "pRectPatchInfo")]),
     StdMethod(HRESULT, "DrawTriPatch", [(UINT, "Handle"), (ConstPointer(Float), "pNumSegs"), (ConstPointer(D3DTRIPATCH_INFO), "pTriPatchInfo")]),
     StdMethod(HRESULT, "DeletePatch", [(UINT, "Handle")]),
