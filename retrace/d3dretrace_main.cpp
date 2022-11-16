@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011-2022 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "os_string.hpp"
+#include "os_time.hpp"
 
 #include "d3dstate.hpp"
 #include "retrace.hpp"
@@ -66,7 +67,10 @@ retrace::finishRendering(void) {
 
 void
 retrace::waitForInput(void) {
-    /* TODO */
+    flushRendering();
+    while (d3dretrace::processEvents()) {
+        os::sleep(100*1000);
+    }
 }
 
 void
