@@ -145,6 +145,10 @@ public:
         ++blobNo;
     }
 
+    void visit(trace::Repr *repr) override {
+        _visit(repr->machineValue);
+    }
+
     void visit(trace::Call *call) override {
         callNo = call->no;
         blobNo = 0;
