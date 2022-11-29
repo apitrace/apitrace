@@ -150,7 +150,7 @@ struct FrameTrimmeImpl {
 
     bool skipDeleteObj(const trace::Call& call);
     bool skipDeleteImpl(unsigned obj_id, DependecyObjectMap& map);
-    void finalize();
+    std::unordered_set<unsigned> finalize(int last_frame_start);
 
     bool checkCommonSuffixes(const char *suffix) const;
 
@@ -243,9 +243,9 @@ FrameTrimmer::getUniqueCallIds()
     return impl->getUniqueCallIds();
 }
 
-void FrameTrimmer::finalize()
+std::unordered_set<unsigned> FrameTrimmer::finalize(int last_frame_start)
 {
-    impl->finalize();
+    return impl->finalize(last_frame_start);
 }
 
 FrameTrimmeImpl::FrameTrimmeImpl(bool keep_all_states):
@@ -460,10 +460,34 @@ FrameTrimmeImpl::skipDeleteImpl(unsigned obj_id, DependecyObjectMap& map)
     return !obj || (m_recording_frame && !obj->emitted()) || obj->createdBefore(m_last_frame_start);
 }
 
-void FrameTrimmeImpl::finalize()
+std::unordered_set<unsigned>
+FrameTrimmeImpl::finalize(int last_frame_start)
 {
+    std::unordered_set<unsigned> result;
+
+    m_programs.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_textures.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_buffers.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_shaders.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_renderbuffers.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_samplers.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_sync_objects.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+
+    for (auto& [dummy, context] : m_contexts) {
+        context->m_vertex_arrays.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+        context->m_program_pipelines.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+        context->m_fbo.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    }
+
+    m_vertex_attrib_pointers.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_vertex_buffer_pointers.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_legacy_programs.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+    m_queries.unbalancedCreateCallsInLastFrame(last_frame_start, result);
+
     if (m_last_swap)
         m_required_calls.insert(m_last_swap);
+
+    return result;
 }
 
 void FrameTrimmeImpl::endTargetFrame()

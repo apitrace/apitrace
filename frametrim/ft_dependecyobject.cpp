@@ -185,6 +185,7 @@ void DependecyObjectMap::create(const trace::Call& call)
     auto c = trace2call(call);
     obj->addCall(c);
     obj->setExtraInfo("valid", 1);
+    obj->setExtraInfo("create_call", call.no);
 }
 
 void DependecyObjectMap::del(const trace::Call& call)
@@ -193,6 +194,7 @@ void DependecyObjectMap::del(const trace::Call& call)
     if (obj_it != m_objects.end()) {
         obj_it->second->addCall(trace2call(call));
         obj_it->second->setExtraInfo("valid", 0);
+        obj_it->second->setExtraInfo("delete_call", call.no);
     }
 }
 
@@ -471,6 +473,39 @@ DependecyObjectMap::getById(unsigned id) const
 {
     auto i = m_objects.find(id);
     return i !=  m_objects.end() ? i->second : nullptr;
+}
+
+static bool isNonRepeatCall(const std::string& name)
+{
+    static const std::unordered_set<std::string> nonRepeateCalls = {
+        "glShaderSource",
+        "glCompileShader",
+        "glAttachShader",
+        "glLinkProgram",
+    };
+    return nonRepeateCalls.find(name) != nonRepeateCalls.end();
+}
+
+void
+DependecyObjectMap::unbalancedCreateCallsInLastFrame(uint32_t last_frame_start,
+                                                     std::unordered_set<unsigned>& outSet)
+{
+    for (auto&& [key, obj] : m_objects) {
+        if (obj && obj->extraInfo("delete_call") == 0) {
+            auto create_callno = obj->extraInfo("create_call");
+            if (create_callno >= last_frame_start) {
+                outSet.insert(create_callno);
+            }
+            auto reused_callno = obj->extraInfo("reused_call");
+            if (reused_callno >= last_frame_start) {
+                outSet.insert(reused_callno);
+            }
+            for (auto&& c : obj->calls()) {
+                if (c->callNo() >= last_frame_start && isNonRepeatCall(c->name()))
+                    outSet.insert(c->callNo());
+            }
+        }
+    }
 }
 
 void
