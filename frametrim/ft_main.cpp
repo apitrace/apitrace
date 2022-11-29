@@ -138,7 +138,7 @@ static int trim_to_frame(const char *filename,
     std::priority_queue<std::pair<unsigned, unsigned>> calls_in_frame;
 
     unsigned calls_in_this_frame = 0;
-    bool start_last_frame = false;
+    uint32_t last_frame_start = 0;
 
     while (call) {
         /* There's no use doing any work past the last call and frame
@@ -152,9 +152,9 @@ static int trim_to_frame(const char *filename,
             ft = ft_key_frame;
         if (options.frames.contains(frame, call->flags)) {
             ft = ft_retain_frame;
-            if (!start_last_frame && frame == options.frames.getLast()) {
-                start_last_frame = true;
-                trimmer.start_last_frame(call->no);
+            if ((last_frame_start == 0) && frame == options.frames.getLast()) {
+                last_frame_start = call->no - 1;
+                trimmer.start_last_frame(last_frame_start);
             }
         }
 
@@ -177,7 +177,7 @@ static int trim_to_frame(const char *filename,
         call.reset(p.parse_call());
         ++calls_in_this_frame;
     }
-    trimmer.finalize();
+    auto skip_loop_calls = trimmer.finalize(last_frame_start);
     std::cerr << "\nDone scanning frames\n";
 
     trace::Writer writer;
@@ -194,6 +194,9 @@ static int trim_to_frame(const char *filename,
     call.reset(p.parse_call());
 
     std::cerr << "Copying " << call_ids.size() << " calls\n";
+    std::cerr << "Write calls before " << last_frame_start << " and setup calls from last frame\n";
+
+    int call_id = 0;
 
     while (1) {
         while (call && call_ids.find(call->no) == call_ids.end())
@@ -202,7 +205,34 @@ static int trim_to_frame(const char *filename,
         if (!call)
             break;
 
-        writer.writeCall(call.get());
+        // Write setup calls in last frame  before last frame starts
+        if (call->no < last_frame_start ||
+                skip_loop_calls.find(call->no) != skip_loop_calls.end()) {
+            call->no = call_id++;
+            writer.writeCall(call.get());
+        }
+        call.reset(p.parse_call());
+    }
+
+    // Now write the last frame without the setup calls
+    p.close();
+    p.open(filename);
+    call.reset(p.parse_call());
+
+    std::cerr << "Write calls after " << last_frame_start << " without setup calls\n";
+    while (1) {
+        while (call &&
+               (call->no < last_frame_start ||
+                call_ids.find(call->no) == call_ids.end()))
+            call.reset(p.parse_call());
+
+        if (!call)
+            break;
+
+        if (skip_loop_calls.find(call->no) == skip_loop_calls.end()) {
+            call->no = call_id++;
+            writer.writeCall(call.get());
+        }
         call.reset(p.parse_call());
     }
 

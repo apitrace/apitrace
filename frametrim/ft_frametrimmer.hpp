@@ -49,7 +49,7 @@ public:
     void start_last_frame(uint32_t callno);
     void call(const trace::Call& call, Frametype target_frame_type);
 
-    void finalize();
+    std::unordered_set<unsigned> finalize(int last_frame_start);
 
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();

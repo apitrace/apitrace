@@ -54,6 +54,7 @@ public:
 
     bool createdBefore(unsigned callno) const;
 
+    auto calls() { return m_calls; }
 private:
 
     std::vector<PTraceCall> m_calls;
@@ -106,6 +107,9 @@ public:
     void addBoundAsDependencyTo(UsedObject& obj);
 
     UsedObject::Pointer bind(unsigned bindpoint, unsigned id);
+
+    void unbalancedCreateCallsInLastFrame(uint32_t last_frame_start,
+                                          std::unordered_set<unsigned>& outSet);
 
 protected:
     void addObject(unsigned id, UsedObject::Pointer obj);
