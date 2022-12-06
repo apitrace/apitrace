@@ -80,6 +80,7 @@ HRESULT = MAKE_HRESULT(ok = "D3D_OK", errors = [
 # Shader handles
 DWORD_VERTEX_SHADER = Handle("vertexShader", DWORD)
 DWORD_PIXEL_SHADER = Handle("pixelShader", DWORD)
+DWORD_STATE_BLOCK = Handle("stateBlock", DWORD)
 
 DWORD_D3DFVF = Polymorphic("Handle & 1", [("0", D3DFVF)], DWORD_VERTEX_SHADER, contextLess=False)
 
@@ -179,11 +180,11 @@ IDirect3DDevice8.methods += [
     StdMethod(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "State"), (D3DRENDERSTATEVALUE, "Value")]),
     StdMethod(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "State"), Out(Pointer(D3DRENDERSTATEVALUE), "pValue")], sideeffects=False),
     StdMethod(HRESULT, "BeginStateBlock", []),
-    StdMethod(HRESULT, "EndStateBlock", [Out(Pointer(DWORD), "pToken")]),
-    StdMethod(HRESULT, "ApplyStateBlock", [(DWORD, "Token")]),
-    StdMethod(HRESULT, "CaptureStateBlock", [(DWORD, "Token")]),
-    StdMethod(HRESULT, "DeleteStateBlock", [(DWORD, "Token")]),
-    StdMethod(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "Type"), Out(Pointer(DWORD), "pToken")]),
+    StdMethod(HRESULT, "EndStateBlock", [Out(Pointer(DWORD_STATE_BLOCK), "pToken")]),
+    StdMethod(HRESULT, "ApplyStateBlock", [(DWORD_STATE_BLOCK, "Token")]),
+    StdMethod(HRESULT, "CaptureStateBlock", [(DWORD_STATE_BLOCK, "Token")]),
+    StdMethod(HRESULT, "DeleteStateBlock", [(DWORD_STATE_BLOCK, "Token")]),
+    StdMethod(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "Type"), Out(Pointer(DWORD_STATE_BLOCK), "pToken")]),
     StdMethod(HRESULT, "SetClipStatus", [(ConstPointer(D3DCLIPSTATUS8), "pClipStatus")]),
     StdMethod(HRESULT, "GetClipStatus", [Out(Pointer(D3DCLIPSTATUS8), "pClipStatus")], sideeffects=False),
     StdMethod(HRESULT, "GetTexture", [(DWORD, "Stage"), Out(Pointer(PDIRECT3DBASETEXTURE8), "ppTexture")]),
