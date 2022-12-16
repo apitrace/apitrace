@@ -1935,9 +1935,9 @@ parameters = [
     ("",	X,	1,	"GL_PN_TRIANGLES_NORMAL_MODE_QUADRATIC_ATI"),	# 0x87F8
     ("",	X,	1,	"GL_3DC_X_AMD"),	# 0x87F9
     ("",	X,	1,	"GL_3DC_XY_AMD"),	# 0x87FA
-    ("glGet",	I,	1,	"GL_VBO_FREE_MEMORY_ATI"),	# 0x87FB
-    ("glGet",	I,	1,	"GL_TEXTURE_FREE_MEMORY_ATI"),	# 0x87FC
-    ("glGet",	I,	1,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
+    ("glGet",	I,	4,	"GL_VBO_FREE_MEMORY_ATI"),	# 0x87FB
+    ("glGet",	I,	4,	"GL_TEXTURE_FREE_MEMORY_ATI"),	# 0x87FC
+    ("glGet",	I,	4,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
     ("glGet",	I,	1,	"GL_NUM_PROGRAM_BINARY_FORMATS"),	# 0x87FE
     ("glGet",	E,	"_glGetInteger(GL_NUM_PROGRAM_BINARY_FORMATS)",	"GL_PROGRAM_BINARY_FORMATS"),	# 0x87FF
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FUNC"),	# 0x8800
