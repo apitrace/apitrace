@@ -134,8 +134,11 @@ class StateGetter(Visitor):
         elem_type = self.inflector.reduced_type(type)
         inflection = self.inflector.inflect(type)
         if inflection.endswith('v' + self.inflector.suffix):
-            print('    %s %s = 0;' % (elem_type, temp_name))
-            print('    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name))
+            print('    %s %s_arr[2] = {0, (%s)0xdeadc0de};' % (elem_type, temp_name, elem_type))
+            print('    %s(%s, %s_arr);' % (inflection, ', '.join(args), temp_name))
+            # Buffer overflow check
+            print('    %s %s = %s_arr[0];' % (elem_type, temp_name, temp_name))
+            print('    assert(%s_arr[1] == (%s)0xdeadc0de);' % (temp_name, elem_type))
         else:
             print('    %s %s = %s(%s);' % (elem_type, temp_name, inflection, ', '.join(args)))
         return temp_name
