@@ -47,7 +47,6 @@ enum ChannelType {
 
 
 class Image {
-    static const unsigned GUARD_VALUE = 0xdeadc0de;
 public:
     unsigned width;
     unsigned height;
@@ -77,10 +76,12 @@ public:
         // Additional space to avoid buffer overflow crash in case of a bug in driver
         unsigned guardBytes = ((h + w) * 4 + 32) * bytesPerPixel;
         pixels = new unsigned char[contentBytes + guardBytes];
+        unsigned GUARD_VALUE = 0xdeadc0de;
         memcpy(pixels + contentBytes, &GUARD_VALUE, 4);
     }
 
     inline ~Image() {
+        unsigned GUARD_VALUE = 0xdeadc0de;
         assert(memcmp(pixels + sizeInBytes(), &GUARD_VALUE, 4) == 0);
         delete [] pixels;
     }
