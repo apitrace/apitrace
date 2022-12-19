@@ -1035,7 +1035,7 @@ glapi.addFunctions([
     GlFunction(Void, "glBufferStorage", [ (GLenum, "target"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLbitfield_storage, "flags")]),
 
     # GL_ARB_cl_event
-    GlFunction(GLsync, "glCreateSyncFromCLeventARB", [(Opaque("struct _cl_context *"), "context"), (Opaque("struct _cl_event *"), "event"), (GLbitfield, "flags")], sideeffects=False),
+    GlFunction(GLsync, "glCreateSyncFromCLeventARB", [(Opaque("struct _cl_context *"), "context"), (Opaque("struct _cl_event *"), "event"), (GLbitfield, "flags")]),
 
     # GL_ARB_clear_buffer_object
     GlFunction(Void, "glClearBufferData", [(GLenum, "target"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
