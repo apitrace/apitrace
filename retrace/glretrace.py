@@ -225,24 +225,46 @@ class GlRetracer(Retracer):
         print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
         print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
         print(r'    }')
-        print(r'     std::vector<char> buffer;')
+        print(r'    std::vector<char> buffer;')
         print(r'    if (!_pack_buffer) {')
         # if no pack buffer is bound we have to read back
         data_param_name = "pixels"
         if function.name == "glGetTexImage":
-            print(r'     GLint max_tex_size;')
-            print(r'     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);')
-            print(r'     buffer.resize(max_tex_size * max_tex_size * max_tex_size);');
+            print(r'        static const double MAX_BPP = 16.0;     // RGBA x FLOAT')
+            print(r'        static const double MAX_BYTES_CAP = (sizeof(void*) > 4 ? 4ULL << 30 : 1ULL << 30);')
+            print(r'        double max_bytes;')
+            print(r'        if (target == GL_TEXTURE_3D) {')
+            print(r'            GLint max_dim;')
+            print(r'            glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &max_dim);')
+            print(r'            max_bytes = MAX_BPP * max_dim * max_dim * max_dim;')
+            print(r'        }')
+            print(r'        else {')
+            print(r'            GLint max_dim;')
+            print(r'            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_dim);')
+            print(r'            GLint max_width = max_dim, max_height = max_dim;')
+            print(r'            GLint max_layers = 1;')
+            print(r'            GLint max_faces = 1;')
+            print(r'            if (target == GL_TEXTURE_1D || target == GL_TEXTURE_1D_ARRAY)')
+            print(r'                max_height = 1;')
+            print(r'            if (target == GL_TEXTURE_CUBE_MAP_ARRAY)')
+            print(r'                max_faces = 6;')
+            print(r'            if (target == GL_TEXTURE_1D_ARRAY || target == GL_TEXTURE_2D_ARRAY || target == GL_TEXTURE_CUBE_MAP_ARRAY)')
+            print(r'                glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &max_layers);')
+            print(r'            max_bytes = MAX_BPP * max_layers * max_faces * max_height * max_width;')
+            print(r'        }')
+            print(r'        assert(max_bytes > 1e+3);')
+            print(r'        GLuint64 buffer_size = (GLuint64)std::min(max_bytes, MAX_BYTES_CAP);')
+            print(r'        buffer.resize(buffer_size);')
         elif function.name == "glGetTexnImage":
-            print(r'     buffer.resize(call.arg(4).toUInt());');
+            print(r'        buffer.resize(call.arg(4).toUInt());');
         elif function.name == "glGetTextureImage":
-            print(r'     buffer.resize(call.arg(4).toUInt());');
+            print(r'        buffer.resize(call.arg(4).toUInt());');
         elif function.name == "glReadPixels":
-            print(r'     GLsizei _w = call.arg(2).toSInt();')
-            print(r'     GLsizei _h = call.arg(3).toSInt();')
-            print(r'     buffer.resize(_w * _h * 64);')
+            print(r'        GLsizei _w = call.arg(2).toSInt();')
+            print(r'        GLsizei _h = call.arg(3).toSInt();')
+            print(r'        buffer.resize(_w * _h * 64);')
         elif function.name == "glReadnPixels":
-            print(r'     buffer.resize(call.arg(6).toSInt());')
+            print(r'        buffer.resize(call.arg(6).toSInt());')
             data_param_name = "data"
         else:
             print(r'    return;')
