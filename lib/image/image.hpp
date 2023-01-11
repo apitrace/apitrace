@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <assert.h>
+#include <string.h>
 
 #include <iostream>
 
@@ -68,11 +70,19 @@ public:
         channelType(t),
         bytesPerChannel(t == TYPE_FLOAT ? 4 : 1),
         bytesPerPixel(channels * bytesPerChannel),
-        flipped(f),
-        pixels(new unsigned char[h*w*bytesPerPixel])
-    {}
+        flipped(f)
+    {
+        unsigned contentBytes = sizeInBytes();
+        // Additional space to avoid buffer overflow crash in case of a bug in driver
+        unsigned guardBytes = ((h + w) * 4 + 32) * bytesPerPixel;
+        pixels = new unsigned char[contentBytes + guardBytes];
+        unsigned GUARD_VALUE = 0xdeadc0de;
+        memcpy(pixels + contentBytes, &GUARD_VALUE, 4);
+    }
 
     inline ~Image() {
+        unsigned GUARD_VALUE = 0xdeadc0de;
+        assert(memcmp(pixels + sizeInBytes(), &GUARD_VALUE, 4) == 0);
         delete [] pixels;
     }
 
