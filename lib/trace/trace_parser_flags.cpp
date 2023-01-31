@@ -136,6 +136,8 @@ callFlagTable[] = {
     { "IDirect3DViewport3::Clear",                     CALL_FLAG_RENDER },
     { "IDirect3DViewport3::Clear2",                    CALL_FLAG_RENDER },
     { "IDirect3DViewport::Clear",                      CALL_FLAG_RENDER },
+    { "eglExportDMABUFImageMESA",                      CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
+    { "eglExportDMABUFImageQueryMESA",                 CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglGetConfigAttrib",                            CALL_FLAG_VERBOSE },
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },

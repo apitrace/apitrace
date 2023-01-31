@@ -247,5 +247,18 @@ releaseTexImage(Drawable *pBuffer, int iBuffer);
 bool
 setPbufferAttrib(Drawable *pBuffer, const int *attribList);
 
+void *
+createImage(Context *context, int target, void *buffer, const int *attribList);
+
+void
+destroyImage(EGLImageKHR image);
+
+bool
+exportDMABUFImageQuery(EGLImageKHR image, int *pFourcc, int *pNumPlanes,
+                       EGLuint64KHR *modifiers);
+
+bool
+exportDMABUFImage(EGLImageKHR image, int *pfds, EGLint *pStrides,
+                  EGLint *offsets);
 
 } /* namespace glws */

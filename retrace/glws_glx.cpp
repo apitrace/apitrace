@@ -630,4 +630,27 @@ setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
     return true;
 }
 
+void *
+createImage(Context *context, int target, void *buffer, const int *attribList) {
+    return NULL;
+}
+
+void
+destroyImage(EGLImageKHR image) {
+    (void)image;
+    return;
+}
+
+bool
+exportDMABUFImage(EGLImageKHR image, int *pfds, EGLint *pStrides,
+                  EGLint *pOffsets) {
+    return false;
+}
+
+bool
+exportDMABUFImageQuery(EGLImageKHR image, int *pFourcc, int *pNumPlanes,
+                       EGLuint64KHR *pModifiers) {
+    return false;
+}
+
 } /* namespace glws */

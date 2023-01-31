@@ -78,6 +78,9 @@ EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
 # EGL_NV_system_time
 EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
+# EGL_MESA_image_dma_buf_export
+EGLuint64KHR = Alias("EGLuint64KHR", UInt64)
+
 eglapi = Module("EGL")
 
 EGLSurfaceFlags = Flags(Int, [
@@ -232,7 +235,7 @@ eglImageAttribs = [
     ('EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
 ]
 EGLImageAttribs = EGLAttribArray(eglImageAttribs)
-EGLImageAttribsKHR = EGLIntArray(eglImageAttribs)
+EGLImageAttribsKHR = EGLAttribArray(eglImageAttribs)
 
 EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
 
@@ -322,7 +325,7 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     # EGL_KHR_image
-    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLImageAttribsKHR, "attrib_list")]),
+    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLIntArray([]), "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
 
     # EGL_KHR_image_base
@@ -362,4 +365,8 @@ eglapi.addFunctions([
     # GL_OES_EGL_image
     GlFunction(Void, "glEGLImageTargetTexture2DOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
     GlFunction(Void, "glEGLImageTargetRenderbufferStorageOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
+
+    # EGL_MESA_dma_buf_export
+    GlFunction(EGLBoolean, "eglExportDMABUFImageQueryMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "fourcc"), Out(Pointer(EGLint), "num_planes"), Out(Pointer(EGLuint64KHR), "modifiers")]),
+    GlFunction(EGLBoolean, "eglExportDMABUFImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "fds"), Out(Pointer(EGLint), "strides"), Out(Pointer(EGLint), "offsets")]),
 ])

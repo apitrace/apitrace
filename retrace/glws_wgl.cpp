@@ -672,5 +672,8 @@ setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
     return pfnWglSetPbufferAttribARB(wglDrawable->hPBuffer, attribList);
 }
 
+void *
+createImage(Context *context, int target, void *buffer, const int *attribList) {
+}
 
 } /* namespace glws */

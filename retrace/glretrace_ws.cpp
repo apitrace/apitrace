@@ -381,4 +381,11 @@ setPbufferAttrib(glws::Drawable *pBuffer, const int *attribs) {
     return glws::setPbufferAttrib(pBuffer, attribs);
 }
 
+void *
+createImage(Context *context, int target, void *buffer,
+            const int *attribs) {
+    glws::Context *wsContext = context ? context->wsContext : NULL;
+    return glws::createImage(wsContext, target, buffer, attribs);
+}
+
 } /* namespace glretrace */

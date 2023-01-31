@@ -553,5 +553,38 @@ setPbufferAttrib(Drawable *pBuffer, const int *attribList) {
     return true;
 }
 
+void *
+createImage(Context *context, int target, void *buffer, const int *attribList) {
+    if (context) {
+       EglContext *eglContext = static_cast<EglContext *>(context);
+       return eglCreateImageKHR(eglDisplay, eglContext->context,
+                                target, buffer, attribList);
+    } else {
+       return eglCreateImageKHR(eglDisplay, EGL_NO_CONTEXT,
+                                target, buffer, attribList);
+    }
+}
+
+void
+destroyImage(EGLImageKHR image) {
+    if (!image)
+       return;
+
+    eglDestroyImageKHR(eglDisplay, image);
+}
+
+bool
+exportDMABUFImageQuery(EGLImageKHR image, int *pFourcc,
+                       int *pNumPlanes, EGLuint64KHR *pModifiers) {
+    return eglExportDMABUFImageQueryMESA(eglDisplay, image,
+                                         pFourcc, pNumPlanes, pModifiers);
+}
+
+bool
+exportDMABUFImage(EGLImageKHR image, int *pfds,
+                  EGLint *pStrides, EGLint *pOffsets) {
+    return eglExportDMABUFImageMESA(eglDisplay, image,
+                                         pfds, pStrides, pOffsets);
+}
 
 } /* namespace glws */

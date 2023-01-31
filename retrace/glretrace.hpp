@@ -232,6 +232,9 @@ releaseTexImage(glws::Drawable *pBuffer, int iBuffer);
 bool
 setPbufferAttrib(glws::Drawable *pBuffer, const int *attribList);
 
+void *
+createImage(Context *context, int target, void *buffer, const int *attribList);
+
 } /* namespace glretrace */
 
 

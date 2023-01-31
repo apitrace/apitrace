@@ -44,13 +44,14 @@
 
 using namespace glretrace;
 
-
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
 typedef std::map<unsigned long long, glfeatures::Profile> ProfileMap;
+typedef std::map<unsigned long long, EGLImageKHR> ImageMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
 static ProfileMap profile_map;
+static ImageMap image_map;
 
 /* FIXME: This should be tracked per thread. */
 static unsigned int current_api = EGL_OPENGL_ES_API;
@@ -65,6 +66,7 @@ static glfeatures::Profile last_profile(glfeatures::API_GLES, 2, 0);
 
 static glws::Drawable *null_drawable = NULL;
 
+static int *plane_fds = new int[3];
 
 static void
 createDrawable(unsigned long long orig_config, unsigned long long orig_surface);
@@ -98,6 +100,18 @@ getContext(unsigned long long context_ptr) {
     it = context_map.find(context_ptr);
 
     return (it != context_map.end()) ? it->second : NULL;
+}
+
+static EGLImageKHR
+getImage(unsigned long long image_ptr) {
+    if (image_ptr == 0) {
+        return NULL;
+    }
+
+    ImageMap::const_iterator it;
+    it = image_map.find(image_ptr);
+
+    return (it != image_map.end()) ? it->second : NULL;
 }
 
 static void createDrawable(unsigned long long orig_config, unsigned long long orig_surface)
@@ -159,6 +173,112 @@ static void retrace_eglSwapBuffersWithDamage(trace::Call &call) {
         // Wait for presentation to finish
         glFinish();
         std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
+}
+
+static void retrace_eglCreateImageKHR(trace::Call &call) {
+    unsigned long long orig_image = call.ret->toUInt();
+
+    Context *new_context = getContext(call.arg(1).toUIntPtr());
+
+    EGLenum target;
+    target = static_cast<EGLenum>((call.arg(2)).toSInt());
+
+    EGLClientBuffer buffer;
+    buffer = static_cast<EGLClientBuffer>((call.arg(3)).toPointer());
+
+    trace::Array *attrib_array = call.arg(4).toArray();
+    trace::Array *attribs_ = attrib_array ? attrib_array->toArray() : NULL;
+    int *new_attrib_list = NULL;
+    int nattribs = 0;
+
+    if (attribs_) {
+        nattribs = attribs_->values.size();
+    }
+
+    if (nattribs) {
+        new_attrib_list = new int[nattribs];
+        for (size_t i = 0; i < nattribs; i+=2) {
+            int param_i = attribs_->values[i]->toSInt();
+            new_attrib_list[i] = param_i;
+            if (param_i == EGL_NONE) {
+                break;
+            }
+
+            int param_v = attribs_->values[i+1]->toSInt();
+            new_attrib_list[i+1] = param_v;
+
+            if (param_i == EGL_DMA_BUF_PLANE0_FD_EXT ||
+                param_i == EGL_DMA_BUF_PLANE1_FD_EXT ||
+                param_i == EGL_DMA_BUF_PLANE2_FD_EXT) {
+                new_attrib_list[i+1] = plane_fds[param_i - EGL_DMA_BUF_PLANE0_FD_EXT];
+            } else {
+                new_attrib_list[i+1] = param_v;
+            }
+        }
+    }
+
+    EGLImageKHR eglImage = glretrace::createImage(new_context, target,
+                                              buffer, new_attrib_list);
+    if (!eglImage)
+       std::cout << "eglCreateImageKHR failed" << std::endl;
+
+    else if (orig_image) {
+       image_map[orig_image] = eglImage;
+   }
+}
+
+static void retrace_eglDestroyImageKHR(trace::Call &call) {
+    unsigned long long orig_image = call.arg(1).toUIntPtr();
+    if (!orig_image) {
+       return;
+    }
+
+    ImageMap::iterator it;
+    it = image_map.find(orig_image);
+
+    if (it != image_map.end()) {
+        EGLImageKHR image = it->second;
+        glws::destroyImage(image);
+        image_map.erase(it);
+    }
+}
+
+static void retrace_eglExportDMABUFImageQueryMESA(trace::Call &call) {
+    EGLImageKHR eglImage = getImage(call.arg(1).toUIntPtr());
+    if (!eglImage)
+       return;
+
+    int fourcc, *pFourcc = NULL;
+    int numPlanes, *pNumPlanes = NULL;
+    EGLuint64KHR modifiers, *pModifiers = NULL;
+
+    pFourcc = &fourcc;
+    pNumPlanes = &numPlanes;
+    pModifiers = &modifiers;
+
+    bool retVal =
+       glws::exportDMABUFImageQuery(eglImage, pFourcc, pNumPlanes, pModifiers);
+}
+
+static void retrace_eglExportDMABUFImageMESA(trace::Call &call) {
+    EGLImageKHR eglImage = getImage(call.arg(1).toUIntPtr());
+    if (!eglImage)
+       return;
+
+    trace::Array *fds = call.arg(2).toArray();
+    int nfds = fds->values.size();
+
+    int *pfds = new int[nfds];
+    EGLint *pStrides = NULL;
+    EGLint *pOffsets = NULL;
+
+    bool retVal =
+       glws::exportDMABUFImage(eglImage, pfds, pStrides, pOffsets);
+
+    /* Save the returned fds for later references */
+    for (unsigned i = 0; i < nfds; i++) {
+        plane_fds[i] = pfds[i];
     }
 }
 
@@ -376,9 +496,13 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglSwapBuffersWithDamageKHR", &retrace_eglSwapBuffersWithDamage},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
-    {"eglCreateImageKHR", &retrace::ignore},
-    {"eglDestroyImageKHR", &retrace::ignore},
+    {"eglCreateImage", &retrace_eglCreateImageKHR},
+    {"eglDestroyImage", &retrace_eglDestroyImageKHR},
+    {"eglCreateImageKHR", &retrace_eglCreateImageKHR},
+    {"eglDestroyImageKHR", &retrace_eglDestroyImageKHR},
     {"glEGLImageTargetTexture2DOES", &retrace::ignore},
     {"eglGetSyncValuesCHROMIUM", &retrace::ignore},
+    {"eglExportDMABUFImageMESA", &retrace_eglExportDMABUFImageMESA},
+    {"eglExportDMABUFImageQueryMESA", &retrace_eglExportDMABUFImageQueryMESA},
     {NULL, NULL},
 };
