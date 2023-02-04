@@ -282,6 +282,17 @@ static void retrace_eglExportDMABUFImageMESA(trace::Call &call) {
     }
 }
 
+static void retrace_eglImageTargetTexture2DOES(trace::Call &call) {
+    EGLImageKHR eglImage = getImage(call.arg(1).toUIntPtr());
+    if (!eglImage)
+       return;
+
+    GLenum target;
+    target = static_cast<GLenum>((call.arg(0)).toSInt());
+
+    glws::createImageTargetTexture2D(target, eglImage);
+}
+
 static void retrace_eglChooseConfig(trace::Call &call) {
     if (!call.ret->toSInt()) {
         return;
@@ -500,7 +511,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglDestroyImage", &retrace_eglDestroyImageKHR},
     {"eglCreateImageKHR", &retrace_eglCreateImageKHR},
     {"eglDestroyImageKHR", &retrace_eglDestroyImageKHR},
-    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
+    {"glEGLImageTargetTexture2DOES", &retrace_eglImageTargetTexture2DOES},
     {"eglGetSyncValuesCHROMIUM", &retrace::ignore},
     {"eglExportDMABUFImageMESA", &retrace_eglExportDMABUFImageMESA},
     {"eglExportDMABUFImageQueryMESA", &retrace_eglExportDMABUFImageQueryMESA},

@@ -261,4 +261,7 @@ bool
 exportDMABUFImage(EGLImageKHR image, int *pfds, EGLint *pStrides,
                   EGLint *offsets);
 
+void
+createImageTargetTexture2D(GLenum, EGLImageKHR image);
+
 } /* namespace glws */

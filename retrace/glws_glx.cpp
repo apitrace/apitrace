@@ -653,4 +653,8 @@ exportDMABUFImageQuery(EGLImageKHR image, int *pFourcc, int *pNumPlanes,
     return false;
 }
 
+void
+createImageTargetTexture2D(GLenum target, EGLImageKHR image) {
+}
+
 } /* namespace glws */

@@ -587,4 +587,8 @@ exportDMABUFImage(EGLImageKHR image, int *pfds,
                                          pfds, pStrides, pOffsets);
 }
 
+void
+createImageTargetTexture2D(GLenum target, EGLImageKHR image) {
+    return glEGLImageTargetTexture2DOES(target, image);
+}
 } /* namespace glws */
