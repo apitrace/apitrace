@@ -43,13 +43,14 @@ enum Frametype {
 class FrameTrimmer
 {
 public:
-    FrameTrimmer(bool keep_all_states);
+    FrameTrimmer(bool keep_all_states, bool swap_to_finish);
     ~FrameTrimmer();
 
     void start_last_frame(uint32_t callno);
     void call(const trace::Call& call, Frametype target_frame_type);
 
     std::unordered_set<unsigned> finalize(int last_frame_start);
+    std::unordered_set<unsigned> get_swap_to_finish_calls();
 
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();

@@ -88,7 +88,7 @@ struct FrameTrimmeImpl {
 
     using ObjectMap = std::unordered_map<unsigned, UsedObject::Pointer>;
 
-    FrameTrimmeImpl(bool keep_all_states);
+    FrameTrimmeImpl(bool keep_all_states, bool swaps_to_finish);
     void call(const trace::Call& call, Frametype frametype);
     void startTargetFrame();
     void endTargetFrame();
@@ -206,12 +206,14 @@ struct FrameTrimmeImpl {
 
     PTraceCall m_last_swap;
     bool m_keep_all_state_calls;
+    bool m_swaps_to_finish;
     unsigned m_last_frame_start;
+    std::unordered_set<unsigned> m_swap_calls;
 };
 
-FrameTrimmer::FrameTrimmer(bool keep_all_states)
+FrameTrimmer::FrameTrimmer(bool keep_all_states, bool swap_to_finish)
 {
-    impl = new FrameTrimmeImpl(keep_all_states);
+    impl = new FrameTrimmeImpl(keep_all_states, swap_to_finish);
 }
 
 FrameTrimmer::~FrameTrimmer()
@@ -248,9 +250,16 @@ std::unordered_set<unsigned> FrameTrimmer::finalize(int last_frame_start)
     return impl->finalize(last_frame_start);
 }
 
-FrameTrimmeImpl::FrameTrimmeImpl(bool keep_all_states):
+std::unordered_set<unsigned> FrameTrimmer::get_swap_to_finish_calls()
+{
+    return impl->m_swap_calls;
+}
+
+
+FrameTrimmeImpl::FrameTrimmeImpl(bool keep_all_states, bool swaps_to_finish):
     m_recording_frame(false),
     m_keep_all_state_calls(keep_all_states),
+    m_swaps_to_finish(swaps_to_finish),
     m_last_frame_start(0)
 {
     registerStateCalls();
@@ -338,8 +347,13 @@ FrameTrimmeImpl::call(const trace::Call& call, Frametype frametype)
     auto c = trace2call(call);
 
     if (frametype == ft_none) {
-        if (call.flags & trace::CALL_FLAG_END_FRAME)
+        if (call.flags & trace::CALL_FLAG_END_FRAME) {
+            if (m_swaps_to_finish && m_last_swap) {
+                m_required_calls.insert(c);
+                m_swap_calls.insert(m_last_swap->callNo());
+            }
             m_last_swap = c;
+        }
     } else {
         if (!(call.flags & trace::CALL_FLAG_END_FRAME)) {
             m_required_calls.insert(c);
