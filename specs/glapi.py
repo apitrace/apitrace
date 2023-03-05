@@ -832,6 +832,10 @@ glapi.addFunctions([
 
     # GL_ES_VERSION_3_1
 
+    # GL_ES_VERSION_3_2
+    GlFunction(Void, "glBlendBarrier", []),
+    GlFunction(Void, "glPrimitiveBoundingBox", [(GLfloat, "minX"), (GLfloat, "minY"), (GLfloat, "minZ"), (GLfloat, "minW"), (GLfloat, "maxX"), (GLfloat, "maxY"), (GLfloat, "maxZ"), (GLfloat, "maxW")]),
+    
     # GL_3DFX_tbuffer
     GlFunction(Void, "glTbufferMask3DFX", [(GLuint, "mask")]),
 
@@ -2014,6 +2018,13 @@ glapi.addFunctions([
     # GL_EXT_buffer_storage
     GlFunction(Void, "glBufferStorageEXT", [(GLenum, "target"), (GLsizeiptr, "size"), (Blob(Const(Void), "size"), "data"), (GLbitfield_storage, "flags")]),
 
+    # GL_EXT_clear_texture
+    GlFunction(Void, "glClearTexImageEXT", [ (GLtexture, "texture"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glClearBufferData_size(format, type)"), "data")]),
+    GlFunction(Void, "glClearTexSubImageEXT", [ (GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glClearBufferData_size(format, type)"), "data")]),
+
+    # GL_EXT_clip_control
+    GlFunction(Void, "glClipControlEXT", [(GLenum, "origin"), (GLenum, "depth")]),
+    
     # GL_EXT_color_subtable
     GlFunction(Void, "glColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLsizei, "count"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glColorSubTable_size(format, type, count)"), "data")]),
     GlFunction(Void, "glCopyColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
@@ -3483,6 +3494,17 @@ glapi.addFunctions([
     GlFunction(Void, "glGenVertexArraysOES", [(GLsizei, "n"), Out(Array(GLarray, "n"), "arrays")]),
     GlFunction(GLboolean, "glIsVertexArrayOES", [(GLarray, "array")], sideeffects=False),
 
+    # GL_OES_viewport_array
+    GlFunction(Void, "glViewportArrayvOES", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLfloat), "count*4"), "v")]),
+    GlFunction(Void, "glViewportIndexedfOES", [(GLuint, "index"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "w"), (GLfloat, "h")]),
+    GlFunction(Void, "glViewportIndexedfvOES", [(GLuint, "index"), (Array(Const(GLfloat), 4), "v")]),
+    GlFunction(Void, "glScissorArrayvOES", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLint), "count*4"), "v")]),
+    GlFunction(Void, "glScissorIndexedOES", [(GLuint, "index"), (GLint, "left"), (GLint, "bottom"), (GLsizei, "width"), (GLsizei, "height")]),
+    GlFunction(Void, "glScissorIndexedvOES", [(GLuint, "index"), (Array(Const(GLint), 4), "v")]),
+    GlFunction(Void, "glDepthRangeArrayfvOES", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLfloat), "count*2"), "v")]),
+    GlFunction(Void, "glDepthRangeIndexedfOES", [(GLuint, "index"), (GLfloat, "n"), (GLfloat, "f")]),
+    GlFunction(Void, "glGetFloati_vOES", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLfloat, "_gl_param_size(target)"), "data")], sideeffects=False),
+    
     # GL_PGI_misc_hints
     GlFunction(Void, "glHintPGI", [(GLenum, "target"), (GLint, "mode")]),
 
