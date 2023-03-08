@@ -141,7 +141,7 @@ struct FrameTrimmeImpl {
                                        unsigned dep_id_param);
 
     void oglBindMultitex(const trace::Call& call);
-    void oglDispatchCompute(const trace::Call& call);
+    void oglDispatchCompute(const trace::Call& call, bool indirect);
     void oglBindVertexArray(const trace::Call& call);
     void oglBindBuffer(const trace::Call& call);
 
@@ -664,7 +664,8 @@ void FrameTrimmeImpl::registerLegacyCalls()
     MAP_OBJ(glTranslate, m_matrix_states, AllMatrisStates::matrixOp);
     MAP_OBJ(glPopMatrix, m_matrix_states, AllMatrisStates::popMatrix);
     MAP_OBJ(glPushMatrix, m_matrix_states, AllMatrisStates::pushMatrix);
-    MAP(glDispatchCompute, oglDispatchCompute);
+    MAP_V(glDispatchCompute, oglDispatchCompute, false);
+    MAP_V(glDispatchComputeIndirect, oglDispatchCompute, true);
 }
 
 void FrameTrimmeImpl::registerFramebufferCalls()
@@ -872,6 +873,8 @@ void FrameTrimmeImpl::registerTextureCalls()
     MAP_OBJ(glTexStorage3D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexStorage3DMultisample, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glTexImage3D, m_textures, TextureObjectMap::callOnBoundObject);
+    MAP_OBJ(glClearTexImage, m_textures, TextureObjectMap::callOnNamedObject);
+    MAP_OBJ(glClearTexSubImage, m_textures, TextureObjectMap::callOnNamedObject);
     MAP_OBJ(glTexImage3DMultisample, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ_RV(glTexSubImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                     m_buffers, GL_PIXEL_UNPACK_BUFFER);
@@ -956,6 +959,7 @@ FrameTrimmeImpl::registerStateCalls()
         "glListBase",
         "glLogicOp",
         "glMultiTexCoord",
+        "glMemoryBarrier",
         "glPatchParameteri",
         "glPixelZoom",
         "glPointSize",
@@ -1000,6 +1004,7 @@ FrameTrimmeImpl::registerStateCalls()
         "glPushClientAttrib",
         "glRenderMode",
         "glSampleMaski",
+        "glScissorIndexed",
         "glStencilOp",
         "glStencilOpSeparate",
         "glStencilFunc",
@@ -1026,6 +1031,7 @@ FrameTrimmeImpl::registerStateCalls()
     }
 
     MAP(glDisable, recordRequiredCall);
+    MAP(glDisablei, recordRequiredCall);
     MAP(glEnable, recordRequiredCall);
     MAP(glEnablei, recordRequiredCall);
 
@@ -1100,6 +1106,7 @@ void FrameTrimmeImpl::registerIgnoreHistoryCalls()
         "glGetFramebufferParameteriv",
         "glGetInfoLog",
         "glGetInteger",
+        "glGetIntegeri_v",
         "glGetNamedFramebufferAttachmentParameteriv", 
         "glGetNamedFramebufferParameteriv",
         "glGetObjectLabelEXT",
@@ -1181,6 +1188,8 @@ FrameTrimmeImpl::registerVaCalls()
 
     MAP(glVertexAttribBinding, recordRequiredCall);
     MAP(glVertexAttribFormat, recordRequiredCall);
+    MAP(glVertexAttribIFormat, recordRequiredCall);
+    MAP(glVertexAttribLFormat, recordRequiredCall);
     MAP(glVertexBindingDivisor, recordRequiredCall);
 
     MAP(glVertexAttrib1, recordRequiredCall);
@@ -1569,7 +1578,7 @@ void FrameTrimmeImpl::callOnNamedObjectWithNamedDep(const trace::Call& call, ePe
     map.callOnNamedObjectWithNamedDep(call, dep_map, dep_id_param);
 }
 
-void FrameTrimmeImpl::oglDispatchCompute(const trace::Call& call)
+void FrameTrimmeImpl::oglDispatchCompute(const trace::Call& call, bool indirect)
 {
     auto cur_prog = m_programs.boundTo(0);
     assert(cur_prog);
@@ -1582,6 +1591,12 @@ void FrameTrimmeImpl::oglDispatchCompute(const trace::Call& call)
 
     m_buffers.addSSBODependencies(cur_prog);
     m_textures.addImageDependencies(cur_prog);
+
+    if (indirect) {
+        auto buffer = m_buffers.boundToTarget(GL_DISPATCH_INDIRECT_BUFFER);
+        assert(buffer);
+        cur_prog->addDependency(buffer);
+    }
 
     if (m_recording_frame)
         cur_prog->emitCallsTo(m_required_calls);
