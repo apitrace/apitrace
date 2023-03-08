@@ -695,7 +695,7 @@ class GlTracer(Tracer):
             print('    }')
 
         # FIXME: We don't support AMD_pinned_memory
-        if function.name in ('glBufferStorage', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
+        if function.name in ('glBufferStorage', 'glBufferStorageEXT', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
             print(r'    if (flags & GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX) {')
             print(r'        if (!(flags & GL_MAP_PERSISTENT_BIT)) {')
             print(r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);')
@@ -708,7 +708,7 @@ class GlTracer(Tracer):
             print(r'')
             print(r'    if ((flags & GL_MAP_COHERENT_BIT) && (flags & GL_MAP_WRITE_BIT)) {')
             print(r'        gltrace::Context *_ctx = gltrace::getContext();')
-            if function.name in ('glBufferStorage'):
+            if function.name in ('glBufferStorage', 'glBufferStorageEXT'):
                 print(r'        GLint buffer = getBufferName(target);')
             print(r'        auto memoryShadow = std::make_unique<GLMemoryShadow>();')
             print(r'        const bool success = memoryShadow->init(data, size);')
