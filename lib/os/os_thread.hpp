@@ -36,17 +36,6 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace os {
-
-    using mutex [[deprecated("use std::mutex instead")]] = std::mutex;
-    using recursive_mutex [[deprecated("use std::recursive_mutex instead")]] = std::recursive_mutex;
-    template< class Mutex >
-    using unique_lock [[deprecated("use std::unique_lock instead")]] = std::unique_lock<Mutex>;
-    using condition_variable [[deprecated("use std::condition_variable instead")]] = std::condition_variable;
-    using thread [[deprecated("use std::thread instead")]] = std::thread;
-
-} /* namespace os */
-
 
 /**
  * Compiler TLS.
