@@ -116,7 +116,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitBitmask(self, bitmask):
         print('static const trace::BitmaskFlag _bitmask%s_flags[] = {' % (bitmask.tag))
         for value in bitmask.values:
-            print('    {"%s", %s},' % (value, value))
+            print('    {"%s", (unsigned long long)%s},' % (value, value))
         print('};')
         print()
         print('static const trace::BitmaskSig _bitmask%s_sig = {' % (bitmask.tag))
@@ -890,15 +890,10 @@ class Tracer:
         print('}')
         print()
 
-    def implementWrapperInterfaceMethodBody(self, interface, base, method):
+    def implementWrapperInterfaceMethodBody(self, interface, base, method, resultOverride = None):
         assert not method.internal
 
         sigName = interface.name + '::' + method.sigName()
-        if method.overloaded:
-            # Once the method signature name goes into a trace, we'll need to
-            # support it indefinetely, so log them so one can make sure nothing
-            # weird gets baked in
-            sys.stderr.write('note: overloaded method %s\n' % (sigName,))
 
         numArgs = len(method.args) + 1
         print('    static const char * _args[%u] = {%s};' % (numArgs, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args])))
@@ -913,7 +908,13 @@ class Tracer:
                 self.serializeArg(method, arg)
         print('    trace::localWriter.endEnter();')
         
-        self.invokeMethod(interface, base, method)
+        # If a resultOverride is specified, do not invoke the
+        # method. Log the call and return the given result.
+        resultVariable = "_result"
+        if resultOverride is None:
+            self.invokeMethod(interface, base, method)
+        else:
+            resultVariable = resultOverride
 
         print('    trace::localWriter.beginLeave(_call);')
 
@@ -925,9 +926,9 @@ class Tracer:
         print('    }')
 
         if method.type is not stdapi.Void:
-            self.serializeRet(method, '_result')
+            self.serializeRet(method, resultVariable)
         if method.type is not stdapi.Void:
-            self.wrapRet(method, '_result')
+            self.wrapRet(method, resultVariable)
 
         if method.name == 'Release':
             assert method.type is not stdapi.Void

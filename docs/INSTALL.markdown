@@ -1,18 +1,17 @@
-[![Build Status](https://travis-ci.org/apitrace/apitrace.svg?branch=master)](https://travis-ci.org/apitrace/apitrace)
-[![Build status](https://ci.appveyor.com/api/projects/status/5da6kauyfvclv6y0/branch/master?svg=true)](https://ci.appveyor.com/project/jrfonseca/apitrace/branch/master)
+[![Build Status](https://github.com/apitrace/apitrace/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/apitrace/apitrace/actions/workflows/build.yml)
 
 
 # Requirements #
 
 Requirements common for all platforms:
 
-* C++ compiler
+* C++ 17 compiler
 
-* Python version 2.7
+* Python version 3.6 or newer
 
   * Python Image Library
 
-* CMake version 2.8.11 or higher (tested with version 2.8.12.2)
+* CMake version 3.8 or newer
 
 Optional dependencies:
 
@@ -22,16 +21,14 @@ Optional dependencies:
 
 The GUI also dependends on:
 
-* Qt version 5.2.1 or higher (tested with version 5.4.0 and 5.3.0; use the
-  [6.1 release](https://github.com/apitrace/apitrace/releases/tag/6.1), if you
-  must build with Qt4)
+* Qt version 5.15
 
 Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
 if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
 If you have Qt in a non-standard directory, you'll need to set
-[`-DCMAKE_PREFIX_PATH`](http://doc.qt.io/qt-5/cmake-manual.html).
+[`-DCMAKE_PREFIX_PATH`](https://doc.qt.io/qt-5/cmake-manual.html).
 
 
 The code also depends on snappy libraries, but the bundled sources are always
@@ -51,7 +48,7 @@ Optional dependencies:
 
 Build as:
 
-    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
     make -C build
 
 Other possible values for `CMAKE_BUILD_TYPE` `Debug`, `Release`,
@@ -61,7 +58,7 @@ You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
 you have a multilib gcc and 32-bits X11 libraries, by doing:
 
     cmake \
-        -H. -Bbuild32 \
+        -S. -Bbuild32 \
         -DCMAKE_C_FLAGS=-m32 \
         -DCMAKE_CXX_FLAGS=-m32 \
         -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 \
@@ -80,7 +77,7 @@ First install Qt through [Homebrew](https://brew.sh/) like
 
 Then do:
 
-    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
+    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
     make -C build
 
 
@@ -97,7 +94,7 @@ Additional requirements:
 
 * CMake 3.7 or later
 
-* Microsoft Visual Studio 2017 or later
+* Microsoft Visual Studio 2019 or later
 
 * [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk)
   for D3D11.3 headers.
@@ -108,7 +105,7 @@ To build with Visual Studio first open a Command Prompt window (*not* Visual
 Studio Command Prompt window), change into the Apitrace source, and invoke
 CMake GUI as:
 
-    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
+    cmake-gui -S. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2019
 
 and press the _Configure_ button.
 
@@ -131,11 +128,7 @@ generators are available on your system:
 
 At the end of the output, choose a generator and start configuring the project:
 
-    cmake -H. -Bbuild -G "Visual Studio 15 2017" -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2015
-
-Note as off Qt version 5.9.1 there's no `msvc2017` directory, only `msvc2015`
-and `msvc2017_64`, but `msvc2015` should work as MSVC 2017 is binary backwards
-compatible with MSVC 2015.
+    cmake -S. -Bbuild -G "Visual Studio 17 2022" -A Win32 -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2019
 
 After you've successfully configured, you can start the build by invoking CMake as:
 
@@ -144,31 +137,30 @@ After you've successfully configured, you can start the build by invoking CMake 
 ### Deployment ###
 
 To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the system path, or use
-[Qt's Windows deployment tool](http://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
+[Qt's Windows deployment tool](https://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
-    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2015\bin;%Path%
+    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2019\bin;%Path%
     windeployqt build\qapitrace.exe
 
 ### 64-bits ###
 
-The steps to build 64-bits version are similar, but choosing _Visual Studio xx
-Win64_ instead of _Visual Studio xx_, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2017_64`
-for Qt path.
+The steps to build 64-bits version are similar, but choosing `-A x64` instead
+of `-A Win32`, and using `C:\Qt\QtX.Y.Z\X.Y\msvc2019_64` for Qt path.
 
 ### Windows XP ###
 
 Windows XP is no longer supported.  If you need Windows XP support, your best
-bet is to try an old release (search for windows-xp branch upstream.)
+bet is to user an [older version of the code](https://github.com/apitrace/apitrace/tree/windows-xp).
 
 ## MinGW ##
 
 Additional requirements:
 
-* [MinGW-w64](http://mingw-w64.sourceforge.net/) (tested with mingw-w64's gcc version 4.9)
+* [MinGW-w64](https://www.mingw-w64.org/) (tested with mingw-w64's gcc version 4.9)
 
 * [DirectX headers](https://github.com/apitrace/dxsdk)
 
 It's also possible to cross-compile Windows binaries from Linux with
-[MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
+[MinGW cross compilers](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/cross_compiling/Mingw).
 

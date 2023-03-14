@@ -36,11 +36,13 @@
 #include <iomanip>
 #include <iostream>
 
+#include "version.h"
 #include "cli.hpp"
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 static const char *help_synopsis = "Print detailed help for the given command.";
+static const char *version_synopsis = "Print apitrace version.";
 
 static void list_commands(void);
 
@@ -55,8 +57,19 @@ help_usage()
     list_commands();
 }
 
+static void
+version_usage()
+{
+    std::cout
+        << "usage: apitrace version\n"
+        "\n";
+}
+
 static int
 do_help_command(int argc, char *argv[]);
+
+static int
+do_version_command(int argc, char *argv[]);
 
 const Command help_command = {
     "help",
@@ -65,12 +78,20 @@ const Command help_command = {
     do_help_command
 };
 
+const Command version_command = {
+    "version",
+    version_synopsis,
+    version_usage,
+    do_version_command
+};
+
 static const Command * commands[] = {
     &diff_command,
     &diff_state_command,
     &diff_images_command,
     &dump_command,
     &dump_images_command,
+    &gltrim_command,
     &leaks_command,
     &pickle_command,
     &sed_command,
@@ -78,6 +99,8 @@ static const Command * commands[] = {
     &retrace_command,
     &trace_command,
     &trim_command,
+    &info_command,
+    &version_command,
     &help_command
 };
 
@@ -158,6 +181,13 @@ do_help_command(int argc, char *argv[])
               << " (see \"apitrace help\").\n";
 
     return 1;
+}
+
+static int
+do_version_command(int argc, char *argv[])
+{
+    std::cout << "apitrace " << APITRACE_VERSION << "\n";
+    return 0;
 }
 
 int

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 
 
@@ -35,9 +35,9 @@ copyright = '''
 #
 # Usage:
 #
-#   sudo apt-get install castxml mingw-w64-i686-dev
-#   pip install 'pygccxml==1.9.1'
-#   python specs/scripts/cxx2api.py -Idxsdk/Include -DD2D_USE_C_DEFINITIONS dcomp.h dcomptypes.h dcompanimation.h
+#   sudo apt-get install python2 castxml mingw-w64-i686-dev
+#   python2 -m pip install 'pygccxml==1.9.1'
+#   python2 specs/scripts/cxx2api.py -Idxsdk/Include -DD2D_USE_C_DEFINITIONS dcomp.h dcomptypes.h dcompanimation.h
 #
 # See also:
 # - http://pygccxml.readthedocs.org/en/develop/index.html
@@ -46,8 +46,9 @@ copyright = '''
 
 import os.path
 import sys
-import io as StringIO
 import subprocess
+
+from cStringIO import StringIO
 
 from pygccxml import utils
 from pygccxml import parser
@@ -229,9 +230,9 @@ class decl2_dumper_t(decl_visitor.decl_visitor_t):
         # The current declaration
         self.decl = None
 
-        self.interfaces = StringIO.StringIO()
-        self.methods = StringIO.StringIO()
-        self.functions = StringIO.StringIO()
+        self.interfaces = StringIO()
+        self.methods = StringIO()
+        self.functions = StringIO()
 
     def start(self):
         print(copyright.strip())
@@ -385,7 +386,8 @@ def main():
             ["x86_64-w64-mingw32-g++", "-x", "c++", "-E", "-Wp,-v", '-', '-fsyntax-only'],
             stdin=open(os.devnull, 'rt'),
             stdout=open(os.devnull, 'wt'),
-            stderr=subprocess.PIPE)
+            stderr=subprocess.PIPE,
+            universal_newlines=True)
         includes.append('/usr/share/castxml/clang/include')
         for line in p.stderr:
             if line.startswith(' '):
@@ -426,6 +428,8 @@ def main():
         cxxflags += [
             #'-m32',
             #'-target', 'x86_64-pc-mingw32',
+
+            '-Wno-pragma-pack',
         ]
 
     sys.stderr.write('Include path:\n')
@@ -454,7 +458,6 @@ def main():
 
     script_dir = os.path.dirname(__file__)
     headers = [
-        os.path.join(script_dir, '..', '..', 'compat', 'winsdk_compat.h'),
         os.path.join(script_dir, 'cxx2api.h'),
     ]
     main_header = args[0]

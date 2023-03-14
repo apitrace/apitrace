@@ -240,57 +240,6 @@ public:
 static const WindowsHighlighter windowsHighlighter;
 
 
-static bool
-haveAnsi(void)
-{
-    static bool checked = false;
-    static bool result = false;
-
-    if (!checked) {
-        checked = true;
-
-        // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        HMODULE hNtDll = GetModuleHandleA("ntdll");
-        if (hNtDll &&
-            GetProcAddress(hNtDll, "wine_get_version") != nullptr) {
-            return result = true;
-        }
-
-        // Cygwin shell
-        if (1) {
-            const char *term = getenv("TERM");
-            if (term &&
-                strcmp(term, "xterm") == 0) {
-                return result = true;
-            }
-        }
-
-        // Set output mode to handle virtual terminal sequences
-        // https://msdn.microsoft.com/en-us/library/windows/desktop/mt638032.aspx
-        // TODO: Use CONOUT$
-        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682075.aspx
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hOut == INVALID_HANDLE_VALUE) {
-            return false;
-        }
-
-        DWORD dwMode = 0;
-        if (!GetConsoleMode(hOut, &dwMode)) {
-            return false;
-        }
-
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        if (SetConsoleMode(hOut, dwMode)) {
-            return result = true;
-        } else {
-            return false;
-        }
-    }
-
-    return result;
-}
-
-
 #endif /* _WIN32 */
 
 
@@ -298,11 +247,44 @@ const Highlighter &
 defaultHighlighter(bool color) {
     if (color) {
 #ifdef _WIN32
-        if (haveAnsi()) {
-            return ansiHighlighter;
-        } else {
-            return windowsHighlighter;
+        static const Highlighter * highlighter = nullptr;
+        if (highlighter == nullptr) {
+            // http://wiki.winehq.org/DeveloperFaq#detect-wine
+            // XXX: ANSI escape codes used to work, but as of wine 6.0.3 both
+            // ANSI and console attributes are unusably broken.
+            HMODULE hNtDll = GetModuleHandleA("ntdll");
+            if (hNtDll &&
+                GetProcAddress(hNtDll, "wine_get_version") != nullptr) {
+                highlighter = &plainHighlighter;
+                return *highlighter;
+            }
+
+            // Cygwin shell
+            const char *term = getenv("TERM");
+            if (term &&
+                strcmp(term, "xterm") == 0) {
+                highlighter = &ansiHighlighter;
+                return *highlighter;
+            }
+
+            highlighter = &windowsHighlighter;
+
+            // Try to set output mode to handle virtual terminal sequences
+            // https://msdn.microsoft.com/en-us/library/windows/desktop/mt638032.aspx
+            // TODO: Use CONOUT$
+            // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682075.aspx
+            HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hOut != INVALID_HANDLE_VALUE) {
+                DWORD dwMode = 0;
+                if (GetConsoleMode(hOut, &dwMode)) {
+                    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                    if (SetConsoleMode(hOut, dwMode)) {
+                        highlighter = &ansiHighlighter;
+                    }
+                }
+            }
         }
+        return *highlighter;
 #else
         return ansiHighlighter;
 #endif

@@ -125,8 +125,6 @@ issue.
 
 # Attachments #
 
-github issue tracker doesn't support attachments.
-
 Please attach long logs to https://gist.github.com/ and paste the URL into the
 issue description.
 
@@ -137,7 +135,8 @@ paste the URL into the issue description.
 
 Trace files are only slightly compressed (for performance reasons).  You can
 further reduce their size when attaching/uploading by compressing with
-[XZ](http://tukaani.org/xz/) or [7-Zip](http://www.7-zip.org/).
+`apitrace repack -b`.
+If the hosting service requires archives (for example, Github), you can use gzip on Linux/Mac or zip on Windows, preferably with the weakest compression.
 
 
 # Bugs on tracing #
@@ -183,13 +182,11 @@ To trace an application inside GDB invoke apitrace as:
 
 See also more detailed and Distro specific instructions:
 
-* http://wiki.debian.org/HowToGetABacktrace
+* https://wiki.debian.org/HowToGetABacktrace
 
 * https://wiki.ubuntu.com/Backtrace
 
-* http://fedoraproject.org/wiki/StackTraces
-
-* http://live.gnome.org/GettingTraces
+* https://fedoraproject.org/wiki/StackTraces
 
 
 ## Mac OS X ##

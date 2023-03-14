@@ -1234,6 +1234,27 @@ D3D11_FEATURE_DATA_D3D11_OPTIONS4 = Struct('D3D11_FEATURE_DATA_D3D11_OPTIONS4', 
     (BOOL, 'ExtendedNV12SharedTextureSupported'),
 ])
 
+D3D11_SHADER_CACHE_SUPPORT_FLAGS = FakeEnum(UINT, [
+    "D3D11_SHADER_CACHE_SUPPORT_NONE",
+    "D3D11_SHADER_CACHE_SUPPORT_AUTOMATIC_INPROC_CACHE",
+    "D3D11_SHADER_CACHE_SUPPORT_AUTOMATIC_DISK_CACHE",
+])
+
+D3D11_FEATURE_DATA_SHADER_CACHE = Struct("D3D11_FEATURE_DATA_SHADER_CACHE", [
+    (D3D11_SHADER_CACHE_SUPPORT_FLAGS, 'SupportFlags'),
+])
+
+D3D11_SHARED_RESOURCE_TIER = Enum("D3D11_SHARED_RESOURCE_TIER", [
+    "D3D11_SHARED_RESOURCE_TIER_0",
+    "D3D11_SHARED_RESOURCE_TIER_1",
+    "D3D11_SHARED_RESOURCE_TIER_2",
+])
+
+D3D11_FEATURE_DATA_D3D11_OPTIONS5 = Struct("D3D11_FEATURE_DATA_D3D11_OPTIONS5", [
+    (D3D11_SHARED_RESOURCE_TIER, "SharedResourceTier"),
+])
+
+
 D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", [
     ("D3D11_FEATURE_THREADING", Pointer(D3D11_FEATURE_DATA_THREADING)),
     ("D3D11_FEATURE_DOUBLES", Pointer(D3D11_FEATURE_DATA_DOUBLES)),
@@ -1253,6 +1274,8 @@ D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", 
     ("D3D11_FEATURE_D3D11_OPTIONS3", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS3)),
     ("D3D11_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT", Pointer(D3D11_FEATURE_DATA_GPU_VIRTUAL_ADDRESS_SUPPORT)),
     ("D3D11_FEATURE_D3D11_OPTIONS4", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS4)),
+    ("D3D11_FEATURE_SHADER_CACHE", Pointer(D3D11_FEATURE_DATA_SHADER_CACHE)),
+    ("D3D11_FEATURE_D3D11_OPTIONS5", Pointer(D3D11_FEATURE_DATA_D3D11_OPTIONS5)),
 ], Blob(Void, "FeatureSupportDataSize"), False)
 
 D3D11_NUM_RTVS = FakeEnum(UINT, [
@@ -1398,6 +1421,8 @@ D3D_FEATURE_LEVEL = Enum("D3D_FEATURE_LEVEL", [
     "D3D_FEATURE_LEVEL_10_1",
     "D3D_FEATURE_LEVEL_11_0",
     "D3D_FEATURE_LEVEL_11_1",
+    "D3D_FEATURE_LEVEL_12_0",
+    "D3D_FEATURE_LEVEL_12_1",
 ])
 
 D3D11_RASTERIZED_STREAM = FakeEnum(UINT, [
@@ -2198,7 +2223,7 @@ ID3D11VideoDevice.methods += [
     StdMethod(HRESULT, "CreateVideoDecoder", [(Pointer(Const(D3D11_VIDEO_DECODER_DESC)), "pVideoDesc"), (Pointer(Const(D3D11_VIDEO_DECODER_CONFIG)), "pConfig"), Out(Pointer(ObjPointer(ID3D11VideoDecoder)), "ppDecoder")]),
     StdMethod(HRESULT, "CreateVideoProcessor", [(ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (UINT, "RateConversionIndex"), Out(Pointer(ObjPointer(ID3D11VideoProcessor)), "ppVideoProcessor")]),
     StdMethod(HRESULT, "CreateAuthenticatedChannel", [(D3D11_AUTHENTICATED_CHANNEL_TYPE, "ChannelType"), Out(Pointer(ObjPointer(ID3D11AuthenticatedChannel)), "ppAuthenticatedChannel")]),
-    StdMethod(HRESULT, "CreateCryptoSession", [(Pointer(Const(GUID)), "pCryptoType"), (Pointer(Const(GUID)), "pDecoderProfile"), (Pointer(Const(GUID)), "pKeyExchangeType"), (Pointer(ObjPointer(ID3D11CryptoSession)), "ppCryptoSession")]),
+    StdMethod(HRESULT, "CreateCryptoSession", [(Pointer(Const(GUID)), "pCryptoType"), (Pointer(Const(GUID)), "pDecoderProfile"), (Pointer(Const(GUID)), "pKeyExchangeType"), Out(Pointer(ObjPointer(ID3D11CryptoSession)), "ppCryptoSession")]),
     StdMethod(HRESULT, "CreateVideoDecoderOutputView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoDecoderOutputView)), "ppVDOVView")]),
     StdMethod(HRESULT, "CreateVideoProcessorInputView", [(ObjPointer(ID3D11Resource), "pResource"), (ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoProcessorInputView)), "ppVPIView")]),
     StdMethod(HRESULT, "CreateVideoProcessorOutputView", [(ObjPointer(ID3D11Resource), "pResource"), (ObjPointer(ID3D11VideoProcessorEnumerator), "pEnum"), (Pointer(Const(D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11VideoProcessorOutputView)), "ppVPOView")]),
@@ -2478,6 +2503,7 @@ ID3D11DebugTest.methods += [
 
 d3d11.addInterfaces([
     ID3D11Device1,
+    ID3D11VideoProcessorEnumerator1,
     ID3DUserDefinedAnnotation,
     ID3D11DebugTest,
 ])
@@ -2598,9 +2624,9 @@ D3D11_TEXTURE2D_DESC1 = Struct("D3D11_TEXTURE2D_DESC1", [
     (DXGI_FORMAT, "Format"),
     (DXGI_SAMPLE_DESC, "SampleDesc"),
     (D3D11_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D11_BIND_FLAG, "BindFlags"),
+    (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D11_RESOURCE_MISC_FLAG, "MiscFlags"),
     (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
 ])
 
@@ -2615,9 +2641,9 @@ D3D11_TEXTURE3D_DESC1 = Struct("D3D11_TEXTURE3D_DESC1", [
     (UINT, "MipLevels"),
     (DXGI_FORMAT, "Format"),
     (D3D11_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D11_BIND_FLAG, "BindFlags"),
+    (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D11_RESOURCE_MISC_FLAG, "MiscFlags"),
     (D3D11_TEXTURE_LAYOUT, "TextureLayout"),
 ])
 
@@ -2812,6 +2838,7 @@ D3D11_FENCE_FLAG = Enum('D3D11_FENCE_FLAG', [
     'D3D11_FENCE_FLAG_NONE',
     'D3D11_FENCE_FLAG_SHARED',
     'D3D11_FENCE_FLAG_SHARED_CROSS_ADAPTER',
+    'D3D11_FENCE_FLAG_NON_MONITORED',
 ])
 
 ID3D11Device4 = Interface('ID3D11Device4', ID3D11Device3)
@@ -2820,8 +2847,8 @@ ID3D11Multithread = Interface('ID3D11Multithread', IUnknown)
 ID3D11VideoContext2 = Interface('ID3D11VideoContext2', ID3D11VideoContext1)
 
 ID3D11Device4.methods += [
-    StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')]),
-    StdMethod(Void, 'UnregisterDeviceRemoved', [(DWORD, 'dwCookie')]),
+    StdMethod(HRESULT, 'RegisterDeviceRemovedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(Void, 'UnregisterDeviceRemoved', [(DWORD, 'dwCookie')], sideeffects=False),
 ]
 
 ID3D11Device5.methods += [

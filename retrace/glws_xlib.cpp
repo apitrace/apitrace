@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <iostream>
 
@@ -39,6 +40,16 @@ namespace glws {
 
 Display *display = NULL;
 int screen = 0;
+
+
+// Ignore headless with NVIDIA proprietary drivers, as glReadPixels is not
+// realiable for occluded windows due to the fragment ownership test,
+//
+// A simple workaround is to use a X desktop compositor, if we could detect
+// when one is in use.
+//
+// The more comprehensive solution would be to use Pbuffers in headless mode.
+static bool ignoreHeadless = false;
 
 
 static void
@@ -125,6 +136,22 @@ initX(void)
     }
 
     screen = DefaultScreen(display);
+
+    /*
+     * Detect NVIDIA GLX driver.
+     */
+    int numExtensions = 0;
+    char **extensions;
+    extensions = XListExtensions(display, &numExtensions);
+    if (extensions) {
+        for (int i = 0; i < numExtensions; ++i) {
+            if (strcmp(extensions[i], "NV-GLX") == 0) {
+                ignoreHeadless = true;
+                break;
+            }
+        }
+        XFreeExtensionList(extensions);
+    }
 }
 
 void
@@ -272,13 +299,18 @@ resizeWindow(Window window, int w, int h)
 void
 showWindow(Window window)
 {
-    // FIXME: This works for DRI drivers, but not NVIDIA proprietary drivers,
-    // for which the only solution seems to be to use Pbuffers.
-    if (true || !ws::headless) {
+    if (ignoreHeadless || !ws::headless) {
         long request = NextRequest(display);
         XMapWindow(display, window);
         waitForEvent(window, MapNotify, request);
     }
+}
+
+
+void
+setWindowName(Window window, const char *name)
+{
+    XStoreName(display, window, const_cast<char *>(name));
 }
 
 

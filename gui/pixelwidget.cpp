@@ -47,7 +47,6 @@
 #include "pixelwidget.h"
 
 #include <qapplication.h>
-#include <qdesktopwidget.h>
 #include <qapplication.h>
 #ifndef QT_NO_CLIPBOARD
 #include <qclipboard.h>
@@ -65,6 +64,7 @@ PixelWidget::PixelWidget(QWidget *parent)
 {
     setWindowTitle(QLatin1String("PixelTool"));
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setFocusPolicy(Qt::StrongFocus);
 
     m_gridSize = 1;
     m_gridActive = 0;
@@ -133,10 +133,10 @@ void PixelWidget::paintEvent(QPaintEvent *)
     // Draw the grid on top.
     if (m_gridActive) {
         p.setPen(m_gridActive == 1 ? Qt::black : Qt::white);
-        int incr = m_gridSize * zoomValue();
-        for (int x=0; x<w; x+=incr)
+        double incr = m_gridSize * zoomValue();
+        for (double x=0; x<w; x+=incr)
             p.drawLine(x, 0, x, h);
-        for (int y=0; y<h; y+=incr)
+        for (double y=0; y<h; y+=incr)
             p.drawLine(0, y, w, y);
     }
 
@@ -180,10 +180,10 @@ void PixelWidget::keyPressEvent(QKeyEvent *e)
 {
     switch (e->key()) {
     case Qt::Key_Plus:
-        increaseZoom();
+        emit zoomStepUp();
         break;
     case Qt::Key_Minus:
-        decreaseZoom();
+        emit zoomStepDown();
         break;
     case Qt::Key_PageUp:
         setGridSize(m_gridSize + 1);
@@ -206,6 +206,9 @@ void PixelWidget::keyPressEvent(QKeyEvent *e)
         break;
     case Qt::Key_Control:
         grabKeyboard();
+        break;
+    default:
+        QWidget::keyPressEvent(e);
         break;
     }
 }
@@ -348,7 +351,7 @@ void PixelWidget::startGridSizeVisibleTimer()
     }
 }
 
-void PixelWidget::setZoom(int zoom)
+void PixelWidget::setZoom(double zoom, bool forceGrid)
 {
     if (zoom > 0 && zoom != m_zoom) {
         QPoint pos = m_lastMousePos;
@@ -357,9 +360,9 @@ void PixelWidget::setZoom(int zoom)
         m_lastMousePos = pos;
         m_dragStart = m_dragCurrent = QPoint();
 
-        if (m_zoom == 1)
+        if (m_zoom <= 1)
             m_gridActive = 0;
-        else if (!m_gridActive)
+        else if (forceGrid)
             m_gridActive = 1;
 
         zoomChanged(m_zoom);
@@ -404,5 +407,3 @@ QColor PixelWidget::colorAtCurrentPosition() const
 {
     return m_currentColor;
 }
-
-#include "pixelwidget.moc"

@@ -3,15 +3,15 @@ About **apitrace**
 
 **apitrace** consists of a set of tools to:
 
-* trace OpenGL, OpenGL ES, Direct3D, and DirectDraw APIs calls to a file;
+* trace OpenGL, Direct3D, and DirectDraw APIs calls to a file;
 
-* replay OpenGL and OpenGL ES calls from a file;
+* replay OpenGL and Direct3D calls from a file;
 
-* inspect OpenGL state at any call while retracing;
+* inspect OpenGL and Direct3D state at any call while retracing;
 
 * visualize and edit trace files.
 
-See the [apitrace homepage](http://apitrace.github.io/) for more details.
+See the [apitrace homepage](https://apitrace.github.io/) for more details.
 
 
 Status
@@ -27,7 +27,7 @@ Obtaining **apitrace**
 ======================
 
 To obtain apitrace either [download the latest
-binaries](http://apitrace.github.io/#download) for your platform if available,
+binaries](https://apitrace.github.io/#download) for your platform if available,
 or follow [these instructions](docs/INSTALL.markdown) to build and install it
 yourself.
 

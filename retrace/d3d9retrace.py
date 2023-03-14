@@ -65,13 +65,14 @@ class D3DRetracer(Retracer):
         if function.name.startswith('Direct3DCreate9'):
             print(r'    // 0: default')
             print(r'    // 1: force discrete')
-            print(r'    // 2/3: force integrated')
+            print(r'    // 2: prefer integrated?')
+            print(r'    // 3: force integrated')
             print(r'    UINT uHybrid = 0;')
             print(r'    if (retrace::driver == retrace::DRIVER_DISCRETE) {')
             print(r'        uHybrid = 1;')
             print(r'    }')
             print(r'    if (retrace::driver == retrace::DRIVER_INTEGRATED) {')
-            print(r'        uHybrid = 2;')
+            print(r'        uHybrid = 3;')
             print(r'    }')
             print(r'    if (uHybrid != 0) {')
             print(r'        HMODULE hD3D9 = LoadLibraryA("D3D9");')
@@ -188,6 +189,8 @@ class D3DRetracer(Retracer):
             print(r'    if (retrace::forceWindowed) {')
             print(r'        pPresentationParameters->Windowed = TRUE;')
             print(r'        pPresentationParameters->FullScreen_RefreshRateInHz = 0;')
+            if method.name == 'CreateDeviceEx':
+                print(r'   pFullscreenDisplayMode = nullptr;')
             if interface.name.startswith('IDirect3D8'):
                 print(r'        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;')
             print(r'    }')
@@ -275,6 +278,21 @@ class D3DRetracer(Retracer):
             for flag in mapFlagsArg.type.values:
                 if flag.endswith('_DONOTWAIT'):
                     print(r'    Flags &= ~%s;' % flag)
+
+        # SetClipPlane methods were broken until cf519352c
+        if method.name == 'SetClipPlane':
+            print(r'    if (retrace::parser->getVersion() < 6) {')
+            print(r'        const trace::Array *_pPlane = call.arg(2).toArray();')
+            print(r'        if (_pPlane && _pPlane->values.size() < 4) {')
+            print(r'            static bool _warned = false;')
+            print(r'            if (!_warned) {')
+            print(r'                retrace::warning(call) << "ignoring incomplete SetClipPlane plane\n";')
+            print(r'                _warned = true;')
+            print(r'            }')
+            print(r'            static float _zeroPlane[4] = { 0.0f, 0.0f, 0.0f, 0.0f };')
+            print(r'            pPlane = _zeroPlane;')
+            print(r'        }')
+            print(r'    }')
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 

@@ -130,6 +130,16 @@ public:
     }
 
     void
+    setDamageRegion(int *rects, int nrects) override {
+        if (!checkExtension("EGL_KHR_partial_update", eglExtensions))
+            return;
+
+        EGLint value;
+        eglQuerySurface(eglDisplay, surface, EGL_BUFFER_AGE_KHR, &value);
+        eglSetDamageRegionKHR(eglDisplay, surface, rects, nrects);
+    }
+
+    void
     recreate(void) {
         EGLContext currentContext = eglGetCurrentContext();
         EGLSurface currentDrawSurface = eglGetCurrentSurface(EGL_DRAW);
@@ -216,6 +226,15 @@ public:
     void swapBuffers(void) override {
         bindAPI(api);
         eglSwapBuffers(eglDisplay, surface);
+        processKeys(window);
+    }
+
+    void swapBuffersWithDamage(int *rects, int nrects) override {
+        if (!checkExtension("EGL_KHR_swap_buffers_with_damage", eglExtensions))
+            return;
+
+        bindAPI(api);
+        eglSwapBuffersWithDamageEXT(eglDisplay, surface, rects, nrects);
         processKeys(window);
     }
 };

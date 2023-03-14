@@ -35,12 +35,6 @@
 #include <string.h>
 
 #ifdef _WIN32
-#ifndef snprintf
-#define snprintf _snprintf
-#endif
-#ifndef vsnprintf
-#define vsnprintf _vsnprintf
-#endif
 #ifndef strcasecmp
 #define strcasecmp stricmp
 #endif
@@ -75,15 +69,9 @@ void log(const char *format, ...)
  * This should be called only from the wrappers, when there is no safe way of
  * failing gracefully.
  */
-// coverity[+kill]
-#ifdef _MSC_VER
-__declspec(noreturn)
-#endif
-void abort(void)
-#ifdef __GNUC__
-   __attribute__((__noreturn__))
-#endif
-;
+[[noreturn]]
+void
+abort(void);
 
 void
 breakpoint(void);

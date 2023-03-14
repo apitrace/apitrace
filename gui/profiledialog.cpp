@@ -261,5 +261,3 @@ void ProfileDialog::graphSelectionChanged(SelectionState state)
         m_table->selectRow(model->getRowIndex(state.start));
     }
 }
-
-#include "profiledialog.moc"

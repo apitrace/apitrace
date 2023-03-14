@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2012 VMware Inc
+ * Copyright 2012-2020 VMware Inc
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -267,7 +267,7 @@ overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *
         IDXGIFactory *pFactory = NULL;
         hr = pUnknown->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);
         if (SUCCEEDED(hr)) {
-            *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);
+            *ppvObj = new CDXGIFactoryDWM(pFactory);
             *pResult = S_OK;
             return TRUE;
         }

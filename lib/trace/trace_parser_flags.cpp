@@ -66,6 +66,7 @@ callFlagTable[] = {
     { "D3DPERF_BeginEvent",                            /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_PUSH },
     { "D3DPERF_EndEvent",                              /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_POP },
     { "D3DPERF_SetMarker",                             /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER },
+    { "ID3D11VideoProcessorEnumerator::CheckVideoProcessorFormat", CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "ID3DUserDefinedAnnotation::BeginEvent",         /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_PUSH },
     { "ID3DUserDefinedAnnotation::EndEvent",           /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_POP },
     { "ID3DUserDefinedAnnotation::SetMarker",          /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER },
@@ -138,6 +139,7 @@ callFlagTable[] = {
     { "eglGetConfigAttrib",                            CALL_FLAG_VERBOSE },
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
+    { "eglSetDamageRegionKHR",                         CALL_FLAG_NO_SIDE_EFFECTS },
     { "eglSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },
     { "eglSwapBuffersWithDamageEXT",                   CALL_FLAG_SWAPBUFFERS },
     { "eglSwapBuffersWithDamageKHR",                   CALL_FLAG_SWAPBUFFERS },
@@ -539,7 +541,7 @@ Parser::lookupCallFlags(const char *name)
         static const regex present("^IDXGI(Decode)?SwapChain\\w*::Present\\w*$");
         static const regex draw   ("^ID3D1(0Device|1DeviceContext)\\d*::(Draw\\w*|ExecuteCommandList)$");
         static const regex srt    ("^ID3D1(0Device|1DeviceContext)\\d*::OMSetRenderTargets\\w*$");
-        static const regex cmql   ("^ID3D1[01]Device\\d*::CheckMultisampleQualityLevels$");
+        static const regex cmql   ("^ID3D1[01]Device\\d*::(CheckFormatSupport|CheckMultisampleQualityLevels)$");
 
         if (regex_match(name, draw))    return CALL_FLAG_RENDER;
         if (regex_match(name, srt))     return CALL_FLAG_SWAP_RENDERTARGET;

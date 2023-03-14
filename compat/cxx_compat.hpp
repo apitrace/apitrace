@@ -31,26 +31,6 @@
 
 
 /*
- * Emulate std::to_string on Android.
- *
- * XXX: There might be different solutions per
- * http://stackoverflow.com/questions/26095886/error-to-string-is-not-a-member-of-std
- */
-#ifdef ANDROID
-#include <string>
-#include <sstream>
-namespace std {
-    template< typename T >
-    string to_string(const T & value) {
-        ostringstream ss;
-        ss << value;
-        return ss.str();
-    }
-}
-#endif /* ANDROID */
-
-
-/*
  * Implement std::make_unique on C++11.
  */
 #if !defined(_MSC_VER) && __cplusplus < 201402L

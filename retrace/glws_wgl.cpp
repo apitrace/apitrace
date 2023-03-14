@@ -59,6 +59,7 @@ namespace glws {
 static PFN_WGLCHOOSEPIXELFORMAT pfnChoosePixelFormat = &ChoosePixelFormat;
 static PFN_WGLDESCRIBEPIXELFORMAT pfnDescribePixelFormat = &DescribePixelFormat;
 static PFN_WGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
+static PFN_WGLGETPIXELFORMAT pfnGetPixelFormat = &GetPixelFormat;
 static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
@@ -77,6 +78,7 @@ static PFNWGLGETPBUFFERDCARBPROC pfnWglGetPbufferDCARB;
 static PFNWGLCHOOSEPIXELFORMATARBPROC pfnWglChoosePixelFormatARB;
 static PFNWGLDESTROYPBUFFERARBPROC pfnWglDestroyPbufferARB;
 static PFNWGLRELEASEPBUFFERDCARBPROC pfnWglReleasePbufferDCARB;
+static HDC g_hDC = nullptr;
 
 static bool has_WGL_ARB_render_texture = false;
 static PFNWGLBINDTEXIMAGEARBPROC pfnWglBindTexImageARB;
@@ -88,13 +90,45 @@ static PFNWGLMAKECONTEXTCURRENTARBPROC pfnWglMakeContextCurrentARB;
 static PFNWGLGETCURRENTREADDCARBPROC pfnWglGetCurrentReadDCARB;
 
 
+static void
+logLastError(const char *szMsg)
+{
+    DWORD dwLastError = GetLastError();
+
+    // https://learn.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
+    LPSTR lpErrorMsg = nullptr;
+    DWORD cbWritten;
+    cbWritten = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr,
+        dwLastError,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR) &lpErrorMsg,
+        0, nullptr);
+
+    std::cerr << szMsg;
+    if (cbWritten) {
+        std::cerr << lpErrorMsg;
+    } else if (dwLastError >= 0x80000000LU) {
+        std::cerr << "error " << "0x" << std::hex << dwLastError << std::dec;
+    } else {
+        std::cerr << "error " << dwLastError;
+    }
+    std::cerr << std::endl;
+
+    LocalFree(lpErrorMsg);
+}
+
+
 class WglDrawable : public Drawable
 {
 public:
     // Only one of hWnd and pbBuffer will be non-zero
-    HWND hWnd;
-    HPBUFFERARB hPBuffer;
-    HDC hDC;
+    HWND hWnd = nullptr;
+    HPBUFFERARB hPBuffer = nullptr;
+    HDC hDC = nullptr;
 
     WglDrawable(const Visual *vis, int width, int height,
                 const glws::pbuffer_info *pbInfo) :
@@ -261,6 +295,7 @@ public:
                      pfnWglDestroyPbufferARB, "wglDestroyPbufferARB");
             WGL_PROC(PFNWGLRELEASEPBUFFERDCARBPROC,
                      pfnWglReleasePbufferDCARB, "wglReleasePbufferDCARB");
+            g_hDC = hDC;
         }
         if (checkExtension("WGL_ARB_render_texture", extensionsString)) {
             assert(has_WGL_ARB_pbuffer);
@@ -387,10 +422,7 @@ public:
                     bRet = wglShareLists(shareContext->hglrc,
                                          hglrc);
                     if (!bRet) {
-                        std::cerr
-                            << "warning: wglShareLists failed: "
-                            << std::hex << GetLastError() << std::dec
-                            << "\n";
+                        logLastError("warning: wglShareLists failed: ");
                     }
                 }
             }
@@ -419,6 +451,8 @@ init(void) {
             assert(pfnDescribePixelFormat);
             pfnSetPixelFormat = (PFN_WGLSETPIXELFORMAT)GetProcAddress(_libGlHandle, "wglSetPixelFormat");
             assert(pfnSetPixelFormat);
+            pfnGetPixelFormat = (PFN_WGLGETPIXELFORMAT)GetProcAddress(_libGlHandle, "wglGetPixelFormat");
+            assert(pfnGetPixelFormat);
             pfnSwapBuffers = (PFN_WGLSWAPBUFFERS)GetProcAddress(_libGlHandle, "wglSwapBuffers");
             assert(pfnSwapBuffers);
         }
@@ -524,17 +558,24 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
     }
     attribs.end();
 
-    int pixelFormats[20];
-    UINT numPixelFormats;
-    WglDrawable *wgl_draw = static_cast<WglDrawable *>(pbInfo->hdc_drawable);
-    HDC hdc = wgl_draw->hDC;
-    assert(hdc);
+    int iPixelFormat = -1;
+    UINT nNumPixelFormats = 0;
 
-    if (!pfnWglChoosePixelFormatARB(hdc, attribs, NULL,
-                                    20, pixelFormats,
-                                    &numPixelFormats)) {
-        std::cerr << "error: wglChoosePixelFormatARB failed.\n";
-        exit(1);
+    HDC hTempDC;
+    if (pbInfo->hdc_drawable) {
+        WglDrawable *wgl_draw = static_cast<WglDrawable *>(pbInfo->hdc_drawable);
+        hTempDC = wgl_draw->hDC;
+        assert(hTempDC);
+        if (!pfnWglChoosePixelFormatARB(hTempDC, attribs, nullptr,
+                                        1, &iPixelFormat, &nNumPixelFormats)) {
+            logLastError("warning: wglChoosePixelFormatARB failed: ");
+            exit(1);
+        }
+    } else {
+        // Attempt to use the last hDC / iPixelFormat
+        hTempDC = g_hDC;
+        assert(hTempDC);
+        iPixelFormat = pfnGetPixelFormat(hTempDC);
     }
 
     // create pbuffer
@@ -566,13 +607,10 @@ glws::WglDrawable::createPbuffer(const Visual *vis,
     }
     pbAttribs.end();
 
-    hPBuffer = pfnWglCreatePbufferARB(hdc, pixelFormats[0],
+    hPBuffer = pfnWglCreatePbufferARB(hTempDC, iPixelFormat,
                                       width, height, pbAttribs);
     if (!hPBuffer) {
-        std::cerr << "error: wglCreatePbufferARB failed (format "
-                  << pixelFormats[0] << ")\n";
-        DWORD er = GetLastError();
-        std::cerr << "error code " << er << "\n";
+        logLastError("warning: wglCreatePbufferARB failed: ");
         exit(1);
     }
     hDC = pfnWglGetPbufferDCARB(hPBuffer);

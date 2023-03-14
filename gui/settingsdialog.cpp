@@ -10,17 +10,17 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     m_showFilters.insert(
         tr("Draw events"),
-        QRegExp("glDraw|glVertex|glBegin|glEnd"));
+        QRegularExpression("glDraw|glVertex|glBegin|glEnd"));
     m_showFilters.insert(
         tr("Texture events"),
-        QRegExp("glTex|glBindTex|glBegin|glEnd"));
+        QRegularExpression("glTex|glBindTex|glBegin|glEnd"));
 
-    QMap<QString, QRegExp>::const_iterator itr;
+    QMap<QString, QRegularExpression>::const_iterator itr;
     for (itr = m_showFilters.constBegin();
          itr != m_showFilters.constEnd(); ++itr) {
         showFilterCB->addItem(itr.key(), itr.value());
     }
-    showFilterCB->addItem(tr("Custom"), QRegExp());
+    showFilterCB->addItem(tr("Custom"), QRegularExpression());
 
     connect(showFilterCB, SIGNAL(currentIndexChanged(const QString &)),
             SLOT(changeRegexp(const QString&)));
@@ -48,12 +48,12 @@ void SettingsDialog::filtersFromModel(const ApiTraceFilter *model)
         customEdit->setText(str);
     }
 
-    QRegExp regexp = model->filterRegexp();
-    if (regexp.isEmpty()) {
+    QRegularExpression regexp = model->filterRegexp();
+    if (regexp.pattern().isEmpty()) {
         showFilterBox->setChecked(false);
     } else {
         showFilterBox->setChecked(true);
-        QMap<QString, QRegExp>::const_iterator itr;
+        QMap<QString, QRegularExpression>::const_iterator itr;
         int i = 0;
         for (itr = m_showFilters.constBegin();
              itr != m_showFilters.constEnd(); ++itr, ++i) {
@@ -90,16 +90,16 @@ void SettingsDialog::filtersToModel(ApiTraceFilter *model)
     }
     m_filter->setFilterOptions(opts);
     if (showFilterBox->isChecked()) {
-        m_filter->setFilterRegexp(QRegExp(showFilterEdit->text()));
+        m_filter->setFilterRegexp(QRegularExpression(showFilterEdit->text()));
     } else {
-        m_filter->setFilterRegexp(QRegExp());
+        m_filter->setFilterRegexp(QRegularExpression());
     }
 }
 
 void SettingsDialog::accept()
 {
     if (showFilterBox->isChecked()) {
-        QRegExp regexp(showFilterEdit->text());
+        QRegularExpression regexp(showFilterEdit->text());
         if (!regexp.isValid()) {
             QMessageBox::warning(
                 this,
@@ -110,7 +110,7 @@ void SettingsDialog::accept()
         }
     }
     if (customBox->isChecked()) {
-        QRegExp regexp(customEdit->text());
+        QRegularExpression regexp(customEdit->text());
         if (!regexp.isValid()) {
             QMessageBox::warning(
                 this,
@@ -144,5 +144,3 @@ void SettingsDialog::setFilterModel(ApiTraceFilter *filter)
     m_filter = filter;
     filtersFromModel(m_filter);
 }
-
-#include "settingsdialog.moc"

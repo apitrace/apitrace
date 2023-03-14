@@ -86,8 +86,12 @@ _gl_uniform_size(GLenum type, GLenum &elemType, GLint &numCols, GLint &numRows) 
     numRows = 1;
 
     switch (type) {
+    case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
+    case GL_SHORT:
+    case GL_UNSIGNED_SHORT:
     case GL_HALF_FLOAT:
-        elemType = GL_HALF_FLOAT;
+        elemType = type;
         break;
     case GL_FLOAT:
         elemType = GL_FLOAT;
@@ -324,6 +328,39 @@ _gl_uniform_size(GLenum type, GLenum &elemType, GLint &numCols, GLint &numRows) 
     case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
     case GL_UNSIGNED_INT_SAMPLER_BUFFER:
     case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+    case GL_IMAGE_1D:
+    case GL_IMAGE_2D:
+    case GL_IMAGE_3D:
+    case GL_IMAGE_2D_RECT:
+    case GL_IMAGE_CUBE:
+    case GL_IMAGE_BUFFER:
+    case GL_IMAGE_1D_ARRAY:
+    case GL_IMAGE_2D_ARRAY:
+    case GL_IMAGE_CUBE_MAP_ARRAY:
+    case GL_IMAGE_2D_MULTISAMPLE:
+    case GL_IMAGE_2D_MULTISAMPLE_ARRAY:
+    case GL_INT_IMAGE_1D:
+    case GL_INT_IMAGE_2D:
+    case GL_INT_IMAGE_3D:
+    case GL_INT_IMAGE_2D_RECT:
+    case GL_INT_IMAGE_CUBE:
+    case GL_INT_IMAGE_BUFFER:
+    case GL_INT_IMAGE_1D_ARRAY:
+    case GL_INT_IMAGE_2D_ARRAY:
+    case GL_INT_IMAGE_CUBE_MAP_ARRAY:
+    case GL_INT_IMAGE_2D_MULTISAMPLE:
+    case GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
+    case GL_UNSIGNED_INT_IMAGE_1D:
+    case GL_UNSIGNED_INT_IMAGE_2D:
+    case GL_UNSIGNED_INT_IMAGE_3D:
+    case GL_UNSIGNED_INT_IMAGE_2D_RECT:
+    case GL_UNSIGNED_INT_IMAGE_CUBE:
+    case GL_UNSIGNED_INT_IMAGE_BUFFER:
+    case GL_UNSIGNED_INT_IMAGE_1D_ARRAY:
+    case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+    case GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY:
+    case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:
+    case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
         elemType = GL_INT;
         break;
     default:
@@ -921,7 +958,7 @@ __glPathGetCodePointUTF8(const void *&utf_string,
                                  ((c1 & 0x3F) << 12) | 
                                  ((c2 & 0x3F) << 6) |
                                   (c3 & 0x3F);
-                    if (code_point < 65536 && code_point > 1114111) {
+                    if (code_point < 65536 || code_point > 1114111) {
                         return false;
                     }
                     assert(code_point >= 65536 && code_point <= 1114111);

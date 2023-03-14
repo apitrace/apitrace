@@ -98,19 +98,65 @@ _shaderSize(const DWORD *pFunction)
 {
     DWORD dwLength = 0;
 
-    while (true) {
-        DWORD dwToken = pFunction[dwLength++];
+    // Version token
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/version-token
+    DWORD dwVersion = pFunction[dwLength++];
 
-        switch (dwToken & D3DSI_OPCODE_MASK) {
-        case D3DSIO_COMMENT:
-            dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
-            break;
+    if (D3DSHADER_VERSION_MAJOR(dwVersion) >= 2) {
+        // Advance tokens using instruction length
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/instruction-token
+        while (true) {
+            DWORD dwToken = pFunction[dwLength++];
+            D3DSHADER_INSTRUCTION_OPCODE_TYPE opcode = D3DSHADER_INSTRUCTION_OPCODE_TYPE(dwToken & D3DSI_OPCODE_MASK);
+            switch (opcode) {
+            case D3DSIO_COMMENT:
+                dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+                break;
 
-        case D3DSIO_END:
-            if (dwToken == D3DSIO_END) {
-                return dwLength * sizeof *pFunction;
+            case D3DSIO_END:
+                assert(dwToken == D3DSIO_END);
+                if (dwToken == D3DSIO_END) {
+                    return dwLength * sizeof *pFunction;
+                }
+                break;
+
+            default:
+                dwLength += (dwToken & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT;
+                break;
             }
-            break;
+        }
+    } else {
+        // Advance tokens using bit 31
+        while (true) {
+            DWORD dwToken = pFunction[dwLength++];
+
+            // Skip Destination/Source/Label tokens
+            if (dwToken & 0x80000000U) {
+                continue;
+            }
+
+            D3DSHADER_INSTRUCTION_OPCODE_TYPE opcode = D3DSHADER_INSTRUCTION_OPCODE_TYPE(dwToken & D3DSI_OPCODE_MASK);
+            switch (opcode) {
+            case D3DSIO_COMMENT:
+                dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+                break;
+
+            case D3DSIO_DEF:
+                // Contains raw floating point so can't be advanced with the 31 bit test.
+                // NOTE: DEFB/DEFI are SM 2 only.
+                dwLength += 5;
+                break;
+
+            case D3DSIO_END:
+                // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/end-token
+                if (dwToken == D3DSIO_END) {
+                    return dwLength * sizeof *pFunction;
+                }
+                break;
+
+            default:
+                break;
+            }
         }
     }
 }

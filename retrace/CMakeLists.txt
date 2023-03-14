@@ -3,6 +3,7 @@
 
 include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR} # for version.h
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
@@ -17,7 +18,7 @@ add_definitions (-DRETRACE)
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
     DEPENDS
         glretrace.py
         retrace.py
@@ -28,7 +29,7 @@ add_custom_command (
 
 add_custom_command (
     OUTPUT glstate_params.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
     DEPENDS
         glstate_params.py
         ${CMAKE_SOURCE_DIR}/specs/glparams.py
@@ -57,16 +58,18 @@ add_library (retrace_common STATIC
 target_link_libraries (retrace_common
     image
     common
-    ${ZLIB_LIBRARIES}
-    ${SNAPPY_LIBRARIES}
-    ${GETOPT_LIBRARIES}
+    getopt
 )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr mhook winmm psapi)
+    target_link_libraries (retrace_common dxerr winmm psapi)
+    if (HAVE_X86)
+        target_link_libraries (retrace_common mhook)
+    endif ()
 endif ()
+add_dependencies (retrace_common version)
 
 
 add_library (glretrace_common STATIC
@@ -103,6 +106,9 @@ endif ()
 
 if (WIN32)
     set (glws_os glws_wgl.cpp)
+    target_link_libraries (glretrace_common
+        gdi32
+    )
 else ()
     if (APPLE)
         set (glws_os glws_cocoa.mm)
@@ -115,6 +121,7 @@ endif ()
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
         ${glws_os}
+        glproc_gl.cpp
     )
 
     add_dependencies (glretrace glproc)
@@ -123,7 +130,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_gl
+        glproc
     )
 
     if (WIN32)
@@ -161,6 +168,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
     add_executable (eglretrace
         glws_xlib.cpp
         glws_egl_xlib.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (eglretrace glproc)
@@ -169,7 +177,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_egl
+        glproc
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
@@ -180,6 +188,7 @@ endif ()
 if (ENABLE_EGL AND ENABLE_WAFFLE)
     add_executable (eglretrace
         glws_waffle.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (eglretrace glproc)
@@ -189,7 +198,7 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
         retrace_common
         glretrace_common
         glhelpers
-        glproc_egl
+        glproc
         ${Waffle_LIBRARIES}
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
@@ -203,7 +212,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3dretrace_ddraw.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
             DEPENDS
                 ddrawretrace.py
                 dllretrace.py
@@ -236,7 +245,7 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d8.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
@@ -257,7 +266,7 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
@@ -289,7 +298,7 @@ if (WIN32)
         )
         add_custom_command (
             OUTPUT dxgistate_so.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
             DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
@@ -303,7 +312,7 @@ if (WIN32)
         )
         add_custom_command (
             OUTPUT d3dretrace_dxgi.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
             DEPENDS
                 dxgiretrace.py
                 dllretrace.py
@@ -335,6 +344,7 @@ if (WIN32)
     target_link_libraries (d3dretrace
         retrace_common
         d3dhelpers
+        ole32
     )
     if (DirectX_D3D11_4_INCLUDE_FOUND)
         target_link_libraries (d3dretrace directxtex)

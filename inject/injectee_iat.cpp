@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2016-2018 VMware, Inc.
+ * Copyright 2016-2022 VMware, Inc.
  * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <intrin.h>
 
 #include <algorithm>
 #include <set>
@@ -69,6 +70,11 @@ static HMODULE g_hHookModule = NULL;
 
 
 static void
+#if defined(__MINGW32__)
+    __attribute__ ((format (__MINGW_PRINTF_FORMAT, 1, 2)))
+#elif  defined(__GNUC__)
+    __attribute__ ((format (printf, 1, 2)))
+#endif
 debugPrintf(const char *format, ...)
 {
     char buf[512];
@@ -79,22 +85,6 @@ debugPrintf(const char *format, ...)
     va_end(ap);
 
     OutputDebugStringA(buf);
-}
-
-
-EXTERN_C void
-_assert(const char *_Message, const char *_File, unsigned _Line)
-{
-    debugPrintf("Assertion failed: %s, file %s, line %u\n", _Message, _File, _Line);
-    TerminateProcess(GetCurrentProcess(), 1);
-}
-
-
-EXTERN_C void
-_wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
-{
-    debugPrintf("Assertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
-    TerminateProcess(GetCurrentProcess(), 1);
 }
 
 
@@ -256,7 +246,79 @@ MyCreateProcessAsUserW(HANDLE hToken,
                                    lpProcessAttributes,
                                    lpThreadAttributes,
                                    bInheritHandles,
-                                   dwCreationFlags,
+                                   dwCreationFlags | CREATE_SUSPENDED,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessWithTokenW(HANDLE                hToken,
+                          DWORD                 dwLogonFlags,
+                          LPCWSTR               lpApplicationName,
+                          LPWSTR                lpCommandLine,
+                          DWORD                 dwCreationFlags,
+                          LPVOID                lpEnvironment,
+                          LPCWSTR               lpCurrentDirectory,
+                          LPSTARTUPINFOW        lpStartupInfo,
+                          LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessWithTokenW(hToken,
+                                   dwLogonFlags,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   dwCreationFlags | CREATE_SUSPENDED,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessWithLogonW(LPCWSTR               lpUsername,
+                          LPCWSTR               lpDomain,
+                          LPCWSTR               lpPassword,
+                          DWORD                 dwLogonFlags,
+                          LPCWSTR               lpApplicationName,
+                          LPWSTR                lpCommandLine,
+                          DWORD                 dwCreationFlags,
+                          LPVOID                lpEnvironment,
+                          LPCWSTR               lpCurrentDirectory,
+                          LPSTARTUPINFOW        lpStartupInfo,
+                          LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessWithLogonW(lpUsername,
+                                   lpDomain,
+                                   lpPassword,
+                                   dwLogonFlags,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   dwCreationFlags | CREATE_SUSPENDED,
                                    lpEnvironment,
                                    lpCurrentDirectory,
                                    lpStartupInfo,
@@ -318,6 +380,29 @@ getOptionalHeader(HMODULE hModule,
                     szModule, pNtHeaders->Signature);
         return NULL;
     }
+
+    /*
+     * Handle gracefully DLL might have been loaded for resources,
+     * LOAD_LIBRARY_AS_DATAFILE.
+     */
+    const WORD Machine =
+#ifdef _WIN64
+        IMAGE_FILE_MACHINE_AMD64
+#else
+        IMAGE_FILE_MACHINE_I386
+#endif
+    ;
+    if (pNtHeaders->FileHeader.Machine != Machine) {
+        debugPrintf("inject: warning: %s: ignoring different machine (0x%02x)\n",
+                    szModule, pNtHeaders->FileHeader.Machine);
+        return nullptr;
+    }
+    if (pNtHeaders->FileHeader.SizeOfOptionalHeader < sizeof pNtHeaders->OptionalHeader) {
+        debugPrintf("inject: warning: %s: SizeOfOptionalHeader too small (%u)\n",
+                    szModule, pNtHeaders->FileHeader.SizeOfOptionalHeader);
+        return nullptr;
+    }
+
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     return pOptionalHeader;
 }
@@ -545,7 +630,7 @@ patchFunction(HMODULE hModule,
 
 
 
-struct StrCompare : public std::binary_function<const char *, const char *, bool> {
+struct StrCompare {
     bool operator() (const char * s1, const char * s2) const {
         return strcmp(s1, s2) < 0;
     }
@@ -553,7 +638,7 @@ struct StrCompare : public std::binary_function<const char *, const char *, bool
 
 typedef std::map<const char *, LPVOID, StrCompare> FunctionMap;
 
-struct StrICompare : public std::binary_function<const char *, const char *, bool> {
+struct StrICompare  {
     bool operator() (const char * s1, const char * s2) const {
         return stricmp(s1, s2) < 0;
     }
@@ -686,7 +771,9 @@ patchModule(HMODULE hModule,
         stricmp(szBaseName, "AcLayers.dll") == 0 ||
         stricmp(szBaseName, "ConEmuHk.dll") == 0 ||
         stricmp(szBaseName, "gameoverlayrenderer.dll") == 0 ||
-        stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0) {
+        stricmp(szBaseName, "gameoverlayrenderer64.dll") == 0 ||
+        stricmp(szBaseName, "nvoglv32.dll") == 0 ||
+        stricmp(szBaseName, "nvoglv64.dll") == 0) {
         return;
     }
 
@@ -769,8 +856,11 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
             if (VERBOSITY < 2) {
                 debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpLibFileName);
             }
-#ifdef __GNUC__
-            void *caller = __builtin_return_address (0);
+#ifdef _MSC_VER
+            void *caller = _ReturnAddress();
+#else
+            void *caller = __builtin_return_address(0);
+#endif
 
             HMODULE hModule = 0;
             BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -782,7 +872,6 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
             DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
             assert(dwRet);
             debugPrintf("inject: called from %s\n", szCaller);
-#endif
         }
     }
 
@@ -856,18 +945,52 @@ adjustFlags(DWORD dwFlags)
 static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
+    BOOL bIntercept = (dwFlags & (DONT_RESOLVE_DLL_REFERENCES |
+                                  LOAD_LIBRARY_AS_DATAFILE |
+                                  LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE)) == 0;
+    HMODULE hTestModule = nullptr;
+    BOOL bLoaded = FALSE;
+
+    /*
+     * XXX: GDI's DescribePixelFormat does
+     *
+     *   HMODULE hModule = LoadLibraryExA("OPENGL32", 0, 0)
+     *   GetProcAddress(hModule, "wglDescribePixelFormat")
+     *   MyFreeLibrary(hModule)
+     *
+     * And GLFW3 calls it for every existing pixel format, and we end up
+     * spending an eternity inside Tool Help Library functions.  To avoid this,
+     * we try to detect when loading an existing library and do nothing.
+     *
+     * TODO: Extend this to the other LoadLibrary* entrypoints.
+     */
+
+    if (bIntercept) {
+        bLoaded = GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                     lpLibFileName,
+                                     &hTestModule);
+    }
+
     HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
-    DWORD dwLastError = GetLastError();
+
+    if (bLoaded && hModule == hTestModule) {
+        bIntercept = FALSE;
+    }
 
     if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
-                    __FUNCTION__ + 2, lpLibFileName, hFile, dwFlags, hModule);
+        debugPrintf("inject: %s %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
+                    bIntercept ? "intercepting" : "ignoring",
+                    __FUNCTION__ + 2,
+                    lpLibFileName, hFile, dwFlags, hModule);
     }
 
     // Hook all new modules (and not just this one, to pick up any dependencies)
-    patchAllModules(ACTION_HOOK);
+    if (bIntercept) {
+        DWORD dwLastError = GetLastError();
+        patchAllModules(ACTION_HOOK);
+        SetLastError(dwLastError);
+    }
 
-    SetLastError(dwLastError);
     return hModule;
 }
 
@@ -883,7 +1006,11 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     }
 
     // Hook all new modules (and not just this one, to pick up any dependencies)
-    patchAllModules(ACTION_HOOK);
+    if ((dwFlags & (DONT_RESOLVE_DLL_REFERENCES |
+                    LOAD_LIBRARY_AS_DATAFILE |
+                    LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE)) == 0) {
+        patchAllModules(ACTION_HOOK);
+    }
 
     SetLastError(dwLastError);
     return hModule;
@@ -893,9 +1020,9 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 static void
 logGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
     if (HIWORD(lpProcName) == 0) {
-        debugPrintf("inject: intercepting %s(%u)\n", "GetProcAddress", LOWORD(lpProcName));
+        debugPrintf("inject: intercepting %s(0x%p, %u)\n", "GetProcAddress", hModule, LOWORD(lpProcName));
     } else {
-        debugPrintf("inject: intercepting %s(\"%s\")\n", "GetProcAddress", lpProcName);
+        debugPrintf("inject: intercepting %s(0x%p, \"%s\")\n", "GetProcAddress", hModule, lpProcName);
     }
 }
 
@@ -972,36 +1099,54 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 static BOOL WINAPI
 MyFreeLibrary(HMODULE hModule)
 {
-    if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(0x%p)\n", __FUNCTION__, hModule);
-    }
-
     BOOL bRet = FreeLibrary(hModule);
-    DWORD dwLastError = GetLastError();
 
-    std::set<HMODULE> hCurrentModules;
-    HANDLE hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (hModuleSnap != INVALID_HANDLE_VALUE) {
-        MODULEENTRY32 me32;
-        me32.dwSize = sizeof me32;
-        if (Module32First(hModuleSnap, &me32)) {
-            do  {
-                hCurrentModules.insert(me32.hModule);
-            } while (Module32Next(hModuleSnap, &me32));
+    BOOL bIntercept = bRet;
+    HMODULE hTestModule = nullptr;
+    if (bRet) {
+        if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                              (LPCTSTR)hModule,
+                              &hTestModule) &&
+            hModule == hTestModule) {
+            bIntercept = FALSE;
         }
-        CloseHandle(hModuleSnap);
     }
 
-    // Clear the modules that have been freed
-    EnterCriticalSection(&g_Mutex);
-    std::set<HMODULE> hIntersectedModules;
-    std::set_intersection(g_hHookedModules.begin(), g_hHookedModules.end(),
-                          hCurrentModules.begin(), hCurrentModules.end(),
-                          std::inserter(hIntersectedModules, hIntersectedModules.begin()));
-    g_hHookedModules = std::move(hIntersectedModules);
-    LeaveCriticalSection(&g_Mutex);
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: %s %s(0x%p)\n",
+                    bIntercept ? "intercepting" : "ignoring",
+                    __FUNCTION__ + 2, hModule);
+    }
 
-    SetLastError(dwLastError);
+    if (bIntercept) {
+        DWORD dwLastError = GetLastError();
+
+        std::set<HMODULE> hCurrentModules;
+        HANDLE hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+        if (hModuleSnap != INVALID_HANDLE_VALUE) {
+            MODULEENTRY32 me32;
+            me32.dwSize = sizeof me32;
+            if (Module32First(hModuleSnap, &me32)) {
+                do  {
+                    hCurrentModules.insert(me32.hModule);
+                } while (Module32Next(hModuleSnap, &me32));
+            }
+            CloseHandle(hModuleSnap);
+        }
+
+        // Clear the modules that have been freed
+        EnterCriticalSection(&g_Mutex);
+        std::set<HMODULE> hIntersectedModules;
+        std::set_intersection(g_hHookedModules.begin(), g_hHookedModules.end(),
+                              hCurrentModules.begin(), hCurrentModules.end(),
+                              std::inserter(hIntersectedModules, hIntersectedModules.begin()));
+        g_hHookedModules = std::move(hIntersectedModules);
+        LeaveCriticalSection(&g_Mutex);
+
+        SetLastError(dwLastError);
+    }
+
     return bRet;
 }
 
@@ -1030,7 +1175,8 @@ registerProcessThreadsHooks(const char *szMatchModule)
     functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
     // NOTE: CreateProcessAsUserA is implemented by advapi32.dll
     functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
-    // TODO: CreateProcessWithTokenW
+    functionMap["CreateProcessWithTokenW"] = (LPVOID)MyCreateProcessWithTokenW;
+    functionMap["CreateProcessWithLogonW"] = (LPVOID)MyCreateProcessWithLogonW;
 }
 
 static void
@@ -1148,21 +1294,28 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         /*
          * Hook kernel32.dll functions, and its respective Windows API Set.
          *
-         * http://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
-         * http://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+         * https://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
+         * https://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+         * https://docs.microsoft.com/en-us/uwp/win32-and-com/win32-apis
          */
 
         registerLibraryLoaderHooks("kernel32.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-1.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-1.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-2.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l2-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-1.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-2.dll");
 
         registerProcessThreadsHooks("kernel32.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-0.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-1.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-2.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-2.dll");
+        registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-3.dll");
 
         szNewDllBaseName = getBaseName(szNewDllName);
         if (stricmp(szNewDllBaseName, "dxgitrace.dll") == 0) {

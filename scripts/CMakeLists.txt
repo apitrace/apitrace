@@ -1,7 +1,21 @@
-file (GLOB SCRIPTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
-
 install (
-    PROGRAMS ${SCRIPTS}
+    PROGRAMS
+        convert.py
+        jsondiff.py
+        jsonextractimages.py
+        leaks.py
+        profileshader.py
+        retracediff.py
+        snapdiff.py
+        tracecheck.py
+        tracediff.py
+        unpickle.py
+    DESTINATION ${SCRIPTS_INSTALL_DIR}
+)
+install (
+    FILES
+        apitrace.PIXExp
+        highlight.py
     DESTINATION ${SCRIPTS_INSTALL_DIR}
 )
 install (

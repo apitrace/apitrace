@@ -27,11 +27,13 @@
 
 
 #include <string.h>
+#include <atomic>
 #include <limits.h> // for CHAR_MAX
 #include <memory> // for unique_ptr
 #include <iostream>
 #include <regex>
 #include <getopt.h>
+#include <time.h>
 #ifndef _WIN32
 #include <unistd.h> // for isatty()
 #endif
@@ -55,6 +57,7 @@
 #include "state_writer.hpp"
 #include "ws.hpp"
 #include "process_name.hpp"
+#include "version.h"
 
 
 static bool waitOnFinish = false;
@@ -89,6 +92,10 @@ bool snapshotAlpha = false;
 bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
+bool watchdogEnabled = false;
+
+bool ignoreCalls = false;
+trace::CallSet callsToIgnore;
 
 bool resolveMSAA = true;
 
@@ -108,6 +115,7 @@ bool profilingListMetrics = false;
 bool profilingNumPasses = false;
 
 bool profiling = false;
+bool profilingFrameTimes = false;
 bool profilingGpuTimes = false;
 bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
@@ -116,15 +124,101 @@ bool useCallNos = true;
 bool singleThread = false;
 bool ignoreRetvals = false;
 bool contextCheck = true;
+bool snapshotForceBackbuffer = false;
 int64_t minCpuTime = 1000;
+
+retrace::EQueryHandling queryResultHandling = retrace::QUERY_SKIP;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
 
+long long lastFrameTime = 0;
+long long perFrameDelayUsec = 0;
+long long minFrameDurationUsec = 0;
 
 static void
-takeSnapshot(unsigned call_no);
+takeSnapshot(unsigned call_no, bool backBuffer);
 
+/**
+ * Retrace watchdog.
+ *
+ * Retrace watchdog triggers abort() if retrace of a single api call
+ * will take more than {TimeoutInSec} seconds.
+ */
+class RetraceWatchdog
+{
+public:
+    enum {
+        // This is high because loading sequences can cause very expensive
+        // frames with shader compiles, etc, and we do not want flaky results
+        // on occasionally devices.
+        TimeoutInSec = 300,
+        RunnerSleepInMills = 1000,
+    };
+
+    static uint32_t get_time_u32() {
+        return static_cast<uint32_t>(time(NULL));
+    }
+
+    static uint32_t get_duration_u32(uint32_t from, uint32_t to) {
+        if (to <= from) return 0;
+        return to - from;
+    }
+
+private:
+    typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
+
+    RetraceWatchdog()
+    : last_call_mark(get_time_u32()), want_exit(false) {
+        thread = std::thread(runnerThread, this);
+    }
+
+    std::thread thread;
+    std::atomic<uint64_t> last_call_mark;
+    std::atomic<bool> want_exit;
+
+    static void runnerThread(RetraceWatchdog* rw) {
+        while(!rw->want_exit) {
+            // Once a second check if progress has been made.
+            uint64_t mark = rw->last_call_mark;
+            uint32_t dur = get_duration_u32(
+                    static_cast<uint32_t>(mark&0xFFFFFFFF),
+                    get_time_u32()
+                );
+
+            if (dur >= static_cast<uint32_t>(TimeoutInSec)) {
+                fprintf(
+                    stderr,
+                    "Exception: Retrace watchdog timeout has occured at call %u!\n",
+                    static_cast<uint32_t>(mark >> 32));
+                abort();
+            }
+            os::sleep(RunnerSleepInMills * 1000);
+        }
+    }
+
+public:
+    ~RetraceWatchdog() {
+        want_exit = true;
+        if (thread.joinable()) {
+           thread.join();
+        }
+    }
+    // Assuming we use C++ 11 or newer therefore the following singleton
+    // implementation is thread safe
+    static RetraceWatchdog& Instance() {
+        static RetraceWatchdog inst;
+        return inst;
+    }
+
+    void CallProcessed(uint32_t call_no) {
+      // Record time and monotonic number/id of last trace call.
+      last_call_mark = (static_cast<uint64_t>(call_no) << 32) | get_time_u32();
+    }
+
+    RetraceWatchdog(RetraceWatchdog const&) = delete;
+    void operator=(RetraceWatchdog const&) = delete;
+};
 
 /**
  * Called when we are about to present.
@@ -136,12 +230,36 @@ void
 frameComplete(trace::Call &call)
 {
     ++frameNo;
+    bool bNeedFrameDelay = perFrameDelayUsec || minFrameDurationUsec;
+    if (bNeedFrameDelay) {
+        long long startTime = os::getTime();
+        long long delayUsec = perFrameDelayUsec;
+        if (lastFrameTime > 0) {
+            long long actualFrameTime = startTime - lastFrameTime;
+            if (actualFrameTime < 0) {
+                actualFrameTime = 0;
+                std::cerr << "warning: os::getTime() returned a negative interval.\n";
+            }
+            long long actualFrameTimeUsec = actualFrameTime *
+                1000 * 1000 / os::timeFrequency;
+            if (actualFrameTimeUsec < minFrameDurationUsec) {
+                delayUsec += minFrameDurationUsec - actualFrameTimeUsec;
+            }
+        }
+        if (delayUsec > 0) {
+            os::sleep(delayUsec);
+        }
+    }
 
     if (snapshotFrequency.contains(call)) {
-        takeSnapshot(call.no);
+        takeSnapshot(call.no, snapshotForceBackbuffer);
         if (call.no >= snapshotFrequency.getLast()) {
             exit(0);
         }
+    }
+
+    if (bNeedFrameDelay) {
+        lastFrameTime = os::getTime();
     }
 }
 
@@ -155,7 +273,7 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n) override {
+    getSnapshot(int n, bool backBuffer) override {
         return NULL;
     }
 
@@ -187,12 +305,12 @@ static Snapshotter *snapshotter;
  * Take snapshots.
  */
 static void
-takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
+takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no, bool backBuffer) {
 
     assert(dumpingSnapshots);
     assert(snapshotPrefix);
 
-    std::unique_ptr<image::Image> src(dumper->getSnapshot(mrt));
+    std::unique_ptr<image::Image> src(dumper->getSnapshot(mrt, backBuffer));
     if (!src) {
         /* TODO for mrt>0 we probably don't want to treat this as an error: */
         if (mrt == 0)
@@ -248,7 +366,7 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no) {
 }
 
 static void
-takeSnapshot(unsigned call_no)
+takeSnapshot(unsigned call_no, bool backBuffer)
 {
     static signed long long last_call_no = -1;
     if (call_no == last_call_no) {
@@ -261,10 +379,10 @@ takeSnapshot(unsigned call_no)
 
     if (retrace::snapshotMRT) {
         for (int mrt = -2; mrt < cnt; mrt++) {
-            takeSnapshot(call_no, mrt, snapshot_no);
+            takeSnapshot(call_no, mrt, snapshot_no, backBuffer);
         }
     } else {
-        takeSnapshot(call_no, 0, snapshot_no);
+        takeSnapshot(call_no, 0, snapshot_no, backBuffer);
     }
 
     snapshot_no++;
@@ -281,21 +399,30 @@ static void
 retraceCall(trace::Call *call) {
     callNo = call->no;
 
+    if (ignoreCalls && callsToIgnore.contains(callNo)) {
+        return;
+    }
+
     retracer.retrace(*call);
 
     if (snapshotFrequency.contains(*call)) {
-        takeSnapshot(call->no);
+        takeSnapshot(call->no, snapshotForceBackbuffer);
         if (call->no >= snapshotFrequency.getLast()) {
             exit(0);
         }
     }
 
-    if (call->no >= dumpStateCallNo &&
-        dumper->canDump()) {
-        StateWriter *writer = stateWriterFactory(std::cout);
-        dumper->dumpState(*writer);
-        delete writer;
-        exit(0);
+    // dumpStateCallNo is 0 when fetching default state
+    if (call->no == dumpStateCallNo || dumpStateCallNo == 0) {
+        if (dumper->canDump()) {
+            StateWriter *writer = stateWriterFactory(std::cout);
+            dumper->dumpState(*writer);
+            delete writer;
+            exit(0);
+        } else if (dumpStateCallNo != 0) {
+            std::cerr << call->no << ": error: failed to dump state\n";
+            exit(1);
+        }
     }
 }
 
@@ -357,8 +484,8 @@ private:
 
     unsigned leg;
 
-    os::mutex mutex;
-    os::condition_variable wake_cond;
+    std::mutex mutex;
+    std::condition_variable wake_cond;
 
     /**
      * There are protected by the mutex.
@@ -366,7 +493,7 @@ private:
     bool finished;
     trace::Call *baton;
 
-    os::thread thread;
+    std::thread thread;
 
     static void
     runnerThread(RelayRunner *_this);
@@ -380,7 +507,7 @@ public:
     {
         /* The fore runner does not need a new thread */
         if (leg) {
-            thread = os::thread(runnerThread, this);
+            thread = std::thread(runnerThread, this);
         }
     }
 
@@ -395,7 +522,7 @@ public:
      */
     void
     runRace(void) {
-        os::unique_lock<os::mutex> lock(mutex);
+        std::unique_lock<std::mutex> lock(mutex);
 
         while (1) {
             while (!finished && !baton) {
@@ -433,7 +560,10 @@ public:
             assert(call->thread_id == leg);
 
             retraceCall(call);
-            delete call;
+            if (watchdogEnabled)
+              RetraceWatchdog::Instance().CallProcessed(call->no);
+            if (!call->reuse_call)
+                delete call;
             call = parser->parse_call();
 
         } while (call && call->thread_id == leg);
@@ -605,7 +735,10 @@ mainLoop() {
         trace::Call *call;
         while ((call = parser->parse_call())) {
             retraceCall(call);
-            delete call;
+            if (watchdogEnabled)
+                RetraceWatchdog::Instance().CallProcessed(call->no);
+            if (!call->reuse_call)
+                delete call;
         }
     } else {
         RelayRace race;
@@ -643,6 +776,7 @@ usage(const char *argv0) {
         "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
         "  -d, --debug             increase debugging checks\n"
         "      --markers           insert call no markers in the command stream\n"
+        "      --pframe-times      frame times profiling (cpu times per frame)\n"
         "      --pcpu              cpu profiling (cpu times per call)\n"
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
@@ -651,6 +785,8 @@ usage(const char *argv0) {
         "      --pframes           frame profiling metrics selection\n"
         "      --pdrawcalls        draw call profiling metrics selection\n"
         "      --list-metrics      list all available metrics for TRACE\n"
+        "      --query-handling    How query readbacks should be handled: ('skip', 'run', 'check'), default is 'skip'\n"
+        "      --query-tolerance   Set a tolerance when comparing recorded query results to evaluated ones, a value >0 enables query-handling 'check'\n"
         "      --gen-passes        generate profiling passes and output passes number\n"
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
@@ -668,15 +804,21 @@ usage(const char *argv0) {
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -t, --snapshot-threaded encode screenshots on multiple threads\n"
+        "      --snapshot-force-backbuffer always read from the backbuffer when taking a snapshot (default read from the current draw buffer)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
+        "      --min-frame-duration=MICROSECONDS   specify minimum frame rendering duration\n"
+        "      --per-frame-delay=MICROSECONDS   add extra delay after each frame (in addition to min-frame-duration)\n"
         "  -w, --wait              waitOnFinish on final frame\n"
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
+        "      --watchdog          invokes abort() if retrace of a single api call will take more than " << retrace::RetraceWatchdog::TimeoutInSec << " seconds\n"
         "      --singlethread      use a single thread to replay command stream\n"
         "      --ignore-retvals    ignore return values in wglMakeCurrent, etc\n"
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
+        "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
+        "      --version           display version information and exit\n"
     ;
 }
 
@@ -688,6 +830,7 @@ enum {
     DRIVER_OPT,
     FULLSCREEN_OPT,
     HEADLESS_OPT,
+    PFRAMETIMES_OPT,
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
@@ -699,6 +842,9 @@ enum {
     GENPASS_OPT,
     MSAA_NO_RESOLVE_OPT,
     SB_OPT,
+    WATCHDOG_OPT,
+    MIN_FRAME_DURATION_OPT,
+    PER_FRAME_DELAY_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
     IGNORE_RETVALS_OPT,
@@ -706,9 +852,14 @@ enum {
     SNAPSHOT_ALPHA_OPT,
     SNAPSHOT_FORMAT_OPT,
     SNAPSHOT_INTERVAL_OPT,
+    SNAPSHOT_FORCE_BACKBUFFER_OPT,
     DUMP_FORMAT_OPT,
     MARKERS_OPT,
     MIN_CPU_TIME_OPT,
+    QUERY_HANDLING_OPT,
+    QUERY_CHECK_TOLARANCE_OPT,
+    IGNORE_CALLS_OPT,
+    VERSION_OPT,
 };
 
 const static char *
@@ -731,6 +882,7 @@ longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"mrt", no_argument, 0, 'm'},
     {"msaa-no-resolve", no_argument, 0, MSAA_NO_RESOLVE_OPT},
+    {"pframe-times", no_argument, 0, PFRAMETIMES_OPT},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
     {"ppd", no_argument, 0, PPD_OPT},
@@ -738,6 +890,8 @@ longOptions[] = {
     {"pcalls", required_argument, 0, PCALLS_OPT},
     {"pframes", required_argument, 0, PFRAMES_OPT},
     {"pdrawcalls", required_argument, 0, PDRAWCALLS_OPT},
+    {"query-handling", required_argument, 0, QUERY_HANDLING_OPT},
+    {"query-tolerance", required_argument, 0, QUERY_CHECK_TOLARANCE_OPT},
     {"list-metrics", no_argument, 0, PLMETRICS_OPT},
     {"gen-passes", no_argument, 0, GENPASS_OPT},
     {"sb", no_argument, 0, SB_OPT},
@@ -745,22 +899,28 @@ longOptions[] = {
     {"snapshot-alpha", no_argument, 0, SNAPSHOT_ALPHA_OPT},
     {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
+    {"snapshot-force-backbuffer", no_argument, 0, SNAPSHOT_FORCE_BACKBUFFER_OPT},
     {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot-threaded", no_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
+    {"watchdog", no_argument, 0, WATCHDOG_OPT},
+    {"min-frame-duration", required_argument, 0, MIN_FRAME_DURATION_OPT},
+    {"per-frame-delay", required_argument, 0, PER_FRAME_DELAY_OPT},
     {"loop", optional_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {"ignore-retvals", no_argument, 0, IGNORE_RETVALS_OPT},
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
+    {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
+    {"version", no_argument, 0, VERSION_OPT},
     {0, 0, 0, 0}
 };
 
 
 static void exceptionCallback(void)
 {
-    std::cerr << retrace::callNo << ": error: caught an unhandled exception\n";
+    std::cerr << retrace::callNo << ": error: caught an unhandled exception" << std::endl;
 }
 
 
@@ -930,23 +1090,30 @@ VectoredHandler(PEXCEPTION_POINTERS pExceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-#endif  // _WIN32
-
-
 /*
- * Direct NVIDIA Optimus driver to use the High Performance Graphics.
- *
- * If we invoked glGetString(GL_VENDOR) or glGetString(GL_RENDERER) this
- * wouldn't be necessary, but glretrace skips such calls.
- *
- * See also:
- * - http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
+ * Show the current call number on the first Ctrl-C/Break event.
  */
-#ifdef _WIN32
-extern "C" {
-     __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000000;
+static BOOL WINAPI
+consoleCtrlHandler(DWORD fdwCtrlType)
+{
+    static int cCtrlC = 0;
+    static int cCtrlBreak = 0;
+
+    switch (fdwCtrlType) {
+    case CTRL_C_EVENT:
+        fprintf(stderr, "%u: warning: caught Ctrl-C event\n",
+                retrace::callNo);
+        return cCtrlC++ ? FALSE : TRUE;
+    case CTRL_BREAK_EVENT:
+        fprintf(stderr, "%u: warning: caught Ctrl-Break event\n",
+                retrace::callNo);
+        return cCtrlBreak++ ? FALSE : TRUE;
+    default:
+        return FALSE;
+    }
 }
-#endif
+
+#endif  // _WIN32
 
 
 extern "C"
@@ -970,6 +1137,7 @@ int main(int argc, char **argv)
    if (!IsDebuggerPresent()) {
       AddVectoredExceptionHandler(0, VectoredHandler);
    }
+   SetConsoleCtrlHandler(&consoleCtrlHandler, TRUE);
 #endif
 
     assert(snapshotFrequency.empty());
@@ -1023,13 +1191,8 @@ int main(int argc, char **argv)
                 driver = DRIVER_HARDWARE;
             } else if (strcasecmp(optarg, "dgpu") == 0) {
                 driver = DRIVER_DISCRETE;
-#ifdef _WIN32
-                NvOptimusEnablement = 0x00000001;
-#endif
             } else if (strcasecmp(optarg, "igpu") == 0) {
                 driver = DRIVER_INTEGRATED;
-            } else if (strcasecmp(optarg, "sw") == 0) {
-                driver = DRIVER_SOFTWARE;
             } else if (strcasecmp(optarg, "sw") == 0) {
                 driver = DRIVER_SOFTWARE;
             } else if (strcasecmp(optarg, "ref") == 0) {
@@ -1111,6 +1274,9 @@ int main(int argc, char **argv)
         case SNAPSHOT_INTERVAL_OPT:
             snapshotInterval = atoi(optarg);
             break;
+        case SNAPSHOT_FORCE_BACKBUFFER_OPT:
+            snapshotForceBackbuffer = true;
+            break;
         case 't':
             snapshotThreaded = true;
             break;
@@ -1120,8 +1286,24 @@ int main(int argc, char **argv)
         case 'w':
             waitOnFinish = true;
             break;
+        case MIN_FRAME_DURATION_OPT:
+            minFrameDurationUsec = trace::intOption(optarg, 0);
+            break;
+        case WATCHDOG_OPT:
+            retrace::watchdogEnabled = true;
+            break;
+        case PER_FRAME_DELAY_OPT:
+            perFrameDelayUsec = trace::intOption(optarg, 0);
+            break;
         case LOOP_OPT:
             loopCount = trace::intOption(optarg, -1);
+            break;
+        case PFRAMETIMES_OPT:
+            retrace::debug = 0;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            retrace::profilingFrameTimes = true;
             break;
         case PGPU_OPT:
             retrace::debug = 0;
@@ -1179,6 +1361,19 @@ int main(int argc, char **argv)
             retrace::profilingWithBackends = true;
             retrace::profilingListMetrics = true;
             break;
+        case QUERY_HANDLING_OPT:
+            if (strcmp(optarg, "check") == 0)
+                retrace::queryHandling = retrace::QUERY_RUN_AND_CHECK_RESULT;
+            else if (strcmp(optarg, "run") == 0)
+                retrace::queryHandling = retrace::QUERY_RUN;
+            else
+                retrace::queryHandling = retrace::QUERY_SKIP;
+            break;
+        case QUERY_CHECK_TOLARANCE_OPT:
+            retrace::queryTolerance = atoi(optarg);
+            if (retrace::queryTolerance > 0)
+                retrace::queryHandling = retrace::QUERY_RUN_AND_CHECK_RESULT;
+            break;
         case GENPASS_OPT:
             retrace::debug = 0;
             retrace::profiling = true;
@@ -1188,12 +1383,26 @@ int main(int argc, char **argv)
             break;
         case MIN_CPU_TIME_OPT:
             retrace::minCpuTime = atol(optarg);
+        case IGNORE_CALLS_OPT:
+            retrace::ignoreCalls = true;
+            if (retrace::callsToIgnore.empty()) {
+                retrace::callsToIgnore = trace::CallSet(trace::FREQUENCY_ALL);
+            }
+
+            retrace::callsToIgnore.merge(optarg);
             break;
+        case VERSION_OPT:
+            std::cout << "apitrace " << APITRACE_VERSION << std::endl;
+            return 0;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);
             return 1;
         }
+    }
+
+    if (loopCount) {
+        std::cerr << "warning: --loop blindly repeats the last frame calls, therefore frames might not necessarily render correctly (https://github.com/apitrace/apitrace/issues/800)" << std::endl;
     }
 
 #ifndef _WIN32
@@ -1213,7 +1422,7 @@ int main(int argc, char **argv)
 #endif
 
     if (snapshotThreaded) {
-        snapshotter = new ThreadedSnapshotter(os::thread::hardware_concurrency());
+        snapshotter = new ThreadedSnapshotter(std::thread::hardware_concurrency());
     } else {
         snapshotter = new Snapshotter();
     }

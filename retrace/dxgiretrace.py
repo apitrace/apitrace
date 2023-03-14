@@ -80,8 +80,16 @@ class D3DRetracer(Retracer):
                 print(r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;')
                 print(r'    }')
 
+                # D3D10CreateDevice(D3D10_DRIVER_TYPE_REFERENCE) fails with
+                # DXGI_ERROR_UNSUPPORTED on 64bits.
+                print(r'#ifdef _WIN64')
+                print(r'    if (DriverType == D3D10_DRIVER_TYPE_REFERENCE) {')
+                print(r'        DriverType = D3D10_DRIVER_TYPE_WARP;')
+                print(r'    }')
+                print(r'#endif')
+
                 # Force driver
-                self.forceDriver('D3D10_DRIVER_TYPE')
+                self.forceDriver('D3D10_DRIVER_TYPE_HARDWARE')
 
             if function.name.startswith('D3D11CreateDevice'):
                 # Toggle debugging
@@ -95,7 +103,7 @@ class D3DRetracer(Retracer):
                 print(r'    }')
 
                 # Force driver
-                self.forceDriver('D3D_DRIVER_TYPE')
+                self.forceDriver('D3D_DRIVER_TYPE_UNKNOWN')
 
         Retracer.invokeFunction(self, function)
 
@@ -122,107 +130,97 @@ class D3DRetracer(Retracer):
         # Catch when device is removed, and report the reason.
         if interface is not None:
             print(r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {')
-            getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
-            if getDeviceRemovedReasonMethod is not None:
-                print(r'            HRESULT _reason = _this->GetDeviceRemovedReason();')
-                print(r'            retrace::failed(call, _reason);')
-            getDeviceMethod = interface.getMethodByName("GetDevice")
-            if getDeviceMethod is not None and len(getDeviceMethod.args) == 1:
-                print(r'            com_ptr<%s> _pDevice;' % getDeviceMethod.args[0].type.type.type)
-                print(r'            _this->GetDevice(&_pDevice);')
-                print(r'            HRESULT _reason = _pDevice->GetDeviceRemovedReason();')
-                print(r'            retrace::failed(call, _reason);')
-            print(r'            exit(EXIT_FAILURE);')
+            print(r'            d3dretrace::deviceRemoved(call, _this);')
             print(r'        }')
 
         Retracer.handleFailure(self, interface, methodOrFunction)
 
-    def forceDriver(self, enum):
+    def forceDriver(self, driverType):
         # This can only work when pAdapter is NULL. For non-NULL pAdapter we
         # need to override inside the EnumAdapters call below
-        print(r'    if (pAdapter == NULL) {')
-        print(r'        switch (retrace::driver) {')
-        print(r'        case retrace::DRIVER_INTEGRATED:')
-        print(r'            retrace::warning(call) << "integrated gpu selection not yet implemented\n";')
-        print(r'        case retrace::DRIVER_DISCRETE:')
-        print(r'        case retrace::DRIVER_HARDWARE:')
-        print(r'            DriverType = %s_HARDWARE;' % enum)
-        print(r'            Software = NULL;')
-        print(r'            break;')
-        print(r'        case retrace::DRIVER_SOFTWARE:')
-        print(r'            DriverType = %s_WARP;' % enum)
-        print(r'            Software = NULL;')
-        print(r'            break;')
-        print(r'        case retrace::DRIVER_REFERENCE:')
-        print(r'            DriverType = %s_REFERENCE;' % enum)
-        print(r'            Software = NULL;')
-        print(r'            break;')
-        print(r'        case retrace::DRIVER_NULL:')
-        print(r'            DriverType = %s_NULL;' % enum)
-        print(r'            Software = NULL;')
-        print(r'            break;')
-        print(r'        case retrace::DRIVER_MODULE:')
-        print(r'            DriverType = %s_SOFTWARE;' % enum)
-        print(r'            Software = LoadLibraryA(retrace::driverModule);')
-        print(r'            if (!Software) {')
-        print(r'                retrace::warning(call) << "failed to load " << retrace::driverModule << "\n";')
-        print(r'            }')
-        print(r'            break;')
-        print(r'        default:')
-        print(r'            assert(0);')
-        print(r'            /* fall-through */')
-        print(r'        case retrace::DRIVER_DEFAULT:')
-        print(r'            if (DriverType == %s_SOFTWARE) {' % enum)
-        print(r'                Software = LoadLibraryA("d3d10warp");')
-        print(r'                if (!Software) {')
-        print(r'                    retrace::warning(call) << "failed to load d3d10warp.dll\n";')
-        print(r'                }')
-        print(r'            }')
-        print(r'            break;')
-        print(r'        }')
-        print(r'    } else {')
-        print(r'        Software = NULL;')
+        print(r'    ComPtr<IDXGIFactory1> _pFactory;')
+        print(r'    ComPtr<IDXGIAdapter> _pAdapter;')
+        print(r'    if (pAdapter == nullptr && retrace::driver != retrace::DRIVER_DEFAULT) {')
+        print(r'        _result = CreateDXGIFactory1(IID_IDXGIFactory1, &_pFactory);')
+        print(r'        assert(SUCCEEDED(_result));')
+        print(r'        _result = d3dretrace::createAdapter(_pFactory.Get(), IID_IDXGIAdapter1, &_pAdapter);')
+        print(r'        pAdapter = _pAdapter.Get();')
+        print(r'        DriverType = %s;' % driverType)
+        print(r'        Software = nullptr;')
+        print(r'    }')
+        print(r'    if (Software) {')
+        print(r'        Software = LoadLibraryA("d3d10warp.dll");')
+        print(r'        assert(Software != nullptr);')
         print(r'    }')
 
     def doInvokeInterfaceMethod(self, interface, method):
+        if interface.name.startswith('IDXGIAdapter') and method.name == 'EnumOutputs':
+            print(r'    if (Output != 0) {')
+            print(r'        retrace::warning(call) << "ignoring output " << Output << "\n";')
+            print(r'        Output = 0;')
+            print(r'    }')
+
+        # GPU counters are vendor specific and likely to fail, so use a
+        # timestamp query instead, which is guaranteed to succeed
+        if method.name == 'CreateCounter':
+            if interface.name.startswith('ID3D10'):
+                print(r'    D3D10_QUERY_DESC _queryDesc;')
+                print(r'    _queryDesc.Query = D3D10_QUERY_TIMESTAMP;')
+                print(r'    _queryDesc.MiscFlags = 0;')
+                print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D10Query **>(ppCounter));')
+                return
+            if interface.name.startswith('ID3D11'):
+                print(r'    D3D11_QUERY_DESC _queryDesc;')
+                print(r'    _queryDesc.Query = D3D11_QUERY_TIMESTAMP;')
+                print(r'    _queryDesc.MiscFlags = 0;')
+                print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D11Query **>(ppCounter));')
+                return
+
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
         # Force driver
         if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapters'):
-            print(r'    const char *szSoftware = NULL;')
-            print(r'    switch (retrace::driver) {')
-            print(r'    case retrace::DRIVER_REFERENCE:')
-            print(r'        szSoftware = "d3d11ref.dll";')
-            print(r'        break;')
-            print(r'    case retrace::DRIVER_SOFTWARE:')
-            print(r'        szSoftware = "d3d10warp.dll";')
-            print(r'        break;')
-            print(r'    case retrace::DRIVER_MODULE:')
-            print(r'        szSoftware = retrace::driverModule;')
-            print(r'        break;')
-            print(r'    default:')
-            print(r'        break;')
+            print(r'    if (Adapter != 0) {')
+            print(r'        retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";')
+            print(r'        Adapter = 0;')
             print(r'    }')
-            print(r'    HMODULE hSoftware = NULL;')
-            print(r'    if (szSoftware) {')
-            print(r'        hSoftware = LoadLibraryA(szSoftware);')
-            print(r'        if (!hSoftware) {')
-            print(r'            retrace::warning(call) << "failed to load " << szSoftware << "\n";')
-            print(r'        }')
-            print(r'    }')
-            print(r'    if (hSoftware) {')
-            print(r'        _result = _this->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppAdapter));')
+            print(r'    if (retrace::driver != retrace::DRIVER_DEFAULT) {')
+            print(r'        _result = d3dretrace::createAdapter(_this, IID_IDXGIAdapter1, (void **)ppAdapter);')
             print(r'    } else {')
-            print(r'        if (Adapter != 0) {')
-            print(r'            retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";')
-            print(r'            Adapter = 0;')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print(r'    }')
+            return
+
+        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapterByLuid'):
+            print(r'    retrace::warning(call) << "ignoring adapter LUID, returning adapter 0\n";')
+            print(r'    if (retrace::driver != retrace::DRIVER_DEFAULT) {')
+            print(r'        _result = d3dretrace::createAdapter(_this, riid, ppvAdapter);')
+            print(r'    } else {')
+            print(r'        if (ppvAdapter)')
+            print(r'            *ppvAdapter = nullptr;')
+            print(r'        IDXGIAdapter1 *_temp_adapter;')
+            print(r'        _result = _this->EnumAdapters1(0, &_temp_adapter);')
+            print(r'        if (SUCCEEDED(_result)) {')
+            print(r'            _result = _temp_adapter->QueryInterface(riid, ppvAdapter);')
+            print(r'            _temp_adapter->Release();')
             print(r'        }')
+            print(r'    }')
+            return
+
+        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapterByGpuPreference'):
+            print(r'    if (Adapter != 0) {')
+            print(r'        retrace::warning(call) << "ignoring non-default adapter " << Adapter << "\n";')
+            print(r'        Adapter = 0;')
+            print(r'    }')
+            print(r'    if (retrace::driver != retrace::DRIVER_DEFAULT) {')
+            print(r'        _result = d3dretrace::createAdapter(_this, riid, ppvAdapter);')
+            print(r'    } else {')
             Retracer.doInvokeInterfaceMethod(self, interface, method)
             print(r'    }')
             return
 
         if interface.name.startswith('IDXGIFactory') and method.name == 'CreateSoftwareAdapter':
-            print(r'    const char *szSoftware = NULL;')
+            print(r'    const char *szSoftware = nullptr;')
             print(r'    switch (retrace::driver) {')
             print(r'    case retrace::DRIVER_REFERENCE:')
             print(r'        szSoftware = "d3d11ref.dll";')
@@ -235,7 +233,7 @@ class D3DRetracer(Retracer):
             print(r'        szSoftware = "d3d10warp.dll";')
             print(r'        break;')
             print(r'    }')
-            print(r'    Module = LoadLibraryA("d3d10warp");')
+            print(r'    Module = LoadLibraryA(szSoftware);')
             print(r'    if (!Module) {')
             print(r'        retrace::warning(call) << "failed to load " << szSoftware << "\n";')
             print(r'    }')
@@ -286,6 +284,17 @@ class D3DRetracer(Retracer):
             print(r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);')
             self.checkResult(interface, method)
             return
+        if method.name == 'CreateSwapChainForCompositionSurfaceHandle':
+            print(r'    ComPtr<IDXGIFactory2> pFactory;')
+            print(r'    _result = _this->QueryInterface(IID_IDXGIFactory2, &pFactory);')
+            print(r'    assert(SUCCEEDED(_result));')
+            print(r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);')
+            print(r'    pDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;')
+            print(r'    _result = pFactory->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);')
+            self.checkResult(interface, method)
+            return
+        if method.name == 'ResizeBuffers':
+            print(r'    SwapChainFlags &= ~DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;')
         if method.name == 'CreateTargetForHwnd':
             print(r'    hwnd = d3dretrace::createWindow(1024, 768);')
 
@@ -301,16 +310,21 @@ class D3DRetracer(Retracer):
 
         # notify frame has been completed
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
+            # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
+            # way to cope with it (other than retry).
+            print(r'    Flags &= ~DXGI_PRESENT_DO_NOT_WAIT;')
             if interface.name.startswith('IDXGISwapChainDWM'):
-                print(r'    com_ptr<IDXGISwapChain> pSwapChain;')
-                print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, (void **) &pSwapChain))) {')
-                print(r'        dxgiDumper.bindDevice(pSwapChain);')
+                print(r'    ComPtr<IDXGISwapChain> pSwapChain;')
+                print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, &pSwapChain))) {')
+                print(r'        dxgiDumper.bindDevice(pSwapChain.Get());')
                 print(r'    } else {')
                 print(r'        assert(0);')
                 print(r'    }')
             else:
                 print(r'    dxgiDumper.bindDevice(_this);')
-            print(r'    retrace::frameComplete(call);')
+            print(r'    if ((Flags & DXGI_PRESENT_TEST) == 0) {')
+            print(r'        retrace::frameComplete(call);')
+            print(r'    }')
 
         if 'pSharedResource' in method.argNames():
             print(r'    if (pSharedResource) {')
@@ -373,7 +387,7 @@ class D3DRetracer(Retracer):
             print(r'    }')
 
         if method.name == 'GetData':
-            print(r'    pData = _allocator.alloc(DataSize);')
+            print(r'    pData = DataSize ? _allocator.alloc(DataSize) : nullptr;')
             print(r'    do {')
             self.doInvokeInterfaceMethod(interface, method)
             print(r'        GetDataFlags = 0; // Prevent infinite loop')
@@ -381,12 +395,14 @@ class D3DRetracer(Retracer):
             self.checkResult(interface, method)
             print(r'    return;')
 
-        Retracer.invokeInterfaceMethod(self, interface, method)
+        # We don't capture multiple processes, so don't wait keyed mutexes to
+        # avoid deadlocks.  However it's important to try honouring the
+        # IDXGIKeyedMutex interfaces so that single processes using multiple
+        # contexts work reliably, by ensuring pending commands get flushed.
+        if method.name == 'AcquireSync':
+            print(r'    dwMilliseconds = 0;')
 
-        if method.name in ('AcquireSync', 'ReleaseSync'):
-            print(r'    if (SUCCEEDED(_result) && _result != S_OK) {')
-            print(r'        retrace::warning(call) << " returned " << _result << "\n";')
-            print(r'    }')
+        Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
         if interface.name.startswith('IDXGISwapChain') and method.name.startswith('Present'):
@@ -448,7 +464,7 @@ class D3DRetracer(Retracer):
             ppBuffer = method.args[-1]
             print(r'    if (retrace::dumpingState && SUCCEEDED(_result)) {')
             print(r'       char label[32];')
-            print(r'       _snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
+            print(r'       snprintf(label, sizeof label, "0x%%llx", call.arg(%u).toArray()->values[0]->toUIntPtr());' % ppBuffer.index)
             print(r'        (*%s)->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(label)+1, label);' % ppBuffer.name)
             print(r'    }')
 
@@ -497,6 +513,15 @@ class D3DRetracer(Retracer):
             print(r'        }')
             print(r'    }')
 
+    def checkResult(self, interface, methodOrFunction):
+        if interface is not None and interface.name == 'IDXGIKeyedMutex' and methodOrFunction.name == 'AcquireSync':
+            print(r'    if (_result != S_OK) {')
+            print(r'        retrace::failed(call, _result);')
+            self.handleFailure(interface, methodOrFunction)
+            print(r'    }')
+            return
+
+        return Retracer.checkResult(self, interface, methodOrFunction)
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         # Set object names

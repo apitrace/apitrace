@@ -36,10 +36,12 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
+typedef std::map<unsigned long long, int> FBConfigMap;
+
 static DrawableMap drawable_map;
 static DrawableMap pbuffer_map;
 static ContextMap context_map;
-
+static FBConfigMap fbconfig_map;
 
 static glws::Drawable *
 getDrawable(unsigned long long hdc) {
@@ -155,6 +157,12 @@ static void retrace_wglSwapBuffers(trace::Call &call) {
     } else {
         glFlush();
     }
+
+    if (retrace::profilingFrameTimes) {
+        // Wait for presentation to finish
+        glFinish();
+        std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
 }
 
 static void retrace_wglShareLists(trace::Call &call) {
@@ -220,6 +228,8 @@ static void retrace_wglSwapLayerBuffers(trace::Call &call) {
 #define WGL_AUX7_ARB                        0x208E
 #define WGL_AUX8_ARB                        0x208F
 #define WGL_AUX9_ARB                        0x2090
+#define WGL_SAMPLE_BUFFERS_ARB              0x2041
+#define WGL_SAMPLES_ARB                     0x2042
 
 static void retrace_wglCreatePbufferARB(trace::Call &call) {
     unsigned long long orig_pbuffer = call.ret->toUIntPtr();
@@ -302,6 +312,10 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
 
     const trace::Value * attribList = &call.arg(2);
     glfeatures::Profile profile = parseContextAttribList(attribList);
+
+    auto it = fbconfig_map.find(call.arg(0).toUInt());
+    if (it != fbconfig_map.end())
+        profile.samples = it->second;
 
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
@@ -446,14 +460,23 @@ static void retrace_wglUseFontOutlinesAW(trace::Call &call)
     }
 }
 
+static void retrace_wglChoosePixelFormat(trace::Call &call) {
+    auto attrib_list = call.arg(1).toArray();
+    if (!parseAttrib(attrib_list, WGL_SAMPLE_BUFFERS_ARB))
+        return;
 
+    int samples = parseAttrib(attrib_list, WGL_SAMPLES_ARB);
+
+    if (samples > 0)
+        fbconfig_map[call.arg(0).toUInt()] = samples;
+}
 
 const retrace::Entry glretrace::wgl_callbacks[] = {
     {"glAddSwapHintRectWIN", &retrace::ignore},
     {"wglBindTexImageARB", &retrace_wglBindTexImageARB},
-    {"wglChoosePixelFormat", &retrace::ignore},
-    {"wglChoosePixelFormatARB", &retrace::ignore},
-    {"wglChoosePixelFormatEXT", &retrace::ignore},
+    {"wglChoosePixelFormat", &retrace_wglChoosePixelFormat},
+    {"wglChoosePixelFormatARB", &retrace_wglChoosePixelFormat},
+    {"wglChoosePixelFormatEXT", &retrace_wglChoosePixelFormat},
     {"wglCreateContext", &retrace_wglCreateContext},
     {"wglCreateContextAttribsARB", &retrace_wglCreateContextAttribsARB},
     {"wglCreateLayerContext", &retrace_wglCreateLayerContext},

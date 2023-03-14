@@ -274,6 +274,15 @@ parse_file(FILE *f, configuration *conf)
         else if (matchKeyword(b, "GL_MINOR_VERSION")) {
             conf->versionMinor = intValue(f, b + 17);
         }
+        else if (matchKeyword(b, "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT")) {
+            conf->ubo_offset_alignment = intValue(f, b + 35);
+        }
+        else if (matchKeyword(b, "GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT")) {
+            conf->tbo_offset_alignment = intValue(f, b + 35);
+        }
+        else if (matchKeyword(b, "GL_STORAGE_BUFFER_OFFSET_ALIGNMENT")) {
+            conf->ssbo_offset_alignment = intValue(f, b + 35);
+        }
         else if (matchKeyword(b, "GL_CONTEXT_PROFILE_MASK")) {
             std::string maskStr = stringValue(f, b + 24);
             conf->profileMask = 0x0;
@@ -350,6 +359,10 @@ readConfigFile(const char *filename)
         os::log("apitrace: config GL_MAJOR_VERSION = %d\n", conf->versionMajor);
         os::log("apitrace: config GL_MINOR_VERSION = %d\n", conf->versionMinor);
         os::log("apitrace: config GL_CONTEXT_PROFILE_MASK = 0x%x\n", conf->profileMask);
+        os::log("apitrace: config GL_CONTEXT_PROFILE_MASK = 0x%x\n", conf->profileMask);
+        os::log("apitrace: config GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT = %d\n", conf->ubo_offset_alignment);
+        os::log("apitrace: config GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT = %d\n", conf->tbo_offset_alignment);
+        os::log("apitrace: config GL_STORAGE_BUFFER_OFFSET_ALIGNMENT = %d\n", conf->ssbo_offset_alignment);
     }
 
     return conf;
@@ -390,15 +403,15 @@ getConfigString(const configuration *config, GLenum pname)
 
     switch (pname) {
     case GL_VERSION:
-        return (const GLubyte *) config->version.c_str();
+        return !config->version.empty() ? (const GLubyte *) config->version.c_str() : NULL;
     case GL_VENDOR:
-        return (const GLubyte *) config->vendor.c_str();
+        return !config->vendor.empty() ? (const GLubyte *) config->vendor.c_str() : NULL;
     case GL_EXTENSIONS:
-        return (const GLubyte *) config->extensions.c_str();
+        return !config->extensions.empty() ? (const GLubyte *) config->extensions.c_str() : NULL;
     case GL_RENDERER:
-        return (const GLubyte *) config->renderer.c_str();
+        return !config->renderer.empty() ? (const GLubyte *) config->renderer.c_str() : NULL;
     case GL_SHADING_LANGUAGE_VERSION:
-        return (const GLubyte *) config->glslVersion.c_str();
+        return !config->glslVersion.empty() ? (const GLubyte *) config->glslVersion.c_str() : NULL;
     default:
         return NULL;
     }

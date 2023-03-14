@@ -14,7 +14,7 @@ For OpenGL the typical procedure is to run
     make -B
 
 which will generate several python scripts with prototypes and defines from the
-Khronos `.spec` files:
+Khronos `.xml` files:
     
 * glapi.py
 

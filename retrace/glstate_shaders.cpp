@@ -40,7 +40,7 @@
 #include "glstate.hpp"
 #include "glstate_internal.hpp"
 #include "halffloat.hpp"
-
+#include "floating_point_conversion.hpp"
 
 namespace glstate {
 
@@ -74,7 +74,16 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
     source[0] = 0;
     glGetShaderSource(shader, source_length, &length, source);
 
-    shaderMap[enumToString(shader_type)] += source;
+    // https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#_magic_number
+    // 0x07230203
+    if (length >= 4 &&
+        ((source[0] == 0x03 && source[1] == 0x02 && source[2] == 0x23 && source[3] == 0x07) ||
+         (source[0] == 0x07 && source[1] == 0x23 && source[2] == 0x02 && source[3] == 0x03))) {
+        // TODO: Disassemble with SPIRV-Tools' spvBinaryToText()
+        std::cerr << "warning: dumping of SPIR-V shader binaries not yet supported\n";
+    } else {
+        shaderMap[enumToString(shader_type)] += source;
+    }
 
     delete [] source;
 }
@@ -283,6 +292,26 @@ struct AttribDesc
     }
 };
 
+struct VertexAttribDesc : AttribDesc
+{
+    VertexAttribDesc()
+    {}
+
+    VertexAttribDesc(GLenum _type,
+                     GLint _size,
+                     GLint _stride)
+    {
+        type = _type;
+        size = 1;
+        elemType = _type;
+        elemStride = _gl_type_size(elemType);
+        numCols = _size;
+        numRows = 1;
+        rowStride = _stride ? _stride : numCols * elemStride;
+        colStride = elemStride;
+        arrayStride = rowStride;
+    }
+};
 
 static void
 dumpAttrib(StateWriter &writer,
@@ -302,9 +331,12 @@ dumpAttrib(StateWriter &writer,
 
         for (GLint col = 0; col < desc.numCols; ++col) {
             union {
-                const GLbyte *rawvalue;
-                const GLfloat *fvalue;
+                const GLbyte *bvalue;
+                const GLubyte *ubvalue;
+                const GLshort *svalue;
+                const GLushort *usvalue;
                 const GLhalf *hvalue;
+                const GLfloat *fvalue;
                 const GLdouble *dvalue;
                 const GLint *ivalue;
                 const GLuint *uivalue;
@@ -312,9 +344,21 @@ dumpAttrib(StateWriter &writer,
                 const GLuint64 *ui64value;
             } u;
 
-            u.rawvalue = data + row*desc.rowStride + col*desc.colStride;
+            u.bvalue = data + row*desc.rowStride + col*desc.colStride;
 
             switch (desc.elemType) {
+            case GL_BYTE:
+                writer.writeInt(*u.bvalue);
+                break;
+            case GL_UNSIGNED_BYTE:
+                writer.writeInt(*u.ubvalue);
+                break;
+            case GL_SHORT:
+                writer.writeInt(*u.svalue);
+                break;
+            case GL_UNSIGNED_SHORT:
+                writer.writeInt(*u.usvalue);
+                break;
             case GL_HALF_FLOAT:
                 writer.writeFloat(util_half_to_float(*u.hvalue));
                 break;
@@ -338,6 +382,18 @@ dumpAttrib(StateWriter &writer,
                 break;
             case GL_BOOL:
                 writer.writeBool(*u.uivalue);
+                break;
+            case GL_INT_2_10_10_10_REV:
+            case GL_UNSIGNED_INT_2_10_10_10_REV:
+                writer.writeInt(*u.ivalue & 0x3ff);
+                writer.writeInt((*u.ivalue >> 10) & 0x3ff);
+                writer.writeInt((*u.ivalue >> 20) & 0x3ff);
+                writer.writeInt((*u.ivalue >> 30) & 0x3);
+                break;
+            case GL_UNSIGNED_INT_10F_11F_11F_REV:
+                writer.writeFloat(uint11ToFLoat(*u.ivalue & 0x7ff));
+                writer.writeFloat(uint11ToFLoat((*u.ivalue >> 11) & 0x7ff));
+                writer.writeFloat(uint10ToFLoat((*u.ivalue >> 21) & 0x3ff));
                 break;
             default:
                 assert(0);
@@ -859,7 +915,7 @@ dumpProgramUniformsStage(StateWriter &writer, GLint program, const char *stage)
 
 struct VertexAttrib {
     std::string name;
-    AttribDesc desc;
+    VertexAttribDesc desc;
     GLsizei offset = 0;
     GLsizei stride = 0;
     GLsizei size = 0;
@@ -909,8 +965,6 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
             continue;
         }
 
-
-
         GLint size = 0;
         glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_SIZE, &size);
         GLint type = 0;
@@ -938,7 +992,7 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
             size = 4;
         }
 
-        AttribDesc desc(type, size);
+        VertexAttribDesc desc(type, size, stride);
         if (!desc) {
             std::cerr << "warning: dumping of packed attribute (" << &name[0] << ") not yet supported\n";
             // TODO: handle
@@ -955,11 +1009,11 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
         }
 
         attrib.desc = desc;
-        GLsizei attribSize = attrib.desc.arrayStride;
+        GLsizei attribSize = attrib.desc.numCols * attrib.desc.colStride;
 
         if (stride == 0) {
             // tightly packed
-            stride = attribSize;
+            stride = attrib.desc.arrayStride;
         }
 
         attrib.offset = offset;
@@ -989,12 +1043,15 @@ dumpVertexAttributes(StateWriter &writer, Context &context, GLint program)
         return;
     }
 
+    // limit vertex count
+    count = std::min(count, 4096U);
+
     writer.beginMember("vertices");
     writer.beginArray();
     for (unsigned vertex = 0; vertex < count; ++vertex) {
         writer.beginObject();
         for (auto attrib : attribs) {
-            const AttribDesc & desc = attrib.desc;
+            const VertexAttribDesc & desc = attrib.desc;
             assert(desc);
 
             const GLbyte *vertex_data = attrib.map + attrib.stride*vertex + attrib.offset;

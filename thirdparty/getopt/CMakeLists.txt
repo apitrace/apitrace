@@ -1,7 +1,9 @@
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
-
-add_library (getopt_bundled STATIC EXCLUDE_FROM_ALL
+add_library (getopt STATIC EXCLUDE_FROM_ALL
     getopt_long.c
+)
+
+target_include_directories (getopt
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 install (

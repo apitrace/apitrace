@@ -11,6 +11,12 @@ class ApiTraceState;
 
 namespace trace { struct Profile; }
 
+struct RetracerCallRange
+{
+    qlonglong m_callStartNo{0};
+    qlonglong m_callEndNo{0};
+};
+
 class Retracer : public QThread
 {
     Q_OBJECT
@@ -46,8 +52,12 @@ public:
     bool isMsaaResolve() const;
     void setMsaaResolve(bool resolve);
 
+
+
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
+
+    void setCallsToIgnore(const QList<RetracerCallRange>& callsToIgnore);
 
     bool captureState() const;
     void setCaptureState(bool enable);
@@ -59,6 +69,12 @@ public:
     void resetThumbnailsToCapture();
 
     QString thumbnailCallSet();
+
+    int queryHandling();
+    void setQueryHandling(int handling);
+
+    int queryCheckReportThreshold();
+    void setQueryCheckReportThreshold(int value);
 
 signals:
     void finished(const QString &output);
@@ -87,8 +103,12 @@ private:
     bool m_profileGpu;
     bool m_profileCpu;
     bool m_profilePixels;
+    int m_queryHandling;
+    int m_queryCheckThreshold;
 
     QProcessEnvironment m_processEnvironment;
 
     QList<qlonglong> m_thumbnailsToCapture;
+
+    QList<RetracerCallRange> m_callsToIgnore;
 };

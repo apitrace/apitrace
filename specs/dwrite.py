@@ -1234,7 +1234,7 @@ IDWriteTextLayout1 = Interface("IDWriteTextLayout1", IDWriteTextLayout)
 IDWriteBitmapRenderTarget1 = Interface("IDWriteBitmapRenderTarget1", IDWriteBitmapRenderTarget)
 
 IDWriteFactory1.methods += [
-    StdMethod(HRESULT, "GetEudcFontCollection", [(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), (BOOL, "checkForUpdates")]),
+    StdMethod(HRESULT, "GetEudcFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), (BOOL, "checkForUpdates")]),
     StdMethod(HRESULT, "CreateCustomRenderingParams", [(FLOAT, "gamma"), (FLOAT, "enhancedContrast"), (FLOAT, "enhancedContrastGrayscale"), (FLOAT, "clearTypeLevel"), (DWRITE_PIXEL_GEOMETRY, "pixelGeometry"), (DWRITE_RENDERING_MODE, "renderingMode"), Out(Pointer(ObjPointer(IDWriteRenderingParams1)), "renderingParams")]),
 ]
 

@@ -40,8 +40,12 @@
 
 #include <algorithm>
 
+#include <wrl/client.h>
+
 #include "dxgisize.hpp"
-#include "com_ptr.hpp"
+
+
+using Microsoft::WRL::ComPtr;
 
 
 inline UINT
@@ -269,13 +273,13 @@ _getQueryType(ID3D10Query *pQuery)
 static inline D3D10_QUERY
 _getQueryType(ID3D10Asynchronous *pAsync)
 {
-    com_ptr<ID3D10Query> pQuery;
+    ComPtr<ID3D10Query> pQuery;
     HRESULT hr;
-    hr = pAsync->QueryInterface(IID_ID3D10Query, (void **)&pQuery);
+    hr = pAsync->QueryInterface(IID_ID3D10Query, &pQuery);
     if (FAILED(hr)) {
         return (D3D10_QUERY)-1;
     }
-    return _getQueryType(pQuery);
+    return _getQueryType(pQuery.Get());
 }
 
 

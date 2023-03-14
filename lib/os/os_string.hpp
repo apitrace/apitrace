@@ -228,7 +228,7 @@ public:
         va_end(args_copy);
 
         assert(length >= 0);
-        size_t size = length + 1;
+        size_t size = size_t(length) + 1;
 
         String path(size);
 

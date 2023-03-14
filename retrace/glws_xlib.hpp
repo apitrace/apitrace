@@ -63,6 +63,8 @@ resizeWindow(Window, int width, int height);
 void
 showWindow(Window window);
 
+void
+setWindowName(Window window, const char *name);
 
 } /* namespace glws */
 

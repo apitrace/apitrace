@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ##########################################################################
 #
-# Copyright 2012 Jose Fonseca
+# Copyright 2012-2022 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,20 +26,18 @@
 
 '''Sample program for apitrace pickle command.
 
-Run as:
-
-   apitrace pickle foo.trace | python unpickle.py
-
 '''
 
 
 import itertools
+import pickle
 import operator
 import optparse
+import os.path
+import re
+import subprocess
 import sys
 import time
-import re
-import pickle as pickle
 
 
 # Same as trace_model.hpp's call flags
@@ -201,11 +199,13 @@ class Rebuilder(Visitor):
 class Call:
 
     def __init__(self, callTuple):
-        self.no, self.functionName, self.args, self.ret, self.flags = callTuple
+        self.no, self.threadId, self.functionName, self.args, self.ret, self.flags = callTuple
         self._hash = None
 
     def __str__(self):
         s = self.functionName
+        if self.threadId is not None:
+            s = '@' + str(self.threadId) + ' ' + s
         if self.no is not None:
             s = str(self.no) + ' ' + s
         dumper = Dumper()
@@ -238,6 +238,19 @@ class Call:
     def argValues(self):
         '''Return the arg values'''
         return [value for name, value in self.args]
+
+
+def pickleTrace(trace, apitrace='apitrace', symbolic=True, calls=None):
+    cmd = [apitrace, 'pickle']
+    if symbolic:
+        cmd.append('--symbolic')
+    if calls:
+        cmd.append('--calls=' + calls)
+
+    assert os.path.isfile(trace)
+    cmd.append(trace)
+    p = subprocess.Popen(args = cmd, stdout=subprocess.PIPE)
+    return p.stdout
 
 
 class Unpickler:
@@ -296,9 +309,25 @@ class Counter(Unpickler):
             self.functionFrequencies[call.functionName] = 1
 
 
+def count(stream, options):
+    startTime = time.time()
+    parser = Counter(stream, options.verbose)
+    parser.parse()
+    stopTime = time.time()
+    duration = stopTime - startTime
+
+    if options.profile:
+        sys.stderr.write('Processed %u calls in %.03f secs, at %u calls/sec\n' % (parser.numCalls, duration, parser.numCalls/duration))
+
+
 def main():
     optparser = optparse.OptionParser(
-        usage="\n\tapitrace pickle <trace> | %prog [options]")
+        usage="\n\t%prog [options] TRACE ..." +
+              "\n\tapitrace pickle TRACE | %prog [options]")
+    optparser.add_option(
+        '-a', '--apitrace', metavar='PROGRAM',
+        type='string', dest='apitrace', default='apitrace',
+        help='apitrace command [default: %default]')
     optparser.add_option(
         '-p', '--profile',
         action="store_true", dest="profile", default=False,
@@ -311,25 +340,22 @@ def main():
     (options, args) = optparser.parse_args(sys.argv[1:])
 
     if args:
-        optparser.error('unexpected arguments')
-
-    # Change stdin to binary mode
-    try:
-        import msvcrt
-    except ImportError:
-        pass
+        for arg in args:
+            count(pickleTrace(arg, apitrace=options.apitrace), options)
     else:
-        import os
-        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+        if sys.stdin.isatty:
+            optparser.error('no trace given')
 
-    startTime = time.time()
-    parser = Counter(sys.stdin.buffer, options.verbose)
-    parser.parse()
-    stopTime = time.time()
-    duration = stopTime - startTime
+        # Change stdin to binary mode
+        try:
+            import msvcrt
+        except ImportError:
+            pass
+        else:
+            import os
+            msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
 
-    if options.profile:
-        sys.stderr.write('Processed %u calls in %.03f secs, at %u calls/sec\n' % (parser.numCalls, duration, parser.numCalls/duration))
+        count(sys.stdin.buffer, options)
 
 
 if __name__ == '__main__':

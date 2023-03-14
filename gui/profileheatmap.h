@@ -3,6 +3,8 @@
 #include "graphing/heatmapview.h"
 #include "profiling.h"
 
+#include <algorithm>
+
 /**
  * Data providers for a heatmap based off the trace::Profile call data
  */
@@ -450,7 +452,7 @@ private:
         }
 
         /* Sort the shaders by most used gpu */
-        qSort(gpu);
+        std::sort(gpu.begin(), gpu.end());
 
         /* Create row order */
         m_rowPrograms.clear();

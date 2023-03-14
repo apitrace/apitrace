@@ -506,5 +506,3 @@ TraceLoader::FrameContents::load(TraceLoader   *loader,
 
     return bEndFrameReached;
 }
-
-#include "traceloader.moc"

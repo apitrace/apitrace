@@ -182,7 +182,7 @@ insertCallMarker(trace::Call &call, Context *currentContext)
 }
 
 
-static inline int64_t
+int64_t
 getCurrentTime(void) {
     if (retrace::profilingGpuTimes && supportsTimestamp) {
         /* Get the current GL time without stalling */
@@ -571,6 +571,14 @@ frame_complete(trace::Call &call) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 
+    /* Display the frame number in the window title, except in benchmark mode
+     * as compositor/window manager activity may affect the profile. */
+    if (retrace::debug > 0 && !retrace::profiling) {
+        std::ostringstream str;
+        str << "glretrace [frame: " << retrace::frameNo << "]";
+        currentDrawable->setName(str.str().c_str());
+    }
+
     if (curMetricBackend) {
         curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
     }
@@ -807,11 +815,11 @@ public:
     }
 
     image::Image *
-    getSnapshot(int n) override {
+    getSnapshot(int n, bool backBuffer) override {
         if (!glretrace::getCurrentContext()) {
             return NULL;
         }
-        return glstate::getDrawBufferImage(n);
+        return glstate::getDrawBufferImage(n, backBuffer);
     }
 
     bool
@@ -919,4 +927,101 @@ retrace::waitForInput(void) {
 void
 retrace::cleanUp(void) {
     glws::cleanup();
+}
+
+static GLint
+getLocationForUniform(GLuint program, const std::string &name) {
+    // iterate the program resources to find the desired name
+    GLint active_resources;
+    glGetProgramInterfaceiv(program,
+                            GL_UNIFORM,
+                            GL_ACTIVE_RESOURCES,
+                            &active_resources);
+    for (int i = 0; i < active_resources; ++i) {
+        static const int kNameBufSize = 512;
+        GLchar retraced_name[kNameBufSize] = "";
+        GLint retraced_name_len;
+        glGetProgramResourceName(program, GL_UNIFORM, i, kNameBufSize,
+                                 &retraced_name_len, retraced_name);
+        retraced_name[retraced_name_len] = '\0';
+        if (name != retraced_name)
+          continue;
+
+        // found the resource for the desired name
+        const GLenum prop = GL_LOCATION;
+        GLsizei prop_len;
+        GLint location;
+        glGetProgramResourceiv(program,
+                               GL_UNIFORM,
+                               i,  // resource index
+                               1,  // propCount
+                               &prop,
+                               1, // bufSize,
+                               &prop_len,
+                               &location); // params
+        assert(prop_len == 1);
+        return location;
+    }
+    assert(false);
+    return -1;
+}
+
+static std::map<GLhandleARB, std::vector<std::string>> _traced_resource_names;
+
+void
+glretrace::mapResourceLocation(GLuint program,
+                               GLenum programInterface,
+                               GLint index,
+                               const trace::Array *props,
+                               const trace::Array *params,
+                               std::map<GLhandleARB, retrace::map<GLint>> &location_map) {
+    if (programInterface != GL_UNIFORM)
+        return;
+    for (int i = 0; i < props->size(); ++i) {
+        auto prop = props->values[i];
+        if (prop->toSInt() != GL_LOCATION)
+            continue;
+        const auto location = params->values[i]->toSInt();
+        // we can associated the retraced location with the actual location.
+        assert(_traced_resource_names[program].size() > index);
+        const auto &name = _traced_resource_names[program][index];
+        GLint retraced_location = getLocationForUniform(program, name);
+        if (retraced_location < 0)
+            // location not found. use the traced location
+            retraced_location = location;
+        location_map[program][location] = retraced_location;
+        break;
+    }
+}
+
+void
+glretrace::trackResourceName(GLuint program, GLenum programInterface,
+                             GLint index, const std::string &traced_name) {
+    if (programInterface != GL_UNIFORM)
+        return;
+    auto &uniform_vec = _traced_resource_names[program];
+    if (index >= uniform_vec.size())
+        uniform_vec.resize(index + 1);
+    uniform_vec[index] = traced_name;
+}
+
+void
+glretrace::mapUniformBlockName(GLuint program,
+                               GLint index,
+                               const std::string &traced_name,
+                               std::map<GLuint, retrace::map<GLuint>> &uniformBlock_map) {
+    GLint num_blocks=0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &num_blocks);
+    for (int i = 0; i < num_blocks; ++i) {
+        GLint buf_len;
+        glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_NAME_LENGTH, &buf_len);
+        std::vector<char> name_buf(buf_len+1);
+        GLint length;
+        glGetActiveUniformBlockName(program, i, name_buf.size(), &length, name_buf.data());
+        name_buf[length] = '\0';
+        if (traced_name == name_buf.data()) {
+            uniformBlock_map[program][index] = i;
+            return;
+        }
+    }
 }

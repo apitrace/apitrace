@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2016 VMware, Inc.
+ * Copyright 2016-2022 VMware, Inc.
  * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
@@ -123,6 +123,11 @@ static PFNCREATEPROCESSASUSERW RealCreateProcessAsUserW = CreateProcessAsUserW;
 
 
 static void
+#if defined(__MINGW32__)
+    __attribute__ ((format (__MINGW_PRINTF_FORMAT, 1, 2)))
+#elif  defined(__GNUC__)
+    __attribute__ ((format (printf, 1, 2)))
+#endif
 debugPrintf(const char *format, ...)
 {
     char buf[512];
@@ -133,22 +138,6 @@ debugPrintf(const char *format, ...)
     va_end(ap);
 
     OutputDebugStringA(buf);
-}
-
-
-EXTERN_C void
-_assert(const char *_Message, const char *_File, unsigned _Line)
-{
-    debugPrintf("Assertion failed: %s, file %s, line %u\n", _Message, _File, _Line);
-    TerminateProcess(GetCurrentProcess(), 1);
-}
-
-
-EXTERN_C void
-_wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
-{
-    debugPrintf("Assertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
-    TerminateProcess(GetCurrentProcess(), 1);
 }
 
 
@@ -283,7 +272,7 @@ MyCreateProcessAsUserW(HANDLE hToken,
                                     lpProcessAttributes,
                                     lpThreadAttributes,
                                     bInheritHandles,
-                                    dwCreationFlags,
+                                    dwCreationFlags | CREATE_SUSPENDED,
                                     lpEnvironment,
                                     lpCurrentDirectory,
                                     lpStartupInfo,

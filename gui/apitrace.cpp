@@ -570,5 +570,3 @@ void ApiTrace::iterateMissingThumbnails(void *object, ThumbnailCallback cb)
         (*cb)(object, thumbnailIndex);
     }
 }
-
-#include "apitrace.moc"

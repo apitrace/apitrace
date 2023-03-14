@@ -28,7 +28,6 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDir>
 #include <QFileDialog>
 #include <QLineEdit>
@@ -50,6 +49,7 @@ MainWindow::MainWindow()
       m_nonDefaultsLookupEvent(0)
 {
     m_ui.setupUi(this);
+    initWindowState();
     updateActionsState(false);
     initObjects();
     initConnections();
@@ -249,6 +249,16 @@ void MainWindow::replayStart()
     dlgUi.coreProfileCB->setChecked(
         m_retracer->isCoreProfile());
 
+    dlgUi.queryHandlingSelector->addItem("Skip");
+    dlgUi.queryHandlingSelector->addItem("Run");
+    dlgUi.queryHandlingSelector->addItem("Run & Check");
+    dlgUi.queryHandlingSelector->setCurrentIndex(
+                m_retracer->queryHandling());
+
+    dlgUi.queryCheckReportThreshold->setValue(
+                m_retracer->queryCheckReportThreshold());
+
+
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
@@ -263,6 +273,11 @@ void MainWindow::replayStart()
             dlgUi.coreProfileCB->isChecked());
 
         m_retracer->setProfiling(false, false, false);
+
+        m_retracer->setQueryHandling(
+                    dlgUi.queryHandlingSelector->currentIndex());
+        m_retracer->setQueryCheckReportThreshold(
+                    dlgUi.queryCheckReportThreshold->value());
 
         replayTrace(false, false);
     }
@@ -497,6 +512,73 @@ void MainWindow::trim()
     trimEvent();
 }
 
+void MainWindow::toggleCalls() {
+    QItemSelection selection = m_ui.callView->selectionModel()->selection();
+    if (selection.empty()) {
+        QMessageBox::warning(
+            this, tr("Unknown Event"),
+            tr("To toggle calls select events in the event list."));
+        return;
+    }
+
+    QModelIndexList selectedIndexes = selection.indexes();
+
+    for (const QModelIndex& index : selectedIndexes) {
+        ApiTraceEvent *event =
+            index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+        if (event->type() == ApiTraceEvent::Call) {
+            event->setIgnored(false);
+        }
+    }
+
+    m_ignoredCalls.merge(selection, QItemSelectionModel::Toggle);
+
+    selectedIndexes = m_ignoredCalls.indexes();
+    for (const QModelIndex& index : selectedIndexes) {
+        ApiTraceEvent *event =
+            index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+        if (event->type() == ApiTraceEvent::Call){
+            event->setIgnored(true);
+        }
+    }
+
+    QList<RetracerCallRange> callRanges;
+    for (const QItemSelectionRange& range : m_ignoredCalls) {
+        ApiTraceEvent *eventTop =
+            range.topLeft().data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+
+        ApiTraceEvent *eventBottom =
+            range.bottomRight().data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+
+        if (eventTop->type() == ApiTraceEvent::Call && eventBottom->type() == ApiTraceEvent::Call) {
+            RetracerCallRange callRange;
+            callRange.m_callStartNo = static_cast<ApiTraceCall*>(eventTop)->index();
+            callRange.m_callEndNo = static_cast<ApiTraceCall*>(eventBottom)->index();
+
+            callRanges.push_back(callRange);
+        }
+    }
+
+    m_retracer->setCallsToIgnore(callRanges);
+
+    m_ui.callView->model()->dataChanged(QModelIndex(), QModelIndex());
+}
+
+void MainWindow::enableAllCalls() {
+    const QModelIndexList ignoredCallIndexes = m_ignoredCalls.indexes();
+    for (const QModelIndex& index : ignoredCallIndexes) {
+        ApiTraceEvent *event =
+            index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+        if (event->type() == ApiTraceEvent::Call){
+            event->setIgnored(false);
+        }
+    }
+
+    m_ignoredCalls.clear();
+    m_retracer->setCallsToIgnore(QList<RetracerCallRange>());
+    m_ui.callView->model()->dataChanged(QModelIndex(), QModelIndex());
+}
+
 static void
 variantToString(const QVariant &var, QString &str)
 {
@@ -654,18 +736,23 @@ static void addSurfaceItem(const ApiSurface &surface,
 
     int width = surface.size().width();
     int height = surface.size().height();
+    int depth = surface.depth();
     QString descr =
-        QString::fromLatin1("%1, %2, %3 x %4")
+        QString::fromUtf8(u8"%1, %2, %3 \u00d7 %4")
         .arg(label)
         .arg(surface.formatName())
         .arg(width)
         .arg(height);
+    if (depth > 1) {
+        descr += QString::fromUtf8(u8" \u00d7 %1").arg(depth);
+    }
 
     QString toolTip;
     toolTip += QString::fromLatin1("label = %1\n").arg(label);
     toolTip += QString::fromLatin1("format = %1\n").arg(surface.formatName());
     toolTip += QString::fromLatin1("width = %1\n").arg(width);
     toolTip += QString::fromLatin1("height = %1\n").arg(height);
+    toolTip += QString::fromLatin1("depth = %1\n").arg(depth);
     item->setToolTip(0, toolTip);
     item->setToolTip(1, toolTip);
 
@@ -845,11 +932,7 @@ void MainWindow::fillStateForFrame()
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
     QMap<QString, QString> shaderSources = state.shaderSources();
-    if (shaderSources.isEmpty()) {
-        m_sourcesWidget->setShaders(shaderSources);
-    } else {
-        m_sourcesWidget->setShaders(shaderSources);
-    }
+    m_sourcesWidget->setShaders(shaderSources);
 
     m_ui.uniformsTreeWidget->clear();
     QList<QTreeWidgetItem *> uniformsItems;
@@ -967,6 +1050,20 @@ void MainWindow::showSelectedSurface()
     viewer->activateWindow();
 }
 
+void MainWindow::initWindowState()
+{
+    QSettings settings;
+    restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
+    restoreState(settings.value("mainWindowState").toByteArray());
+}
+
+void MainWindow::saveWindowState()
+{
+    QSettings settings;
+    settings.setValue("mainWindowGeometry", saveGeometry());
+    settings.setValue("mainWindowState", saveState());
+}
+
 void MainWindow::initObjects()
 {
     m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
@@ -1002,6 +1099,8 @@ void MainWindow::initObjects()
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
     m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_ui.callView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectItems);
+    m_ui.callView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 100);
@@ -1117,6 +1216,10 @@ void MainWindow::initConnections()
             this, SLOT(lookupState()));
     connect(m_ui.actionTrim, SIGNAL(triggered()),
             this, SLOT(trim()));
+    connect(m_ui.actionToggleCalls, SIGNAL(triggered()),
+            this, SLOT(toggleCalls()));
+    connect(m_ui.actionEnableAllCalls, SIGNAL(triggered()),
+            this, SLOT(enableAllCalls()));
     connect(m_ui.actionShowThumbnails, SIGNAL(triggered()),
             this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
@@ -1208,6 +1311,8 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
         m_ui.actionLookupState   ->setEnabled(true);
         m_ui.actionShowThumbnails->setEnabled(true);
         m_ui.actionTrim          ->setEnabled(true);
+        m_ui.actionToggleCalls   ->setEnabled(true);
+        m_ui.actionEnableAllCalls->setEnabled(true);
     }
     else {
         /* File */
@@ -1226,12 +1331,15 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
         m_ui.actionLookupState   ->setEnabled(false);
         m_ui.actionShowThumbnails->setEnabled(false);
         m_ui.actionTrim          ->setEnabled(false);
+        m_ui.actionToggleCalls   ->setEnabled(false);
+        m_ui.actionEnableAllCalls->setEnabled(false);
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent * event)
 {
     m_profileDialog->close();
+    saveWindowState();
     QMainWindow::closeEvent(event);
 }
 
@@ -1647,7 +1755,8 @@ void MainWindow::slotSearchResult(const ApiTrace::SearchRequest &request,
                 m_trace->findNext(call->parentFrame(), call,
                                   request.text, request.cs, request.useRegex);
             } else {
-                m_trace->findNext(call->parentFrame(), call,
+                assert(request.direction == ApiTrace::SearchRequest::Prev);
+                m_trace->findPrev(call->parentFrame(), call,
                                   request.text, request.cs, request.useRegex);
             }
         }
@@ -1856,5 +1965,3 @@ void MainWindow::updateRecentLaunchesMenu()
         });
     }
 }
-
-#include "mainwindow.moc"

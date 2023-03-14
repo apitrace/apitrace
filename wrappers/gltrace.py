@@ -111,13 +111,45 @@ class GlTracer(Tracer):
     # arrays available in ES1
     arrays_es1 = ("Vertex", "Normal", "Color", "TexCoord")
 
+    buffer_targets = [
+        "GL_ARRAY_BUFFER",
+        "GL_ATOMIC_COUNTER_BUFFER",
+        "GL_COPY_READ_BUFFER",
+        "GL_COPY_WRITE_BUFFER",
+        "GL_DRAW_INDIRECT_BUFFER",
+        "GL_DISPATCH_INDIRECT_BUFFER",
+        "GL_ELEMENT_ARRAY_BUFFER",
+        "GL_PIXEL_PACK_BUFFER",
+        "GL_PIXEL_UNPACK_BUFFER",
+        "GL_QUERY_BUFFER",
+        "GL_SHADER_STORAGE_BUFFER",
+        "GL_TEXTURE_BUFFER",
+        "GL_TRANSFORM_FEEDBACK_BUFFER",
+        "GL_UNIFORM_BUFFER",
+    ]
+
+    # Names of the functions that can pack into the current pixel buffer
+    # object.  See also the ARB_pixel_buffer_object specification.
+    pack_function_regex = re.compile(r'^gl(' + r'|'.join([
+        r'Getn?Histogram',
+        r'Getn?PolygonStipple',
+        r'Getn?PixelMap[a-z]+v',
+        r'Getn?Minmax',
+        r'Getn?(Convolution|Separable)Filter',
+        r'Getn?(Compressed)?(Multi)?Tex(ture)?(Sub)?Image',
+        r'Readn?Pixels',
+    ]) + r')[0-9A-Z]*$')
+
     def header(self, api):
         Tracer.header(self, api)
 
         print('#include <algorithm>')
+        print('#include "cxx_compat.hpp"')
         print()
         print('#include "gltrace.hpp"')
         print('#include "gltrace_arrays.hpp"')
+        print('#include "glmemshadow.hpp"')
+        print('#include "gltrace_unpack_compressed.hpp"')
         print()
 
         # Whether we need user arrays
@@ -178,7 +210,7 @@ class GlTracer(Tracer):
             if function.name in self.fake_function_names:
                 print(function.prototype('_fake_' + function.name) + ';')
         print()
-        print(r'static inline void')
+        print(r'inline void')
         print(r'_fakeStringMarker(const std::string &s) {')
         print(r'    _fake_glStringMarkerGREMEDY(s.length(), s.data());')
         print(r'}')
@@ -230,6 +262,29 @@ class GlTracer(Tracer):
         print(r'        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);')
         print('        return 1;')
         print('    }')
+        print('}')
+        print()
+
+        # Generate a helper function to get buffer binding
+        print('static GLenum')
+        print('getBufferBinding(GLenum target) {')
+        print('    switch (target) {')
+        for target in self.buffer_targets:
+            print('    case %s:' % target)
+            print('        return %s_BINDING;' % target)
+        print('    default:')
+        print('        assert(false);')
+        print('        return 0;')
+        print('    }')
+        print('}')
+        print()
+
+        print('static GLint')
+        print('getBufferName(GLenum target) {')
+        print('    GLint bufferName = 0;')
+        print('    _glGetIntegerv(getBufferBinding(target), &bufferName);')
+        print('    assert(bufferName != 0);')
+        print('    return bufferName;')
         print('}')
         print()
 
@@ -354,7 +409,7 @@ class GlTracer(Tracer):
             print('        static bool warned = false;')
             print('        if (!warned) {')
             print('            warned = true;')
-            print('            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/docs/BUGS.markdown#tracing)\\n", __FUNCTION__);')
+            print('            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://git.io/JOMRv)\\n", __FUNCTION__);')
             print('        }')
             print('        gltrace::Context *_ctx = gltrace::getContext();')
             print('        _ctx->user_arrays = true;')
@@ -412,7 +467,7 @@ class GlTracer(Tracer):
                 print(r'            GLint _size = 0;')
                 print(r'            _%s(%s%s, &_size);' % (getter, extraArg, pname))
                 print(r'            if (_size != GL_BGRA) {')
-                print(r'                os::log("apitrace: warning: %s(%s) does not return GL_BGRA; trace will be incorrect (https://github.com/apitrace/apitrace/issues/261)\n");' % (getter, pname))
+                print(r'                os::log("apitrace: warning: %s(%s) does not return GL_BGRA; trace will be incorrect (https://git.io/JOM0n)\n");' % (getter, pname))
                 print(r'            }')
                 print(r'            _checked = true;')
                 print(r'        }')
@@ -425,6 +480,9 @@ class GlTracer(Tracer):
         if mo:
             functionRadical = mo.group('radical')
             print('    gltrace::Context *_ctx = gltrace::getContext();')
+
+            print('    GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+
             print('    if (_need_user_arrays(_ctx)) {')
             if 'Indirect' in function.name:
                 print(r'        os::log("apitrace: warning: %s: indirect user arrays not supported\n");' % (function.name,))
@@ -450,6 +508,11 @@ class GlTracer(Tracer):
                 print('        GLuint _count = _glDraw_count(_ctx, _params);')
                 print('        _trace_user_arrays(_ctx, _count);')
             print('    }')
+
+        if function.name.startswith("glDispatchCompute"):
+            print('    gltrace::Context *_ctx = gltrace::getContext();')
+            print('    GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+
         if function.name == 'glLockArraysEXT':
             print('    gltrace::Context *_ctx = gltrace::getContext();')
             print('    if (_ctx) {')
@@ -463,7 +526,7 @@ class GlTracer(Tracer):
         if function.name.startswith('glArrayElement'):
             print(r'    gltrace::Context *_ctx = gltrace::getContext();')
             print(r'    if (_ctx->userArraysOnBegin) {')
-            print(r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://github.com/apitrace/apitrace/issues/276)\n");')
+            print(r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://git.io/JOM0l)\n");')
             print(r'        _ctx->userArraysOnBegin = false;')
             print(r'    }')
         
@@ -487,6 +550,17 @@ class GlTracer(Tracer):
             print('    } else {')
             print('        _glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix)
             print('        flush = access != GL_READ_ONLY;')
+            print('    }')
+            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('        gltrace::Context *_ctx = gltrace::getContext();')
+            print('        GLint buffer = getBufferName(target);')
+            print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
+            print('        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
+            print('            it->second->unmap(trace::fakeMemcpy);')
+            print('        } else {')
+            print(r'            os::log("apitrace: error: %s: cannot find memory shadow\n", __FUNCTION__);')
+            print('        }')
+            print('        flush = false;')
             print('    }')
             print('    if (flush) {')
             print('        GLvoid *map = NULL;')
@@ -550,8 +624,16 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBuffer':
             print('    GLint access_flags = 0;')
             print('    _glGetNamedBufferParameteriv(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);')
-            print('    if ((access_flags & GL_MAP_WRITE_BIT) &&')
-            print('        !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {')
+            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('        gltrace::Context *_ctx = gltrace::getContext();')
+            print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
+            print('        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
+            print('            it->second->unmap(trace::fakeMemcpy);')
+            print('        } else {')
+            print(r'            os::log("apitrace: error: %s: cannot find memory shadow\n", __FUNCTION__);')
+            print('        }')
+            print('    } else if ((access_flags & GL_MAP_WRITE_BIT) &&')
+            print('               !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {')
             print('        GLvoid *map = NULL;')
             print('        _glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &map);')
             print('        GLint length = 0;')
@@ -563,8 +645,16 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBufferEXT':
             print('    GLint access_flags = 0;')
             print('    _glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);')
-            print('    if ((access_flags & GL_MAP_WRITE_BIT) &&')
-            print('        !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {')
+            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('        gltrace::Context *_ctx = gltrace::getContext();')
+            print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
+            print('        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
+            print('            it->second->unmap(trace::fakeMemcpy);')
+            print('        } else {')
+            print(r'            os::log("apitrace: error: %s: cannot find memory shadow\n", __FUNCTION__);')
+            print('        }')
+            print('    } else if ((access_flags & GL_MAP_WRITE_BIT) &&')
+            print('               !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {')
             print('        GLvoid *map = NULL;')
             print('        _glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);')
             print('        GLint length = 0;')
@@ -604,8 +694,8 @@ class GlTracer(Tracer):
             self.emit_memcpy('(const char *)map + offset', 'length')
             print('    }')
 
-        # FIXME: We don't support coherent/pinned memory mappings
-        if function.name in ('glBufferStorage', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
+        # FIXME: We don't support AMD_pinned_memory
+        if function.name in ('glBufferStorage', 'glBufferStorageEXT', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
             print(r'    if (flags & GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX) {')
             print(r'        if (!(flags & GL_MAP_PERSISTENT_BIT)) {')
             print(r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);')
@@ -614,6 +704,19 @@ class GlTracer(Tracer):
             print(r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_WRITE_BIT\n", __FUNCTION__);')
             print(r'        }')
             print(r'        flags &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;')
+            print(r'    }')
+            print(r'')
+            print(r'    if ((flags & GL_MAP_COHERENT_BIT) && (flags & GL_MAP_WRITE_BIT)) {')
+            print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            if function.name in ('glBufferStorage', 'glBufferStorageEXT'):
+                print(r'        GLint buffer = getBufferName(target);')
+            print(r'        auto memoryShadow = std::make_unique<GLMemoryShadow>();')
+            print(r'        const bool success = memoryShadow->init(data, size);')
+            print(r'        if (success) {')
+            print(r'            _ctx->sharedRes->bufferToShadowMemory.insert_or_assign(buffer, std::move(memoryShadow));')
+            print(r'        } else {')
+            print(r'            os::log("apitrace: error: %s: cannot create memory shadow\n", __FUNCTION__);')
+            print(r'        }')
             print(r'    }')
         if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
             print(r'    if (access & GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX) {')
@@ -627,13 +730,6 @@ class GlTracer(Tracer):
             print(r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/ MAP_FLUSH_EXPLICIT_BIT\n", __FUNCTION__);')
             print(r'        }')
             print(r'        access &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;')
-            print(r'    } else if (access & GL_MAP_WRITE_BIT) {')
-            print(r'        if (access & GL_MAP_COHERENT_BIT) {')
-            print(r'            os::log("apitrace: warning: %s: MAP_COHERENT_BIT|MAP_WRITE_BIT unsupported <https://git.io/vV9kM>\n", __FUNCTION__);')
-            print(r'        } else if ((access & GL_MAP_PERSISTENT_BIT) &&')
-            print(r'                   !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {')
-            print(r'            os::log("apitrace: warning: %s: MAP_PERSISTENT_BIT|MAP_WRITE_BIT w/o MAP_FLUSH_EXPLICIT_BIT unsupported <https://git.io/vV9kM>\n", __FUNCTION__);')
-            print(r'        }')
             print(r'    }')
         if function.name in ('glBufferData', 'glBufferDataARB'):
             print(r'    if (target == GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD) {')
@@ -645,6 +741,12 @@ class GlTracer(Tracer):
             print(r'    if (access & GL_MAP_WRITE_BIT) {')
             print(r'        os::log("apitrace: warning: GL_INTEL_map_texture not fully supported\n");')
             print(r'    }')
+
+        # Operations on PBO may use coherent buffers so we must commit them first
+        if self.unpack_function_regex.match(function.name) or self.pack_function_regex.match(function.name):
+            print('    gltrace::Context *_ctx = gltrace::getContext();')
+            print('    GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+            print('')
 
         # Don't leave vertex attrib locations to chance.  Instead emit fake
         # glBindAttribLocation calls to ensure that the same locations will be
@@ -804,6 +906,41 @@ class GlTracer(Tracer):
 
         Tracer.doInvokeFunction(self, function)
 
+        if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
+            print(r'    if ((access & GL_MAP_COHERENT_BIT) && (access & GL_MAP_WRITE_BIT)) {')
+            print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT'):
+                print(r'        GLint buffer = getBufferName(target);')
+            print(r'        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
+            print(r'        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
+            print(r'            _result = it->second->map(_ctx, _result, access, offset, length);')
+            print(r'        } else {')
+            print(r'            os::log("apitrace: error: %s: cannot find memory shadow\n", __FUNCTION__);')
+            print(r'        }')
+            print(r'    }')
+
+        # We should sync back readable coherent buffers only when a fence become signaled
+        # because in any other moment application cannot know if changes from operations on
+        # GPU are done and buffers are updated.
+        if function.name == 'glWaitSync':
+            print(r'    gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'    GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+            print(r'    GLMemoryShadow::syncAllForReads(_ctx);')
+
+        if function.name == 'glClientWaitSync':
+            print(r'    if (_result == GL_ALREADY_SIGNALED || _result == GL_CONDITION_SATISFIED) {')
+            print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'        GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+            print(r'        GLMemoryShadow::syncAllForReads(_ctx);')
+            print(r'    }')
+
+        if function.name == 'glGetSynciv':
+            print(r'    if (pname == GL_SYNC_STATUS && bufSize > 0 && values[0] == GL_SIGNALED) {')
+            print(r'        gltrace::Context *_ctx = gltrace::getContext();')
+            print(r'        GLMemoryShadow::commitAllWrites(_ctx, trace::fakeMemcpy);')
+            print(r'        GLMemoryShadow::syncAllForReads(_ctx);')
+            print(r'    }')
+
         if function.name == 'glGetProgramiv':
             print(r'    if (params && pname == GL_PROGRAM_BINARY_LENGTH) {')
             print(r'        *params = 0;')
@@ -812,20 +949,6 @@ class GlTracer(Tracer):
             print(r'    if (length) {')
             print(r'        *length = 0;')
             print(r'    }')
-
-    buffer_targets = [
-        'ARRAY_BUFFER',
-        'ELEMENT_ARRAY_BUFFER',
-        'PIXEL_PACK_BUFFER',
-        'PIXEL_UNPACK_BUFFER',
-        'UNIFORM_BUFFER',
-        'TEXTURE_BUFFER',
-        'TRANSFORM_FEEDBACK_BUFFER',
-        'COPY_READ_BUFFER',
-        'COPY_WRITE_BUFFER',
-        'DRAW_INDIRECT_BUFFER',
-        'ATOMIC_COUNTER_BUFFER',
-    ]
 
     def wrapRet(self, function, instance):
         Tracer.wrapRet(self, function, instance)
@@ -856,6 +979,8 @@ class GlTracer(Tracer):
         r'(Compressed)?(Multi)?Tex(ture)?(Sub)?Image[1-4]D',
     ]) + r')[0-9A-Z]*$')
 
+    compressed_image_function_regex = re.compile(r'^glCompressedTex(ture)?(Sub)?Image[1-4]D[0-9A-Z]*$')
+
     def serializeArgValue(self, function, arg):
         # Recognize offsets instead of blobs when a PBO is bound
         if self.unpack_function_regex.match(function.name) \
@@ -870,7 +995,10 @@ class GlTracer(Tracer):
             print('        if (_unpack_buffer) {')
             print('            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name)
             print('        } else {')
-            Tracer.serializeArgValue(self, function, arg)
+            if self.compressed_image_function_regex.match(function.name):
+                print('            %s;' % arg.type.size.format('[](const void* data, GLsizei size){ trace::localWriter.writeBlob(data, size); }'))
+            else:
+                Tracer.serializeArgValue(self, function, arg)
             print('        }')
             print('    }')
             return

@@ -134,6 +134,18 @@ dumpScissors(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 
 
 static void
+dumpTopology(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
+{
+    D3D11_PRIMITIVE_TOPOLOGY topology;
+
+    pDeviceContext->IAGetPrimitiveTopology(&topology);
+    writer.beginMember("Topology");
+    dumpStateObject(writer, topology);
+    writer.endMember();
+}
+
+
+static void
 dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     // TODO: dump description of current bound state
@@ -150,6 +162,7 @@ dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     dumpDepthStencilState(writer, pDeviceContext);
     dumpViewports(writer, pDeviceContext);
     dumpScissors(writer, pDeviceContext);
+    dumpTopology(writer, pDeviceContext);
 
     writer.endObject();
     writer.endMember(); // parameters

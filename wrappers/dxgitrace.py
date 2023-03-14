@@ -225,6 +225,20 @@ class D3DCommonTracer(DllTracer):
             print(r'        os::log("apitrace: warning: hiding IWarpPrivateAPI interface\n");')
             print(r'    }')
 
+        if interface.name.startswith('ID3D11Device') and method.name == 'CheckFeatureSupport':
+            print(r'    if (FORCE_D3D_FEATURE_LEVEL_11_0 &&')
+            print(r'        _result == S_OK &&')
+            print(r'        Feature >= D3D11_FEATURE_D3D11_OPTIONS) {')
+            print(r'        ZeroMemory(pFeatureSupportData, FeatureSupportDataSize);')
+            print(r'    }')
+
+        if method.name == 'CheckMultisampleQualityLevels':
+            print(r'    if (FORCE_D3D_FEATURE_LEVEL_11_0 &&')
+            print(r'        _result == S_OK &&')
+            print(r'        pNumQualityLevels && *pNumQualityLevels > 1) {')
+            print(r'        *pNumQualityLevels = 1;')
+            print(r'    }')
+
         # Ensure buffers are initialized, otherwise we can fail to detect
         # changes when unititialized data matches what the app wrote.
         if method.name == 'CreateBuffer':
@@ -241,6 +255,9 @@ if __name__ == '__main__':
     print()
     print(r'#include "dxgitrace.hpp"')
     print()
+
+    # TODO: Expose this via a runtime option
+    print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
 
     api = API()
     api.addModule(dxgi.dxgi)

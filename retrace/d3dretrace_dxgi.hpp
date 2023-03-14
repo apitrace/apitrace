@@ -43,10 +43,14 @@
 
 struct ID3D10Device;
 struct ID3D11Device;
+struct ID3D10DeviceChild;
+struct ID3D11DeviceChild;
 
 
 namespace d3dretrace {
 
+HRESULT
+createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter);
 
 static inline void
 createWindowForSwapChain(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
@@ -75,6 +79,26 @@ createSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void **ppR
 HRESULT
 createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppResource);
 
+
+inline void
+deviceRemoved(trace::Call &call, IUnknown *pUnknown) {
+    exit(EXIT_FAILURE);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D11Device *pDevice);
+
+void
+deviceRemoved(trace::Call &call, ID3D10Device *pDevice);
+
+void
+deviceRemoved(trace::Call &call, ID3D11DeviceChild *pDevice);
+
+void
+deviceRemoved(trace::Call &call, ID3D10DeviceChild *pDevice);
+
+void
+deviceRemoved(trace::Call &call, IDXGISwapChain *pSwapChain);
 
 
 } /* namespace d3dretrace */

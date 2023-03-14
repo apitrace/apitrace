@@ -33,12 +33,13 @@
 #include <os_thread.hpp>
 #include <glproc.hpp>
 #include <gltrace.hpp>
+#include <os.hpp>
 
 namespace gltrace {
 
 typedef std::shared_ptr<Context> context_ptr_t;
 static std::map<uintptr_t, context_ptr_t> context_map;
-static os::recursive_mutex context_map_mutex;
+static std::recursive_mutex context_map_mutex;
 
 class ThreadState {
 public:
@@ -108,7 +109,7 @@ bool releaseContext(uintptr_t context_id)
     return res;
 }
 
-void createContext(uintptr_t context_id)
+void createContext(uintptr_t context_id, uintptr_t shared_context_id)
 {
     // wglCreateContextAttribsARB causes internal calls to wglCreateContext to be
     // traced, causing context to be defined twice.
@@ -119,6 +120,14 @@ void createContext(uintptr_t context_id)
     context_ptr_t ctx(new Context);
 
     context_map_mutex.lock();
+
+    if (shared_context_id) {
+        auto shredIt = context_map.find(shared_context_id);
+        if (shredIt != context_map.end())
+            ctx->sharedRes = (*shredIt).second->sharedRes;
+        else
+            os::log("apitrace: error: %s: shared context wasn't found\n", __FUNCTION__);
+    }
 
     _retainContext(ctx);
     context_map[context_id] = ctx;

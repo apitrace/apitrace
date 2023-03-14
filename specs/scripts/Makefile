@@ -14,27 +14,13 @@ download: \
 	gl.xml \
 	glx.xml \
 	wgl.xml \
-	egl.xml \
-	gl.spec \
-	gl.tm \
-	glxenum.spec \
-	glx.spec \
-	glxext.spec \
-	glx.tm \
-	wglenum.spec \
-	wgl.spec \
-	wglext.spec \
-	wgl.tm
-
+	egl.xml
 
 %.xml:
-	wget -nv -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
+	wget -nv -N https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/master/xml/$@
 
-%.spec:
-	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
-
-%.tm:
-	wget -nv -N https://www.opengl.org/registry/oldspecs/$@
+egl.xml:
+	wget -nv -N https://raw.githubusercontent.com/KhronosGroup/EGL-Registry/master/api/$@
 
 glapi.py: xml2api.py gl.xml
 	python3 $^ > $@
@@ -65,6 +51,6 @@ clean:
         glapi.py glxapi.py wglapi.py \
         glparams.py wglenum.py
 
-.PRECIOUS: %.xml %.spec %.tm
+.PRECIOUS: %.xml
 
 .PHONY: download clean

@@ -4,7 +4,7 @@
 #include "apitracefilter.h"
 #include "ui_settings.h"
 #include <QDialog>
-#include <QRegExp>
+#include <QRegularExpression>
 
 
 class SettingsDialog : public QDialog, public Ui_Settings
@@ -23,6 +23,6 @@ private:
     void filtersFromModel(const ApiTraceFilter *model);
     void filtersToModel(ApiTraceFilter *model);
 private:
-    QMap<QString, QRegExp> m_showFilters;
+    QMap<QString, QRegularExpression> m_showFilters;
     ApiTraceFilter *m_filter;
 };

@@ -43,7 +43,8 @@
 #include <unistd.h>
 
 
-static std::string g_processName;
+// Must not use std::string to prevent it from being destroyed.
+static char g_processName[4097];
 
 extern "C"  {
 
@@ -63,14 +64,13 @@ readlink(const char *pathname, char *buf, size_t bufsiz)
             std::string callerModule(getModuleFromAddress(ReturnAddress()));
             fprintf(stderr, "readlink(\"%s\") from %s\n", pathname, callerModule.c_str());
         }
-        if (!g_processName.empty()) {
-            size_t len = g_processName.length();
+        size_t len = strlen(g_processName);
+        if (len) {
             if (len < bufsiz) {
-                memcpy(buf, g_processName.data(), len);
-                buf[len] = 0;
+                memcpy(buf, g_processName, len + 1);
                 return len;
             } else {
-                memcpy(buf, g_processName.data(), bufsiz);
+                memcpy(buf, g_processName, bufsiz);
                 return bufsiz;
             }
         } else {
@@ -93,7 +93,8 @@ readlink(const char *pathname, char *buf, size_t bufsiz)
 void
 setProcessName(const char *processName)
 {
-    g_processName = processName;
+    strncpy(g_processName, processName, sizeof g_processName - 1);
+    g_processName[sizeof g_processName - 1] = '\0';
 
     char **p__progname_full = (char **)dlsym(RTLD_DEFAULT, "__progname_full");
     if (p__progname_full == nullptr) {
@@ -123,13 +124,16 @@ setProcessName(const char *processName)
 }
 
 
-#elif defined(_WIN32)
+#elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64))
 
 #include <windows.h>
 #include "mhook.h"
 
 typedef DWORD (WINAPI *PFNGETMODULEFILENAMEA)(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
 static PFNGETMODULEFILENAMEA pfnGetModuleFileNameA = &GetModuleFileNameA;
+
+typedef DWORD (WINAPI *PFNGETMODULEFILENAMEW)(HMODULE hModule, LPWSTR lpFilename, DWORD nSize);
+static PFNGETMODULEFILENAMEW pfnGetModuleFileNameW = &GetModuleFileNameW;
 
 static inline HMODULE
 GetModuleFromAddress(PVOID pAddress)
@@ -142,7 +146,8 @@ GetModuleFromAddress(PVOID pAddress)
     return bRet ? hModule : nullptr;
 }
 
-static std::string g_processName;
+// Must not use std::string to prevent it from being destroyed.
+static char g_processName[4097];
 
 
 static DWORD WINAPI
@@ -159,17 +164,17 @@ MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
             std::cerr << "GetModuleFileNameA(" << hModule << ") from " << szCaller << "\n";
         }
 
-        assert(!g_processName.empty());
+        assert(*g_processName);
         assert(nSize != 0);
 
-        size_t len = g_processName.length();
+        size_t len = strlen(g_processName);
         if (len < nSize) {
-            memcpy(lpFilename, g_processName.data(), len);
+            memcpy(lpFilename, g_processName, len);
             lpFilename[len] = 0;
             SetLastError(ERROR_SUCCESS);
             return len;
         } else {
-            memcpy(lpFilename, g_processName.data(), nSize - 1);
+            memcpy(lpFilename, g_processName, nSize - 1);
             lpFilename[nSize - 1] = 0;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return nSize;
@@ -179,11 +184,45 @@ MyGetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize)
     return pfnGetModuleFileNameA(hModule, lpFilename, nSize);
 }
 
+static DWORD WINAPI
+MyGetModuleFileNameW(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
+{
+    if (hModule == nullptr) {
+        if (0) {
+            void *pCallerAddr = ReturnAddress();
+            HMODULE hCallerModule = GetModuleFromAddress(pCallerAddr);
+            WCHAR szCaller[MAX_PATH];
+            DWORD dwRet = pfnGetModuleFileNameW(hCallerModule, szCaller, sizeof szCaller);
+            assert(dwRet > 0);
+
+            std::cerr << "GetModuleFileNameW(" << hModule << ") from " << szCaller << "\n";
+        }
+
+        assert(*g_processName);
+        assert(nSize != 0);
+
+        size_t len = strlen(g_processName);
+        if (len < nSize) {
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName, -1, lpFilename, len);
+            lpFilename[len] = 0;
+            SetLastError(ERROR_SUCCESS);
+            return len;
+        } else {
+            ::MultiByteToWideChar(CP_UTF8, 0, g_processName, -1, lpFilename, nSize - 1);
+            lpFilename[nSize - 1] = L'\0';
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return nSize;
+        }
+    }
+
+    return pfnGetModuleFileNameW(hModule, lpFilename, nSize);
+}
 
 void
 setProcessName(const char *processName)
 {
-    g_processName = processName;
+    strncpy(g_processName, processName, sizeof g_processName - 1);
+    g_processName[sizeof g_processName - 1] = '\0';
 
     static BOOL bHooked = FALSE;
     if (!bHooked) {
@@ -197,6 +236,16 @@ setProcessName(const char *processName)
                 std::cerr << "error: failed to GetModuleFileNameA\n";
             }
             pfnGetModuleFileNameA = (PFNGETMODULEFILENAMEA)lpRealAddress;
+        }
+
+        lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetModuleFileNameW");
+        if (lpOrigAddress) {
+            LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameW;
+            LPVOID lpRealAddress = lpOrigAddress;
+            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+                std::cerr << "error: failed to GetModuleFileNameW\n";
+            }
+            pfnGetModuleFileNameW = (PFNGETMODULEFILENAMEW)lpRealAddress;
         }
     }
 }

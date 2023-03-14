@@ -7,16 +7,20 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     )
 endif ()
 
-add_definitions (-DQT_FORCE_ASSERTS)
+add_definitions (-DQT_FORCE_ASSERTS -DQT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
 add_library (qubjson STATIC
     qubjson.cpp
 )
+target_link_libraries (qubjson Qt::Widgets)
 
-add_gtest (qubjson_test qubjson_test.cpp)
-target_link_libraries (qubjson_test qubjson)
+if (BUILD_TESTING)
+    add_gtest (qubjson_test qubjson_test.cpp)
+    target_link_libraries (qubjson_test qubjson)
+endif ()
 
 set(qapitrace_SRCS
+   adaptivedoublespinbox.cpp
    apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
@@ -53,7 +57,7 @@ set(qapitrace_SRCS
    graphing/timeaxiswidget.cpp
  )
 
-qt5_add_resources(qapitrace_SRCS qapitrace.qrc)
+qt_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
    ui/argumentseditor.ui
@@ -76,45 +80,29 @@ endif()
 
 set (CMAKE_AUTOMOC ON)
 
-# Workaround https://github.com/apitrace/apitrace/issues/528
-if (${CMAKE_VERSION} VERSION_LESS 3.9.0 OR
-    ${CMAKE_VERSION} VERSION_EQUAL 3.9.5 OR
-    ${CMAKE_VERSION} VERSION_GREATER 3.9.5)
-    # Silence `Note: No relevant classes found. No output generated.`
-    set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
-endif ()
+# Silence `Note: No relevant classes found. No output generated.`
+set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
 
-QT5_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+QT_WRAP_UI (qapitrace_UIS_H ${qapitrace_UIS})
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
+    ${CMAKE_BINARY_DIR}
 )
+
+add_dependencies(apitrace version)
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-# Avoid qt5_use_modules. See also:
-# - https://bugreports.qt.io/browse/QTBUG-39457
-# - http://doc.qt.io/qt-5/cmake-manual.html
-# - http://www.kdab.com/using-cmake-with-qt-5/
-if (Qt5Core_VERSION_STRING VERSION_LESS 5.2.0)
-    qt5_use_modules (qubjson Widgets)
-    qt5_use_modules (qubjson_test Widgets)
-    qt5_use_modules (qapitrace Widgets Network)
-else ()
-    target_link_libraries (qubjson Qt5::Widgets)
-    target_link_libraries (qubjson_test Qt5::Widgets)
-    target_link_libraries (qapitrace Qt5::Widgets Qt5::Network)
-endif ()
-
 target_link_libraries (qapitrace
+    Qt::Widgets
+    Qt::Network
     qubjson
     image
     common
-    ${ZLIB_LIBRARIES}
-    ${SNAPPY_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -143,9 +131,9 @@ install_pdb (qapitrace RUNTIME DESTINATION bin)
 # XXX: windeployqt can fail if there's weird stuff in the Path env var, so we
 # invoke it with a sanitized Path, via `cmake -E env` that was introduced in
 # CMake 3.1.
-if (WIN32 AND NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_VERSION VERSION_LESS 3.1)
+if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
     # http://stackoverflow.com/a/24676432
-    get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+    get_target_property (QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
     get_filename_component (QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program (QT_WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
     if (QT_WINDEPLOYQT_EXECUTABLE)

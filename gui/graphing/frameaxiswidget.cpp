@@ -51,7 +51,7 @@ void FrameAxisWidget::paintEvent(QPaintEvent *)
         double right = dxdv * end;
         QString text = QString("%1").arg(i);
 
-        int width = painter.fontMetrics().width(text) + padding * 2;
+        int width = painter.fontMetrics().boundingRect(text).width() + padding * 2;
 
         if (right > scroll) {
             visible = true;

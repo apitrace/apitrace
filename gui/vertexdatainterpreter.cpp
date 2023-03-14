@@ -229,5 +229,3 @@ void VertexDataInterpreter::setStartingOffset(int offset)
 {
     m_startingOffset = offset;
 }
-
-#include "vertexdatainterpreter.moc"

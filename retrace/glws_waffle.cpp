@@ -124,9 +124,7 @@ init(void)
 {
     int32_t waffle_platform;;
 
-#if defined(__ANDROID__)
-    waffle_platform = WAFFLE_PLATFORM_ANDROID;
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
     waffle_platform = WAFFLE_PLATFORM_CGL
 #elif defined(_WIN32)
     waffle_platform = WAFFLE_PLATFORM_WGL
@@ -143,6 +141,11 @@ init(void)
             waffle_platform = WAFFLE_PLATFORM_WAYLAND;
         } else if (strcmp(waffle_platform_name, "x11_egl") == 0) {
             waffle_platform = WAFFLE_PLATFORM_X11_EGL;
+#if WAFFLE_MAJOR_VERSION > 1 || (WAFFLE_MAJOR_VERSION == 1 && WAFFLE_MINOR_VERSION >= 6)
+        } else if ((strcmp(waffle_platform_name, "surfaceless_egl") == 0) ||
+                   (strcmp(waffle_platform_name, "sl") == 0)) {
+            waffle_platform = WAFFLE_PLATFORM_SURFACELESS_EGL;
+#endif
         } else {
             std::cerr << "error: unsupported WAFFLE_PLATFORM \"" << waffle_platform_name << "\"\n";
             exit(1);
@@ -263,7 +266,7 @@ createContext(const Visual *visual, Context *shareContext,
 
     context = waffle_context_create(waffleVisual->config, share_context);
     if (!context) {
-        std::cerr << "error: waffle_context_create failed\n";
+        std::cerr << "error: failed to create " << waffleVisual->profile << " context.\n";
         exit(1);
         return NULL;
     }

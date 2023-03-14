@@ -51,3 +51,6 @@ extern const Command retrace_command;
 extern const Command sed_command;
 extern const Command trace_command;
 extern const Command trim_command;
+extern const Command info_command;
+extern const Command version_command;
+extern const Command gltrim_command;

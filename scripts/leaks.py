@@ -25,7 +25,6 @@
 ##########################################################################/
 
 
-import subprocess
 import sys
 import os.path
 import optparse
@@ -37,11 +36,8 @@ import unpickle
 class LeakDetector(unpickle.Unpickler):
 
     def __init__(self, apitrace, trace):
-
-        cmd = [apitrace, 'pickle', '--symbolic', trace]
-        p = subprocess.Popen(args = cmd, stdout=subprocess.PIPE)
-
-        unpickle.Unpickler.__init__(self, p.stdout)
+        stream = unpickle.pickleTrace(trace, apitrace=apitrace, symbolic=True)
+        unpickle.Unpickler.__init__(self, stream)
 
         self.numContexts = 0
 

@@ -204,7 +204,7 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
 
     get_texture_2d_image(info);
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
-    _glDeleteBuffers(1, &tex);
+    _glDeleteTextures(1, &tex);
 
     return info;
 }

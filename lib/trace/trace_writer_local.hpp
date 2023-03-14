@@ -68,7 +68,7 @@ namespace trace {
          * be done outside the beginEnter/endEnter and beginLeave/endLeave
          * pairs. Preferably between these two pairs.
          */
-        os::recursive_mutex mutex;
+        std::recursive_mutex mutex;
         int acquired;
 
         /// For getenv("FLUSH_EVERY_MS")

@@ -26,7 +26,7 @@ if (ENABLE_STATIC_LIBSTDCXX)
 endif ()
 
 macro (target_linker_version_script target version_script)
-    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         # https://sourceware.org/binutils/docs/ld/VERSION.html
         set_property (
             TARGET ${target}
@@ -71,7 +71,6 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Code shared across all APIs
 add_convenience_library (trace
-    assert.cpp
     memtrace.hpp
     memtrace.cpp
 )
@@ -79,7 +78,6 @@ target_link_libraries (trace
     common
     guids
     crc32c
-    ${SNAPPY_LIBRARIES}
 )
 
 # Code shared across all OpenGL variants
@@ -88,6 +86,10 @@ add_convenience_library (gltrace_common
     config.cpp
     gltrace_arrays.cpp
     gltrace_state.cpp
+    glmemshadow.hpp
+    glmemshadow.cpp
+    gltrace_unpack_compressed.hpp
+    gltrace_unpack_compressed.cpp
 )
 add_dependencies (gltrace_common glproc)
 target_link_libraries (gltrace_common
@@ -107,7 +109,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
             DEPENDS
                 ddrawtrace.py
                 dlltrace.py
@@ -137,7 +139,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
             DEPENDS
                 d3d8trace.py
                 dlltrace.py
@@ -171,7 +173,7 @@ if (WIN32)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
             DEPENDS
                 d3d9trace.py
                 dlltrace.py
@@ -207,7 +209,7 @@ if (WIN32)
 
         add_custom_command (
             OUTPUT dxgitrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
             DEPENDS
                 dxgitrace.py
                 dlltrace.py
@@ -290,7 +292,7 @@ if (WIN32)
 
         add_custom_command (
             OUTPUT d2d1trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
             DEPENDS
                 d2d1trace.py
                 dlltrace.py
@@ -316,7 +318,7 @@ if (WIN32)
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS
                 wgltrace.py
                 gltrace.py
@@ -333,12 +335,13 @@ if (WIN32)
     )
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
+        glproc_gl.cpp
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
         gltrace_common
         glproc
-        glproc_gl
+        gdi32
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
@@ -351,7 +354,7 @@ elseif (APPLE)
     # OpenGL framework
     add_custom_command (
         OUTPUT cgltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
         DEPENDS
             cgltrace.py
             gltrace.py
@@ -366,6 +369,7 @@ elseif (APPLE)
 
     add_library (cgltrace SHARED
         cgltrace.cpp
+        glproc_gl.cpp
     )
 
     add_dependencies (cgltrace glproc)
@@ -381,7 +385,7 @@ elseif (APPLE)
 
     target_link_libraries (cgltrace
         gltrace_common
-        glproc_gl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -391,7 +395,7 @@ elseif (X11_FOUND)
     # libGL.so
     add_custom_command (
         OUTPUT glxtrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
         DEPENDS
             glxtrace.py
             gltrace.py
@@ -407,6 +411,7 @@ elseif (X11_FOUND)
     add_library (glxtrace SHARED
         glxtrace.cpp
         dlsym.cpp
+        glproc_gl.cpp
     )
 
     add_dependencies (glxtrace glproc)
@@ -418,7 +423,7 @@ elseif (X11_FOUND)
 
     target_link_libraries (glxtrace
         gltrace_common
-        glproc_gl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
@@ -433,7 +438,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     # libEGL.so/libGL.so
     add_custom_command (
         OUTPUT egltrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
         DEPENDS
             egltrace.py
             gltrace.py
@@ -450,6 +455,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     add_library (egltrace SHARED
         egltrace.cpp
         dlsym.cpp
+        glproc_egl.cpp
     )
 
     add_dependencies (egltrace glproc)
@@ -463,7 +469,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (egltrace
         gltrace_common
-        glproc_egl
+        glproc
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )

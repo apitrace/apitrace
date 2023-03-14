@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
+    <width>865</width>
     <height>629</height>
    </rect>
   </property>
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>811</width>
-        <height>561</height>
+        <width>845</width>
+        <height>543</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -142,7 +142,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="lowerSpinBox">
        <property name="decimals">
-        <number>3</number>
+        <number>5</number>
        </property>
        <property name="minimum">
         <double>-999.999000000000024</double>
@@ -165,7 +165,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="upperSpinBox">
        <property name="decimals">
-        <number>3</number>
+        <number>5</number>
        </property>
        <property name="minimum">
         <double>-999.999000000000024</double>
@@ -220,27 +220,40 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="zoomSpinBox">
+      <widget class="AdaptiveDoubleSpinBox" name="zoomSpinBox">
        <property name="specialValueText">
+        <string/>
+       </property>
+       <property name="prefix">
         <string/>
        </property>
        <property name="suffix">
         <string>x</string>
        </property>
-       <property name="prefix">
-        <string/>
+       <property name="decimals">
+        <number>3</number>
        </property>
        <property name="minimum">
-        <number>1</number>
+        <double>0.001000000000000</double>
        </property>
        <property name="maximum">
-        <number>15</number>
+        <double>1024.000000000000000</double>
        </property>
        <property name="singleStep">
-        <number>1</number>
+        <double>1.000000000000000</double>
        </property>
        <property name="value">
-        <number>1</number>
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="zoomToFitCheckBox">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -248,6 +261,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AdaptiveDoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>adaptivedoublespinbox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

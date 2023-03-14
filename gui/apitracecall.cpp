@@ -10,6 +10,7 @@
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
 #include <QTextDocument>
+#include <QRegularExpression>
 
 const char * const styleSheet =
     ".call {\n"
@@ -96,7 +97,7 @@ plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false
     }
 
     if (quote && !forceNoQuote) {
-        return QLatin1Literal("\"") + rich + QLatin1Literal("\"");
+        return QLatin1String("\"") + rich + QLatin1String("\"");
     }
 
     return rich;
@@ -362,7 +363,7 @@ QString ApiStruct::toString(bool multiLine) const
     str += QLatin1String("{");
     for (unsigned i = 0; i < m_members.count(); ++i) {
         str += m_sig.memberNames[i] %
-               QLatin1Literal(" = ") %
+               QLatin1String(" = ") %
                apiVariantToString(m_members[i], multiLine);
         if (i < m_members.count() - 1)
             str += QLatin1String(", ");
@@ -608,7 +609,8 @@ ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
       m_binaryDataIndex(-1),
       m_state(0),
-      m_staticText(0)
+      m_staticText(0),
+      m_ignored(false)
 {
 }
 
@@ -616,7 +618,8 @@ ApiTraceEvent::ApiTraceEvent(Type t)
     : m_type(t),
       m_binaryDataIndex(-1),
       m_state(0),
-      m_staticText(0)
+      m_staticText(0),
+      m_ignored(false)
 {
     Q_ASSERT(m_type == t);
 }
@@ -645,6 +648,16 @@ void ApiTraceEvent::setThumbnail(const QImage & thumbnail)
 const QImage & ApiTraceEvent::thumbnail() const
 {
     return m_thumbnail;
+}
+
+void ApiTraceEvent::setIgnored(bool ignored)
+{
+    m_ignored = ignored;
+}
+
+bool ApiTraceEvent::ignored() const
+{
+    return m_ignored;
 }
 
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
@@ -979,10 +992,10 @@ QStaticText ApiTraceCall::staticText() const
         richText += QLatin1String(")");
         if (m_returnValue.isValid()) {
             richText +=
-                QLatin1Literal(" = ") %
-                QLatin1Literal("<span style=\"color:#0000ff\">") %
+                QLatin1String(" = ") %
+                QLatin1String("<span style=\"color:#0000ff\">") %
                 apiVariantToString(m_returnValue) %
-                QLatin1Literal("</span>");
+                QLatin1String("</span>");
         }
     }
 
@@ -1040,10 +1053,10 @@ QString ApiTraceCall::toHtml() const
             QLatin1String("<span class=\"arg-name\">") +
             argNames[i] +
             QLatin1String("</span>") +
-            QLatin1Literal(" = ") +
-            QLatin1Literal("<span class=\"arg-value\">") +
+            QLatin1String(" = ") +
+            QLatin1String("<span class=\"arg-value\">") +
             apiVariantToString(argValues[i], true) +
-            QLatin1Literal("</span>");
+            QLatin1String("</span>");
         if (i < argNames.count() - 1)
             m_richText += QLatin1String(", ");
     }
@@ -1084,11 +1097,11 @@ QString ApiTraceCall::searchText() const
         return m_searchText;
 
     QVector<QVariant> argValues = arguments();
-    m_searchText = m_signature->name() + QLatin1Literal("(");
+    m_searchText = m_signature->name() + QLatin1String("(");
     QStringList argNames = m_signature->argNames();
     for (int i = 0; i < argNames.count(); ++i) {
         m_searchText += argNames[i] +
-                        QLatin1Literal(" = ") +
+                        QLatin1String(" = ") +
                         apiVariantToString(argValues[i]);
         if (i < argNames.count() - 1)
             m_searchText += QLatin1String(", ");
@@ -1096,7 +1109,7 @@ QString ApiTraceCall::searchText() const
     m_searchText += QLatin1String(")");
 
     if (m_returnValue.isValid()) {
-        m_searchText += QLatin1Literal(" = ") +
+        m_searchText += QLatin1String(" = ") +
                         apiVariantToString(m_returnValue);
     }
     m_searchText.squeeze();
@@ -1113,8 +1126,14 @@ bool ApiTraceCall::contains(const QString &str,
                             bool useRegex) const
 {
     QString txt = searchText();
-    return useRegex ? txt.contains(QRegExp(str, sensitivity))
-                    : txt.contains(str, sensitivity);
+    if (useRegex) {
+        QRegularExpression::PatternOptions options = sensitivity == Qt::CaseInsensitive
+                                                   ? QRegularExpression::CaseInsensitiveOption
+                                                   : QRegularExpression::NoPatternOption;
+        return txt.contains(QRegularExpression(str, options));
+    } else {
+        return txt.contains(str, sensitivity);
+    }
 }
 
 void ApiTraceCall::missingThumbnail()
@@ -1138,6 +1157,27 @@ ApiTraceFrame::~ApiTraceFrame()
     qDeleteAll(m_calls);
 }
 
+static QString formatDataSize(const quint64 size)
+{
+    const auto formatSmallNumber=[](const double x)
+    {
+        if (x < 100) {
+            return QString::number(x, 'f', 1);
+        } else {
+            return QString::number(x, 'f', 0);
+        }
+    };
+    if (size < 1024) {
+        return QString(u8"%1\u202fB").arg(size);
+    } else if (size < 1ull<<20) {
+        return QString(u8"%1\u202fKiB").arg(formatSmallNumber(size/1024.));
+    } else if (size < 1ull<<30) {
+        return QString(u8"%1\u202fMiB").arg(formatSmallNumber(size/double(1ull<<20)));
+    } else {
+        return QString(u8"%1\u202fGiB").arg(formatSmallNumber(size/double(1ull<<30)));
+    }
+}
+
 QStaticText ApiTraceFrame::staticText() const
 {
     if (m_staticText && !m_staticText->text().isEmpty())
@@ -1157,9 +1197,9 @@ QStaticText ApiTraceFrame::staticText() const
             QObject::tr(
                 "%1"
                 "<span style=\"font-style:italic;\">"
-                "&nbsp;&nbsp;&nbsp;&nbsp;(%2MB)</span>")
+                "&nbsp;&nbsp;&nbsp;&nbsp;(%2)</span>")
             .arg(richText)
-            .arg(double(m_binaryDataSize / (1024.*1024.)), 0, 'g', 2);
+            .arg(formatDataSize(m_binaryDataSize));
     }
 
     if (!m_staticText)

@@ -27,11 +27,80 @@
 
 #include "d3d10imports.hpp"
 #include "d3d11imports.hpp"
+#include "d3dretrace.hpp"
 
-#include "com_ptr.hpp"
+#include <wrl/client.h>
+
+
+using Microsoft::WRL::ComPtr;
 
 
 namespace d3dretrace {
+
+
+HRESULT
+createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
+{
+    assert(retrace::driver != retrace::DRIVER_DEFAULT);
+    assert(pFactory != nullptr);
+    assert(ppvAdapter != nullptr);
+
+    DXGI_GPU_PREFERENCE GpuPreference = DXGI_GPU_PREFERENCE_UNSPECIFIED;
+    const char *szSoftware = nullptr;
+    switch (retrace::driver) {
+    case retrace::DRIVER_INTEGRATED:
+        GpuPreference = DXGI_GPU_PREFERENCE_MINIMUM_POWER;
+        break;
+    case retrace::DRIVER_DISCRETE:
+        GpuPreference = DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE;
+        break;
+    case retrace::DRIVER_REFERENCE:
+        szSoftware = "d3d11ref.dll";
+        break;
+    case retrace::DRIVER_SOFTWARE:
+        szSoftware = "d3d10warp.dll";
+        break;
+    case retrace::DRIVER_MODULE:
+        szSoftware = retrace::driverModule;
+        break;
+    case retrace::DRIVER_DEFAULT:
+    default:
+        break;
+    }
+
+    IDXGIAdapter *pAdapter = nullptr;
+    HRESULT hr;
+
+    if (szSoftware) {
+        HMODULE hSoftware = nullptr;
+        hSoftware = LoadLibraryA(szSoftware);
+        if (!hSoftware) {
+            std::cerr << "error: failed to load " << szSoftware << "\n";
+            _exit(EXIT_FAILURE);
+        }
+        hr = pFactory->CreateSoftwareAdapter(hSoftware, &pAdapter);
+    } else if (GpuPreference != DXGI_GPU_PREFERENCE_UNSPECIFIED) {
+        ComPtr<IDXGIFactory6> pFactory6;
+        if (SUCCEEDED(pFactory->QueryInterface(IID_IDXGIFactory6, &pFactory6))) {
+            hr = pFactory6->EnumAdapterByGpuPreference(0, GpuPreference, IID_IDXGIAdapter1, (void **)&pAdapter);
+        } else {
+            hr = DXGI_ERROR_NOT_FOUND;
+        }
+    } else {
+        hr = pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter **>(ppvAdapter));
+    }
+
+    if (SUCCEEDED(hr)) {
+        DXGI_ADAPTER_DESC AdapterDesc;
+        if (SUCCEEDED(pAdapter->GetDesc(&AdapterDesc))) {
+            std::wcerr << L"info: using " << AdapterDesc.Description << std::endl;
+        }
+    }
+
+    *ppvAdapter = pAdapter;
+
+    return hr;
+}
 
 
 static const DWORD
@@ -68,7 +137,7 @@ createSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void **ppR
         Checker, sizeof Checker[0], sizeof Checker
     };
 
-    com_ptr<ID3D10Texture2D> pResource;
+    ComPtr<ID3D10Texture2D> pResource;
     HRESULT hr = pDevice->CreateTexture2D(&Desc, &InitialData, &pResource);
     if (SUCCEEDED(hr)) {
         hr = pResource->QueryInterface(ReturnedInterface, ppResource);
@@ -100,7 +169,7 @@ createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppR
         Checker, sizeof Checker[0], sizeof Checker
     };
 
-    com_ptr<ID3D11Texture2D> pResource;
+    ComPtr<ID3D11Texture2D> pResource;
     HRESULT hr = pDevice->CreateTexture2D(&Desc, &InitialData, &pResource);
     if (SUCCEEDED(hr)) {
         hr = pResource->QueryInterface(ReturnedInterface, ppResource);
@@ -109,5 +178,55 @@ createSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppR
     return hr;
 }
 
+
+void
+deviceRemoved(trace::Call &call, ID3D11Device *pDevice)
+{
+    HRESULT hrReason = pDevice->GetDeviceRemovedReason();
+    retrace::failed(call, hrReason);
+    exit(EXIT_FAILURE);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D10Device *pDevice)
+{
+    HRESULT hrReason = pDevice->GetDeviceRemovedReason();
+    retrace::failed(call, hrReason);
+    exit(EXIT_FAILURE);
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D11DeviceChild *pDeviceChild)
+{
+    ComPtr<ID3D11Device> pDevice;
+    pDeviceChild->GetDevice(&pDevice);
+    deviceRemoved(call, pDevice.Get());
+}
+
+void
+deviceRemoved(trace::Call &call, ID3D10DeviceChild *pDeviceChild)
+{
+    ComPtr<ID3D10Device> pDevice;
+    pDeviceChild->GetDevice(&pDevice);
+    deviceRemoved(call, pDevice.Get());
+}
+
+void
+deviceRemoved(trace::Call &call, IDXGISwapChain *pSwapChain)
+{
+    ComPtr<ID3D11Device> pDevice11;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D11Device, &pDevice11))) {
+        deviceRemoved(call, pDevice11.Get());
+        return;
+    }
+
+    ComPtr<ID3D10Device> pDevice10;
+    if (SUCCEEDED(pSwapChain->GetDevice(IID_ID3D10Device, &pDevice10))) {
+        deviceRemoved(call, pDevice10.Get());
+        return;
+    }
+
+    exit(EXIT_FAILURE);
+}
 
 } /* namespace d3dretrace */

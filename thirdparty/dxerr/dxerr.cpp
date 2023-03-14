@@ -53,10 +53,12 @@
 #include <dwrite.h>
 #endif
 
-#define XAUDIO2_E_INVALID_CALL          0x88960001
-#define XAUDIO2_E_XMA_DECODER_ERROR     0x88960002
-#define XAUDIO2_E_XAPO_CREATION_FAILED  0x88960003
-#define XAUDIO2_E_DEVICE_INVALIDATED    0x88960004
+// XAudio2 error codes
+// Cast to HRESULT to match parameter type and suppress GCC narrowing error
+#define XAUDIO2_E_INVALID_CALL          ((HRESULT)0x88960001)
+#define XAUDIO2_E_XMA_DECODER_ERROR     ((HRESULT)0x88960002)
+#define XAUDIO2_E_XAPO_CREATION_FAILED  ((HRESULT)0x88960003)
+#define XAUDIO2_E_DEVICE_INVALIDATED    ((HRESULT)0x88960004)
 
 #define XAPO_E_FORMAT_UNSUPPORTED MAKE_HRESULT(SEVERITY_ERROR, 0x897, 0x01)
 
@@ -94,18 +96,18 @@ strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource)
 
 //--------------------------------------------------------------------------------------
 #define  CHK_ERR(hrchk, strOut) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return strOut;
 
 #define  CHK_ERRA(hrchk) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return #hrchk;
 
 #define HRESULT_FROM_WIN32b(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 
 #define  CHK_ERR_WIN32A(hrchk) \
         case HRESULT_FROM_WIN32b(hrchk): \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              return #hrchk;
 
 #define  CHK_ERR_WIN32_ONLY(hrchk, strOut) \
@@ -3500,12 +3502,12 @@ const char* WINAPI DXGetErrorStringA( HRESULT hr )
 #undef CHK_ERR_WIN32_ONLY
 
 #define  CHK_ERRA(hrchk) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              strcpy_s( desc, count, #hrchk ); \
              break;
 
 #define  CHK_ERR(hrchk, strOut) \
-        case hrchk: \
+        case (HRESULT)(hrchk): \
              strcpy_s( desc, count, strOut ); \
              break;
 

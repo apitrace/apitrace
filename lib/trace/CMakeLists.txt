@@ -31,8 +31,12 @@ target_link_libraries (common
     guids
     highlight
     os
-    brotli_dec brotli_common
+    Snappy::snappy
+    ZLIB::ZLIB
+    PkgConfig::BROTLIDEC
 )
 
-add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
-target_link_libraries (trace_parser_flags_test common)
+if (BUILD_TESTING)
+    add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
+    target_link_libraries (trace_parser_flags_test common)
+endif ()

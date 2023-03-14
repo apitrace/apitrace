@@ -9,7 +9,6 @@
 #include <QImage>
 #include <QVariant>
 
-
 ApiTraceModel::ApiTraceModel(QObject *parent)
     : QAbstractItemModel(parent),
       m_trace(0)
@@ -112,7 +111,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags ApiTraceModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
-        return 0;
+        return Qt::NoItemFlags;
 
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
@@ -416,5 +415,3 @@ void ApiTraceModel::endLoadingFrame(ApiTraceFrame *frame)
 
     m_loadingFrames.remove(frame);
 }
-
-#include "apitracemodel.moc"

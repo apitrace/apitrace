@@ -32,6 +32,8 @@
 
 #define GLX_PBUFFER_HEIGHT 0x8040
 #define GLX_PBUFFER_WIDTH 0x8041
+#define GLX_SAMPLE_BUFFERS_ARB 100000
+#define GLX_SAMPLES_ARB 100001
 
 #endif /* !HAVE_X11 */
 
@@ -41,12 +43,14 @@ using namespace glretrace;
 
 typedef std::map<unsigned long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
+typedef std::map<unsigned long long, int> FBConfigMap;
+
 static DrawableMap drawable_map;
 static ContextMap context_map;
-
+static FBConfigMap fbconfig_map;
 
 static glws::Drawable *
-getDrawable(unsigned long drawable_id) {
+getDrawable(unsigned long drawable_id, Context *ctx) {
     if (drawable_id == 0) {
         return NULL;
     }
@@ -54,7 +58,8 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glretrace::createDrawable());
+        return (drawable_map[drawable_id] =
+                glretrace::createDrawable(ctx ? ctx->actualProfile() : defaultProfile));
     }
 
     return it->second;
@@ -98,6 +103,9 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     const trace::Value * attrib_list = &call.arg(4);
     glfeatures::Profile profile = parseContextAttribList(attrib_list);
 
+    auto it = fbconfig_map.find(call.arg(1).toUInt());
+    if (it != fbconfig_map.end())
+        profile.samples = it->second;
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
 }
@@ -109,7 +117,8 @@ static void retrace_glXMakeCurrent(trace::Call &call) {
         return;
     }
 
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt(),
+                                               getContext(call.arg(2).toUInt()));
     Context *new_context = getContext(call.arg(2).toUIntPtr());
 
     glretrace::makeCurrent(call, new_drawable, new_context);
@@ -129,7 +138,7 @@ static void retrace_glXDestroyContext(trace::Call &call) {
 }
 
 static void retrace_glXCopySubBufferMESA(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
     int x = call.arg(2).toSInt();
     int y = call.arg(3).toSInt();
     int width = call.arg(4).toSInt();
@@ -139,7 +148,7 @@ static void retrace_glXCopySubBufferMESA(trace::Call &call) {
 }
 
 static void retrace_glXSwapBuffers(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
 
     frame_complete(call);
     if (retrace::doubleBuffer) {
@@ -148,6 +157,12 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
         }
     } else {
         glFlush();
+    }
+
+    if (retrace::profilingFrameTimes) {
+        // Wait for presentation to finish
+        glFinish();
+        std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
     }
 }
 
@@ -164,7 +179,14 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
 
     Context *share_context = getContext(call.arg(3).toUIntPtr());
 
-    Context *context = glretrace::createContext(share_context);
+    glfeatures::Profile profile = defaultProfile;
+
+    auto it = fbconfig_map.find(call.arg(1).toUInt());
+    if (it != fbconfig_map.end())
+        profile.samples = it->second;
+
+
+    Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
 }
 
@@ -185,7 +207,7 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
 }
 
 static void retrace_glXDestroyPbuffer(trace::Call &call) {
-    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt(), nullptr);
 
     if (!drawable) {
         return;
@@ -201,11 +223,42 @@ static void retrace_glXMakeContextCurrent(trace::Call &call) {
         return;
     }
 
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Drawable *new_readable = getDrawable(call.arg(2).toUInt());
     Context *new_context = getContext(call.arg(3).toUIntPtr());
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt(), new_context);
+    glws::Drawable *new_readable = getDrawable(call.arg(2).toUInt(), new_context);
+
 
     glretrace::makeCurrent(call, new_drawable, new_readable, new_context);
+}
+
+static void retrace_glXChooseFBConfig(trace::Call &call) {
+    auto attrib_list = call.arg(2).toArray();
+    if (!parseAttrib(attrib_list, GLX_SAMPLE_BUFFERS_ARB))
+        return;
+
+    int samples = parseAttrib(attrib_list, GLX_SAMPLES_ARB);
+
+    if (samples > 0) {
+        const auto ids = call.ret->toArray();
+        if (ids) {
+            for (auto& v : ids->values)
+                fbconfig_map[v->toUInt()] = samples;
+        }
+    }
+}
+
+static void retrace_glXGetFBConfigAttrib(trace::Call &call) {
+    if (call.arg(2).toUInt() == GLX_SAMPLES_ARB) {
+        auto retval = call.arg(3).toArray();
+        if (retval->size() != 1) {
+            std::cerr << "Warning: got more than one samples value from glXGetFBConfigAttrib\n";
+        }
+        if (retval->size() > 0) {
+            fbconfig_map[call.arg(1).toUInt()] = retval->values[0]->toUInt();
+        } else {
+            std::cerr << "Warning: glXGetFBConfigAttrib didn't provide any samples value\n";
+        }
+    }
 }
 
 const retrace::Entry glretrace::glx_callbacks[] = {
@@ -215,7 +268,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     {"glXBindTexImageEXT", &retrace::ignore},
     //{"glXChannelRectSGIX", &retrace_glXChannelRectSGIX},
     //{"glXChannelRectSyncSGIX", &retrace_glXChannelRectSyncSGIX},
-    {"glXChooseFBConfig", &retrace::ignore},
+    {"glXChooseFBConfig", &retrace_glXChooseFBConfig},
     {"glXChooseFBConfigSGIX", &retrace::ignore},
     {"glXChooseVisual", &retrace::ignore},
     //{"glXCopyContext", &retrace_glXCopyContext},
@@ -249,8 +302,8 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     {"glXGetCurrentDrawable", &retrace::ignore},
     {"glXGetCurrentReadDrawable", &retrace::ignore},
     {"glXGetCurrentReadDrawableSGI", &retrace::ignore},
-    {"glXGetFBConfigAttrib", &retrace::ignore},
-    {"glXGetFBConfigAttribSGIX", &retrace::ignore},
+    {"glXGetFBConfigAttrib", &retrace_glXGetFBConfigAttrib},
+    {"glXGetFBConfigAttribSGIX", &retrace_glXGetFBConfigAttrib},
     {"glXGetFBConfigFromVisualSGIX", &retrace::ignore},
     {"glXGetFBConfigs", &retrace::ignore},
     {"glXGetMscRateOML", &retrace::ignore},

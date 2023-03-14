@@ -420,5 +420,3 @@ void ArgumentsEditor::revert()
     m_call->revert();
     setupCall();
 }
-
-#include "argumentseditor.moc"

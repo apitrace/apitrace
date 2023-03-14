@@ -11,7 +11,7 @@ directory.  You can specify the written trace filename by passing the
 Problems while tracing (e.g, if the application uses calls/parameters
 unsupported by apitrace) will be reported via stderr output on Unices.  On
 Windows you'll need to run
-[DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647) to view
+[DebugView](https://docs.microsoft.com/en-gb/sysinternals/downloads/debugview) to view
 these messages.
 
 If you cannot obtain a trace, check the [application specific instructions on
@@ -134,6 +134,10 @@ ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
 
+_NOTE: This `LD_LIBRARY_PATH` approach will not work with applications which
+call [glvnd](https://gitlab.freedesktop.org/glvnd/libglvnd#architecture)
+components directly._
+
 If you are an application developer, you can avoid this either by linking with
 `-Bsymbolic` flag, or by using some unique prefix for your function pointers.
 
@@ -171,7 +175,7 @@ column of the _Processes_ tab of _Windows Task Manager_ window.
 You also need to know which graphics API is being used.  If you are unsure, the
 simplest way to determine what API an application uses is to:
 
-* download and run [Process Explorer](http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx)
+* download and run [Process Explorer](https://docs.microsoft.com/en-gb/sysinternals/downloads/process-explorer)
 
 * search and select the application's process in _Process Explorer_
 
@@ -195,7 +199,7 @@ Then run the application as usual.
 You can specify the written trace filename by setting the `TRACE_FILE`
 environment variable before running.
 
-For D3D10 and higher you really must use `apitrace trace -a DXGI ...`. This is
+For D3D10 and higher you really must use `apitrace trace -a dxgi ...`. This is
 because D3D10-11 API span many DLLs which depend on each other, and once a DLL
 with a given name is loaded Windows will reuse it for LoadLibrary calls of the
 same name, causing internal calls to be traced erroneously. `apitrace trace`
@@ -210,19 +214,19 @@ to hook only the APIs of interest.
 From within OpenGL applications you can embed annotations in the trace file
 through the following extensions:
 
-* [`GL_KHR_debug`](http://www.opengl.org/registry/specs/KHR/debug.txt)
+* [`GL_KHR_debug`](https://www.khronos.org/registry/OpenGL/extensions/KHR/KHR_debug.txt)
 
-* [`GL_ARB_debug_output`](http://www.opengl.org/registry/specs/ARB/debug_output.txt)
+* [`GL_ARB_debug_output`](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_debug_output.txt)
 
-* [`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
+* [`GL_EXT_debug_marker`](https://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
 
-* [`GL_EXT_debug_label`](http://www.opengl.org/registry/specs/EXT/EXT_debug_label.txt)
+* [`GL_EXT_debug_label`](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_debug_label.txt)
 
-* [`GL_AMD_debug_output`](http://www.opengl.org/registry/specs/AMD/debug_output.txt)
+* [`GL_AMD_debug_output`](https://www.khronos.org/registry/OpenGL/extensions/AMD/AMD_debug_output.txt)
 
-* [`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
+* [`GL_GREMEDY_string_marker`](https://www.khronos.org/registry/OpenGL/extensions/GREMEDY/GREMEDY_string_marker.txt)
 
-* [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
+* [`GL_GREMEDY_frame_terminator`](https://www.khronos.org/registry/OpenGL/extensions/GREMEDY/GREMEDY_frame_terminator.txt)
 
 **apitrace** will advertise and intercept these OpenGL extensions regardless
 of whether the OpenGL implementation supports them or not.  So all you have
@@ -262,15 +266,15 @@ parameters tab.
 
 
 For OpenGL ES applications you can embed annotations in the trace file through the
-[`GL_KHR_debug`](http://www.khronos.org/registry/gles/extensions/KHR/debug.txt) or 
-[`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
+[`GL_KHR_debug`](https://www.khronos.org/registry/OpenGL/extensions/KHR/KHR_debug.txt) or 
+[`GL_EXT_debug_marker`](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_debug_marker.txt)
 extensions.
 
 
 ### Direct3D annotations ###
 
 For Direct3D applications you can follow the standard procedure for
-[adding user defined events to Visual Studio Graphics Debugger / PIX](http://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
+[adding user defined events to Visual Studio Graphics Debugger / PIX](https://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
 
 - `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9,
   D3D10, and D3D11.0 applications.
@@ -279,7 +283,7 @@ For Direct3D applications you can follow the standard procedure for
   `ID3DUserDefinedAnnotation::EndEvent`, and
   `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
-And for [naming objects](http://blogs.msdn.com/b/chuckw/archive/2010/04/15/object-naming.aspx)
+And for [naming objects](https://blogs.msdn.com/b/chuckw/archive/2010/04/15/object-naming.aspx)
 which support `SetPrivateData` method:
 
     pObject->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(szName), szName);
@@ -289,9 +293,7 @@ are currently _not_ supported.
 
 See also:
 
-* <http://seanmiddleditch.com/direct3d-11-debug-api-tricks/>
-
-* <http://blogs.msdn.com/b/chuckw/archive/2012/11/30/direct3d-sdk-debug-layer-tricks.aspx>
+* <https://blogs.msdn.com/b/chuckw/archive/2012/11/30/direct3d-sdk-debug-layer-tricks.aspx>
 
 
 ## Mask OpenGL features ##
@@ -393,6 +395,8 @@ section above.
 ## Profiling a trace ##
 
 You can perform gpu and cpu profiling with the command line options:
+
+ * `--pframe-times` record frames times, waiting for presentation to finish before starting next frame.
 
  * `--pgpu` record gpu times for frames and draw calls.
 

@@ -137,5 +137,3 @@ void GraphAxisWidget::setView(qint64 start, qint64 end)
     m_valueEnd = end;
     update();
 }
-
-#include "graphaxiswidget.moc"

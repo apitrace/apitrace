@@ -118,10 +118,6 @@ LocalWriter::open(void) {
 #endif
         process.trimDirectory();
 
-#ifdef ANDROID
-        os::String prefix = "/data/data";
-        prefix.join(process);
-#else
         os::String prefix = os::getCurrentDir();
 #ifdef _WIN32
         // Default to user's desktop, as current directory often points to
@@ -131,7 +127,6 @@ LocalWriter::open(void) {
         if (SUCCEEDED(hr)) {
             prefix = szDesktopPath;
         }
-#endif
 #endif
         prefix.join(process);
 
@@ -295,7 +290,7 @@ void fakeMemcpy(const void *ptr, size_t size) {
         maxSize = (const uint8_t *)mi.BaseAddress + mi.RegionSize - (const uint8_t *)ptr;
     }
     if (maxSize < size) {
-        os::log("apitrace: warning: %u: clamping size from %Iu to %Iu\n", _call, size, maxSize);
+        os::log("apitrace: warning: %u: clamping size from %zu to %zu\n", _call, size, maxSize);
         size = maxSize;
     }
 #endif

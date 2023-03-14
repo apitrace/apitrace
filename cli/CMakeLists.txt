@@ -11,12 +11,13 @@ add_definitions(
 if (WIN32)
     add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="python")
 else ()
-    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE}")
+    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
 endif ()
 
 include_directories (
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/thirdparty
+    ${CMAKE_BINARY_DIR}
 )
 
 add_executable (apitrace
@@ -27,6 +28,7 @@ add_executable (apitrace
     cli_leaks.cpp
     cli_dump.cpp
     cli_dump_images.cpp
+    cli_gltrim.cpp
     cli_pager.cpp
     cli_pickle.cpp
     cli_repack.cpp
@@ -34,17 +36,19 @@ add_executable (apitrace
     cli_sed.cpp
     cli_trace.cpp
     cli_trim.cpp
+    cli_info.cpp
     cli_resources.cpp
 )
 
 target_link_libraries (apitrace
     common
-    brotli_dec brotli_enc brotli_common
-    ${ZLIB_LIBRARIES}
-    ${SNAPPY_LIBRARIES}
-    ${GETOPT_LIBRARIES}
+    PkgConfig::BROTLIDEC
+    PkgConfig::BROTLIENC
+    getopt
     ${CMAKE_DL_LIBS}
 )
+
+add_dependencies(apitrace version)
 
 if (NOT CMAKE_CROSSCOMPILING)
     # On debug builds tell where the source is so that scripts can be found

@@ -106,5 +106,3 @@ bool TraceProcess::canTrace() const
 {
     return m_canTrace;
 }
-
-#include "traceprocess.moc"

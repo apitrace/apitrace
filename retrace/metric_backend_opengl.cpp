@@ -23,6 +23,8 @@
  *
  **************************************************************************/
 
+#include <math.h>
+
 #include "metric_backend_opengl.hpp"
 #include "os_time.hpp"
 #include "os_memory.hpp"
@@ -82,6 +84,11 @@ MetricBackend_opengl::MetricBackend_opengl(glretrace::Context* context,
                           context->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = context->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 1, 5);
+
+    glGetQueryiv(GL_TIMESTAMP, GL_QUERY_COUNTER_BITS, &timestamp_bits_precision);
+    if (timestamp_bits_precision >= 64) {
+         timestamp_bits_precision = 0;
+    }
 
     #ifdef __APPLE__
         // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.
@@ -307,21 +314,34 @@ void MetricBackend_opengl::beginPass() {
 }
 
 void MetricBackend_opengl::processQueries() {
-    int64_t gpuStart, gpuEnd, pixels;
+    int64_t gpuStart, gpuEnd, timestamp, pixels;
     for (int i = 0; i < QUERY_BOUNDARY_LIST_END; i++) {
         QueryBoundary boundary = static_cast<QueryBoundary>(i);
         while (!queries[i].empty()) {
             auto &query = queries[i].front();
             if (metrics[METRIC_GPU_START].profiled[i]) {
                 glGetQueryObjecti64v(query[QUERY_GPU_START], GL_QUERY_RESULT,
-                                     &gpuStart);
-                int64_t value = gpuStart - baseTime;
+                                      &timestamp);
+                if (timestamp < gpuStart && timestamp_bits_precision < 64) {
+                    // Correct clock domain of baseTime after roll-over
+                    baseTime -= (UINT64_C(2) << timestamp_bits_precision) - 1;
+                }
+                gpuStart = timestamp;
+                uint64_t value = gpuStart - baseTime;
                 data[METRIC_GPU_START][i]->addData(boundary, value);
             }
             if (metrics[METRIC_GPU_DURATION].profiled[i]) {
                 if (supportsTimestamp) {
+                    if (!metrics[METRIC_GPU_START].profiled[i]) {
+                        glGetQueryObjecti64v(query[QUERY_GPU_START], GL_QUERY_RESULT,
+                                             &gpuStart);
+                    }
                     glGetQueryObjecti64v(query[QUERY_GPU_DURATION], GL_QUERY_RESULT,
                                          &gpuEnd);
+                    if (gpuEnd < gpuStart && timestamp_bits_precision < 64) {
+                        // Correct the roll-over
+                        gpuEnd += (UINT64_C(2) << timestamp_bits_precision) - 1;
+                    }
                     gpuEnd -= gpuStart;
                 } else {
                     glGetQueryObjecti64vEXT(query[QUERY_GPU_DURATION], GL_QUERY_RESULT,

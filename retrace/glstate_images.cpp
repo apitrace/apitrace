@@ -315,7 +315,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
         if (formatDesc.type == GL_NONE) {
             std::cerr << "error: unexpected GL_TEXTURE_BUFFER internal format "
                       << enumToString(desc.internalFormat)
-                      << " (https://github.com/apitrace/apitrace/issues/426)\n";
+                      << " (https://git.io/JOMRy)\n";
             return false;
         }
 
@@ -771,7 +771,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         if (retrace::resolveMSAA){
             // For resolved MSAA...
             image = new image::Image(desc.width, desc.height, channels, true, channelType);
-            memset(image->pixels, 0x0, desc.width * desc.height * sizeof(int));
+            memset(image->pixels, 0x0, image->sizeInBytes());
             getTexImageMSAA(target, format, type, desc, image->pixels, true);
         }
         else {
@@ -779,7 +779,7 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
             GLuint samples = std::max(desc.samples, 1);
             GLuint total_height = desc.height * samples;
             image = new image::Image(desc.width, total_height, channels, true, channelType);
-            memset(image->pixels, 0x0, desc.width * total_height * sizeof(int));
+            memset(image->pixels, 0x0, image->sizeInBytes());
             getTexImageMSAA(target, format, type, desc, image->pixels, false);
         }
     }
@@ -1242,7 +1242,7 @@ getDrawBufferImageCount()
 
 
 image::Image *
-getDrawBufferImage(int n)
+getDrawBufferImage(int n, bool backBuffer)
 {
     Context context;
 
@@ -1265,7 +1265,7 @@ getDrawBufferImage(int n)
         framebuffer_target = GL_FRAMEBUFFER;
     }
     GLint draw_framebuffer = 0;
-    if (context.framebuffer_object) {
+    if (context.framebuffer_object && !backBuffer) {
         glGetIntegerv(framebuffer_binding, &draw_framebuffer);
     }
 
@@ -1289,7 +1289,7 @@ getDrawBufferImage(int n)
 
     GLint draw_buffer = GL_NONE;
     ImageDesc desc;
-    if (draw_framebuffer) {
+    if (draw_framebuffer && !backBuffer) {
         if (context.ARB_draw_buffers) {
             glGetIntegerv(GL_DRAW_BUFFER0 + n, &draw_buffer);
             if (draw_buffer == GL_NONE) {
@@ -1304,7 +1304,7 @@ getDrawBufferImage(int n)
             return NULL;
         }
     } else if (n == 0) {
-        if (context.ES) {
+        if (context.ES || backBuffer) {
             // XXX: Draw buffer is always FRONT for single buffer context, BACK
             // for double buffered contexts. There is no way to know which (as
             // GL_DOUBLEBUFFER state is also unavailable), so always assume

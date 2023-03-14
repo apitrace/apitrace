@@ -34,7 +34,7 @@
 #include "os.hpp"
 
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) && !defined(__UCLIBC__) && __GLIBC__ == 2 && __GLIBC_MINOR__ < 34
 
 
 #include <dlfcn.h>
@@ -95,6 +95,8 @@ extern void * _libGlHandle;
 enum LibClass {
     LIB_UNKNOWN = 0,
     LIB_GL,
+    LIB_GLX,
+    LIB_OPENGL,
     LIB_EGL,
     LIB_GLES1,
     LIB_GLES2,
@@ -112,6 +114,16 @@ classifyLibrary(const char *pathname)
     if (strcmp(filename, "libGL.so") == 0 ||
         strcmp(filename, "libGL.so.1") == 0) {
         return LIB_GL;
+    }
+
+    if (strcmp(filename, "libGLX.so") == 0 ||
+        strcmp(filename, "libGLX.so.0") == 0) {
+        return LIB_GLX;
+    }
+
+    if (strcmp(filename, "libOpenGL.so") == 0 ||
+        strcmp(filename, "libOpenGL.so.0") == 0) {
+        return LIB_OPENGL;
     }
 
 #ifdef EGLTRACE

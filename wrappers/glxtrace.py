@@ -68,9 +68,15 @@ class GlxTracer(GlTracer):
 
         GlTracer.traceFunctionImplBody(self, function)
 
-        if function.name in self.createContextFunctionNames:
+        if function.name == 'glXCreateContextAttribsARB':
             print('    if (_result != NULL)')
-            print('        gltrace::createContext((uintptr_t)_result);')
+            print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)share_context);')
+        elif function.name == 'glXCreateContextWithConfigSGIX':
+            print('    if (_result != NULL)')
+            print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)share_list);')
+        elif function.name in self.createContextFunctionNames:
+            print('    if (_result != NULL)')
+            print('        gltrace::createContext((uintptr_t)_result, (uintptr_t)shareList);')
 
         if function.name in self.makeCurrentFunctionNames:
             print('    if (_result) {')

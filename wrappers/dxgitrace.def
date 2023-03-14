@@ -1,4 +1,5 @@
 EXPORTS
+	CompatValue
 	CreateDXGIFactory
 	CreateDXGIFactory1
 	CreateDXGIFactory2
@@ -8,12 +9,18 @@ EXPORTS
 	D3D10CreateDeviceAndSwapChain1
 	D3D11CreateDevice
 	D3D11CreateDeviceAndSwapChain
-        D3DPERF_BeginEvent
-        D3DPERF_EndEvent
-        D3DPERF_SetMarker
-        D3DPERF_SetRegion
-        D3DPERF_QueryRepeatFrame
-        D3DPERF_SetOptions
-        D3DPERF_GetStatus
+	D3DPERF_BeginEvent
+	D3DPERF_EndEvent
+	D3DPERF_SetMarker
+	D3DPERF_SetRegion
+	D3DPERF_QueryRepeatFrame
+	D3DPERF_SetOptions
+	D3DPERF_GetStatus
 	DCompositionCreateDevice
 	DCompositionCreateSurfaceHandle
+	DXGID3D10CreateDevice
+	DXGID3D10CreateLayeredDevice
+	DXGID3D10GetLayeredDeviceSize
+	DXGID3D10RegisterLayers
+	DXGIGetDebugInterface
+	DXGIGetDebugInterface1

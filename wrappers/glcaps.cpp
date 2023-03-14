@@ -208,7 +208,7 @@ getInteger(const configuration *config,
             GLint numProgramBinaryFormats = 0;
             _glGetIntegerv(pname, &numProgramBinaryFormats);
             if (numProgramBinaryFormats > 0) {
-                os::log("apitrace: warning: hiding program binary formats (https://github.com/apitrace/apitrace/issues/316)\n");
+                os::log("apitrace: warning: hiding program binary formats (https://git.io/JOM0m)\n");
             }
             params[0] = 0;
         }
@@ -272,6 +272,18 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
             if (params[0] == 0) {
                 params[0] = 4096;
             }
+            break;
+        case GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
+            if (config && config->ubo_offset_alignment > params[0])
+                params[0] = config->ubo_offset_alignment;
+            break;
+        case GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
+            if (config && config->tbo_offset_alignment > params[0])
+                params[0] = config->tbo_offset_alignment;
+            break;
+        case GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT:
+            if (config && config->ssbo_offset_alignment > params[0])
+                params[0] = config->ssbo_offset_alignment;
             break;
         }
     }

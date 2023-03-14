@@ -520,7 +520,7 @@ DXGI_DISPLAY_COLOR_SPACE = Struct("DXGI_DISPLAY_COLOR_SPACE", [
 
 IDXGIFactory1.methods += [
     StdMethod(HRESULT, "EnumAdapters1", [(UINT, "Adapter"), Out(Pointer(ObjPointer(IDXGIAdapter1)), "ppAdapter")]),
-    StdMethod(BOOL, "IsCurrent", []),
+    StdMethod(BOOL, "IsCurrent", [], sideeffects=False),
 ]
 
 IDXGIAdapter1.methods += [
@@ -542,8 +542,15 @@ dxgi.addInterfaces([
     IDXGIResource,
 ])
 dxgi.addFunctions([
+    StdFunction(BOOL, "CompatValue", [(LPCSTR, 'pValueName'), Out(Pointer(UINT64), 'pValue')], sideeffects=False),
     StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
     StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "DXGID3D10CreateDevice", [(HMODULE, "hModule"), (ObjPointer(IDXGIFactory), "pFactory"), (ObjPointer(IDXGIAdapter), "pAdapter"), (UINT, "Flags"), (OpaquePointer(Const(IUnknown)), "pUnknown"), Out(Pointer(ObjPointer(Void)), "ppDevice")], internal=True),
+    StdFunction(HRESULT, "DXGID3D10CreateLayeredDevice", [(UINT), (UINT), (UINT), (UINT), (UINT)], internal=True),
+    StdFunction(SIZE_T,  "DXGID3D10GetLayeredDeviceSize", [(OpaqueArray(Const(Void), "NumLayers"), "pLayers"), (UINT, "NumLayers")], internal=True),
+    StdFunction(HRESULT, "DXGID3D10RegisterLayers", [(OpaqueArray(Const(Void), "NumLayers"), "pLayers"), (UINT, "NumLayers")], internal=True),
+    StdFunction(HRESULT, "DXGIGetDebugInterface", [(REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDebug')]),
+    StdFunction(HRESULT, "DXGIGetDebugInterface1", [(UINT, "Flags"), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppDebug')]),
 ])
 
 
@@ -644,7 +651,7 @@ IDXGIDevice2 = Interface("IDXGIDevice2", IDXGIDevice1)
 IDXGIDevice2.methods += [
     StdMethod(HRESULT, "OfferResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), (DXGI_OFFER_RESOURCE_PRIORITY, "Priority")]),
     StdMethod(HRESULT, "ReclaimResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), Out(Pointer(BOOL), "pDiscarded")]),
-    StdMethod(HRESULT, "EnqueueSetEvent", [(HANDLE, "hEvent")]),
+    StdMethod(HRESULT, "EnqueueSetEvent", [(HANDLE, "hEvent")], sideeffects=False),
 ]
 
 DXGI_MODE_DESC1 = Struct("DXGI_MODE_DESC1", [
@@ -1066,4 +1073,98 @@ dxgi.addInterfaces([
     IDXGISwapChain4,
     IDXGIDevice4,
     IDXGIFactory5,
+])
+
+
+#
+# DXGI 1.6
+#
+
+DXGI_ADAPTER_FLAG3 = Enum('DXGI_ADAPTER_FLAG3', [
+    'DXGI_ADAPTER_FLAG3_NONE',
+    'DXGI_ADAPTER_FLAG3_REMOTE',
+    'DXGI_ADAPTER_FLAG3_SOFTWARE',
+    'DXGI_ADAPTER_FLAG3_ACG_COMPATIBLE',
+    'DXGI_ADAPTER_FLAG3_FORCE_DWORD',
+    'DXGI_ADAPTER_FLAG3_SUPPORT_MONITORED_FENCES',
+    'DXGI_ADAPTER_FLAG3_SUPPORT_NON_MONITORED_FENCES',
+    'DXGI_ADAPTER_FLAG3_KEYED_MUTEX_CONFORMANCE',
+])
+
+DXGI_ADAPTER_DESC3 = Struct('DXGI_ADAPTER_DESC3', [
+    (WString, 'Description'),
+    (UINT, 'VendorId'),
+    (UINT, 'DeviceId'),
+    (UINT, 'SubSysId'),
+    (UINT, 'Revision'),
+    (SIZE_T, 'DedicatedVideoMemory'),
+    (SIZE_T, 'DedicatedSystemMemory'),
+    (SIZE_T, 'SharedSystemMemory'),
+    (LUID, 'AdapterLuid'),
+    (DXGI_ADAPTER_FLAG3, 'Flags'),
+    (DXGI_GRAPHICS_PREEMPTION_GRANULARITY, 'GraphicsPreemptionGranularity'),
+    (DXGI_COMPUTE_PREEMPTION_GRANULARITY, 'ComputePreemptionGranularity'),
+])
+
+DXGI_OUTPUT_DESC1 = Struct('DXGI_OUTPUT_DESC1', [
+    (WString, 'DeviceName'),
+    (RECT, 'DesktopCoordinates'),
+    (BOOL, 'AttachedToDesktop'),
+    (DXGI_MODE_ROTATION, 'Rotation'),
+    (HMONITOR, 'Monitor'),
+    (UINT, 'BitsPerColor'),
+    (DXGI_COLOR_SPACE_TYPE, 'ColorSpace'),
+    (Array(FLOAT, 2), 'RedPrimary'),
+    (Array(FLOAT, 2), 'GreenPrimary'),
+    (Array(FLOAT, 2), 'BluePrimary'),
+    (Array(FLOAT, 2), 'WhitePoint'),
+    (FLOAT, 'MinLuminance'),
+    (FLOAT, 'MaxLuminance'),
+    (FLOAT, 'MaxFullFrameLuminance'),
+])
+
+DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS = Flags(UINT, [
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_FULLSCREEN',
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_WINDOWED',
+    'DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAG_CURSOR_STRETCHED',
+])
+
+DXGI_GPU_PREFERENCE = Enum('DXGI_GPU_PREFERENCE', [
+    'DXGI_GPU_PREFERENCE_UNSPECIFIED',
+    'DXGI_GPU_PREFERENCE_MINIMUM_POWER',
+    'DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE',
+])
+
+IDXGIFactory6 = Interface('IDXGIFactory6', IDXGIFactory5)
+IDXGIFactory7 = Interface('IDXGIFactory7', IDXGIFactory6)
+IDXGIAdapter4 = Interface('IDXGIAdapter4', IDXGIAdapter3)
+IDXGIOutput6 = Interface('IDXGIOutput6', IDXGIOutput5)
+
+IDXGIAdapter4.methods += [
+    StdMethod(HRESULT, 'GetDesc3', [Out(Pointer(DXGI_ADAPTER_DESC3), 'pDesc')], sideeffects=False),
+]
+
+IDXGIOutput6.methods += [
+    StdMethod(HRESULT, 'GetDesc1', [Out(Pointer(DXGI_OUTPUT_DESC1), 'pDesc')], sideeffects=False),
+    StdMethod(HRESULT, 'CheckHardwareCompositionSupport', [Out(Pointer(DXGI_HARDWARE_COMPOSITION_SUPPORT_FLAGS), 'pFlags')], sideeffects=False),
+]
+
+IDXGIFactory6.methods += [
+    StdMethod(HRESULT, 'EnumAdapterByGpuPreference', [(UINT, 'Adapter'), (DXGI_GPU_PREFERENCE, 'GpuPreference'), (REFIID, 'riid'), Out(Pointer(ObjPointer(Void)), 'ppvAdapter')]),
+]
+
+IDXGIFactory7.methods += [
+    StdMethod(HRESULT, 'RegisterAdaptersChangedEvent', [(HANDLE, 'hEvent'), Out(Pointer(DWORD), 'pdwCookie')], sideeffects=False),
+    StdMethod(HRESULT, 'UnregisterAdaptersChangedEvent', [(DWORD, 'dwCookie')], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGIFactory7,
+    IDXGIFactory6,
+    IDXGIAdapter4,
+    IDXGIOutput6,
+])
+
+dxgi.addFunctions([
+    StdFunction(HRESULT, "DXGIDeclareAdapterRemovalSupport", [], sideeffects=False),
 ])

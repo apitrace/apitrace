@@ -11,6 +11,7 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
+#include <QRegularExpression>
 
 #include "qubjson.h"
 
@@ -139,7 +140,9 @@ Retracer::Retracer(QObject *parent)
       m_captureCall(0),
       m_profileGpu(false),
       m_profileCpu(false),
-      m_profilePixels(false)
+      m_profilePixels(false),
+      m_queryHandling(0),
+      m_queryCheckThreshold(0)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
 }
@@ -256,6 +259,11 @@ qlonglong Retracer::captureAtCallNumber() const
     return m_captureCall;
 }
 
+void Retracer::setCallsToIgnore(const QList<RetracerCallRange>& callsToIgnore)
+{
+    m_callsToIgnore = callsToIgnore;
+}
+
 bool Retracer::captureState() const
 {
     return m_captureState;
@@ -264,6 +272,26 @@ bool Retracer::captureState() const
 void Retracer::setCaptureState(bool enable)
 {
     m_captureState = enable;
+}
+
+int Retracer::queryHandling()
+{
+    return m_queryHandling;
+}
+
+void Retracer::setQueryHandling(int handling)
+{
+    m_queryHandling = handling;
+}
+
+int Retracer::queryCheckReportThreshold()
+{
+    return m_queryCheckThreshold;
+}
+
+void Retracer::setQueryCheckReportThreshold(int value)
+{
+    m_queryCheckThreshold = value;
 }
 
 bool Retracer::captureThumbnails() const
@@ -394,6 +422,31 @@ void Retracer::run()
         if (m_benchmarking) {
             arguments << QLatin1String("-b");
         }
+    }
+
+    switch (m_queryHandling) {
+    case 1:
+        arguments << QLatin1String("--query-handling");
+        arguments << QLatin1String("run");
+        break;
+    case 2:
+        arguments << QLatin1String("--query-handling");
+        arguments << QLatin1String("check");
+
+        if (m_queryCheckThreshold > 0) {
+            arguments << QLatin1String("--query-tolerance");
+            arguments << QString::number(m_queryCheckThreshold);
+        }
+        break;
+    }
+
+    if (!m_callsToIgnore.empty()) {
+        arguments << QLatin1String("--ignore-calls");
+        QString callsStr("");
+        for (RetracerCallRange& callRange : m_callsToIgnore) {
+            callsStr += QString("%1-%2,").arg(callRange.m_callStartNo).arg(callRange.m_callEndNo);
+        }
+        arguments << callsStr;
     }
 
     arguments << m_fileName;
@@ -538,14 +591,15 @@ void Retracer::run()
 
     QList<ApiTraceError> errors;
     process.setReadChannel(QProcess::StandardError);
-    QRegExp regexp("(^\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
+    QRegularExpression regexp("^(\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
     while (!process.atEnd()) {
         QString line = process.readLine();
-        if (regexp.indexIn(line) != -1) {
+        QRegularExpressionMatch match = regexp.match(line);
+        if (match.hasMatch()) {
             ApiTraceError error;
-            error.callIndex = regexp.cap(1).toInt();
-            error.type = regexp.cap(2);
-            error.message = regexp.cap(3);
+            error.callIndex = match.captured(1).toInt();
+            error.type = match.captured(2);
+            error.message = match.captured(3);
             errors.append(error);
         } else if (!errors.isEmpty()) {
             // Probably a multiligne message
@@ -581,5 +635,3 @@ void Retracer::run()
 
     emit finished(msg);
 }
-
-#include "retracer.moc"

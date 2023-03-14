@@ -36,9 +36,13 @@ public:
     LastFrameLoopParser(AbstractParser *p, int c) {
         parser = p;
         loopCount = c;
+        starts_new_frame = true;
     }
 
     ~LastFrameLoopParser() {
+        for (auto c : lastFrameCalls)
+            delete c;
+        lastFrameCalls.clear();
         delete parser;
     }
 
@@ -53,25 +57,17 @@ public:
     const Properties & getProperties(void) const override { return parser->getProperties(); }
 private:
     int loopCount;
+    bool starts_new_frame;
     AbstractParser *parser;
-    ParseBookmark frameStart;
-    ParseBookmark lastFrameStart;
+    std::vector<Call *> lastFrameCalls;
+    std::vector<Call *>::iterator lastFrameIterator;
 };
 
 
 bool
 LastFrameLoopParser::open(const char *filename)
 {
-    bool ret = parser->open(filename);
-    if (ret) {
-        /* If the user wants to loop we need to get a bookmark target. We
-         * usually get this after replaying a call that ends a frame, but
-         * for a trace that has only one frame we need to get it at the
-         * beginning. */
-        parser->getBookmark(frameStart);
-        lastFrameStart = frameStart;
-    }
-    return ret;
+    return parser->open(filename);
 }
 
 Call *
@@ -83,18 +79,29 @@ LastFrameLoopParser::parse_call(void)
 
     /* Restart last frame when looping is requested. */
     if (call) {
-        lastFrameStart = frameStart;
-        if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            parser->getBookmark(frameStart);
+        if (starts_new_frame) {
+            for (auto c : lastFrameCalls)
+                delete c;
+            lastFrameCalls.clear();
         }
-    } else {
-        if (loopCount) {
-            frameStart = lastFrameStart;
-            parser->setBookmark(frameStart);
-            call = parser->parse_call();
-            if (loopCount > 0) {
-                --loopCount;
-            }
+
+        call->reuse_call = true;
+        lastFrameCalls.push_back(call);
+        starts_new_frame = call->flags & trace::CALL_FLAG_END_FRAME;
+
+        lastFrameIterator = lastFrameCalls.begin();
+
+        return call;
+    }
+
+    /* else */
+    if (loopCount) {
+        call = *lastFrameIterator;
+        ++lastFrameIterator;
+        if (lastFrameIterator == lastFrameCalls.end()) {
+            /* repeat the frame */
+            lastFrameIterator = lastFrameCalls.begin();
+            --loopCount;
         }
     }
 

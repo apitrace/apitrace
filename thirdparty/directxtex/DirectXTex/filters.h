@@ -16,8 +16,8 @@
 #ifdef USE_XNAMATH
 #include <xnamath.h>
 #else
-#include <directxmath.h>
-#include <directxpackedvector.h>
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
 #endif
 
 #include <memory>

@@ -172,6 +172,8 @@ public:
 
         writer.writeInt(call->no);
 
+        writer.writeInt(call->thread_id);
+
         writer.writeString(call->name());
 
         writer.beginList();
@@ -276,6 +278,10 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = parser.parse_call())) {
+            if (call->no > calls.getLast()) {
+                delete call;
+                break;
+            }
             if (calls.contains(*call)) {
                 writer.begin();
                 visitor.visit(call);

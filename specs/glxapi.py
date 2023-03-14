@@ -167,6 +167,7 @@ GLXEnum = FakeEnum(Int, [
     "GLX_GPU_NUM_SIMD_AMD",		# 0x21A6
     "GLX_GPU_NUM_RB_AMD",		# 0x21A7
     "GLX_GPU_NUM_SPI_AMD",		# 0x21A8
+    "GLX_CONTEXT_OPENGL_NO_ERROR_ARB",		# 0x31B3
     "GLX_NONE",		# 0x8000
     "GLX_SLOW_CONFIG",		# 0x8001
     "GLX_TRUE_COLOR",		# 0x8002
@@ -229,7 +230,6 @@ GLXEnum = FakeEnum(Int, [
     "GLX_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION_MESA",		# 0x818B
     "GLX_RENDERER_OPENGL_ES_PROFILE_VERSION_MESA",		# 0x818C
     "GLX_RENDERER_OPENGL_ES2_PROFILE_VERSION_MESA",		# 0x818D
-    "GLX_RENDERER_ID_MESA",		# 0x818E
     "GLX_LOSE_CONTEXT_ON_RESET_ARB",		# 0x8252
     "GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB",		# 0x8256
     "GLX_NO_RESET_NOTIFICATION_ARB",		# 0x8261
@@ -299,8 +299,8 @@ GLXCommonAttribs = [
     ('GLX_TRANSPARENT_GREEN_VALUE', Int),
     ('GLX_TRANSPARENT_BLUE_VALUE', Int),
     ('GLX_TRANSPARENT_ALPHA_VALUE', Int),
-    ('GLX_SAMPLE_BUFFERS', UInt),
-    ('GLX_SAMPLES', UInt),
+    ('GLX_SAMPLE_BUFFERS', Int),
+    ('GLX_SAMPLES', Int),
 ]
 
 GLXVisualAttribs = AttribArray(GLXEnum, GLXCommonAttribs + [
@@ -351,6 +351,7 @@ GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
         'GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB',
         'GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB',
     ])),
+    ('GLX_CONTEXT_OPENGL_NO_ERROR_ARB', Bool),
 ])
 
 GLXPixmapAttribs = AttribArray(Const(GLXEnum), [
@@ -493,7 +494,7 @@ glxapi.addFunctions([
     Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),
 
     # GLX_MESA_set_3dfx_mode
-    Function(Bool, "glXSet3DfxModeMESA", [(Int, "mode")]),
+    Function(GLboolean, "glXSet3DfxModeMESA", [(GLint, "mode")]),
 
     # GLX_MESA_swap_control
     Function(Int, "glXSwapIntervalMESA", [(UInt, "interval")]),
@@ -578,7 +579,7 @@ glxapi.addFunctions([
     # GLX_SGIX_pbuffer
     Function(GLXPbufferSGIX, "glXCreateGLXPbufferSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (UInt, "width"), (UInt, "height"), (GLXPbufferSGIXAttribs, "attrib_list")]),
     Function(Void, "glXDestroyGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf")]),
-    Function(Int, "glXQueryGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf"), (Int, "attribute"), Out(Pointer(UInt), "value")]),
+    Function(Void, "glXQueryGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf"), (Int, "attribute"), Out(Pointer(UInt), "value")]),
     Function(Void, "glXSelectEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (ULong, "mask")]),
     Function(Void, "glXGetSelectedEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), Out(Pointer(ULong), "mask")]),
 

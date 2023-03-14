@@ -209,6 +209,31 @@ EGLPlatformDisplayAttribsEXT = EGLIntArray([
     ('EGL_PLATFORM_X11_SCREEN_EXT', Int),
 ])
 
+eglImageAttribs = [
+    ('EGL_IMAGE_PRESERVED', EGLBoolean),
+
+    ('EGL_GL_TEXTURE_LEVEL', Int),
+    ('EGL_GL_TEXTURE_ZOFFSET', Int),
+
+    # EGL_EXT_image_dma_buf_import
+    ('EGL_LINUX_DRM_FOURCC_EXT', Int),
+    ('EGL_DMA_BUF_PLANE0_FD_EXT', Int),
+    ('EGL_DMA_BUF_PLANE0_OFFSET_EXT', Int),
+    ('EGL_DMA_BUF_PLANE0_PITCH_EXT', Int),
+    ('EGL_DMA_BUF_PLANE1_FD_EXT', Int),
+    ('EGL_DMA_BUF_PLANE1_OFFSET_EXT', Int),
+    ('EGL_DMA_BUF_PLANE1_PITCH_EXT', Int),
+    ('EGL_DMA_BUF_PLANE2_FD_EXT', Int),
+    ('EGL_DMA_BUF_PLANE2_OFFSET_EXT', Int),
+    ('EGL_DMA_BUF_PLANE2_PITCH_EXT', Int),
+    ('EGL_YUV_COLOR_SPACE_HINT_EXT', FakeEnum(Int, ['EGL_ITU_REC601_EXT', 'EGL_ITU_REC709_EXT', 'EGL_ITU_REC2020_EXT'])),
+    ('EGL_SAMPLE_RANGE_HINT_EXT', FakeEnum(Int, ['EGL_YUV_FULL_RANGE_EXT', 'EGL_YUV_NARROW_RANGE_EXT'])),
+    ('EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
+    ('EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
+]
+EGLImageAttribs = EGLAttribArray(eglImageAttribs)
+EGLImageAttribsKHR = EGLIntArray(eglImageAttribs)
+
 EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
 
 def GlFunction(*args, **kwargs):
@@ -263,7 +288,7 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglDestroySync", [(EGLDisplay, "dpy"), (EGLSync, "sync")]),
     GlFunction(EGLint, "eglClientWaitSync", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint, "flags"), (EGLTime, "timeout")]),
     GlFunction(EGLBoolean, "eglGetSyncAttrib", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLAttrib), "value")], sideeffects=False),
-    GlFunction(EGLImage, "eglCreateImage", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLAttribArray([('EGL_IMAGE_PRESERVED', EGLBoolean)]), "attrib_list")]),
+    GlFunction(EGLImage, "eglCreateImage", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLImageAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyImage", [(EGLDisplay, "dpy"), (EGLImage, "image")]),
     GlFunction(EGLDisplay, "eglGetPlatformDisplay", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribs, "attrib_list")]),
     GlFunction(EGLSurface, "eglCreatePlatformWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLAttribArray([]), "attrib_list")]),
@@ -281,6 +306,9 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreatePlatformWindowSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLIntArray([]), "attrib_list")]),
     GlFunction(EGLSurface, "eglCreatePlatformPixmapSurfaceEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLIntArray([]), "attrib_list")]),
 
+    # EGL_KHR_partial_update
+    GlFunction(EGLBoolean, "eglSetDamageRegionKHR", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
+
     # EGL_EXT_swap_buffers_with_damage
     GlFunction(EGLBoolean, "eglSwapBuffersWithDamageEXT", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (Array(EGLint, "n_rects*4"), "rects"), (EGLint, "n_rects")]),
 
@@ -294,7 +322,7 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     # EGL_KHR_image
-    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLIntArray([('EGL_IMAGE_PRESERVED_KHR', EGLBoolean)]), "attrib_list")]),
+    GlFunction(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLImageAttribsKHR, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
 
     # EGL_KHR_image_base

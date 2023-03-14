@@ -292,7 +292,7 @@ attachDebugger(DWORD dwProcessId)
     ZeroMemory(&pi, sizeof pi);
     STARTUPINFOA si;
     ZeroMemory(&si, sizeof si);
-    si.cb = sizeof &si;
+    si.cb = sizeof si;
 
     BOOL bRet = FALSE;
     if (!CreateProcessA(

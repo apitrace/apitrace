@@ -557,18 +557,17 @@ public:
     unsigned no;
     const FunctionSig *sig;
     std::vector<Arg> args;
-    Value *ret;
+    Value *ret = nullptr;
 
     CallFlags flags;
-    Backtrace* backtrace;
+    Backtrace *backtrace = nullptr;
+    bool reuse_call = false;
 
     Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 
-        ret(0),
-        flags(_flags),
-        backtrace(0) {
+        flags(_flags) {
     }
 
     ~Call();
@@ -580,6 +579,12 @@ public:
 
     inline Value &
     arg(unsigned index) {
+        assert(index < args.size());
+        return *(args[index].value);
+    }
+
+    inline const Value &
+    arg(unsigned index) const {
         assert(index < args.size());
         return *(args[index].value);
     }

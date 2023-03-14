@@ -28,6 +28,8 @@ void ApiCallDelegate::paint(QPainter *painter,
     Q_ASSERT(index.column() == 0);
 
     if (event) {
+        painter->save();
+
         QPoint offset = option.rect.topLeft();
         QStaticText text = event->staticText();
         QSize textSize = text.size().toSize();
@@ -54,6 +56,9 @@ void ApiCallDelegate::paint(QPainter *painter,
             painter->drawPixmap(option.rect.topLeft(), px);
             offset += QPoint(textSize.height() + 5, 0);
         }
+
+        bool textDisabled = false;
+
         if (event->type() == ApiTraceEvent::Call) {
             ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
             const QImage & thumbnail = call->thumbnail();
@@ -75,9 +80,18 @@ void ApiCallDelegate::paint(QPainter *painter,
                 painter->drawPixmap(offset, px);
                 offset += QPoint(textSize.height() + 5, 0);
             }
+
+            textDisabled = call->ignored();
+        }
+
+        if (!textDisabled) {
+            painter->setPen(option.palette.color(QPalette::Normal, QPalette::Text));
+        } else {
+            painter->setPen(option.palette.color(QPalette::Disabled, QPalette::Text));
         }
 
         painter->drawStaticText(offset, text);
+        painter->restore();
     } else {
         QStyledItemDelegate::paint(painter, option, index);
     }
@@ -125,6 +139,3 @@ QSize ApiCallDelegate::sizeHint(const QStyleOptionViewItem &option,
     }
     return QStyledItemDelegate::sizeHint(option, index);
 }
-
-
-#include "apicalldelegate.moc"
