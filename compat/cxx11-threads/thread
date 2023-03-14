@@ -34,6 +34,7 @@
 #include <windows.h>
 
 #include <functional>
+#include <chrono>
 
 
 namespace std {
@@ -45,7 +46,7 @@ namespace std {
 
         inline
         thread() :
-            _native_handle(0)
+            _native_handle(nullptr)
         {
         }
 
@@ -53,7 +54,7 @@ namespace std {
         thread(thread &&other) :
             _native_handle(other._native_handle)
         {
-            other._native_handle = 0;
+            other._native_handle = nullptr;
         }
 
         thread(const thread &other) = delete;
@@ -78,20 +79,25 @@ namespace std {
 
         inline thread &
         operator =(thread &&other) {
-            assert(_native_handle == 0);
+            assert(_native_handle == nullptr);
             _native_handle = other._native_handle;
-            other._native_handle = 0;
+            other._native_handle = nullptr;
             return *this;
         }
 
         inline bool
         joinable(void) const {
-            return _native_handle != 0;
+            return _native_handle != nullptr;
         }
 
         inline void
         join() {
             WaitForSingleObject(_native_handle, INFINITE);
+        }
+
+        inline void
+        detach() {
+            _native_handle = nullptr;
         }
 
     private:
@@ -114,5 +120,16 @@ namespace std {
             return reinterpret_cast<HANDLE>(handle);
         }
     };
+
+    namespace this_thread {
+
+        template< class Rep, class Period >
+        inline void
+        sleep_for(const std::chrono::duration<Rep, Period> &sleep_duration) {
+            DWORD dwMiliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(sleep_duration).count();
+            Sleep(dwMiliseconds);
+        }
+
+    }
 
 } /* namespace std */
