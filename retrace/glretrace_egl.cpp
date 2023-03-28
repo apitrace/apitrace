@@ -34,6 +34,8 @@
 #include "os.hpp"
 #include "eglsize.hpp"
 
+#include <climits>
+
 #ifndef EGL_OPENGL_ES_API
 #define EGL_OPENGL_ES_API		0x30A0
 #define EGL_OPENVG_API			0x30A1
@@ -122,7 +124,7 @@ static void retrace_eglSetDamageRegionKHR(trace::Call &call)
 {
     glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
     trace::Array *rects_array = call.arg(2).toArray();
-    EGLint nrects = call.arg(3).toUInt();
+    EGLint nrects = std::min(call.arg(3).toUInt(), (unsigned long long int)PTRDIFF_MAX);
 
     if (!drawable)
         return;
@@ -138,7 +140,7 @@ static void retrace_eglSetDamageRegionKHR(trace::Call &call)
 static void retrace_eglSwapBuffersWithDamage(trace::Call &call) {
     glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
     trace::Array *rects_array = call.arg(2).toArray();
-    EGLint nrects = call.arg(3).toUInt();
+    EGLint nrects = std::min(call.arg(3).toUInt(), (unsigned long long int)PTRDIFF_MAX);
 
     frame_complete(call);
 
