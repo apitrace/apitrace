@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <climits>
 #include <memory>
 
 #include "trace_file.hpp"
@@ -954,7 +955,7 @@ void Parser::scan_repr() {
 
 
 Value *Parser::parse_wstring() {
-    size_t len = read_uint();
+    size_t len = std::min(read_uint(), (long long unsigned int)PTRDIFF_MAX);
     wchar_t * value = new wchar_t[len + 1];
     for (size_t i = 0; i < len; ++i) {
         value[i] = read_uint();
