@@ -24,6 +24,9 @@ project (apitrace)
 # command so that we can default to auto-detecting optional depencies, while
 # still providing a mechanism to force/disable these optional dependencies, as
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
+if (NOT MINGW)
+    set (CMAKE_INTERPROCEDURAL_OPTIMIZATION True)
+endif ()
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 option (ENABLE_QT6 "Use Qt6 support." OFF)
 
