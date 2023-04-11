@@ -165,9 +165,6 @@ void setContext(uintptr_t context_id)
          * Since we currently don't trace window sizes, and rely on viewport
          * calls to deduct, emit fake calls here so that viewport/scissor state
          * can be deducated.
-         *
-         * FIXME: don't call the real functions here -- just emit the fake
-         * calls.
          */
         GLint viewport[4] = {0, 0, 0, 0};
         GLint scissor[4] = {0, 0, 0, 0};
