@@ -109,6 +109,9 @@ bool releaseContext(uintptr_t context_id)
     return res;
 }
 
+static bool
+contextCreated = false;
+
 void createContext(uintptr_t context_id, uintptr_t shared_context_id)
 {
     // wglCreateContextAttribsARB causes internal calls to wglCreateContext to be
@@ -116,6 +119,8 @@ void createContext(uintptr_t context_id, uintptr_t shared_context_id)
     if (context_map.find(context_id) != context_map.end()) {
         return;
     }
+
+    contextCreated = true;
 
     context_ptr_t ctx(new Context);
 
@@ -192,6 +197,14 @@ void clearContext(void)
 
 Context *getContext(void)
 {
+    if (!contextCreated) {
+        static bool warned = false;
+        if (!warned) {
+            os::log("apitrace: warning: attempt to get GL context information when no GL context creation was intercepted, "
+                    "likely the wrong EGL/GLX/WGL/CGL API is being traced\n");
+            warned = true;
+        }
+    }
     return get_ts()->current_context.get();
 }
 
