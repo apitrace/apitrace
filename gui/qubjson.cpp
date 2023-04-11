@@ -39,11 +39,11 @@ using namespace ubjson;
 static Marker
 readMarker(QDataStream &stream)
 {
-    if (stream.atEnd()) {
-        return MARKER_EOF;
-    }
     quint8 byte;
     stream >> byte;
+    if (stream.status() != QDataStream::Ok) {
+        return MARKER_EOF;
+    }
     return static_cast<Marker>(byte);
 }
 
