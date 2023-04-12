@@ -114,6 +114,17 @@ class D3DRetracer(Retracer):
     def doInvokeInterfaceMethod(self, interface, method):
         Retracer.doInvokeInterfaceMethod(self, interface, method)
 
+        # Gracefully handle missing REF driver.
+        if method.name in self.createDeviceMethodNames:
+            print(r'    if (_result == D3DERR_NOTAVAILABLE && DeviceType == D3DDEVTYPE_REF) {')
+            print(r'        retrace::warning(call) << "reference driver not available, continuing with software vertex processing\n";')
+            print(r'        DeviceType = D3DDEVTYPE_HAL;')
+            print(r'        BehaviorFlags &= ~D3DCREATE_PUREDEVICE;')
+            print(r'        BehaviorFlags &= ~D3DCREATE_HARDWARE_VERTEXPROCESSING;')
+            print(r'        BehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print(r'    }')
+
         # Keep retrying IDirectXVideoDecoder::BeginFrame when returns E_PENDING
         if interface.name == 'IDirectXVideoDecoder' and method.name == 'BeginFrame':
             print(r'    while (_result == E_PENDING) {')
