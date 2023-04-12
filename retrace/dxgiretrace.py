@@ -80,14 +80,6 @@ class D3DRetracer(Retracer):
                 print(r'        Flags &= ~D3D10_CREATE_DEVICE_DEBUG;')
                 print(r'    }')
 
-                # D3D10CreateDevice(D3D10_DRIVER_TYPE_REFERENCE) fails with
-                # DXGI_ERROR_UNSUPPORTED on 64bits.
-                print(r'#ifdef _WIN64')
-                print(r'    if (DriverType == D3D10_DRIVER_TYPE_REFERENCE) {')
-                print(r'        DriverType = D3D10_DRIVER_TYPE_WARP;')
-                print(r'    }')
-                print(r'#endif')
-
                 # Force driver
                 self.forceDriver('D3D10_DRIVER_TYPE_HARDWARE')
 
@@ -110,16 +102,28 @@ class D3DRetracer(Retracer):
     def doInvokeFunction(self, function):
         Retracer.doInvokeFunction(self, function)
 
-        # Handle missing debug layer.  While it's possible to detect whether
-        # the debug layers are present, by creating a null device, and checking
-        # the result.  It's simpler to retry.
+        # Handle missing reference drivers and missing debug layers.
+        #
+        # While it's possible to detect whether the debug layers are present,
+        # by creating a null device, and checking the result.  It's simpler to
+        # retry.
         if function.name.startswith('D3D10CreateDevice'):
+            print(r'        if (_result == DXGI_ERROR_UNSUPPORTED && DriverType == D3D10_DRIVER_TYPE_REFERENCE) {')
+            print(r'            retrace::warning(call) << "reference driver not available, continuing with WARP\n";')
+            print(r'            DriverType = D3D10_DRIVER_TYPE_WARP;')
+            Retracer.doInvokeFunction(self, function)
+            print(r'        }')
             print(r'        if ((_result == E_FAIL || _result == DXGI_ERROR_SDK_COMPONENT_MISSING) && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {')
             print(r'            retrace::warning(call) << "Direct3D 10.x SDK Debug Layer (d3d10sdklayers.dll) not available, continuing without debug output\n";')
             print(r'            Flags &= ~D3D10_CREATE_DEVICE_DEBUG;')
             Retracer.doInvokeFunction(self, function)
             print(r'        }')
         if function.name.startswith('D3D11CreateDevice'):
+            print(r'        if (_result == DXGI_ERROR_UNSUPPORTED && DriverType == D3D_DRIVER_TYPE_REFERENCE) {')
+            print(r'            retrace::warning(call) << "reference driver not available, continuing with WARP\n";')
+            print(r'            DriverType = D3D_DRIVER_TYPE_WARP;')
+            Retracer.doInvokeFunction(self, function)
+            print(r'        }')
             print(r'        if ((_result == E_FAIL || _result == DXGI_ERROR_SDK_COMPONENT_MISSING) && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {')
             print(r'            retrace::warning(call) << "Direct3D 11.x SDK Debug Layer (d3d11*sdklayers.dll) not available, continuing without debug output\n";')
             print(r'            Flags &= ~D3D11_CREATE_DEVICE_DEBUG;')
