@@ -3,6 +3,7 @@
 *~
 *.7z
 *.a
+*.bin
 *.bmp
 *.bz2
 *.cbp
