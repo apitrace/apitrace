@@ -8,7 +8,7 @@ jobs:
   ubuntu64:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
@@ -28,7 +28,7 @@ jobs:
   ubuntu32:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
@@ -43,7 +43,7 @@ jobs:
   ubuntu64-clang:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
@@ -63,7 +63,7 @@ jobs:
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
@@ -71,7 +71,7 @@ jobs:
     - name: build
       run: ci/build-ubuntu-18.04.sh
     - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: apitrace-ubuntu-18.04
         path: build/docker-ubuntu-18.04/apitrace-*.tar.bz2
@@ -80,7 +80,7 @@ jobs:
   mingw32:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
@@ -96,13 +96,13 @@ jobs:
         arch: ["x86", "arm"]
         target: ["win32", "win64"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           *qtbase-*.7z
@@ -111,7 +111,7 @@ jobs:
     - name: Build
       run: .\ci\build-msvc.ps1 -arch ${{ matrix.arch }} -target ${{ matrix.target }}
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: apitrace-${{ matrix.target }}-${{ matrix.arch }}
         path: build/apitrace-*.7z
@@ -120,13 +120,13 @@ jobs:
   mac64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
         submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: "qt/*qtbase-*.7z"
         key: ${{ runner.os }}-5.15.2-1
