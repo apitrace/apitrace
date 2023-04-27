@@ -27,12 +27,25 @@
 
 #pragma once
 
+#include "ft_tracecall.hpp"
 #include "trace_parser.hpp"
 
-#include <vector>
+#include <functional>
+#include <set>
 #include <unordered_set>
+#include <vector>
 
 namespace frametrim {
+
+using ft_callback = std::function<void(const trace::Call&)>;
+
+struct string_part_less {
+    bool operator () (const char *lhs, const char *rhs) const
+    {
+        int len = std::min(strlen(lhs), strlen(rhs));
+        return strncmp(lhs, rhs, len) < 0;
+    }
+};
 
 enum Frametype {
     ft_none = 0,
@@ -44,19 +57,38 @@ class FrameTrimmer
 {
 public:
     FrameTrimmer(bool keep_all_states, bool swap_to_finish);
-    ~FrameTrimmer();
 
-    void start_last_frame(uint32_t callno);
+    static std::shared_ptr<FrameTrimmer> create(trace::API api, bool keep_all_states, bool swap_to_finish);
+
     void call(const trace::Call& call, Frametype target_frame_type);
+    void start_last_frame(uint32_t callno);
+    void end_last_frame();
 
-    std::unordered_set<unsigned> finalize(int last_frame_start);
+    std::unordered_set<unsigned> get_skip_loop_calls();
     std::unordered_set<unsigned> get_swap_to_finish_calls();
 
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();
-private:
-    struct FrameTrimmeImpl *impl;
 
+protected:
+    virtual void emitState() {};
+    virtual void finalize() {};
+    virtual ft_callback findCallback(const char *name) = 0;
+    virtual bool skipDeleteObj(const trace::Call& call) = 0;
+
+    using CallTableCache =  std::map<const char *, ft_callback>;
+    CallTableCache m_call_table_cache;
+
+    PTraceCall m_last_swap;
+    bool m_recording_frame;
+    bool m_keep_all_state_calls;
+    bool m_swaps_to_finish;
+    unsigned m_last_frame_start;
+
+    CallSet m_required_calls;
+    std::set<std::string> m_unhandled_calls;
+    std::unordered_set<unsigned> m_swap_calls;
+    std::unordered_set<unsigned> m_skip_loop_calls;
 };
 
 }

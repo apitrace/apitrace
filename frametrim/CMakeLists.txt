@@ -17,6 +17,7 @@ add_executable(gltrim
    ft_frametrimmer.cpp
    ft_main.cpp
    ft_matrixstate.cpp
+   ft_opengl.cpp
    ft_tracecall.cpp)
 
 target_link_libraries (gltrim
