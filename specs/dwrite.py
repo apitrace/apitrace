@@ -770,7 +770,7 @@ dwrite.addInterfaces([
     IDWriteFactory
 ])
 dwrite.addFunctions([
-    StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(ObjPointer(IUnknown)), "factory")]),
+    StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(ObjPointer(IUnknown)), "factory")], throw='WIN_NOEXCEPT'),
 ])
 
 

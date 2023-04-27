@@ -38,6 +38,10 @@ if __name__ == '__main__':
     print()
     print('#define DWRITE_EXPORT WINAPI')
     print()
+    print('#ifndef WIN_NOEXCEPT')
+    print('#define WIN_NOEXCEPT')
+    print('#endif')
+    print()
     print('#include "d2dimports.hpp"')
     print()
 
