@@ -382,7 +382,7 @@ def InOut(type, name):
 
 class Function:
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False, overloaded=False):
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False, overloaded=False, throw=''):
         self.type = type
         self.name = name
 
@@ -405,6 +405,7 @@ class Function:
         self.sideeffects = sideeffects
         self.internal = internal
         self.overloaded = overloaded
+        self.throw = throw
 
     def prototype(self, name=None):
         if name is not None:
@@ -423,6 +424,8 @@ class Function:
         else:
             s += "void"
         s += ")"
+        if self.throw:
+            s += ' ' + self.throw
         return s
 
     def sigName(self):
