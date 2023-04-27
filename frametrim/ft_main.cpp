@@ -133,7 +133,7 @@ static int trim_to_frame(const char *filename,
         out_filename = std::string(base.str()) + std::string("-trim.trace");
     }
 
-    FrameTrimmer trimmer(options.keep_all_states, options.swap_to_finish);
+    auto trimmer = FrameTrimmer::create(p.api, options.keep_all_states, options.swap_to_finish);
 
     frame = 0;
     uint64_t callid = 0;
@@ -157,11 +157,11 @@ static int trim_to_frame(const char *filename,
             ft = ft_retain_frame;
             if ((last_frame_start == 0) && frame == options.frames.getLast()) {
                 last_frame_start = call->no - 1;
-                trimmer.start_last_frame(last_frame_start);
+                trimmer->start_last_frame(last_frame_start);
             }
         }
 
-        trimmer.call(*call, ft);
+        trimmer->call(*call, ft);
 
         if (call->flags & trace::CALL_FLAG_END_FRAME) {
             if (options.top_frame_call_counts > 0) {
@@ -180,8 +180,10 @@ static int trim_to_frame(const char *filename,
         call.reset(p.parse_call());
         ++calls_in_this_frame;
     }
-    auto skip_loop_calls = trimmer.finalize(last_frame_start);
-    auto swap_calls = trimmer.get_swap_to_finish_calls();
+
+    trimmer->end_last_frame();
+    auto skip_loop_calls = trimmer->get_skip_loop_calls();
+    auto swap_calls = trimmer->get_swap_to_finish_calls();
 
     std::cerr << "\nDone scanning frames\n";
 
@@ -191,7 +193,7 @@ static int trim_to_frame(const char *filename,
         return 2;
     }
 
-    auto call_ids = trimmer.getUniqueCallIds();
+    auto call_ids = trimmer->getUniqueCallIds();
     std::cerr << "Write output file\n";
 
     p.close();
