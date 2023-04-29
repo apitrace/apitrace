@@ -133,12 +133,23 @@ static int trim_to_frame(const char *filename,
         out_filename = std::string(base.str()) + std::string("-trim.trace");
     }
 
-    auto trimmer = FrameTrimmer::create(p.api, options.keep_all_states, options.swap_to_finish);
-
     frame = 0;
     uint64_t callid = 0;
     std::unique_ptr<trace::Call> call(p.parse_call());
     std::priority_queue<std::pair<unsigned, unsigned>> calls_in_frame;
+
+    /* Determine whether the trace API is supported */
+    while (call && p.api == trace::API_UNKNOWN)
+        call.reset(p.parse_call());
+    if (!FrameTrimmer::isSupported(p.api)) {
+        std::cerr << "error: unsupported API" << std::endl;
+        return 1;
+    }
+    p.close();
+    p.open(filename);
+    call.reset(p.parse_call());
+
+    auto trimmer = FrameTrimmer::create(p.api, options.keep_all_states, options.swap_to_finish);
 
     unsigned calls_in_this_frame = 0;
     uint32_t last_frame_start = 0;

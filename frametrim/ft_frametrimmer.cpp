@@ -40,6 +40,12 @@ FrameTrimmer::FrameTrimmer(bool keep_all_states, bool swap_to_finish):
 {
 }
 
+bool
+FrameTrimmer::isSupported(trace::API api)
+{
+    return (api == trace::API_GL || api == trace::API_EGL);
+}
+
 std::shared_ptr<FrameTrimmer>
 FrameTrimmer::create(trace::API api, bool keep_all_states, bool swap_to_finish)
 {
