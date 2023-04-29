@@ -26,6 +26,7 @@
  *********************************************************************/
 
 #include "ft_frametrimmer.hpp"
+#include "ft_d3d11.hpp"
 #include "ft_opengl.hpp"
 
 #include <algorithm>
@@ -43,7 +44,7 @@ FrameTrimmer::FrameTrimmer(bool keep_all_states, bool swap_to_finish):
 bool
 FrameTrimmer::isSupported(trace::API api)
 {
-    return (api == trace::API_GL || api == trace::API_EGL);
+    return (api == trace::API_GL || api == trace::API_EGL || api == trace::API_DXGI);
 }
 
 std::shared_ptr<FrameTrimmer>
@@ -52,6 +53,9 @@ FrameTrimmer::create(trace::API api, bool keep_all_states, bool swap_to_finish)
     if (api == trace::API_GL || api == trace::API_EGL) {
         std::cerr << "Creating OpenGL trimmer" << std::endl;
         return std::make_shared<OpenGLImpl>(keep_all_states, swap_to_finish);
+    } else if (api == trace::API_DXGI) {
+        std::cerr << "Creating D3D11 trimmer" << std::endl;
+        return std::make_shared<D3D11Impl>(keep_all_states);
     } else {
         assert(0);
     }
