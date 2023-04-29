@@ -58,6 +58,7 @@ class FrameTrimmer
 public:
     FrameTrimmer(bool keep_all_states, bool swap_to_finish);
 
+    static bool isSupported(trace::API api);
     static std::shared_ptr<FrameTrimmer> create(trace::API api, bool keep_all_states, bool swap_to_finish);
 
     void call(const trace::Call& call, Frametype target_frame_type);
