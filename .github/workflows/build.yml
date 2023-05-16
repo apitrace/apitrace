@@ -32,13 +32,8 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
-    - run: sudo dpkg --add-architecture i386
-    - run: sudo apt-get update
-    - run: sudo apt-get install -qq -y --no-install-recommends gcc-multilib g++-multilib python3 ninja-build cmake libx11-dev:i386
-    - run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DENABLE_STATIC_EXE=1 -DENABLE_GUI=0
-    - run: cmake --build build --use-stderr
-    - run: cmake --build build --use-stderr --target check
-    - run: test -x build/glretrace -a -x build/wrappers/glxtrace.so
+    - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+    - run: ci/build-ubuntu32.sh
 
   ubuntu64-clang:
     runs-on: ubuntu-22.04
@@ -68,8 +63,7 @@ jobs:
         fetch-depth: 1
         submodules: recursive
     - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
-    - name: build
-      run: ci/build-ubuntu-18.04.sh
+    - run: ci/build-ubuntu-18.04.sh
     - if: env.PACKAGE == 'true'
       uses: actions/upload-artifact@v3
       with:

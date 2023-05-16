@@ -62,9 +62,9 @@ docker_run \
     "$@"
 
 docker_run cmake --build $build_dir
-if false
+if [ "$TEST" = "true" ]
 then
-    docker_run cmake --build $build_dir --target test
+    docker_run cmake --build $build_dir --target check
 fi
 
 symbol_versions $build_dir/glretrace
