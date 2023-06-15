@@ -11,7 +11,7 @@ ShadersSourceWidget::ShadersSourceWidget(QWidget *parent)
 
     m_ui.verticalLayout->addWidget(m_edit);
 
-    connect(m_ui.shadersCB, SIGNAL(currentIndexChanged(const QString &)),
+    connect(m_ui.shadersCB, SIGNAL(currentTextChanged(const QString &)),
             SLOT(changeShader(const QString &)));
 }
 

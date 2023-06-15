@@ -1178,7 +1178,7 @@ void MainWindow::initConnections()
             m_vdataInterpreter, SLOT(interpretData()));
     connect(m_ui.bufferExportButton, SIGNAL(clicked()),
             this, SLOT(exportBufferData()));
-    connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
+    connect(m_ui.vertexTypeCB, SIGNAL(currentTextChanged(const QString&)),
             m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
     connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
             m_vdataInterpreter, SLOT(setStride(int)));
