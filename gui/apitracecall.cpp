@@ -976,11 +976,11 @@ QStaticText ApiTraceCall::staticText() const
             // and elide it
             if (argText.length() > 40) {
                 QString shortened = argText.mid(0, 40);
-                shortened[argText.length() - 5] = '.';
-                shortened[argText.length() - 4] = '.';
-                shortened[argText.length() - 3] = '.';
-                shortened[argText.length() - 2] = argText.at(argText.length() - 2);
-                shortened[argText.length() - 1] = argText.at(argText.length() - 1);
+                shortened[shortened.length() - 5] = '.';
+                shortened[shortened.length() - 4] = '.';
+                shortened[shortened.length() - 3] = '.';
+                shortened[shortened.length() - 2] = argText.at(argText.length() - 2);
+                shortened[shortened.length() - 1] = argText.at(argText.length() - 1);
                 richText += shortened;
             } else {
                 richText += argText;
