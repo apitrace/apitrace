@@ -13,7 +13,7 @@ TraceProcess::TraceProcess(QObject *parent)
 
     connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)),
             this, SLOT(traceFinished()));
-    connect(m_process, SIGNAL(error(QProcess::ProcessError)),
+    connect(m_process, SIGNAL(errorOccurred(QProcess::ProcessError)),
             this, SLOT(traceError(QProcess::ProcessError)));
 }
 

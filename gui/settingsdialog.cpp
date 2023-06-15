@@ -22,7 +22,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     }
     showFilterCB->addItem(tr("Custom"), QRegularExpression());
 
-    connect(showFilterCB, SIGNAL(currentIndexChanged(const QString &)),
+    connect(showFilterCB, SIGNAL(currentTextChanged(const QString &)),
             SLOT(changeRegexp(const QString&)));
     connect(showFilterEdit, SIGNAL(textEdited(const QString &)),
             SLOT(regexpChanged(const QString&)));
