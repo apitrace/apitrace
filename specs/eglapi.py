@@ -352,6 +352,9 @@ eglapi.addFunctions([
     # EGL_CHROMIUM_get_sync_values
     GlFunction(Bool, "eglGetSyncValuesCHROMIUM", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), Out(Pointer(Int64), "ust"), Out(Pointer(Int64), "msc"), Out(Pointer(Int64), "sbc")], sideeffects=False),
 
+    # EGL_EXT_device_enumeration
+    GlFunction(EGLBoolean, "eglQueryDevicesEXT", [(EGLint, "max_devices"), Out(Array(EGLDeviceEXT, "max_devices"), "devices"), Out(Array(EGLint, "max_devices"), "num_devices")], sideeffects=False),
+
     # EGL_EXT_device_query
     GlFunction(EGLBoolean, "eglQueryDeviceAttribEXT", [(EGLDeviceEXT, "device"), (EGLint_enum, "attribute"), Out(Pointer(EGLAttrib), "value")], sideeffects=False),
     GlFunction(ConstCString, "eglQueryDeviceStringEXT", [(EGLDeviceEXT, "device"), (EGLint_enum, "name")], sideeffects=False),
