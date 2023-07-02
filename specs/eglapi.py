@@ -84,6 +84,10 @@ EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
 # EGL_NV_system_time
 EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
+# EGL_WL_bind_wayland_display
+WlDisplay = Opaque("struct wl_display*")
+WlResource = Opaque("struct wl_resource*")
+
 eglapi = Module("EGL")
 
 EGLSurfaceFlags = Flags(Int, [
@@ -106,8 +110,19 @@ EGLConformantFlags = Flags(Int, [
 
 EGLVGAlphaFormat = FakeEnum(Int, ['EGL_VG_ALPHA_FORMAT_NONPRE', 'EGL_VG_ALPHA_FORMAT_PRE'])
 EGLVGColorspace = FakeEnum(Int, ['EGL_VG_COLORSPACE_sRGB', 'EGL_VG_COLORSPACE_LINEAR'])
-EGLTextureFormat = FakeEnum(Int, ['EGL_NO_TEXTURE', 'EGL_TEXTURE_RGB', 'EGL_TEXTURE_RGBA'])
 EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE'])
+
+EGLTextureFormat = FakeEnum(Int, [
+    'EGL_NO_TEXTURE',
+    'EGL_TEXTURE_RGB',
+    'EGL_TEXTURE_RGBA',
+
+    # EGL_WL_bind_wayland_display
+    'EGL_TEXTURE_Y_U_V_WL',
+    'EGL_TEXTURE_Y_UV_WL',
+    'EGL_TEXTURE_Y_XUXV_WL',
+    'EGL_TEXTURE_EXTERNAL_WL',
+])
 
 def EGLIntArray(values):
     return AttribArray(Const(EGLint_enum), values, terminator = 'EGL_NONE')
@@ -250,6 +265,9 @@ eglImageAttribs = [
     ('EGL_DMA_BUF_PLANE3_PITCH_EXT', Int),
     ('EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT', Int),
     ('EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT', Int),
+
+    # EGL_WL_bind_wayland_display
+    ('EGL_WAYLAND_PLANE_WL', Int),
 ]
 EGLImageAttribs = EGLAttribArray(eglImageAttribs)
 EGLImageAttribsKHR = EGLIntArray(eglImageAttribs)
@@ -391,4 +409,9 @@ eglapi.addFunctions([
     # GL_OES_EGL_image
     GlFunction(Void, "glEGLImageTargetTexture2DOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
     GlFunction(Void, "glEGLImageTargetRenderbufferStorageOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
+
+    # EGL_WL_bind_wayland_display
+    GlFunction(EGLBoolean, "eglBindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
+    GlFunction(EGLBoolean, "eglUnbindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
+    GlFunction(EGLBoolean, "eglQueryWaylandBufferWL", [(EGLDisplay, "dpy"), (WlResource, "buffer"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 ])
