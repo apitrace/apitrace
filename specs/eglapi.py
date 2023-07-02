@@ -399,6 +399,10 @@ eglapi.addFunctions([
     GlFunction(EGLImageKHR, "eglCreateDRMImageMESA", [(EGLDisplay, "dpy"), (EGLDrmImageMesaAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglExportDRMImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "name"), Out(Pointer(EGLint), "handle"), Out(Pointer(EGLint), "stride")]),
 
+    # EGL_MESA_image_dma_buf_export
+    GlFunction(EGLBoolean, "eglExportDMABUFImageQueryMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "fourcc"), Out(Pointer(EGLint), "num_planes"), Out(Pointer(EGLuint64KHR), "modifiers")]),
+    GlFunction(EGLBoolean, "eglExportDMABUFImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Array(EGLint, 4), "fds"), Out(Array(EGLint, 4), "strides"), Out(Array(EGLint, 4), "offsets")]),
+
     # EGL_NV_post_sub_buffer
     GlFunction(EGLBoolean, "eglPostSubBufferNV", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint, "x"), (EGLint, "y"), (EGLint, "width"), (EGLint, "height")]),
 
