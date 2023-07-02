@@ -207,6 +207,13 @@ EGLContextAttribs = EGLIntArray([
     ])),
     ('EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY', EGLenum),
     ('EGL_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV', EGLBoolean),
+
+    # EGL_IMG_context_priority
+    ('EGL_CONTEXT_PRIORITY_LEVEL_IMG', Flags(Int, [
+        'EGL_CONTEXT_PRIORITY_HIGH_IMG',
+        'EGL_CONTEXT_PRIORITY_MEDIUM_IMG',
+        'EGL_CONTEXT_PRIORITY_LOW_IMG',
+    ])),
 ])
 
 EGLDrmImageMesaAttribs = EGLIntArray([
