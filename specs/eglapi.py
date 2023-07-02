@@ -333,6 +333,9 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreatePlatformPixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLAttribArray([]), "attrib_list")]),
     GlFunction(EGLBoolean, "eglWaitSync", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint, "flags")]),
 
+    # EGL_ANDROID_native_fence_sync
+    GlFunction(EGLint, "eglDupNativeFenceFDANDROID", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync")]),
+
     # EGL_ANGLE_query_surface_pointer
     GlFunction(EGLBoolean, "eglQuerySurfacePointerANGLE", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint_enum, "attribute"), Out(Pointer(OpaquePointer(Void)), "value")], sideeffects=False),
 
