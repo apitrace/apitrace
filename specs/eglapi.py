@@ -213,6 +213,9 @@ EGLContextAttribs = EGLIntArray([
         'EGL_CONTEXT_PRIORITY_HIGH_IMG',
         'EGL_CONTEXT_PRIORITY_MEDIUM_IMG',
         'EGL_CONTEXT_PRIORITY_LOW_IMG',
+
+        # EGL_NV_context_priority_realtime
+        'EGL_CONTEXT_PRIORITY_REALTIME_NV',
     ])),
 ])
 

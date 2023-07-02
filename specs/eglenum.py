@@ -321,6 +321,7 @@ EGLenum = Enum("EGLenum", [
     "EGL_YUV_PLANE_BPP_0_EXT",		# 0x331B
     "EGL_YUV_PLANE_BPP_8_EXT",		# 0x331C
     "EGL_YUV_PLANE_BPP_10_EXT",		# 0x331D
+    "EGL_NV_context_priority_realtime",	# 0x3357
     "EGL_DRM_RENDER_NODE_FILE_EXT",	# 0x3377
     "EGL_OBJECT_THREAD_KHR",		# 0x33B0
     "EGL_OBJECT_DISPLAY_KHR",		# 0x33B1
