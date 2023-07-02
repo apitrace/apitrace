@@ -56,6 +56,9 @@ EGLSync = Opaque("EGLSync")
 EGLImage = Opaque("EGLImage")
 EGLTime = Alias("EGLTime", UInt64)
 
+# EGL_EXT_image_dma_buf_import_modifiers
+EGLuint64KHR = Alias("EGLuint64KHR", UInt64)
+
 # EGL_KHR_image_base
 EGLImageKHR = Alias("EGLImageKHR", EGLImage)
 
@@ -231,6 +234,19 @@ eglImageAttribs = [
     ('EGL_SAMPLE_RANGE_HINT_EXT', FakeEnum(Int, ['EGL_YUV_FULL_RANGE_EXT', 'EGL_YUV_NARROW_RANGE_EXT'])),
     ('EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
     ('EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
+
+    # EGL_EXT_image_dma_buf_import_modifiers
+    ('EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT', Int),
+    ('EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT', Int),
+    ('EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT', Int),
+    ('EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT', Int),
+    ('EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT', Int),
+    ('EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_FD_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_OFFSET_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_PITCH_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT', Int),
 ]
 EGLImageAttribs = EGLAttribArray(eglImageAttribs)
 EGLImageAttribsKHR = EGLIntArray(eglImageAttribs)
@@ -301,6 +317,10 @@ eglapi.addFunctions([
 
     # EGL_CHROMIUM_get_sync_values
     GlFunction(Bool, "eglGetSyncValuesCHROMIUM", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), Out(Pointer(Int64), "ust"), Out(Pointer(Int64), "msc"), Out(Pointer(Int64), "sbc")], sideeffects=False),
+
+    # EGL_EXT_image_dma_buf_import_modifiers
+    GlFunction(EGLBoolean, "eglQueryDmaBufFormatsEXT", [(EGLDisplay, "dpy"), (EGLint, "max_formats"), Out(Array(EGLint, "max_formats"), "formats"), Out(Pointer(EGLint), "num_formats")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQueryDmaBufModifiersEXT", [(EGLDisplay, "dpy"), (EGLint, "format"), (EGLint, "max_modifiers"), Out(Array(EGLuint64KHR, "max_modifiers"), "modifiers"), Out(Array(EGLBoolean, "max_modifiers"), "external_only"), Out(Pointer(EGLint), "num_modifiers")], sideeffects=False),
 
     # EGL_EXT_platform_base
     GlFunction(EGLDisplay, "eglGetPlatformDisplayEXT", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribsEXT, "attrib_list")]),
