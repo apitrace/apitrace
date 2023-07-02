@@ -56,6 +56,9 @@ EGLSync = Opaque("EGLSync")
 EGLImage = Opaque("EGLImage")
 EGLTime = Alias("EGLTime", UInt64)
 
+# EGL_EXT_device_query
+EGLDeviceEXT = Opaque("EGLDeviceEXT")
+
 # EGL_EXT_image_dma_buf_import_modifiers
 EGLuint64KHR = Alias("EGLuint64KHR", UInt64)
 
@@ -317,6 +320,11 @@ eglapi.addFunctions([
 
     # EGL_CHROMIUM_get_sync_values
     GlFunction(Bool, "eglGetSyncValuesCHROMIUM", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), Out(Pointer(Int64), "ust"), Out(Pointer(Int64), "msc"), Out(Pointer(Int64), "sbc")], sideeffects=False),
+
+    # EGL_EXT_device_query
+    GlFunction(EGLBoolean, "eglQueryDeviceAttribEXT", [(EGLDeviceEXT, "device"), (EGLint_enum, "attribute"), Out(Pointer(EGLAttrib), "value")], sideeffects=False),
+    GlFunction(ConstCString, "eglQueryDeviceStringEXT", [(EGLDeviceEXT, "device"), (EGLint_enum, "name")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQueryDisplayAttribEXT", [(EGLDisplay, "dpy"), (EGLint_enum, "attribute"), Out(Pointer(EGLAttrib), "value")], sideeffects=False),
 
     # EGL_EXT_image_dma_buf_import_modifiers
     GlFunction(EGLBoolean, "eglQueryDmaBufFormatsEXT", [(EGLDisplay, "dpy"), (EGLint, "max_formats"), Out(Array(EGLint, "max_formats"), "formats"), Out(Pointer(EGLint), "num_formats")], sideeffects=False),
