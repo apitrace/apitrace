@@ -69,6 +69,10 @@ public:
         window (win)
     {}
 
+    ~WaffleDrawable() {
+        waffle_window_destroy(window);
+    }
+
     void
     resize(int w, int h) {
         if (w == width && h == height) {
