@@ -230,6 +230,9 @@ void
 frameComplete(trace::Call &call)
 {
     ++frameNo;
+    char szFrameNo[16] = {0};
+    sprintf(szFrameNo, "%d", frameNo);
+    setenv("FRAME_NO", szFrameNo, 1);
     bool bNeedFrameDelay = perFrameDelayUsec || minFrameDurationUsec;
     if (bNeedFrameDelay) {
         long long startTime = os::getTime();
