@@ -57,7 +57,8 @@ public slots:
 private slots:
     void callItemSelected(const QModelIndex &index);
     void callItemActivated(const QModelIndex &index);
-    void createTrace(const RecentLaunch* optionalLaunch = nullptr);
+    void createTrace(const RecentLaunch* optionalLaunch);
+    void createTrace() { createTrace(nullptr); }
     void openTrace();
     void saveTrace();
     void replayStart();

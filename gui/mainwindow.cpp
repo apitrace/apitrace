@@ -973,10 +973,9 @@ void MainWindow::leakTrace()
 {
     LeakTraceThread *t=new LeakTraceThread(m_trace->fileName());
 
-    connect (t,SIGNAL(finished()),this,SLOT(leakTraceFinished()));
-
-    connect (t,SIGNAL(leakTraceErrors(const QList<ApiTraceError> &)),
-            this,SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+    connect (t, &QThread::finished, this, &MainWindow::leakTraceFinished);
+    connect (t, &LeakTraceThread::leakTraceErrors,
+            this, &MainWindow::slotRetraceErrors);
 
     t->start();
 }
@@ -1002,13 +1001,11 @@ void MainWindow::showSurfacesMenu(const QPoint &pos)
 
     QAction *act = menu.addAction(tr("View Image"));
     act->setStatusTip(tr("View the currently selected surface"));
-    connect(act, SIGNAL(triggered()),
-            SLOT(showSelectedSurface()));
+    connect(act, &QAction::triggered, this, &MainWindow::showSelectedSurface);
 
     act = menu.addAction(tr("Save Image"));
     act->setStatusTip(tr("Save the currently selected surface"));
-    connect(act, SIGNAL(triggered()),
-            SLOT(saveSelectedSurface()));
+    connect(act, &QAction::triggered, this, &MainWindow::saveSelectedSurface);
 
     menu.exec(tree->viewport()->mapToGlobal(pos));
 }
@@ -1138,151 +1135,145 @@ void MainWindow::initObjects()
 
 void MainWindow::initConnections()
 {
-    connect(m_trace, SIGNAL(problemLoadingTrace(const QString&)),
-            this, SLOT(loadError(const QString&)));
-    connect(m_trace, SIGNAL(startedLoadingTrace()),
-            this, SLOT(startedLoadingTrace()));
-    connect(m_trace, SIGNAL(loaded(int)),
-            this, SLOT(loadProgess(int)));
-    connect(m_trace, SIGNAL(finishedLoadingTrace()),
-            this, SLOT(finishedLoadingTrace()));
-    connect(m_trace, SIGNAL(startedSaving()),
-            this, SLOT(slotStartedSaving()));
-    connect(m_trace, SIGNAL(saved()),
-            this, SLOT(slotSaved()));
-    connect(m_trace, SIGNAL(changed(ApiTraceEvent*)),
-            this, SLOT(slotTraceChanged(ApiTraceEvent*)));
-    connect(m_trace, SIGNAL(findResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
-            this, SLOT(slotSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
-    connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
-            this, SLOT(slotFoundFrameStart(ApiTraceFrame*)));
-    connect(m_trace, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
-            this, SLOT(slotFoundFrameEnd(ApiTraceFrame*)));
-    connect(m_trace, SIGNAL(foundCallIndex(ApiTraceCall*)),
-            this, SLOT(slotJumpToResult(ApiTraceCall*)));
+    connect(m_trace, &ApiTrace::problemLoadingTrace,
+            this, &MainWindow::loadError);
+    connect(m_trace, &ApiTrace::startedLoadingTrace,
+            this, &MainWindow::startedLoadingTrace);
+    connect(m_trace, &ApiTrace::loaded,
+            this, &MainWindow::loadProgess);
+    connect(m_trace, &ApiTrace::finishedLoadingTrace,
+            this, &MainWindow::finishedLoadingTrace);
+    connect(m_trace, &ApiTrace::startedSaving,
+            this, &MainWindow::slotStartedSaving);
+    connect(m_trace, &ApiTrace::saved,
+            this, &MainWindow::slotSaved);
+    connect(m_trace, &ApiTrace::changed,
+            this, &MainWindow::slotTraceChanged);
+    connect(m_trace, &ApiTrace::findResult,
+            this, &MainWindow::slotSearchResult);
+    connect(m_trace, &ApiTrace::foundFrameStart,
+            this, &MainWindow::slotFoundFrameStart);
+    connect(m_trace, &ApiTrace::foundFrameEnd,
+            this, &MainWindow::slotFoundFrameEnd);
+    connect(m_trace, &ApiTrace::foundCallIndex,
+            this, &MainWindow::slotJumpToResult);
 
-    connect(m_retracer, SIGNAL(finished(const QString&)),
-            this, SLOT(replayFinished(const QString&)));
-    connect(m_retracer, SIGNAL(error(const QString&)),
-            this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
-            this, SLOT(replayStateFound(ApiTraceState*)));
-    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
-            this, SLOT(replayProfileFound(trace::Profile*)));
-    connect(m_retracer, SIGNAL(foundThumbnails(const ImageHash&)),
-            this, SLOT(replayThumbnailsFound(const ImageHash&)));
-    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
-            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+    connect(m_retracer, &Retracer::finished,
+            this, &MainWindow::replayFinished);
+    connect(m_retracer, &Retracer::error,
+            this, &MainWindow::replayError);
+    connect(m_retracer, &Retracer::foundState,
+            this, &MainWindow::replayStateFound);
+    connect(m_retracer, &Retracer::foundProfile,
+            this, &MainWindow::replayProfileFound);
+    connect(m_retracer, qOverload<const ImageHash&>(&Retracer::foundThumbnails),
+            this, &MainWindow::replayThumbnailsFound);
+    connect(m_retracer, &Retracer::retraceErrors,
+            this, &MainWindow::slotRetraceErrors);
 
-    connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
-            m_vdataInterpreter, SLOT(interpretData()));
-    connect(m_ui.bufferExportButton, SIGNAL(clicked()),
-            this, SLOT(exportBufferData()));
-    connect(m_ui.vertexTypeCB, SIGNAL(currentTextChanged(const QString&)),
-            m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
-    connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setStride(int)));
-    connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setComponents(int)));
-    connect(m_ui.startingOffsetSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setStartingOffset(int)));
+    connect(m_ui.vertexInterpretButton, &QAbstractButton::clicked,
+            m_vdataInterpreter, &VertexDataInterpreter::interpretData);
+    connect(m_ui.bufferExportButton, &QAbstractButton::clicked,
+            this, &MainWindow::exportBufferData);
+    connect(m_ui.vertexTypeCB, &QComboBox::currentTextChanged,
+            m_vdataInterpreter, &VertexDataInterpreter::setTypeFromString);
+    connect(m_ui.vertexStrideSB, &QSpinBox::valueChanged,
+            m_vdataInterpreter, &VertexDataInterpreter::setStride);
+    connect(m_ui.vertexComponentsSB, &QSpinBox::valueChanged,
+            m_vdataInterpreter, &VertexDataInterpreter::setComponents);
+    connect(m_ui.startingOffsetSB, &QSpinBox::valueChanged,
+            m_vdataInterpreter, &VertexDataInterpreter::setStartingOffset);
 
 
-    connect(m_ui.actionNew, SIGNAL(triggered()),
-            this, SLOT(createTrace()));
-    connect(m_ui.actionOpen, SIGNAL(triggered()),
-            this, SLOT(openTrace()));
-    connect(m_ui.actionSave, SIGNAL(triggered()),
-            this, SLOT(saveTrace()));
-    connect(m_ui.actionQuit, SIGNAL(triggered()),
-            this, SLOT(close()));
+    connect(m_ui.actionNew, &QAction::triggered,
+            this, qOverload<>(&MainWindow::createTrace));
+    connect(m_ui.actionOpen, &QAction::triggered,
+            this, &MainWindow::openTrace);
+    connect(m_ui.actionSave, &QAction::triggered,
+            this, &MainWindow::saveTrace);
+    connect(m_ui.actionQuit, &QAction::triggered,
+            this, &QWidget::close);
 
-    connect(m_ui.actionFind, SIGNAL(triggered()),
-            this, SLOT(slotSearch()));
-    connect(m_ui.actionGo, SIGNAL(triggered()),
-            this, SLOT(slotGoTo()));
-    connect(m_ui.actionGoFrameStart, SIGNAL(triggered()),
-            this, SLOT(slotGoFrameStart()));
-    connect(m_ui.actionGoFrameEnd, SIGNAL(triggered()),
-            this, SLOT(slotGoFrameEnd()));
+    connect(m_ui.actionFind, &QAction::triggered,
+            this, &MainWindow::slotSearch);
+    connect(m_ui.actionGo, &QAction::triggered,
+            this, &MainWindow::slotGoTo);
+    connect(m_ui.actionGoFrameStart, &QAction::triggered,
+            this, &MainWindow::slotGoFrameStart);
+    connect(m_ui.actionGoFrameEnd, &QAction::triggered,
+            this, &MainWindow::slotGoFrameEnd);
 
-    connect(m_ui.actionReplay, SIGNAL(triggered()),
-            this, SLOT(replayStart()));
-    connect(m_ui.actionProfile, SIGNAL(triggered()),
-            this, SLOT(replayProfile()));
-    connect(m_ui.actionStop, SIGNAL(triggered()),
-            this, SLOT(replayStop()));
-    connect(m_ui.actionLookupState, SIGNAL(triggered()),
-            this, SLOT(lookupState()));
-    connect(m_ui.actionTrim, SIGNAL(triggered()),
-            this, SLOT(trim()));
-    connect(m_ui.actionToggleCalls, SIGNAL(triggered()),
-            this, SLOT(toggleCalls()));
-    connect(m_ui.actionEnableAllCalls, SIGNAL(triggered()),
-            this, SLOT(enableAllCalls()));
-    connect(m_ui.actionShowThumbnails, SIGNAL(triggered()),
-            this, SLOT(showThumbnails()));
-    connect(m_ui.actionOptions, SIGNAL(triggered()),
-            this, SLOT(showSettings()));
-    connect(m_ui.actionLeakTrace,SIGNAL(triggered()),
-            this, SLOT(leakTrace()));
+    connect(m_ui.actionReplay, &QAction::triggered,
+            this, &MainWindow::replayStart);
+    connect(m_ui.actionProfile, &QAction::triggered,
+            this, &MainWindow::replayProfile);
+    connect(m_ui.actionStop, &QAction::triggered,
+            this, &MainWindow::replayStop);
+    connect(m_ui.actionLookupState, &QAction::triggered,
+            this, &MainWindow::lookupState);
+    connect(m_ui.actionTrim, &QAction::triggered,
+            this, &MainWindow::trim);
+    connect(m_ui.actionToggleCalls, &QAction::triggered,
+            this, &MainWindow::toggleCalls);
+    connect(m_ui.actionEnableAllCalls, &QAction::triggered,
+            this, &MainWindow::enableAllCalls);
+    connect(m_ui.actionShowThumbnails, &QAction::triggered,
+            this, &MainWindow::showThumbnails);
+    connect(m_ui.actionOptions, &QAction::triggered,
+            this, &MainWindow::showSettings);
+    connect(m_ui.actionLeakTrace,&QAction::triggered,
+            this, &MainWindow::leakTrace);
 
-    connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
-            this, SLOT(callItemSelected(const QModelIndex &)));
-    connect(m_ui.callView, SIGNAL(doubleClicked(const QModelIndex &)),
-            this, SLOT(callItemActivated(const QModelIndex &)));
-    connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
-            this, SLOT(customContextMenuRequested(QPoint)));
+    connect(m_ui.callView->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, &MainWindow::callItemSelected);
+    connect(m_ui.callView, &QAbstractItemView::doubleClicked,
+            this, &MainWindow::callItemActivated);
+    connect(m_ui.callView, &QWidget::customContextMenuRequested,
+            this, &MainWindow::customContextMenuRequested);
 
-    connect(m_ui.surfacesTreeWidget,
-            SIGNAL(customContextMenuRequested(const QPoint &)),
-            SLOT(showSurfacesMenu(const QPoint &)));
-    connect(m_ui.surfacesTreeWidget,
-            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
-            SLOT(showSelectedSurface()));
+    connect(m_ui.surfacesTreeWidget, &QWidget::customContextMenuRequested,
+            this, &MainWindow::showSurfacesMenu);
+    connect(m_ui.surfacesTreeWidget, &QTreeWidget::itemDoubleClicked,
+            this, &MainWindow::showSelectedSurface);
 
-    connect(m_ui.nonDefaultsCB, SIGNAL(toggled(bool)),
-            this, SLOT(fillState(bool)));
+    connect(m_ui.nonDefaultsCB, &QAbstractButton::toggled,
+            this, &MainWindow::fillState);
 
-    connect(m_jumpWidget, SIGNAL(jumpTo(int)),
-            SLOT(slotJumpTo(int)));
+    connect(m_jumpWidget, &JumpWidget::jumpTo, this, &MainWindow::slotJumpTo);
 
-    connect(m_searchWidget,
-            SIGNAL(searchNext(const QString&, Qt::CaseSensitivity, bool)),
-            SLOT(slotSearchNext(const QString&, Qt::CaseSensitivity, bool)));
-    connect(m_searchWidget,
-            SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity, bool)),
-            SLOT(slotSearchPrev(const QString&, Qt::CaseSensitivity, bool)));
+    connect(m_searchWidget, &SearchWidget::searchNext,
+            this, &MainWindow::slotSearchNext);
+    connect(m_searchWidget, &SearchWidget::searchPrev,
+            this, &MainWindow::slotSearchPrev);
 
-    connect(m_traceProcess, SIGNAL(tracedFile(const QString&)),
-            SLOT(createdTrace(const QString&)));
-    connect(m_traceProcess, SIGNAL(error(const QString&)),
-            SLOT(traceError(const QString&)));
+    connect(m_traceProcess, &TraceProcess::tracedFile,
+            this, &MainWindow::createdTrace);
+    connect(m_traceProcess, &TraceProcess::error,
+            this, &MainWindow::traceError);
 
-    connect(m_trimProcess, SIGNAL(trimmedFile(const QString&)),
-            SLOT(createdTrim(const QString&)));
-    connect(m_trimProcess, SIGNAL(error(const QString&)),
-            SLOT(trimError(const QString&)));
+    connect(m_trimProcess, &TrimProcess::trimmedFile,
+            this, &MainWindow::createdTrim);
+    connect(m_trimProcess, &TrimProcess::error,
+            this, &MainWindow::trimError);
 
-    connect(m_ui.errorsDock, SIGNAL(visibilityChanged(bool)),
-            m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
-    connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
-            m_ui.errorsDock, SLOT(setVisible(bool)));
-    connect(m_ui.errorsTreeWidget,
-            SIGNAL(itemActivated(QTreeWidgetItem*, int)),
-            this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
+    connect(m_ui.errorsDock, &QDockWidget::visibilityChanged,
+            m_ui.actionShowErrorsDock, &QAction::setChecked);
+    connect(m_ui.actionShowErrorsDock, &QAction::triggered,
+            m_ui.errorsDock, &QWidget::setVisible);
+    connect(m_ui.errorsTreeWidget, &QTreeWidget::itemActivated,
+            this, &MainWindow::slotErrorSelected);
 
-    connect(m_ui.actionShowProfileDialog, SIGNAL(triggered(bool)),
-            m_profileDialog, SLOT(show()));
-    connect(m_profileDialog, SIGNAL(jumpToCall(int)),
-            this, SLOT(slotJumpTo(int)));
+    connect(m_ui.actionShowProfileDialog, &QAction::triggered,
+            m_profileDialog, &QWidget::show);
+    connect(m_profileDialog, &ProfileDialog::jumpToCall,
+            this, &MainWindow::slotJumpTo);
 
-    connect(m_ui.surfacesOpaqueCB, SIGNAL(stateChanged(int)), this,
-            SLOT(updateSurfacesView()));
-    connect(m_ui.surfacesAlphaCB, SIGNAL(stateChanged(int)), this,
-            SLOT(updateSurfacesView()));
-    connect(m_ui.surfacesResolveMSAA, SIGNAL(stateChanged(int)), this,
-            SLOT(updateSurfacesView()));
+    connect(m_ui.surfacesOpaqueCB, &QCheckBox::stateChanged, this,
+            qOverload<>(&MainWindow::updateSurfacesView));
+    connect(m_ui.surfacesAlphaCB, &QCheckBox::stateChanged, this,
+            qOverload<>(&MainWindow::updateSurfacesView));
+    connect(m_ui.surfacesResolveMSAA, &QCheckBox::stateChanged, this,
+            qOverload<>(&MainWindow::updateSurfacesView));
 }
 
 void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
@@ -1500,9 +1491,9 @@ void MainWindow::customContextMenuRequested(QPoint pos)
 
     QMenu menu;
     menu.addAction(QIcon(":/resources/media-record.png"),
-                   tr("Lookup state"), this, SLOT(lookupState()));
+                   tr("Lookup state"), this, &MainWindow::lookupState);
     if (event->type() == ApiTraceEvent::Call) {
-        menu.addAction(tr("Edit"), this, SLOT(editCall()));
+        menu.addAction(tr("Edit"), this, &MainWindow::editCall);
     }
 
     menu.exec(QCursor::pos());

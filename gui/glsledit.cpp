@@ -600,9 +600,9 @@ GLSLEdit::GLSLEdit(QWidget *parent)
 
     document()->setDocumentLayout(d_ptr->layout);
 
-    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateCursor()));
-    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateSidebar()));
-    connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateSidebar(QRect, int)));
+    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &GLSLEdit::updateCursor);
+    connect(this, &QPlainTextEdit::blockCountChanged, this, qOverload<>(&GLSLEdit::updateSidebar));
+    connect(this, &QPlainTextEdit::updateRequest, this, qOverload<>(&GLSLEdit::updateSidebar));
 
 #if defined(Q_OS_MAC)
     QFont textFont = font();
@@ -1001,7 +1001,7 @@ void GLSLEdit::contextMenuEvent(QContextMenuEvent *e)
 {
     QMenu *menu = createStandardContextMenu();
 
-    menu->addAction(tr("Indent Code"), this, SLOT(indent()));
+    menu->addAction(tr("Indent Code"), this, &GLSLEdit::indent);
 
     menu->exec(e->globalPos());
     delete menu;
