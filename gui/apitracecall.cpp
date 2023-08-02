@@ -1097,7 +1097,7 @@ QString ApiTraceCall::searchText() const
         return m_searchText;
 
     QVector<QVariant> argValues = arguments();
-    m_searchText = m_signature->name() + QLatin1String("(");
+    m_searchText = m_signature->name() % QLatin1String("(");
     QStringList argNames = m_signature->argNames();
     for (int i = 0; i < argNames.count(); ++i) {
         m_searchText += argNames[i] +
