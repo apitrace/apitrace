@@ -252,7 +252,6 @@ void MainWindow::replayStart()
     dlgUi.queryHandlingSelector->addItem("Skip");
     dlgUi.queryHandlingSelector->addItem("Run");
     dlgUi.queryHandlingSelector->addItem("Run & Check");
-    //dlgUi.queryHandlingSelector->setMinimumContentsLength(11);
     dlgUi.queryHandlingSelector->setCurrentIndex(
                 m_retracer->queryHandling());
 

@@ -28,9 +28,6 @@
    </property>
    <item>
     <layout class="QVBoxLayout" name="checkboxesLayout">
-     <property name="leftMargin">
-      <number>27</number>
-     </property>
      <item>
       <widget class="QCheckBox" name="doubleBufferingCB">
        <property name="text">
