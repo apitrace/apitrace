@@ -17,7 +17,7 @@ elseif (GIT_EXECUTABLE)
   endif ()
 endif ()
 
-if (NOT DEFINED APITRACE_VERSION)
+if (NOT DEFINED APITRACE_VERSION OR APITRACE_VERSION STREQUAL "")
   set(APITRACE_VERSION 0.0-unknown)
   message(WARNING "Failed to determine APITRACE_VERSION. Using default version \"${APITRACE_VERSION}\".")
 endif ()
