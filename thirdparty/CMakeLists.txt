@@ -27,12 +27,12 @@ foreach (path IN ITEMS
     directxmath/LICENSE
 )
     if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
-        message (SEND_ERROR "error: ${CMAKE_CURRENT_SOURCE_DIR}/${path} does not exist")
+        message (STATUS "${CMAKE_CURRENT_SOURCE_DIR}/${path} does not exist, relying on system version")
         set (SUBMODULES_MISSING TRUE)
     endif ()
 endforeach ()
 if (SUBMODULES_MISSING)
-    message (FATAL_ERROR "Update Git submodules by running\ngit submodule update --init --depth 1 --recursive")
+    message (WARNING "If any dependencies are not found, update Git submodules by running\ngit submodule update --init --depth 1 --recursive")
 endif ()
 
 if (ENABLE_STATIC_SNAPPY OR NOT Snappy_FOUND)
