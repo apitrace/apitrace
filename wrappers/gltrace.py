@@ -202,7 +202,7 @@ class GlTracer(Tracer):
         print('}')
         print()
 
-        print(r'static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count);')
+        print(r'static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count, bool instanced=false, GLuint instancecount=1);')
         print()
 
         # Declare helper functions to emit fake function calls into the trace
@@ -506,7 +506,10 @@ class GlTracer(Tracer):
                     print(r'        _params.%s = %s;' % (paramsMember, arg.name))
 
                 print('        GLuint _count = _glDraw_count(_ctx, _params);')
-                print('        _trace_user_arrays(_ctx, _count);')
+                if 'instancecount' in function.argNames():
+                    print('        _trace_user_arrays(_ctx, _count, true, instancecount);')
+                else:
+                    print('        _trace_user_arrays(_ctx, _count);')
             print('    }')
 
         if function.name.startswith("glDispatchCompute"):
@@ -1064,7 +1067,7 @@ class GlTracer(Tracer):
 
         # A simple state tracker to track the pointer values
         # update the state
-        print('static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count)')
+        print('static void _trace_user_arrays(gltrace::Context *_ctx, GLuint count, bool instanced, GLuint instancecount)')
         print('{')
         print('    glfeatures::Profile profile = _ctx->profile;')
         print('    bool es1 = profile.es() && profile.major == 1;')
@@ -1161,6 +1164,25 @@ class GlTracer(Tracer):
         print('            _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &_binding);')
         print('            if (!_binding) {')
 
+        print('                GLint divisor = 0;')
+        print('                if (instanced) {')
+
+        # Emit a fake function glVertexAttribDivisor
+        # FIXME: Must be predicated appropriate GL version (3.3) and/or extention (GL_ARB_vertex_attrib_binding) before
+        divisor_function = api.getFunctionByName('glVertexAttribDivisor')
+        print('                    _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_DIVISOR, &divisor);')
+        print('                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (divisor_function.name,))
+        for arg in divisor_function.args:
+            assert not arg.output
+            print('                    trace::localWriter.beginArg(%u);' % (arg.index,))
+            self.serializeValue(arg.type, arg.name)
+            print('                    trace::localWriter.endArg();')
+
+        print('                    trace::localWriter.endEnter();')
+        print('                    trace::localWriter.beginLeave(_call);')
+        print('                    trace::localWriter.endLeave();')
+        print('                }')
+
         # Get the arguments via glGet*
         for arg in function.args[1:]:
             arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper())
@@ -1169,9 +1191,9 @@ class GlTracer(Tracer):
             print('                _%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name))
 
         arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-        print('                size_t _size = _%s_size(%s, count);' % (function.name, arg_names))
+        print('                size_t _size = _%s_size(%s, divisor > 0 ? instancecount / divisor : count);' % (function.name, arg_names))
 
-        # Emit a fake function
+        # Emit a fake glVertexAttribPointer function
         print('                unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,))
         for arg in function.args:
             assert not arg.output
@@ -1185,6 +1207,7 @@ class GlTracer(Tracer):
         print('                trace::localWriter.endEnter();')
         print('                trace::localWriter.beginLeave(_call);')
         print('                trace::localWriter.endLeave();')
+
         print('            }')
         print('        }')
         print('    }')
