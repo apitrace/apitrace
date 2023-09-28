@@ -507,7 +507,10 @@ class GlTracer(Tracer):
 
                 print('        GLuint _count = _glDraw_count(_ctx, _params);')
                 if 'instancecount' in function.argNames():
-                    print('        _trace_user_arrays(_ctx, _count, true, instancecount);')
+                    if 'baseinstance' in function.argNames():
+                        print('        _trace_user_arrays(_ctx, _count, true, instancecount + baseinstance);')
+                    else:
+                        print('        _trace_user_arrays(_ctx, _count, true, instancecount);')
                 else:
                     print('        _trace_user_arrays(_ctx, _count);')
             print('    }')
