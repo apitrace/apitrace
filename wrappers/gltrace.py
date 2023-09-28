@@ -1165,7 +1165,7 @@ class GlTracer(Tracer):
         print('            if (!_binding) {')
 
         print('                GLint divisor = 0;')
-        print('                if (instanced) {')
+        print('                if (instanced && _ctx->features.instanced_arrays) {')
 
         # Emit a fake function glVertexAttribDivisor
         # FIXME: Must be predicated appropriate GL version (3.3) and/or extention (GL_ARB_vertex_attrib_binding) before

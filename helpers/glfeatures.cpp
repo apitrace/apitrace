@@ -375,6 +375,7 @@ Features::load(const Profile & profile, const Extensions & ext)
                             ext.has("GL_NV_primitive_restart");
 
         unpack_subimage = 1;
+        instanced_arrays = profile.versionGreaterOrEqual(3, 3) || ext.has("GL_ARB_instanced_arrays");
     } else {
         texture_3d = 1;
 
@@ -398,6 +399,7 @@ Features::load(const Profile & profile, const Extensions & ext)
         primitive_restart = 0;
 
         unpack_subimage = ext.has("GL_EXT_unpack_subimage");
+        instanced_arrays = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_EXT_instanced_arrays");
     }
 }
 

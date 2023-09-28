@@ -157,6 +157,7 @@ struct Features
     unsigned ARB_shader_storage_buffer_object:1;
     unsigned ARB_program_interface_query:1;
     unsigned ARB_color_buffer_float:1;
+    unsigned instanced_arrays:1;
 
     unsigned texture_3d:1;
     unsigned pixel_buffer_object:1;
