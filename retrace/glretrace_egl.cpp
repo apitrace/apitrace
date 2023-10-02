@@ -270,6 +270,8 @@ static void retrace_eglCreateContext(trace::Call &call) {
         break;
     }
 
+    if (retrace::notifyLostContext)
+        profile.notifyLostContext = true;
 
     Context *context = glretrace::createContext(share_context, profile);
     assert(context);
@@ -334,6 +336,14 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
         // Wait for presentation to finish
         glFinish();
         std::cout << "rendering_finished " << glretrace::getCurrentTime() << std::endl;
+    }
+
+    if (retrace::notifyLostContext &&
+        glretrace::getCurrentContext()->features().support_reset_notification) {
+        if (glGetGraphicsResetStatusEXT() != GL_NO_ERROR) {
+            std::cout << "Context was lost aborting rendering" << std::endl;
+            exit(-2);
+        }
     }
 }
 

@@ -375,6 +375,8 @@ Features::load(const Profile & profile, const Extensions & ext)
                             ext.has("GL_NV_primitive_restart");
 
         unpack_subimage = 1;
+
+        support_reset_notification = ext.has("GL_ARB_robustness");
     } else {
         texture_3d = 1;
 
@@ -398,6 +400,8 @@ Features::load(const Profile & profile, const Extensions & ext)
         primitive_restart = 0;
 
         unpack_subimage = ext.has("GL_EXT_unpack_subimage");
+        support_reset_notification = profile.versionGreaterOrEqual(3, 2) ||
+                ext.has("GL_EXT_robustness");
     }
 }
 

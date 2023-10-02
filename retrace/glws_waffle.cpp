@@ -221,6 +221,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         if (profile.forwardCompatible) {
             config_attrib_list.add(WAFFLE_CONTEXT_FORWARD_COMPATIBLE, true);
         }
+        if (profile.notifyLostContext) {
+            config_attrib_list.add(WAFFLE_CONTEXT_LOSE_CONTEXT_ON_RESET, true);
+        }
     }
     config_attrib_list.add(WAFFLE_RED_SIZE, 8);
     config_attrib_list.add(WAFFLE_GREEN_SIZE, 8);

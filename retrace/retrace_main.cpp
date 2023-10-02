@@ -93,6 +93,7 @@ bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
 bool watchdogEnabled = false;
+bool notifyLostContext = false;
 
 bool ignoreCalls = false;
 trace::CallSet callsToIgnore;
@@ -818,6 +819,7 @@ usage(const char *argv0) {
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
         "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
+        "      --notify-lost-context enable context lost notify\n"
         "      --version           display version information and exit\n"
     ;
 }
@@ -859,6 +861,7 @@ enum {
     QUERY_HANDLING_OPT,
     QUERY_CHECK_TOLARANCE_OPT,
     IGNORE_CALLS_OPT,
+    NOTIFY_LOST_CONTEXT_OPT,
     VERSION_OPT,
 };
 
@@ -913,6 +916,7 @@ longOptions[] = {
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
     {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
+    {"notify-lost-context", no_argument, 0, NOTIFY_LOST_CONTEXT_OPT},
     {"version", no_argument, 0, VERSION_OPT},
     {0, 0, 0, 0}
 };
@@ -1394,6 +1398,9 @@ int main(int argc, char **argv)
         case VERSION_OPT:
             std::cout << "apitrace " << APITRACE_VERSION << std::endl;
             return 0;
+        case NOTIFY_LOST_CONTEXT_OPT:
+            retrace::notifyLostContext = true;
+            break;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);
