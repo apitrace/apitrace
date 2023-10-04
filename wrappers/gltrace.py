@@ -1169,21 +1169,7 @@ class GlTracer(Tracer):
 
         print('                GLint divisor = 0;')
         print('                if (instanced && _ctx->features.instanced_arrays) {')
-
-        # Emit a fake function glVertexAttribDivisor
-        # FIXME: Must be predicated appropriate GL version (3.3) and/or extention (GL_ARB_vertex_attrib_binding) before
-        divisor_function = api.getFunctionByName('glVertexAttribDivisor')
         print('                    _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_DIVISOR, &divisor);')
-        print('                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (divisor_function.name,))
-        for arg in divisor_function.args:
-            assert not arg.output
-            print('                    trace::localWriter.beginArg(%u);' % (arg.index,))
-            self.serializeValue(arg.type, arg.name)
-            print('                    trace::localWriter.endArg();')
-
-        print('                    trace::localWriter.endEnter();')
-        print('                    trace::localWriter.beginLeave(_call);')
-        print('                    trace::localWriter.endLeave();')
         print('                }')
 
         # Get the arguments via glGet*
