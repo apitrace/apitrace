@@ -225,32 +225,33 @@ class GlRetracer(Retracer):
         print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
         print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
         print(r'    }')
-        print(r'     std::vector<char> buffer;')
+        print(r'    std::vector<char> buffer;')
         print(r'    if (!_pack_buffer) {')
         # if no pack buffer is bound we have to read back
-        data_param_name = "pixels"
         if function.name == "glGetTexImage":
-            print(r'     GLint max_tex_size;')
-            print(r'     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);')
-            print(r'     buffer.resize(max_tex_size * max_tex_size * max_tex_size);');
+            print(r'        static const size_t MAX_BYTES = (sizeof(void*) > 4 ? 4ULL << 30 : 1ULL << 30);')
+            print(r'        static std::vector<char> huge_buffer(MAX_BYTES);')
+            print(r'        pixels = huge_buffer.data();');
         elif function.name == "glGetTexnImage":
-            print(r'     buffer.resize(call.arg(4).toUInt());');
+            print(r'        buffer.resize(call.arg(4).toUInt());');
+            print(r'        pixels = buffer.data();')
         elif function.name == "glGetTextureImage":
-            print(r'     buffer.resize(call.arg(4).toUInt());');
+            print(r'        buffer.resize(call.arg(4).toUInt());');
+            print(r'        pixels = buffer.data();')
         elif function.name == "glReadPixels":
-            print(r'     GLsizei _w = call.arg(2).toSInt();')
-            print(r'     GLsizei _h = call.arg(3).toSInt();')
-            print(r'     buffer.resize(_w * _h * 64);')
+            print(r'        GLsizei _w = call.arg(2).toSInt();')
+            print(r'        GLsizei _h = call.arg(3).toSInt();')
+            print(r'        buffer.resize(_w * _h * 64);')
+            print(r'        pixels = buffer.data();')
         elif function.name == "glReadnPixels":
-            print(r'     buffer.resize(call.arg(6).toSInt());')
-            data_param_name = "data"
+            print(r'        buffer.resize(call.arg(6).toSInt());')
+            print(r'        data = buffer.data();')
         else:
             print(r'    return;')
             print(r'    }')
             return
 
         print(r'    }')
-        print('    {} = buffer.data();'.format(data_param_name))
 
 
     def invokeFunction(self, function):
