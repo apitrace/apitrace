@@ -557,7 +557,7 @@ class GlTracer(Tracer):
             print('        _glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix)
             print('        flush = access != GL_READ_ONLY;')
             print('    }')
-            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('    if (gltrace::is_coherent_write_map(access_flags)) {')
             print('        gltrace::Context *_ctx = gltrace::getContext();')
             print('        GLint buffer = getBufferName(target);')
             print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
@@ -630,7 +630,7 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBuffer':
             print('    GLint access_flags = 0;')
             print('    _glGetNamedBufferParameteriv(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);')
-            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('    if (gltrace::is_coherent_write_map(access_flags)) {')
             print('        gltrace::Context *_ctx = gltrace::getContext();')
             print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
             print('        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
@@ -651,7 +651,7 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBufferEXT':
             print('    GLint access_flags = 0;')
             print('    _glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);')
-            print('    if ((access_flags & GL_MAP_COHERENT_BIT) && (access_flags & GL_MAP_WRITE_BIT)) {')
+            print('    if (gltrace::is_coherent_write_map(access_flags)) {')
             print('        gltrace::Context *_ctx = gltrace::getContext();')
             print('        auto it = _ctx->sharedRes->bufferToShadowMemory.find(buffer);')
             print('        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
@@ -712,7 +712,7 @@ class GlTracer(Tracer):
             print(r'        flags &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;')
             print(r'    }')
             print(r'')
-            print(r'    if ((flags & GL_MAP_COHERENT_BIT) && (flags & GL_MAP_WRITE_BIT)) {')
+            print(r'    if (gltrace::is_coherent_write_map(flags)) {')
             print(r'        gltrace::Context *_ctx = gltrace::getContext();')
             if function.name in ('glBufferStorage', 'glBufferStorageEXT'):
                 print(r'        GLint buffer = getBufferName(target);')
@@ -913,7 +913,7 @@ class GlTracer(Tracer):
         Tracer.doInvokeFunction(self, function)
 
         if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
-            print(r'    if ((access & GL_MAP_COHERENT_BIT) && (access & GL_MAP_WRITE_BIT)) {')
+            print(r'    if (gltrace::is_coherent_write_map(access)) {')
             print(r'        gltrace::Context *_ctx = gltrace::getContext();')
             if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT'):
                 print(r'        GLint buffer = getBufferName(target);')

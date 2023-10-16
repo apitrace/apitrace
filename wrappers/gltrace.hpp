@@ -103,4 +103,35 @@ const GLubyte *
 _glGetStringi_override(GLenum name, GLuint index);
 
 
+static inline bool
+is_coherent_write_map(GLbitfield access)
+{
+    if ((access & GL_MAP_WRITE_BIT) == 0) {
+        return false;
+    }
+
+    if (access & GL_MAP_COHERENT_BIT) {
+        return true;
+    }
+
+    if (access & GL_MAP_FLUSH_EXPLICIT_BIT) {
+        return false;
+    }
+
+    // Uncomment to workaround https://github.com/apitrace/apitrace/issues/900
+    //
+    // This is not enabled by default to avoid wasteful creation of shadow
+    // memory on glBufferStorage, as GL_MAP_FLUSH_EXPLICIT_BIT is not allowed
+    // there, therefore there's no way to now whether a persistent buffer is
+    // meant to be used with explicit flushes or not
+#if 0
+    if (access & GL_MAP_PERSISTENT_BIT) {
+        return true;
+    }
+#endif
+
+    return true;
+}
+
+
 } /* namespace gltrace */
