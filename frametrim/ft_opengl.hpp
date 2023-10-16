@@ -129,6 +129,7 @@ private:
     void callOnNamedObject(const trace::Call& call, ePerContext map_type); 
     void callOnObjectBoundTo(const trace::Call& call, ePerContext map_type, unsigned bindpoint);
     void fboBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param);
+    void fboBindAttachmentEXT(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param);
     void fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, int obj_param_pos); 
     void fboBlit(const trace::Call& call);
     void fboBlitNamed(const trace::Call& call); 
@@ -158,6 +159,7 @@ private:
     SyncObjectMap m_sync_objects;
     VertexAttribObjectMap m_vertex_attrib_pointers;
     VertexAttribObjectMap m_vertex_buffer_pointers;
+    FramebufferObjectMap m_fbo_ext;
 
     std::map<void *, std::shared_ptr<PerContextObjects>> m_contexts;
     std::shared_ptr<PerContextObjects> m_current_context;
