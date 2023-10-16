@@ -540,7 +540,6 @@ void OpenGLImpl::registerTextureCalls()
     MAP_RV(glBindTexture, oglBind, m_textures, 1);
     MAP(glBindMultiTexture, oglBindMultitex);
 
-    MAP_OBJ(glCompressedTexImage2D, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glGenerateMipmap, m_textures, TextureObjectMap::callOnBoundObject);
     MAP_OBJ(glGenerateTextureMipmap, m_textures, TextureObjectMap::callOnNamedObject);
     MAP_OBJ_RV(glTexImage1D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
@@ -579,8 +578,12 @@ void OpenGLImpl::registerTextureCalls()
                     m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                     m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glCompressedTexImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glCompressedTexSubImage2D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                   m_buffers, GL_PIXEL_UNPACK_BUFFER);
+    MAP_OBJ_RV(glCompressedTextureSubImage2DEXT, m_textures, TextureObjectMap::callOnNamedObjectWithDepBoundTo,
+               m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glCompressedTexSubImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
                   m_buffers, GL_PIXEL_UNPACK_BUFFER);
     MAP_OBJ_RV(glTexSubImage3D, m_textures, TextureObjectMap::callOnBoundObjectWithDepBoundTo,
@@ -749,6 +752,7 @@ void OpenGLImpl::registerRequiredCalls()
     const std::vector<const char *> required_calls = {
         "glXChooseVisual",
         "glXCreatePbuffer",
+        "glXCreateWindow",
         "glXDestroyContext",
         "glXGetFBConfigAttrib",
         "glXChooseFBConfig",
@@ -814,6 +818,7 @@ void OpenGLImpl::registerIgnoreHistoryCalls()
         "glGetProgramInfoLog",
         "glGetShader",
         "glGetString",
+        "glGetShaderInfoLog",
         "glGetTexLevelParameter",
         "glGetTexParameter",
         "glGetTexImage",
@@ -821,7 +826,8 @@ void OpenGLImpl::registerIgnoreHistoryCalls()
         "glLabelObjectEXT",
         "glIsEnabled",
         "glIsFramebuffer",
-        "glIsRenderbuffer", 
+        "glIsRenderbuffer",
+        "glIsSync",
         "glIsTexture", 
         "glIsVertexArray",
         "glReadPixels",
