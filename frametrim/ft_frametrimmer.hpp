@@ -71,6 +71,8 @@ public:
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();
 
+    virtual void switch_thread(int new_thread) {}
+
 protected:
     virtual void emitState() {};
     virtual void finalize() {};
@@ -85,6 +87,7 @@ protected:
     bool m_keep_all_state_calls;
     bool m_swaps_to_finish;
     unsigned m_last_frame_start;
+    int m_current_thread;
 
     CallSet m_required_calls;
     std::set<std::string> m_unhandled_calls;

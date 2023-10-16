@@ -36,7 +36,8 @@ FrameTrimmer::FrameTrimmer(bool keep_all_states, bool swap_to_finish):
     m_recording_frame(false),
     m_keep_all_state_calls(keep_all_states),
     m_swaps_to_finish(swap_to_finish),
-    m_last_frame_start(0)
+    m_last_frame_start(0),
+    m_current_thread(-1)
 {
 }
 
@@ -79,6 +80,11 @@ FrameTrimmer::call(const trace::Call& call, Frametype frametype)
      * By not deleting such objects looping the last frame will work in more cases */
     if (skipDeleteObj(call)) {
         return;
+    }
+
+    if (m_current_thread != call.thread_id) {
+        switch_thread(call.thread_id);
+        m_current_thread = call.thread_id;
     }
 
     auto icb = m_call_table_cache.find(call_name);

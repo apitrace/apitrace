@@ -44,6 +44,17 @@ using std::make_shared;
 
 namespace frametrim {
 
+PerContextObjects::PerContextObjects():
+    m_id(m_next_id++),
+    m_fbo(m_id)
+{
+    m_vertex_arrays.set_current_context_id(m_id);
+    m_program_pipelines.set_current_context_id(m_id);
+    assert(m_next_id < 0xffffff);
+}
+
+uint32_t PerContextObjects::m_next_id = 1;
+
 OpenGLImpl::OpenGLImpl(bool keep_all_states, bool swaps_to_finish):
     FrameTrimmer(keep_all_states, swaps_to_finish),
     m_fbo_ext(1)
@@ -1150,9 +1161,11 @@ void OpenGLImpl::oglDraw(const trace::Call& call)
         fb = m_fbo_ext.boundTo(GL_DRAW_FRAMEBUFFER);
     auto cur_prog = m_programs.boundTo(0, 0);
     if (cur_prog) {
-        for(auto&& [key, buf]: m_buffers) {
-            if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
-                cur_prog->addDependency(buf);
+        for(auto&& [ctx_id, bound_buffers]: m_buffers) {
+            for(auto&& [key, buf]: bound_buffers) {
+                if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
+                    cur_prog->addDependency(buf);
+            }
         }
         m_buffers.addSSBODependencies(cur_prog);
         m_textures.addImageDependencies(cur_prog);
@@ -1166,9 +1179,11 @@ void OpenGLImpl::oglDraw(const trace::Call& call)
 
     auto cur_pipeline = m_current_context->m_program_pipelines.boundTo(0, 0);
     if (cur_pipeline) {
-        for(auto&& [key, buf]: m_buffers) {
-            if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
-                cur_pipeline->addDependency(buf);
+        for(auto&& [ctx_id, bound_buffers]: m_buffers) {
+            for(auto&& [key, buf]:  bound_buffers) {
+                if (buf && ((key % BufferObjectMap::bt_last) == BufferObjectMap::bt_uniform))
+                    cur_pipeline->addDependency(buf);
+            }
         }
         m_buffers.addSSBODependencies(cur_pipeline);
         m_textures.addImageDependencies(cur_pipeline);
@@ -1191,32 +1206,36 @@ void OpenGLImpl::oglDraw(const trace::Call& call)
         m_current_context->m_program_pipelines.addBoundAsDependencyTo(*fb);
         m_samplers.addBoundAsDependencyTo(*fb);
 
-        for(auto&& [key, vbo]: m_vertex_attrib_pointers) {
-            if (vbo)
-                fb->addDependency(vbo);
-
+        for(auto&& [ctx_id, bound_vao]: m_vertex_attrib_pointers) {
+            for(auto&& [key,vao]: bound_vao) {
+                if (vao)
+                    fb->addDependency(vao);
+            }
         }
-        for(auto&& [key, vbo]: m_vertex_buffer_pointers) {
-            if (vbo)
-                fb->addDependency(vbo);
+        for(auto&& [ctx_id, bound_vbo]: m_vertex_buffer_pointers) {
+            for(auto&& [key, vbo]: bound_vbo) {
+                if (vbo)
+                    fb->addDependency(vbo);
+            }
         }
     }
 
     if (m_recording_frame) {
-
-        for(auto&& [key, vao]: m_current_context->m_vertex_arrays) {
+        for(auto&& [key, vao]: m_current_context->m_vertex_arrays.objects_bound_in_context()) {
             if (vao)
                 vao->emitCallsTo(m_required_calls);
         }
-
-        for(auto&& [key, vbo]: m_vertex_attrib_pointers) {
-            if (vbo)
-                vbo->emitCallsTo(m_required_calls);
-
+        for(auto&& [ctx_id, bound_vao]: m_vertex_attrib_pointers) {
+            for(auto&& [key, vao]: bound_vao) {
+                if (vao)
+                    vao->emitCallsTo(m_required_calls);
+            }
         }
-        for(auto&& [key, vbo]: m_vertex_buffer_pointers) {
-            if (vbo)
-                vbo->emitCallsTo(m_required_calls);
+        for(auto&& [ctx_id, bound_vbo]: m_vertex_buffer_pointers) {
+            for(auto&& [key, vbo]: bound_vbo) {
+                if (vbo)
+                    vbo->emitCallsTo(m_required_calls);
+            }
         }
         m_buffers.emitBoundObjects(m_required_calls);
     }
@@ -1417,23 +1436,56 @@ void OpenGLImpl::createContext(const trace::Call& call, int shared_param)
         if (!shared_context)
             std::cerr << "\nWarning: Have more than one non-shared context, this is not well supported\n";
     }
-    m_current_context = make_shared<PerContextObjects>();
-    m_contexts[call.ret->toPointer()] = m_current_context;
+    m_contexts[call.ret->toPointer()] = make_shared<PerContextObjects>();
     m_required_calls.insert(trace2call(call));
+    assert(m_contexts[call.ret->toPointer()]->m_fbo.bind(GL_FRAMEBUFFER, 0));
 }
 
 void OpenGLImpl::makeCurrent(const trace::Call& call, unsigned param)
 {
     void *ctx_id = call.arg(param).toPointer();
     auto ictx = m_contexts.find(ctx_id);
+    uint32_t context_id = 0;
 
-    if (ictx != m_contexts.end())
+    if (ictx != m_contexts.end()) {
         m_current_context = ictx->second;
-    else
+        m_thread_active_context[call.thread_id] = ictx->second;
+        context_id = m_current_context->m_id;
+    } else
         m_current_context = nullptr;
 
     assert(!ctx_id || m_current_context);
     m_required_calls.insert(trace2call(call));
+    update_context_id(context_id);
+}
+
+void OpenGLImpl::update_context_id(uint32_t context_id)
+{
+    m_buffers.set_current_context_id(context_id);
+    m_textures.set_current_context_id(context_id);
+    m_fbo_ext.set_current_context_id(context_id);
+    m_renderbuffers.set_current_context_id(context_id);
+    m_programs.set_current_context_id(context_id);
+    m_samplers.set_current_context_id(context_id);
+    m_queries.set_current_context_id(context_id);
+    m_vertex_attrib_pointers.set_current_context_id(context_id);
+    m_vertex_buffer_pointers.set_current_context_id(context_id);
+    m_shaders.set_current_context_id(context_id);
+    m_sync_objects.set_current_context_id(context_id);
+    m_legacy_programs.set_current_context_id(context_id);
+}
+
+void OpenGLImpl::switch_thread(int thread_id)
+{
+    uint32_t context_id = 0;
+    auto ictx = m_thread_active_context.find(thread_id);
+    if (ictx != m_thread_active_context.end()) {
+        m_current_context = ictx->second;
+        context_id = m_current_context->m_id;
+    } else {
+        m_current_context = nullptr;
+    }
+    update_context_id(context_id);
 }
 
 DependecyObjectMap& OpenGLImpl::getCurrentMapOfType(ePerContext map_type)
