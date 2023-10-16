@@ -45,7 +45,8 @@ using std::make_shared;
 namespace frametrim {
 
 OpenGLImpl::OpenGLImpl(bool keep_all_states, bool swaps_to_finish):
-    FrameTrimmer(keep_all_states, swaps_to_finish)
+    FrameTrimmer(keep_all_states, swaps_to_finish),
+    m_fbo_ext(1)
 {
     registerStateCalls();
     registerLegacyCalls();
@@ -91,6 +92,7 @@ void OpenGLImpl::emitState()
     m_vertex_buffer_pointers.emitBoundObjects(m_required_calls);
     m_legacy_programs.emitBoundObjects(m_required_calls);
     m_queries.emitBoundObjects(m_required_calls);
+    m_fbo_ext.emitBoundObjects(m_required_calls);
 }
 
 void
@@ -414,6 +416,14 @@ void OpenGLImpl::registerFramebufferCalls()
 
     MAP_VV(glClear, callOnObjectBoundTo, pc_fbo, GL_DRAW_FRAMEBUFFER);
 
+    MAP_OBJ(glGenFramebuffersEXT, m_fbo_ext, FramebufferObjectMap::generate);
+    MAP_OBJ(DeleteFramebuffersEXT, m_fbo_ext, FramebufferObjectMap::destroy);
+    MAP_RV(glBindFramebufferEXT, oglBind, m_fbo_ext, 1);
+
+    MAP_RV(glFramebufferTexture1DEXT, fboBindAttachmentEXT, m_textures, 3);
+    MAP_RV(glFramebufferTexture2DEXT, fboBindAttachmentEXT, m_textures, 3);
+    MAP_RV(glFramebufferTexture3DEXT, fboBindAttachmentEXT, m_textures, 3);
+    MAP_RV(glFramebufferRenderbufferEXT, fboBindAttachmentEXT, m_renderbuffers, 3);
 }
 
 void
@@ -1130,6 +1140,8 @@ OpenGLImpl::oglBindSamplers(const trace::Call& call)
 void OpenGLImpl::oglDraw(const trace::Call& call)
 {
     auto fb = m_current_context->m_fbo.boundTo(GL_DRAW_FRAMEBUFFER);
+    if (!fb)
+        fb = m_fbo_ext.boundTo(GL_DRAW_FRAMEBUFFER);
     auto cur_prog = m_programs.boundTo(0, 0);
     if (cur_prog) {
         for(auto&& [key, buf]: m_buffers) {
@@ -1360,6 +1372,12 @@ void OpenGLImpl::fboBindAttachment(const trace::Call& call, DependecyObjectMap& 
 {
     m_current_context->m_fbo.callOnBoundObjectWithDep(call, dep_map, tex_id_param, true);
 }
+
+void OpenGLImpl::fboBindAttachmentEXT(const trace::Call& call, DependecyObjectMap& dep_map, unsigned tex_id_param)
+{
+    m_fbo_ext.callOnBoundObjectWithDep(call, dep_map, tex_id_param, true);
+}
+
 
 void OpenGLImpl::fboNamedBindAttachment(const trace::Call& call, DependecyObjectMap& dep_map, int obj_param_pos)
 {
