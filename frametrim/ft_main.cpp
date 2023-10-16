@@ -281,6 +281,7 @@ int main(int argc, char **argv)
     options.frames = trace::CallSet(trace::FREQUENCY_NONE);
     options.top_frame_call_counts = false;
     options.keep_all_states = false;
+    options.swap_to_finish = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, nullptr)) != -1) {
