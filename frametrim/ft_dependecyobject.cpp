@@ -454,7 +454,7 @@ DependecyObjectMap::callOnNamedObjectWithDepBoundTo(const trace::Call& call,
 
     obj->addCall(trace2call(call));
 
-    auto dep = other_objects.getById(dep_call_param);
+    auto dep = other_objects.boundTo(dep_call_param);
     if (dep) {
         obj->addDependency(dep);
         if (global_state.emit_dependencies)
