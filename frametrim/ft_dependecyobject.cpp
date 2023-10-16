@@ -245,18 +245,23 @@ bool DependecyObjectMap::setTargetType(unsigned id, unsigned target)
 UsedObject::Pointer
 DependecyObjectMap::bindTarget(unsigned id, unsigned bindpoint)
 {
+    assert(m_current_context_id != 0xffffffff);
+
+    auto& current_binding = m_bound_object[m_current_context_id];
+
     if (id) {
-        m_bound_object[bindpoint] = m_objects[id];
+        current_binding[bindpoint] = m_objects[id];
     } else {
-        m_bound_object[bindpoint] = nullptr;
+        current_binding[bindpoint] = nullptr;
     }
-    return m_bound_object[bindpoint];
+    return current_binding[bindpoint];
 }
 
 UsedObject::Pointer
 DependecyObjectMap::bind( unsigned bindpoint, unsigned id)
 {
-    return m_bound_object[bindpoint] = m_objects[id];
+    assert(m_current_context_id != 0xffffffff);
+    return m_bound_object[m_current_context_id][bindpoint] = m_objects[id];
 }
 
 UsedObject::Pointer
@@ -266,21 +271,10 @@ DependecyObjectMap::boundTo(unsigned target, unsigned index)
     return boundAtBinding(bindpoint);
 }
 
-DependecyObjectMap::ObjectMap::iterator
-DependecyObjectMap::begin()
-{
-    return m_bound_object.begin();
-}
-
-DependecyObjectMap::ObjectMap::iterator
-DependecyObjectMap::end()
-{
-    return m_bound_object.end();
-}
-
 UsedObject::Pointer DependecyObjectMap::boundAtBinding(unsigned index)
 {
-    return m_bound_object[index];
+    assert(m_current_context_id != 0xffffffff);
+    return m_bound_object[m_current_context_id][index];
 }
 
 unsigned DependecyObjectMap::getBindpoint(unsigned target, unsigned index) const
@@ -298,11 +292,13 @@ DependecyObjectMap::callOnBoundObject(const trace::Call& call)
                   << "(" << call.name() << ")\n";
     }
 
-    if (!m_bound_object[bindpoint])  {
+    assert(m_current_context_id != 0xffffffff);
+    auto obj = m_bound_object[m_current_context_id][bindpoint];
+    if (!obj)  {
         return;
     }
 
-    m_bound_object[bindpoint]->addCall(trace2call(call));
+    obj->addCall(trace2call(call));
 }
 
 UsedObject::Pointer
@@ -347,9 +343,12 @@ DependecyObjectMap::callOnBoundObjectWithDep(const trace::Call& call,
                                              int dep_obj_param,
                                              bool reverse_dep_too)
 {
+    assert(m_current_context_id != 0xffffffff);
     unsigned obj_id = call.arg(dep_obj_param).toUInt();
     unsigned bindpoint = getBindpointFromCall(call);
-    if (!m_bound_object[bindpoint]) {
+    auto bound_obj = m_bound_object[m_current_context_id][bindpoint];
+
+    if (!bound_obj) {
         if (obj_id)
             std::cerr << "No object bound in call " << call.no << ":" << call.name() << "\n";
         return nullptr; 
@@ -360,11 +359,11 @@ DependecyObjectMap::callOnBoundObjectWithDep(const trace::Call& call,
     if (obj_id) {
         obj = other_objects.getById(obj_id);
         assert(obj);
-        m_bound_object[bindpoint]->addDependency(obj);
+        bound_obj->addDependency(obj);
         if (reverse_dep_too)
-            obj->addDependency(m_bound_object[bindpoint]);
+            obj->addDependency(bound_obj);
     }
-    m_bound_object[bindpoint]->addCall(trace2call(call));
+    bound_obj->addCall(trace2call(call));
     return obj;
 }
 
@@ -373,20 +372,23 @@ DependecyObjectMap::callOnBoundObjectWithDepBoundTo(const trace::Call& call,
                                                     DependecyObjectMap& other_objects,
                                                     int bindingpoint)
 {
+    assert(m_current_context_id != 0xffffffff);
     unsigned bindpoint = getBindpointFromCall(call);
-    if (!m_bound_object[bindpoint]) {
+    auto bound_obj = m_bound_object[m_current_context_id][bindpoint];
+
+    if (!bound_obj) {
         return;
     }
-    m_bound_object[bindpoint]->addCall(trace2call(call));
+
+    bound_obj->addCall(trace2call(call));
 
     UsedObject::Pointer obj = nullptr;
     auto dep = other_objects.boundTo(bindingpoint);
     if (dep) {
-        m_bound_object[bindpoint]->addDependency(dep);
+        bound_obj->addDependency(dep);
         if (global_state.emit_dependencies)
             dep->emitCallsTo(*global_state.out_list);
     }
-
 }
 
 void
@@ -511,9 +513,12 @@ DependecyObjectMap::unbalancedCreateCallsInLastFrame(uint32_t last_frame_start,
 void
 DependecyObjectMap::emitBoundObjects(CallSet& out_calls)
 {
-    for (auto&& [key, obj]: m_bound_object) {
-        if (obj)
-            obj->emitCallsTo(out_calls);
+    assert(m_current_context_id != 0xffffffff);
+    for (auto&& [key, bound_object]: m_bound_object) {
+        for (auto&& [key, obj]: bound_object) {
+            if (obj)
+                obj->emitCallsTo(out_calls);
+        }
     }
     for(auto&& c : m_calls)
         out_calls.insert(c);
@@ -521,7 +526,8 @@ DependecyObjectMap::emitBoundObjects(CallSet& out_calls)
 
 void DependecyObjectMap::addBoundAsDependencyTo(UsedObject& obj)
 {
-    for (auto&& [key, bound_obj]: m_bound_object) {
+    assert(m_current_context_id != 0xffffffff);
+    for (auto&& [key, bound_obj]: m_bound_object[m_current_context_id]) {
         if (bound_obj)
             obj.addDependency(bound_obj);
     }
@@ -772,7 +778,7 @@ BufferObjectMap::memcopy(const trace::Call& call, CallSet& out_set, bool recordi
 
 void BufferObjectMap::addSSBODependencies(UsedObject::Pointer dep)
 {
-    for(auto && [key, buf]: *this) {
+    for(auto && [key, buf]: objects_bound_in_context()) {
         if (buf && ((key % bt_last) == bt_ssbo)) {
             buf->addDependency(dep);
             dep->addDependency(buf);
@@ -947,10 +953,10 @@ void TextureObjectMap::bindToImageUnit(const trace::Call& call)
         auto tex = getById(id);
         assert(tex);
         tex->addCall(c);
-        m_bound_images[unit] = tex;
+        m_bound_images[context_id()][unit] = tex;
     } else {
         addCall(c);
-        m_bound_images[unit] = nullptr;
+        m_bound_images[context_id()][unit] = nullptr;
     }
 }
 
@@ -981,14 +987,14 @@ TextureObjectMap::getBindpointFromCall(const trace::Call& call) const
 
 void TextureObjectMap::emitBoundObjectsExt(CallSet& out_calls)
 {
-    for(auto [unit, tex]: m_bound_images)
+    for(auto [unit, tex]: m_bound_images[context_id()])
         if (tex)
             tex->emitCallsTo(out_calls);
 }
 
 void TextureObjectMap::addImageDependencies(UsedObject::Pointer dep)
 {
-    for (auto&& [key, tex]: m_bound_images) {
+    for (auto&& [key, tex]: m_bound_images[context_id()]) {
         if (tex) {
             tex->addDependency(dep);
             dep->addDependency(tex);
@@ -1116,8 +1122,9 @@ void QueryObjectMap::endWithTargetIndex(unsigned target, unsigned index, const t
 }
 
 
-FramebufferObjectMap::FramebufferObjectMap()
+FramebufferObjectMap::FramebufferObjectMap(uint32_t context_id)
 {
+    set_current_context_id(context_id);
     auto default_fb = std::make_shared<UsedObject>(0);
     addObject(0, default_fb);
     bind(GL_DRAW_FRAMEBUFFER, 0);

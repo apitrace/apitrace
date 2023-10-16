@@ -101,8 +101,16 @@ public:
     void emitBoundObjects(CallSet& out_calls);
     UsedObject::Pointer boundTo(unsigned target, unsigned index = 0);
 
-    ObjectMap::iterator begin();
-    ObjectMap::iterator end();
+    auto begin() {
+        assert(m_current_context_id != 0xffffffff);
+        return m_bound_object.begin();
+    }
+
+    auto end()
+    {
+        assert(m_current_context_id != 0xffffffff);
+        return m_bound_object.end();
+    }
 
     void addBoundAsDependencyTo(UsedObject& obj);
 
@@ -111,10 +119,17 @@ public:
     void unbalancedCreateCallsInLastFrame(uint32_t last_frame_start,
                                           std::unordered_set<unsigned>& outSet);
 
+    void set_current_context_id(uint32_t id) {m_current_context_id = id;}
+    uint32_t context_id() const { return m_current_context_id;}
+
+    ObjectMap& objects_bound_in_context() {
+        return m_bound_object[m_current_context_id];
+    }
+
 protected:
     void addObject(unsigned id, UsedObject::Pointer obj);
     UsedObject::Pointer boundAtBinding(unsigned index);
-    void generate_internal(const trace::Call& call, int array_id);    
+    void generate_internal(const trace::Call& call, int array_id);
 private:
 
     virtual void emitBoundObjectsExt(CallSet& out_calls);
@@ -124,9 +139,11 @@ private:
     virtual bool setTargetType(unsigned id, unsigned target);
 
     ObjectMap m_objects;
-    ObjectMap m_bound_object;
+    std::unordered_map<uint32_t, ObjectMap> m_bound_object;
 
     std::vector<PTraceCall> m_calls;
+
+    uint32_t m_current_context_id {0xffffffff};
 };
 
 class DependecyObjectWithSingleBindPointMap: public DependecyObjectMap {
@@ -222,7 +239,7 @@ private:
     bool setTargetType(unsigned id, unsigned target) override;
     int getBindpointFromTargetAndUnit(unsigned target, unsigned unit) const;
     unsigned m_active_texture;
-    std::unordered_map<unsigned, UsedObject::Pointer> m_bound_images;
+    std::unordered_map<uint32_t, std::unordered_map<unsigned, UsedObject::Pointer>> m_bound_images;
 };
 
 class QueryObjectMap: public DependecyObjectMap {
@@ -252,7 +269,7 @@ private:
 
 class FramebufferObjectMap: public DependecyObjectMap {
 public:
-    FramebufferObjectMap();
+    FramebufferObjectMap(uint32_t context_id);
     void oglBlit(const trace::Call& call);
     void oglBlitNamed(const trace::Call& call);
     void oglReadBuffer(const trace::Call& call);
