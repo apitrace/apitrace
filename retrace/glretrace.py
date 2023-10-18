@@ -230,9 +230,8 @@ class GlRetracer(Retracer):
         # if no pack buffer is bound we have to read back
         data_param_name = "pixels"
         if function.name == "glGetTexImage":
-            print(r'     GLint max_tex_size;')
-            print(r'     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);')
-            print(r'     buffer.resize(max_tex_size * max_tex_size * max_tex_size);');
+            # TODO: https://github.com/apitrace/apitrace/commit/2a83ddd4f67014e2aacf99c6b203fd3f6b13c4f3#r130319306
+            print(r'        return;')
         elif function.name == "glGetTexnImage":
             print(r'     buffer.resize(call.arg(4).toUInt());');
         elif function.name == "glGetTextureImage":
