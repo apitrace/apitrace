@@ -314,6 +314,28 @@ def GLindexBuffer(countExpr, typeExpr):
         contextLess=False,
     )
 
+def GLdrawArraysIndirectBuffer():
+    # Indices arguments are polymorphic:
+    # - offsets when element array buffer is bound
+    # - or a blob otherwise.
+    return Polymorphic('_draw_indirect_buffer_binding()', [
+            ('0', Blob(Const(GLvoid), 16)),
+        ],
+        IntPointer("const GLvoid *"), 
+        contextLess=False,
+    )
+
+def GLdrawElementsIndirectBuffer():
+    # Indices arguments are polymorphic:
+    # - offsets when element array buffer is bound
+    # - or a blob otherwise.
+    return Polymorphic('_draw_indirect_buffer_binding()', [
+            ('0', Blob(Const(GLvoid), 20)),
+        ],
+        IntPointer("const GLvoid *"), 
+        contextLess=False,
+    )
+
 # Polymorphic object name
 def GLname(targetExpr):
     return Polymorphic(targetExpr, [

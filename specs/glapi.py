@@ -1189,8 +1189,8 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "drawcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "drawcount"), "indices"), (GLsizei, "drawcount"), (Array(Const(GLint), "drawcount"), "basevertex")]),
 
     # GL_ARB_draw_indirect
-    GlFunction(Void, "glDrawArraysIndirect", [(GLenum_mode, "mode"), (GLpointerConst, "indirect")]),
-    GlFunction(Void, "glDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect")]),
+    GlFunction(Void, "glDrawArraysIndirect", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer())]),
+    GlFunction(Void, "glDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer())]),
 
     # GL_ARB_draw_instanced
     GlFunction(Void, "glDrawArraysInstancedARB", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "instancecount")]),

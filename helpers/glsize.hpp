@@ -422,6 +422,11 @@ _element_array_buffer_binding(void) {
     return _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);
 }
 
+static inline GLint
+_draw_indirect_buffer_binding(void) {
+    return _glGetInteger(GL_DRAW_INDIRECT_BUFFER_BINDING);
+}
+
 /**
  * Same as glGetVertexAttribiv, but passing the result in the return value.
  */
@@ -1266,4 +1271,3 @@ _glGetDebugMessageLog_length(const Char * string, const GLsizei *lengths, GLuint
     }
     return size;
 }
-
