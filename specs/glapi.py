@@ -778,8 +778,8 @@ glapi.addFunctions([
 
     # GL_VERSION_4_6
     GlFunction(Void, "glSpecializeShader", [(GLshader, "shader"), (GLstringConst, "pEntryPoint"), (GLuint, "numSpecializationConstants"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantIndex"), (Array(Const(GLuint), "numSpecializationConstants"), "pConstantValue")]),
-    GlFunction(Void, "glMultiDrawArraysIndirectCount", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawElementsIndirectCount", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawArraysIndirectCount", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer("maxdrawcount", "stride"), "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectCount", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer("maxdrawcount", "stride"), "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
 
     # GL_VERSION_ES_CM_1_0
     GlFunction(Void, "glClipPlanef", [(GLenum, "plane"), (Array(Const(GLfloat), 4), "equation")]),
@@ -1189,8 +1189,8 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "drawcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "drawcount"), "indices"), (GLsizei, "drawcount"), (Array(Const(GLint), "drawcount"), "basevertex")]),
 
     # GL_ARB_draw_indirect
-    GlFunction(Void, "glDrawArraysIndirect", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer())]),
-    GlFunction(Void, "glDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer())]),
+    GlFunction(Void, "glDrawArraysIndirect", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer(), "indirect")]),
+    GlFunction(Void, "glDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer(), "indirect")]),
 
     # GL_ARB_draw_instanced
     GlFunction(Void, "glDrawArraysInstancedARB", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "instancecount")]),
@@ -1299,8 +1299,8 @@ glapi.addFunctions([
     GlFunction(Void, "glProgramUniform4ui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count*4"), "value")]),
 
     # GL_ARB_indirect_parameters
-    GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer("maxdrawcount", "stride"), "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer("maxdrawcount", "stride"), "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
 
     # GL_ARB_instanced_arrays
     GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),
@@ -1339,8 +1339,8 @@ glapi.addFunctions([
     GlFunction(Void, "glBindVertexBuffers", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLbuffer), "count"), "buffers"), (Array(Const(GLintptr), "count"), "offsets"), (Array(Const(GLsizei), "count"), "strides")]),
 
     # GL_ARB_multi_draw_indirect
-    GlFunction(Void, "glMultiDrawArraysIndirect", [(GLenum_mode, "mode"), (OpaqueArray(Const(Void), "_glMultiDrawArraysIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glMultiDrawElementsIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawArraysIndirect", [(GLenum_mode, "mode"), (GLdrawArraysIndirectBuffer("drawcount", "stride"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (GLdrawElementsIndirectBuffer("drawcount", "stride"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
 
     # GL_ARB_multisample
     GlFunction(Void, "glSampleCoverageARB", [(GLfloat, "value"), (GLboolean, "invert")]),
