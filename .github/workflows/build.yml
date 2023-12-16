@@ -87,8 +87,12 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        arch: ["x86", "arm"]
-        target: ["win32", "win64"]
+        arch: [x86, arm]
+        target: [win32, win64]
+        exclude:
+          # https://learn.microsoft.com/en-us/windows/arm/arm32-to-arm64
+          - arch: arm
+            target: win32
     steps:
     - uses: actions/checkout@v3
       with:
