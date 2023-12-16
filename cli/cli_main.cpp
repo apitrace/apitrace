@@ -186,7 +186,7 @@ do_help_command(int argc, char *argv[])
 static int
 do_version_command(int argc, char *argv[])
 {
-    std::cout << "apitrace " << APITRACE_VERSION << "\n";
+    std::cout << "apitrace " APITRACE_VERSION "\n";
     return 0;
 }
 

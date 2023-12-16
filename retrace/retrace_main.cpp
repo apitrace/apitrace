@@ -1392,7 +1392,7 @@ int main(int argc, char **argv)
             retrace::callsToIgnore.merge(optarg);
             break;
         case VERSION_OPT:
-            std::cout << "apitrace " << APITRACE_VERSION << std::endl;
+            std::cout << "apitrace " APITRACE_VERSION << std::endl;
             return 0;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
