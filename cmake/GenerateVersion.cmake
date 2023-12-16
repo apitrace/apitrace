@@ -1,6 +1,11 @@
 # https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-if ("$ENV{GITHUB_ACTIONS}" STREQUAL "true" AND "$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
-    set (APITRACE_VERSION "${CMAKE_MATCH_1}")
+if ("$ENV{GITHUB_ACTIONS}" STREQUAL "true")
+    if ("$ENV{GITHUB_REF}" MATCHES [[^refs/tags/([^/]*)$]])
+        set (APITRACE_VERSION "${CMAKE_MATCH_1}")
+    else ()
+        # Git describe doesn't work with shallow clones
+        set (APITRACE_VERSION "git-$ENV{GITHUB_SHA} $ENV{GITHUB_SERVER_URL}/$ENV{GITHUB_REPOSITORY}/actions/runs/$ENV{GITHUB_RUN_ID}")
+    endif ()
 elseif (GIT_EXECUTABLE)
     get_filename_component (SRC_DIR ${SRC} DIRECTORY)
     # Generate a git-describe version string from Git repository tags
@@ -12,7 +17,7 @@ elseif (GIT_EXECUTABLE)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if (NOT GIT_DESCRIBE_ERROR_CODE)
-        set(APITRACE_VERSION ${GIT_DESCRIBE_VERSION})
+        set (APITRACE_VERSION "${GIT_DESCRIBE_VERSION}")
     endif ()
 endif ()
 
