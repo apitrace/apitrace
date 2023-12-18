@@ -20,8 +20,13 @@ docker_run () {
         --rm \
         -i=$interactive \
         --tty=$interactive \
+        -e CI \
         -e GITHUB_ACTIONS \
         -e GITHUB_REF \
+        -e GITHUB_REPOSITORY \
+        -e GITHUB_RUN_ID \
+        -e GITHUB_SERVER_URL \
+        -e GITHUB_SHA \
         -v "$PWD:$PWD" \
         -w "$PWD" \
         -u "$uid" \
