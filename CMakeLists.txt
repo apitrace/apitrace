@@ -681,6 +681,9 @@ if (WIN32 AND NOT HAVE_X86)
         set (CPACK_SYSTEM_NAME win32-arm)
     endif ()
 endif ()
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set (CPACK_SYSTEM_NAME Linux-arm64)
+endif ()
 
 # See http://www.vtk.org/Wiki/CMake:CPackPackageGenerators
 if (WIN32)
