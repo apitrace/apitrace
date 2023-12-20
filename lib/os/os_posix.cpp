@@ -130,6 +130,35 @@ getProcessName(void)
 }
 
 String
+getProcessCommandLine(void)
+{
+    String path;
+
+    size_t size = PATH_MAX;
+    char buf[size];
+
+    int fd = open("/proc/self/cmdline", O_RDONLY);
+    if (fd >= 0) {
+        size_t len = read(fd, buf, size);
+        close(fd);
+
+        if (len > 0) {
+            size_t start = strlen(buf) + 1;
+            size_t cmdlineLen = len - start;
+
+            char *pathBuf = path.buf(cmdlineLen);
+            for (size_t i = 0; i < cmdlineLen - 1; i++) {
+                char character = buf[start + i];
+                if (character == '\0') character = ' ';
+                pathBuf[i] = character;
+            }
+        }
+    }
+
+    return path;
+}
+
+String
 getCurrentDir(void)
 {
     String path;
