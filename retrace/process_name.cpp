@@ -123,6 +123,10 @@ setProcessName(const char *processName)
     *p__progname = progname;
 }
 
+void
+setProcessCommandLine(const char* processCommandLine)
+{
+}
 
 #elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64))
 
@@ -148,6 +152,7 @@ GetModuleFromAddress(PVOID pAddress)
 
 // Must not use std::string to prevent it from being destroyed.
 static char g_processName[4097];
+static char g_processCommandLine[8192];
 
 
 static DWORD WINAPI
@@ -250,11 +255,61 @@ setProcessName(const char *processName)
     }
 }
 
+static LPSTR WINAPI
+MyGetCommandLineA()
+{
+    return g_processCommandLine;
+}
+
+static LPWSTR WINAPI
+MyGetCommandLineW()
+{
+    static wchar_t processCommandLineW[8192];
+    static bool bConverted = false;
+    if (!bConverted) {
+        ::MultiByteToWideChar(CP_UTF8, 0, g_processName, -1, processCommandLineW, sizeof(processCommandLineW) / sizeof(wchar_t));
+        bConverted = true;
+    }
+    return processCommandLineW;
+}
+
+void
+setProcessCommandLine(const char* processCommandLine)
+{
+    strncpy(g_processCommandLine, processCommandLine, sizeof g_processCommandLine - 1);
+    g_processCommandLine[sizeof g_processCommandLine - 1] = '\0';
+
+    static BOOL bHooked = FALSE;
+    if (!bHooked) {
+        bHooked = TRUE;
+
+        LPVOID lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetCommandLineA");
+        if (lpOrigAddress) {
+            LPVOID lpHookAddress = (LPVOID)&MyGetCommandLineA;
+            if (!Mhook_SetHook(&lpOrigAddress, lpHookAddress)) {
+                std::cerr << "error: failed to hook GetCommandLineA\n";
+            }
+        }
+
+        lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetCommandLineW");
+        if (lpOrigAddress) {
+            LPVOID lpHookAddress = (LPVOID)&MyGetCommandLineW;
+            if (!Mhook_SetHook(&lpOrigAddress, lpHookAddress)) {
+                std::cerr << "error: failed to hook GetCommandLineW\n";
+            }
+        }
+    }
+}
 
 #else
 
 void
 setProcessName(const char *processName)
+{
+}
+
+void
+setProcessCommandLine(const char* processCommandLine)
 {
 }
 

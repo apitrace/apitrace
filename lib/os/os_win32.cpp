@@ -57,6 +57,15 @@ getProcessName(void)
 }
 
 String
+getProcessCommandLine(void)
+{
+    LPSTR commandLineRaw = GetCommandLineA();
+    String commandLine(commandLineRaw);
+
+    return commandLine;
+}
+
+String
 getCurrentDir(void)
 {
     String path;

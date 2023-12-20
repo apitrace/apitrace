@@ -29,3 +29,6 @@
 
 void
 setProcessName(const char *processName);
+
+void
+setProcessCommandLine(const char* processCommandLine);

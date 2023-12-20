@@ -154,6 +154,8 @@ LocalWriter::open(void) {
     Properties properties;
     os::String processName = os::getProcessName();
     properties["process.name"] = processName;
+    os::String processCommandLine = os::getProcessCommandLine();
+    properties["process.commandLine"] = processCommandLine;
 
     if (!Writer::open(lpFileName, TRACE_VERSION, properties)) {
         os::log("apitrace: error: failed to open %s\n", lpFileName);

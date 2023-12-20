@@ -423,6 +423,7 @@ public:
 
 
 String getProcessName();
+String getProcessCommandLine(void);
 String getCurrentDir();
 
 String getConfigDir();

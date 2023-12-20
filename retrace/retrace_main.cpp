@@ -1456,6 +1456,10 @@ int main(int argc, char **argv)
             if (processNameIt != properties.end()) {
                 adjustProcessName(processNameIt->second);
             }
+            auto processCommandLineIt = properties.find("process.commandLine");
+            if (processCommandLineIt != properties.end()) {
+                setProcessCommandLine(processCommandLineIt->second.c_str());
+            }
 
             retrace::mainLoop();
 
