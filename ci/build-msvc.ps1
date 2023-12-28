@@ -96,7 +96,12 @@ if ($arch -eq 'x86') {
 $generator = 'Visual Studio 17 2022'
 
 if (!$config) {
-    $config = 'Debug'
+    if ($arch -eq 'arm') {
+        # Avoid fatal error LNK1322: cannot avoid potential ARM hazard (Cortex-A53 MPCore processor bug 843419)
+        $config = 'RelWithDebInfo'
+    } else {
+        $config = 'Debug'
+    }
     # Default to release on master and tags for GitHub builds
     if ($Env:GITHUB_EVENT_NAME -eq "push" -And ($Env:GITHUB_REF -eq 'refs/heads/master' -Or $Env:GITHUB_REF.StartsWith('refs/tags/'))) {
         $config = 'RelWithDebInfo'
