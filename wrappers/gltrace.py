@@ -921,7 +921,7 @@ class GlTracer(Tracer):
             print(r'        if (it != _ctx->sharedRes->bufferToShadowMemory.end()) {')
             print(r'            _result = it->second->map(_ctx, _result, access, offset, length);')
             print(r'        } else {')
-            print(r'            os::log("apitrace: error: %s: cannot find memory shadow\n", __FUNCTION__);')
+            print(r'            os::log("apitrace: error: %s: %u: cannot find memory shadow\n", __FUNCTION__, _call);')
             print(r'        }')
             print(r'    }')
 
