@@ -130,7 +130,7 @@ is_coherent_write_map(GLbitfield access)
     }
 #endif
 
-    return true;
+    return false;
 }
 
 
