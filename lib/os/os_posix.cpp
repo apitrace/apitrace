@@ -146,11 +146,13 @@ getProcessCommandLine(void)
             size_t start = strlen(buf) + 1;
             size_t cmdlineLen = len - start;
 
-            char *pathBuf = path.buf(cmdlineLen);
-            for (size_t i = 0; i < cmdlineLen - 1; i++) {
-                char character = buf[start + i];
-                if (character == '\0') character = ' ';
-                pathBuf[i] = character;
+            if (cmdlineLen > 0) {
+                char *pathBuf = path.buf(cmdlineLen);
+                for (size_t i = 0; i < cmdlineLen - 1; i++) {
+                    char character = buf[start + i];
+                    if (character == '\0') character = ' ';
+                    pathBuf[i] = character;
+                }
             }
         }
     }
