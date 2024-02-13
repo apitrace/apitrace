@@ -144,6 +144,9 @@ getProcessCommandLine(void)
 
         if (len > 0) {
             size_t start = strlen(buf) + 1;
+            if (len <= start) {
+               return path;
+            }
             size_t cmdlineLen = len - start;
 
             char *pathBuf = path.buf(cmdlineLen);
