@@ -148,6 +148,23 @@ EGLDebugMessageType = FakeEnum(Int, [
     'EGL_DEBUG_MSG_INFO_KHR',
 ])
 
+EGLSurfaceCompressionRate = FakeEnum(Int, [
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_NONE_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_DEFAULT_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_1BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_2BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_3BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_4BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_5BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_6BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_7BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_8BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_9BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_10BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_11BPC_EXT',
+    'EGL_SURFACE_COMPRESSION_FIXED_RATE_12BPC_EXT',
+])
+
 def EGLIntArray(values):
     return AttribArray(Const(EGLint_enum), values, terminator = 'EGL_NONE')
 
@@ -190,6 +207,9 @@ WindowSurfaceAttribsValues = [
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace),
     ('EGL_POST_SUB_BUFFER_SUPPORTED_NV', EGLBoolean),
+    ('EGL_SURFACE_COMPRESSION_EXT', EGLSurfaceCompressionRate),
+    ('EGL_SURFACE_COMPRESSION_PLANE1_EXT', EGLSurfaceCompressionRate),
+    ('EGL_SURFACE_COMPRESSION_PLANE2_EXT', EGLSurfaceCompressionRate),
 ]
 EGLWindowSurfaceAttribs = EGLAttribArray(WindowSurfaceAttribsValues)
 EGLWindowSurfaceAttribs_int = EGLIntArray(WindowSurfaceAttribsValues)
@@ -468,6 +488,9 @@ eglapi.addFunctions([
     # GL_OES_EGL_image
     GlFunction(Void, "glEGLImageTargetTexture2DOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
     GlFunction(Void, "glEGLImageTargetRenderbufferStorageOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
+
+    # EGL_EXT_surface_compression
+    GlFunction(EGLBoolean, "eglQuerySupportedCompressionRatesEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLWindowSurfaceAttribs, "attrib_list"), Out(Array(EGLint, "*num_rates"), "rates"), (EGLint, "rate_size"), Out(Pointer(EGLint), "num_rates")], sideeffects=False),
 
     # EGL_WL_bind_wayland_display
     GlFunction(EGLBoolean, "eglBindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
