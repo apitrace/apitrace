@@ -1636,9 +1636,17 @@ glapi.addFunctions([
     GlFunction(Void, "glTexStorage2D", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glTexStorage3D", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth")]),
 
+    # GL_EXT_texture_storage_compression
+    GlFunction(Void, "glTexStorageAttribs2DEXT", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLattribs_texStorage, "attrib_list")]),
+    GlFunction(Void, "glTexStorageAttribs3DEXT", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLattribs_texStorage, "attrib_list")]),
+
     # GL_ARB_texture_storage_multisample
     GlFunction(Void, "glTexStorage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
     GlFunction(Void, "glTexStorage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
+
+    # GL_EXT_EGL_image_storage
+    GlFunction(Void, "glEGLImageTargetTexStorageEXT", [(GLenum, "target"), (GLeglImageOES, "image"), (GLattribs_texStorage, "attrib_list")]),
+    GlFunction(Void, "glEGLImageTargetTextureStorageEXT", [(GLtexture, "texture"), (GLeglImageOES, "image"), (GLattribs_texStorage, "attrib_list")]),
 
     # GL_ARB_texture_view
     GlFunction(Void, "glTextureView", [(GLtexture, "texture"), (GLenum, "target"), (GLtexture, "origtexture"), (GLenum, "internalformat"), (GLuint, "minlevel"), (GLuint, "numlevels"), (GLuint, "minlayer"), (GLuint, "numlayers")]),

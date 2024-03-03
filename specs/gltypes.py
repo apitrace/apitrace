@@ -123,6 +123,7 @@ GLfence = Handle("fence", GLuint)
 GLtextureHandle = Handle("textureHandle", GLuint64)
 GLimageHandle = Handle("imageHandle", GLuint64)
 GLsubroutine = Handle("subroutine", GLuint, key=('program', GLhandleARB))
+GLeglImageOES = Handle("eglImageOES", IntPointer("GLeglImageOES"))
 
 
 # GL mappings are pointers to linear memory regions.
@@ -390,3 +391,25 @@ GLbitfield_texStorageSparse = Flags(GLbitfield, [
 
 # GL_NV_vdpau_interop
 GLvdpauSurfaceNV = Alias('GLvdpauSurfaceNV', GLintptr)
+
+# GL_EXT_texture_storage_compression
+GLenum_texStorageCompression = FakeEnum(GLint, [
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_NONE_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_DEFAULT_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_1BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_2BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_3BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_4BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_5BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_6BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_7BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_8BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_9BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_10BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_11BPC_EXT',
+    'GL_SURFACE_COMPRESSION_FIXED_RATE_12BPC_EXT'
+])
+
+GLattribs_texStorage = GLarray_int([
+    ('GL_SURFACE_COMPRESSION_EXT', GLenum_texStorageCompression),
+])
