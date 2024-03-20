@@ -8,12 +8,12 @@ JumpWidget::JumpWidget(QWidget *parent )
 {
     m_ui.setupUi(this);
 
-    connect(m_ui.jumpButton, SIGNAL(clicked()),
-            SLOT(slotJump()));
-    connect(m_ui.spinBox, SIGNAL(editingFinished()),
-            SLOT(slotJump()));
-    connect(m_ui.cancelButton, SIGNAL(clicked()),
-            SLOT(slotCancel()));
+    connect(m_ui.jumpButton, &QAbstractButton::clicked,
+            this, &JumpWidget::slotJump);
+    connect(m_ui.spinBox, &QAbstractSpinBox::editingFinished,
+            this, &JumpWidget::slotJump);
+    connect(m_ui.cancelButton, &QAbstractButton::clicked,
+            this, &JumpWidget::slotCancel);
 
     installEventFilter(this);
 }
