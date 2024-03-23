@@ -34,57 +34,6 @@
 #include "os.hpp"
 
 
-#if defined(__GLIBC__) && !defined(__UCLIBC__) && __GLIBC__ == 2 && __GLIBC_MINOR__ < 34
-
-
-#include <dlfcn.h>
-
-extern "C" void * __libc_dlopen_mode(const char * filename, int flag);
-extern "C" void * __libc_dlsym(void * handle, const char * symbol);
-
-
-/*
- * Protect against dlsym interception.
- *
- * We implement the whole API, so we don't need to intercept dlsym -- dlopen is
- * enough. However we need to protect against other dynamic libraries
- * intercepting dlsym, to prevent infinite recursion,
- *
- * In particular the Steam Community Overlay exports dlsym.  See also
- * http://lists.freedesktop.org/archives/apitrace/2013-March/000573.html
- */
-PRIVATE
-void *
-dlsym(void * handle, const char * symbol)
-{
-    /*
-     * We rely on glibc's internal __libc_dlsym.  See also
-     * http://www.linuxforu.com/2011/08/lets-hook-a-library-function/
-     *
-     * Use use it to obtain the true dlsym.  We don't use __libc_dlsym directly
-     * because it does not support things such as RTLD_NEXT.
-     */
-    typedef void * (*PFN_DLSYM)(void *, const char *);
-    static PFN_DLSYM dlsym_ptr = NULL;
-    if (!dlsym_ptr) {
-        void *libdl_handle = __libc_dlopen_mode("libdl.so.2", RTLD_LOCAL | RTLD_NOW);
-        if (libdl_handle) {
-            dlsym_ptr = (PFN_DLSYM)__libc_dlsym(libdl_handle, "dlsym");
-        }
-        if (!dlsym_ptr) {
-            os::log("apitrace: error: failed to look up real dlsym\n");
-            return NULL;
-        }
-    }
-
-    return dlsym_ptr(handle, symbol);
-}
-
-
-
-#endif /* __GLIBC__ */
-
-
 #include "dlopen.hpp"
 
 
