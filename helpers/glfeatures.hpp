@@ -99,19 +99,19 @@ struct Profile {
     operator == (const Profile & other) const {
         return major == other.major &&
                minor == other.minor &&
-               api == other.api &&
-               core == other.core &&
+               api   == other.api   &&
+               core  == other.core  &&
                forwardCompatible == other.forwardCompatible;
     }
 
     // Comparison operator, mainly for use in std::map
     inline bool
     operator < (const Profile & other) const {
-        return major < other.major ||
-               minor < other.minor ||
-               api < other.api ||
-               core < other.core ||
-               forwardCompatible < other.forwardCompatible;
+        return (major  < other.major) ||
+               (major == other.major && minor  < other.minor) ||
+               (major == other.major && minor == other.minor && api  < other.api)  ||
+               (major == other.major && minor == other.minor && api == other.api && core  < other.core) ||
+               (major == other.major && minor == other.minor && api == other.api && core == other.core && forwardCompatible < other.forwardCompatible);
     }
 
     std::string
