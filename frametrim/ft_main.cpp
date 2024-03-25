@@ -172,7 +172,7 @@ static int trim_to_frame(const char *filename,
             }
         }
 
-        trimmer->call(*call, ft);
+        trimmer->call(*call, ft, frame);
 
         if (call->flags & trace::CALL_FLAG_END_FRAME) {
             if (options.top_frame_call_counts > 0) {
