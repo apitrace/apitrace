@@ -624,6 +624,8 @@ glFramebufferTextureLayerARB	https://www.opengl.org/registry/specs/ARB/geometry_
 glFramebufferTextureLayerEXT	https://www.opengl.org/registry/specs/EXT/geometry_shader4.txt
 glFramebufferTextureLayerEXT	https://www.opengl.org/registry/specs/EXT/texture_array.txt
 glFramebufferTextureLayerEXT	https://www.opengl.org/registry/specs/NV/geometry_program4.txt
+glFramebufferTextureMultiviewOVR	https://www.opengl.org/registry/specs/OVR/multiview.txt
+glNamedFramebufferTextureMultiviewOVR	https://www.opengl.org/registry/specs/OVR/multiview.txt
 glFreeObjectBufferATI	https://www.opengl.org/registry/specs/ATI/vertex_array_object.txt
 glFrontFace	https://www.opengl.org/sdk/docs/man/html/glFrontFace.xhtml
 glFrontFace	https://www.opengl.org/sdk/docs/man2/xhtml/glFrontFace.xml

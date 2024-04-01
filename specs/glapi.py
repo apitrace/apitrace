@@ -3512,6 +3512,10 @@ glapi.addFunctions([
     GlFunction(Void, "glDepthRangeArrayfvOES", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLfloat), "count*2"), "v")]),
     GlFunction(Void, "glDepthRangeIndexedfOES", [(GLuint, "index"), (GLfloat, "n"), (GLfloat, "f")]),
     GlFunction(Void, "glGetFloati_vOES", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLfloat, "_gl_param_size(target)"), "data")], sideeffects=False),
+
+    # GL_OVR_multiview
+    GlFunction(Void, "glFramebufferTextureMultiviewOVR", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLint, "baseViewIndex"), (GLsizei, "numViews")]),
+    GlFunction(Void, "glNamedFramebufferTextureMultiviewOVR", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLint, "baseViewIndex"), (GLsizei, "numViews")]),
     
     # GL_PGI_misc_hints
     GlFunction(Void, "glHintPGI", [(GLenum, "target"), (GLint, "mode")]),
