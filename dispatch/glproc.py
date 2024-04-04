@@ -573,6 +573,14 @@ class GlDispatcher(Dispatcher):
             print(r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;')
             print(r'    return 0;')
             return
+        # EGL_KHR_debug
+        if function.name.startswith('eglQueryDebugKHR'):
+            print(r'    if (value != 0) *value = 0;')
+            print(r'    return EGL_FALSE;')
+            return
+        if function.name in ('eglDebugMessageControlKHR', 'eglLabelObjectKHR'):
+            print(r'    return EGL_SUCCESS;')
+            return
 
         Dispatcher.failFunction(self, function)
 

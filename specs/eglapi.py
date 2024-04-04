@@ -88,6 +88,11 @@ EGLuint64NV = Alias("EGLuint64NV", UInt64)
 WlDisplay = Opaque("struct wl_display*")
 WlResource = Opaque("struct wl_resource*")
 
+# EGL_KHR_debug
+EGLDEBUGPROCKHR = Opaque("EGLDEBUGPROCKHR")
+EGLLabelKHR = Opaque("EGLLabelKHR")
+EGLObjectKHR = Opaque("EGLObjectKHR")
+
 eglapi = Module("EGL")
 
 EGLSurfaceFlags = Flags(Int, [
@@ -122,6 +127,23 @@ EGLTextureFormat = FakeEnum(Int, [
     'EGL_TEXTURE_Y_UV_WL',
     'EGL_TEXTURE_Y_XUXV_WL',
     'EGL_TEXTURE_EXTERNAL_WL',
+])
+
+EGLObjectType = FakeEnum(Int, [
+    'EGL_OBJECT_THREAD_KHR',
+    'EGL_OBJECT_DISPLAY_KHR',
+    'EGL_OBJECT_CONTEXT_KHR',
+    'EGL_OBJECT_SURFACE_KHR',
+    'EGL_OBJECT_IMAGE_KHR',
+    'EGL_OBJECT_SYNC_KHR',
+    'EGL_OBJECT_STREAM_KHR',
+])
+
+EGLDebugMessageType = FakeEnum(Int, [
+    'EGL_DEBUG_MSG_CRITICAL_KHR',
+    'EGL_DEBUG_MSG_ERROR_KHR',
+    'EGL_DEBUG_MSG_WARN_KHR',
+    'EGL_DEBUG_MSG_INFO_KHR',
 ])
 
 def EGLIntArray(values):
@@ -282,6 +304,13 @@ eglImageAttribs = [
 EGLImageAttribs = EGLAttribArray(eglImageAttribs)
 EGLImageAttribsKHR = EGLIntArray(eglImageAttribs)
 
+EGLDebugAttribs = EGLAttribArray([
+    ('EGL_DEBUG_MSG_CRITICAL_KHR', EGLBoolean),
+    ('EGL_DEBUG_MSG_ERROR_KHR', EGLBoolean),
+    ('EGL_DEBUG_MSG_WARN_KHR', EGLBoolean),
+    ('EGL_DEBUG_MSG_INFO_KHR', EGLBoolean),
+])
+
 EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
 
 def GlFunction(*args, **kwargs):
@@ -434,4 +463,9 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglBindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
     GlFunction(EGLBoolean, "eglUnbindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
     GlFunction(EGLBoolean, "eglQueryWaylandBufferWL", [(EGLDisplay, "dpy"), (WlResource, "buffer"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+
+    # EGL_KHR_debug
+    GlFunction(EGLint, "eglDebugMessageControlKHR", [(EGLDEBUGPROCKHR, "callback"), (EGLDebugAttribs, "attrib_list")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQueryDebugKHR", [(EGLint, "attribute"), (OpaquePointer(EGLAttrib), "value")], sideeffects=False),
+    GlFunction(EGLint, "eglLabelObjectKHR", [(EGLDisplay, "display"), (EGLenum, "objectType"), (EGLObjectKHR, "object"), (EGLLabelKHR, "label")]),
 ])
