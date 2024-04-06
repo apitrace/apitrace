@@ -42,7 +42,7 @@ boolOption(const char *option, bool default_) {
         strcmp(option, "false") == 0) {
         return false;
     }
-    if (strcmp(option, "0") == 0 ||
+    if (strcmp(option, "1") == 0 ||
         strcmp(option, "yes") == 0 ||
         strcmp(option, "true") == 0) {
         return true;
