@@ -34,6 +34,7 @@
 #include "os_thread.hpp"
 #include "os_string.hpp"
 #include "os_version.hpp"
+#include "trace_option.hpp"
 #include "trace_ostream.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
@@ -111,6 +112,7 @@ LocalWriter::open(void) {
     lpFileName = getenv("TRACE_FILE");
     if (!lpFileName) {
         static unsigned dwCounter = 0;
+        char suffix[17] = "";
 
         os::String process = os::getProcessName();
 #ifdef _WIN32
@@ -130,13 +132,19 @@ LocalWriter::open(void) {
 #endif
         prefix.join(process);
 
+        const char *lpTimestamp = getenv("TRACE_TIMESTAMP");
+        if (lpTimestamp && boolOption(lpTimestamp)) {
+            std::time_t time = std::time({});
+            strftime(suffix, sizeof(suffix), ".%Y%m%dT%H%M%S", std::localtime(&time));
+        }
+
         for (;;) {
             FILE *file;
 
             if (dwCounter)
-                szFileName = os::String::format("%s.%u.trace", prefix.str(), dwCounter);
+                szFileName = os::String::format("%s.%s%u.trace", prefix.str(), suffix, dwCounter);
             else
-                szFileName = os::String::format("%s.trace", prefix.str());
+                szFileName = os::String::format("%s%s.trace", prefix.str(), suffix);
 
             lpFileName = szFileName;
             file = fopen(lpFileName, "rb");

@@ -98,7 +98,8 @@ traceProgram(trace::API api,
              const char *output,
              int verbose,
              bool debug,
-             bool mhook)
+             bool mhook,
+             bool timestamp)
 {
     const char *wrapperFilename;
     std::vector<const char *> args;
@@ -162,6 +163,9 @@ traceProgram(trace::API api,
         }
         if (mhook) {
             args.push_back("-m");
+        }
+        if (timestamp) {
+            args.push_back("-t");
         }
         for (int i = 1; i < verbose; ++i) {
             args.push_back("-v");
@@ -265,6 +269,8 @@ traceProgram(trace::API api,
 
         if (output) {
             os::setEnvironment("TRACE_FILE", output);
+        } else if (timestamp) {
+            os::setEnvironment("TRACE_TIMESTAMP", "1");
         }
 
         for (char * const * arg = argv; *arg; ++arg) {
@@ -342,6 +348,8 @@ usage(void)
         "                        default is `gl`\n"
         "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n"
+        "    -t, --timestamp     append timestamp to output trace filename;\n"
+        "                        ignored if --output argument is specified\n"
 #ifdef TRACE_VARIABLE
         "    -d,  --debug        run inside debugger (gdb/lldb)\n"
 #endif
@@ -362,6 +370,7 @@ longOptions[] = {
     { "output", required_argument, 0, 'o' },
     { "debug", no_argument, 0, 'd' },
     { "mhook", no_argument, 0, 'm' },
+    { "timestamp", no_argument, 0, 't' },
     { 0, 0, 0, 0 }
 };
 
@@ -373,6 +382,7 @@ command(int argc, char *argv[])
     const char *output = NULL;
     bool debug = false;
     bool mhook = false;
+    bool timestamp = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -420,6 +430,9 @@ command(int argc, char *argv[])
         case 'm':
             mhook = true;
             break;
+        case 't':
+            timestamp = true;
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -434,7 +447,7 @@ command(int argc, char *argv[])
     }
 
     assert(argv[argc] == 0);
-    return traceProgram(api, argv + optind, output, verbose, debug, mhook);
+    return traceProgram(api, argv + optind, output, verbose, debug, mhook, timestamp);
 }
 
 const Command trace_command = {
