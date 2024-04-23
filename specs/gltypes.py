@@ -141,6 +141,9 @@ GLenum = Enum("GLenum", [
 # that symbolic names are traced correctly.
 GLenum_int = Alias("GLint", GLenum)
 
+def GLarray_int(values):
+    return AttribArray(Const(GLenum_int), values, terminator = 'GL_NONE')
+
 GLenum_mode = FakeEnum(GLenum, [
     "GL_POINTS",                         # 0x0000
     "GL_LINES",                          # 0x0001
