@@ -723,6 +723,10 @@ class Rebuilder(Visitor):
         type = self.visit(array.type)
         return Array(type, array.length)
 
+    def visitAttribArray(self, array):
+        type = self.visit(array.baseType)
+        return AttribArray(type, array.valueTypes, array.terminator)
+
     def visitBlob(self, blob):
         type = self.visit(blob.type)
         return Blob(type, blob.size)

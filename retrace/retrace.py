@@ -71,6 +71,9 @@ class ValueAllocator(stdapi.Visitor):
     def visitArray(self, array, lvalue, rvalue):
         print('    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue))
 
+    def visitAttribArray(self, array, lvalue, rvalue):
+        print('    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.baseType, rvalue))
+
     def visitPointer(self, pointer, lvalue, rvalue):
         print('    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue))
 
@@ -148,6 +151,24 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print('        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length))
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
+        finally:
+            print('        }')
+            print('    }')
+
+    def visitAttribArray(self, array, lvalue, rvalue):
+        tmp = '_a_' + array.tag + '_' + str(self.seq)
+        self.seq += 1
+
+        assert not self.insideStruct
+
+        print('    const trace::Array *%s = (%s).toArray();' % (tmp, rvalue))
+        print('    if (%s) {' % (tmp,))
+
+        length = '%s->values.size()' % (tmp,)
+        index = '_j' + array.tag
+        print('        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length))
+        try:
+            self.visit(array.baseType, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
         finally:
             print('        }')
             print('    }')
