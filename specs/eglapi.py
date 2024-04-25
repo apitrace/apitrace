@@ -233,6 +233,10 @@ EGLFenceSyncNVAttribs = EGLIntArray([
     ('EGL_SYNC_STATUS_NV', Flags(Int, ['EGL_SIGNALED_NV', 'EGL_UNSIGNALED_NV']))
 ])
 
+EGLFenceSyncKHRAttribs = EGLIntArray([
+    ('EGL_SYNC_NATIVE_FENCE_FD_ANDROID', Int)
+])
+
 EGLPlatformDisplayAttribs = EGLAttribArray([
     ('EGL_PLATFORM_X11_SCREEN_EXT', Int),
 ])
@@ -379,7 +383,7 @@ eglapi.addFunctions([
     GlFunction(EGLSurface, "eglCreatePixmapSurfaceHI", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (Pointer(EGLClientPixmapHI), "pixmap")]),
 
     # EGL_KHR_fence_sync
-    GlFunction(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLIntArray([]), "attrib_list")]),
+    GlFunction(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLFenceSyncKHRAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroySyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync")]),
     GlFunction(EGLint, "eglClientWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags"), (EGLTimeKHR, "timeout")]),
     GlFunction(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
