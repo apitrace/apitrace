@@ -61,6 +61,8 @@ EGLDeviceEXT = Opaque("EGLDeviceEXT")
 
 # EGL_EXT_image_dma_buf_import_modifiers
 EGLuint64KHR = Alias("EGLuint64KHR", UInt64)
+EGLModifier = Bitmask(EGLuint64KHR, [])
+Hex = Bitmask(Int, [])
 
 # EGL_KHR_image_base
 EGLImageKHR = Alias("EGLImageKHR", EGLImage)
@@ -290,17 +292,17 @@ eglImageAttribs = [
     ('EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT', FakeEnum(Int, ['EGL_YUV_CHROMA_SITING_0_EXT', 'EGL_YUV_CHROMA_SITING_0_5_EXT'])),
 
     # EGL_EXT_image_dma_buf_import_modifiers
-    ('EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT', Int),
-    ('EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT', Int),
-    ('EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT', Int),
-    ('EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT', Int),
-    ('EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT', Int),
-    ('EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT', Int),
+    ('EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT', Hex),
     ('EGL_DMA_BUF_PLANE3_FD_EXT', Int),
     ('EGL_DMA_BUF_PLANE3_OFFSET_EXT', Int),
     ('EGL_DMA_BUF_PLANE3_PITCH_EXT', Int),
-    ('EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT', Int),
-    ('EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT', Int),
+    ('EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT', Hex),
+    ('EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT', Hex),
 
     # EGL_WL_bind_wayland_display
     ('EGL_WAYLAND_PLANE_WL', Int),
@@ -395,7 +397,7 @@ eglapi.addFunctions([
 
     # EGL_EXT_image_dma_buf_import_modifiers
     GlFunction(EGLBoolean, "eglQueryDmaBufFormatsEXT", [(EGLDisplay, "dpy"), (EGLint, "max_formats"), Out(Array(EGLint, "max_formats"), "formats"), Out(Pointer(EGLint), "num_formats")], sideeffects=False),
-    GlFunction(EGLBoolean, "eglQueryDmaBufModifiersEXT", [(EGLDisplay, "dpy"), (EGLint, "format"), (EGLint, "max_modifiers"), Out(Array(EGLuint64KHR, "max_modifiers"), "modifiers"), Out(Array(EGLBoolean, "max_modifiers"), "external_only"), Out(Pointer(EGLint), "num_modifiers")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQueryDmaBufModifiersEXT", [(EGLDisplay, "dpy"), (EGLint, "format"), (EGLint, "max_modifiers"), Out(Array(EGLModifier, "max_modifiers"), "modifiers"), Out(Array(EGLBoolean, "max_modifiers"), "external_only"), Out(Pointer(EGLint), "num_modifiers")], sideeffects=False),
 
     # EGL_EXT_platform_base
     GlFunction(EGLDisplay, "eglGetPlatformDisplayEXT", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribsEXT, "attrib_list")]),
@@ -449,7 +451,7 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglExportDRMImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "name"), Out(Pointer(EGLint), "handle"), Out(Pointer(EGLint), "stride")]),
 
     # EGL_MESA_image_dma_buf_export
-    GlFunction(EGLBoolean, "eglExportDMABUFImageQueryMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "fourcc"), Out(Pointer(EGLint), "num_planes"), Out(Pointer(EGLuint64KHR), "modifiers")]),
+    GlFunction(EGLBoolean, "eglExportDMABUFImageQueryMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "fourcc"), Out(Pointer(EGLint), "num_planes"), Out(Pointer(EGLModifier), "modifiers")]),
     GlFunction(EGLBoolean, "eglExportDMABUFImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Array(EGLint, 4), "fds"), Out(Array(EGLint, 4), "strides"), Out(Array(EGLint, 4), "offsets")]),
 
     # EGL_NV_post_sub_buffer
