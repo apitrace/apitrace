@@ -185,18 +185,22 @@ EGLConfigAttribs = EGLIntArray([
     ('EGL_TRANSPARENT_BLUE_VALUE ', Int)
 ])
 
-EGLWindowsSurfaceAttribs = EGLIntArray([
+WindowSurfaceAttribsValues = [
     ('EGL_RENDER_BUFFER', FakeEnum(Int, ['EGL_SINGLE_BUFFER', 'EGL_BACK_BUFFER'])),
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace),
     ('EGL_POST_SUB_BUFFER_SUPPORTED_NV', EGLBoolean),
-])
+]
+EGLWindowSurfaceAttribs = EGLAttribArray(WindowSurfaceAttribsValues)
+EGLWindowSurfaceAttribs_int = EGLIntArray(WindowSurfaceAttribsValues)
 
 
-EGLPixmapSurfaceAttribs = EGLIntArray([
+EGLPixmapSurfaceAttribsValues = [
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace)
-])
+]
+EGLPixmapSurfaceAttribs = EGLAttribArray(EGLPixmapSurfaceAttribsValues)
+EGLPixmapSurfaceAttribs_int = EGLIntArray(EGLPixmapSurfaceAttribsValues)
 
 EGLPbufferAttribs = EGLIntArray([
     ('EGL_HEIGHT', Int),
@@ -329,8 +333,8 @@ eglapi.addFunctions([
     GlFunction(EGLBoolean, "eglCopyBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLNativePixmapType, "target")]),
     GlFunction(EGLContext, "eglCreateContext", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLContext, "share_context"), (EGLContextAttribs, "attrib_list")]),
     GlFunction(EGLSurface, "eglCreatePbufferSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLPbufferAttribs, "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreatePixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativePixmapType, "pixmap"), (EGLPixmapSurfaceAttribs, "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreateWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativeWindowType, "win"), (EGLWindowsSurfaceAttribs, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativePixmapType, "pixmap"), (EGLPixmapSurfaceAttribs_int, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreateWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativeWindowType, "win"), (EGLWindowSurfaceAttribs_int, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx")]),
     GlFunction(EGLBoolean, "eglDestroySurface", [(EGLDisplay, "dpy"), (EGLSurface, "surface")]),
     GlFunction(EGLBoolean, "eglGetConfigAttrib", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLint_enum, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
@@ -374,8 +378,8 @@ eglapi.addFunctions([
     GlFunction(EGLImage, "eglCreateImage", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (EGLImageAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglDestroyImage", [(EGLDisplay, "dpy"), (EGLImage, "image")]),
     GlFunction(EGLDisplay, "eglGetPlatformDisplay", [(EGLenum, "platform"), (OpaquePointer(Void), "native_display"), (EGLPlatformDisplayAttribs, "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreatePlatformWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLAttribArray([]), "attrib_list")]),
-    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLAttribArray([]), "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_window"), (EGLWindowSurfaceAttribs, "attrib_list")]),
+    GlFunction(EGLSurface, "eglCreatePlatformPixmapSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (OpaquePointer(Void), "native_pixmap"), (EGLPixmapSurfaceAttribs, "attrib_list")]),
     GlFunction(EGLBoolean, "eglWaitSync", [(EGLDisplay, "dpy"), (EGLSync, "sync"), (EGLint, "flags")]),
 
     # EGL_ANDROID_native_fence_sync
