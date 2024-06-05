@@ -148,3 +148,25 @@ jobs:
         key: ${{ runner.os }}-5.15.2-1
     - name: cmake
       run: ci/build-macos.sh
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [ubuntu-18_04, ubuntu-arm64-cross, msvc]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        submodules: recursive
+    - uses: actions/download-artifact@v4
+      id: download
+      with:
+        path: artifacts
+    - run: ls -lR ${{ steps.download.outputs.download-path }}
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: >
+        gh release create --draft --title "${{ github.ref_name }}" --generate-notes "${{ github.ref_name }}"
+        ${{ steps.download.outputs.download-path }}/*/apitrace-*.tar.bz2
+        ${{ steps.download.outputs.download-path }}/*/apitrace-*.7z
