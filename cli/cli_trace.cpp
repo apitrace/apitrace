@@ -269,7 +269,8 @@ traceProgram(trace::API api,
 
         if (output) {
             os::setEnvironment("TRACE_FILE", output);
-        } else if (timestamp) {
+        }
+        if (timestamp) {
             os::setEnvironment("TRACE_TIMESTAMP", "1");
         }
 
@@ -348,8 +349,7 @@ usage(void)
         "                        default is `gl`\n"
         "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n"
-        "    -t, --timestamp     append timestamp to output trace filename;\n"
-        "                        ignored if --output argument is specified\n"
+        "    -t, --timestamp     append timestamp to output trace filename\n"
 #ifdef TRACE_VARIABLE
         "    -d,  --debug        run inside debugger (gdb/lldb)\n"
 #endif

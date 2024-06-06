@@ -108,11 +108,18 @@ LocalWriter::open(void) {
     os::String szFileName;
 
     const char *lpFileName;
+    char suffix[17] = "";
+    bool hasTimestamp;
+
+    hasTimestamp = boolOption(getenv("TRACE_TIMESTAMP"), false);
+    if (hasTimestamp) {
+        std::time_t time = std::time({});
+        strftime(suffix, sizeof(suffix), ".%Y%m%dT%H%M%S", std::localtime(&time));
+    }
 
     lpFileName = getenv("TRACE_FILE");
     if (!lpFileName) {
         static unsigned dwCounter = 0;
-        char suffix[17] = "";
 
         os::String process = os::getProcessName();
 #ifdef _WIN32
@@ -132,12 +139,6 @@ LocalWriter::open(void) {
 #endif
         prefix.join(process);
 
-        const char *lpTimestamp = getenv("TRACE_TIMESTAMP");
-        if (lpTimestamp && boolOption(lpTimestamp)) {
-            std::time_t time = std::time({});
-            strftime(suffix, sizeof(suffix), ".%Y%m%dT%H%M%S", std::localtime(&time));
-        }
-
         for (;;) {
             FILE *file;
 
@@ -155,6 +156,12 @@ LocalWriter::open(void) {
 
             ++dwCounter;
         }
+    } else if (hasTimestamp) {
+        const char *ext = strrchr(lpFileName, '.');
+        size_t length = ext ? ext - lpFileName : strlen(lpFileName);
+
+        szFileName = os::String::format("%.*s%s%s", length, lpFileName, suffix, ext ? ext : "");
+        lpFileName = szFileName;
     }
 
     os::log("apitrace: tracing to %s\n", lpFileName);
