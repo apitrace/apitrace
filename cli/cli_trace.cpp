@@ -360,7 +360,7 @@ usage(void)
 }
 
 const static char *
-shortOptions = "+hva:o:dm";
+shortOptions = "+hva:o:dmt";
 
 const static struct option
 longOptions[] = {
