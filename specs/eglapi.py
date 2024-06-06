@@ -490,7 +490,7 @@ eglapi.addFunctions([
     GlFunction(Void, "glEGLImageTargetRenderbufferStorageOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
 
     # EGL_EXT_surface_compression
-    GlFunction(EGLBoolean, "eglQuerySupportedCompressionRatesEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLWindowSurfaceAttribs, "attrib_list"), Out(Array(EGLint, "*num_rates"), "rates"), (EGLint, "rate_size"), Out(Pointer(EGLint), "num_rates")], sideeffects=False),
+    GlFunction(EGLBoolean, "eglQuerySupportedCompressionRatesEXT", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLWindowSurfaceAttribs, "attrib_list"), Out(Array(EGLSurfaceCompressionRate, "*num_rates"), "rates"), (EGLint, "rate_size"), Out(Pointer(EGLint), "num_rates")], sideeffects=False),
 
     # EGL_WL_bind_wayland_display
     GlFunction(EGLBoolean, "eglBindWaylandDisplayWL", [(EGLDisplay, "dpy"), (WlDisplay, "display")]),
