@@ -241,6 +241,10 @@ static void retrace_eglBindAPI(trace::Call &call) {
 
 static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (orig_context == 0) {
+        return;
+    }
+
     unsigned long long orig_config = call.arg(1).toUIntPtr();
     Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = call.arg(3).toArray();
