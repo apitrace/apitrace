@@ -195,6 +195,7 @@ static int trim_to_frame(const char *filename,
     trimmer->end_last_frame();
     auto skip_loop_calls = trimmer->get_skip_loop_calls();
     auto swap_calls = trimmer->get_swap_to_finish_calls();
+    auto& overriden_calls = trimmer->get_overriden_calls();
 
     std::cerr << "\nDone scanning frames\n";
 
@@ -233,6 +234,11 @@ static int trim_to_frame(const char *filename,
                 call.reset(new trace::Call(&glFinishSig, 0, call->thread_id));
             }
 
+            auto override_call = overriden_calls.find(call->no);
+            if (override_call != overriden_calls.end()) {
+                call = std::move(override_call->second);
+            }
+
             call->no = call_id++;
             writer.writeCall(call.get());
         }
@@ -253,6 +259,11 @@ static int trim_to_frame(const char *filename,
 
         if (!call)
             break;
+
+        auto override_call = overriden_calls.find(call->no);
+        if (override_call != overriden_calls.end()) {
+            call = std::move(override_call->second);
+        }
 
         if (skip_loop_calls.find(call->no) == skip_loop_calls.end()) {
             call->no = call_id++;

@@ -159,6 +159,12 @@ FrameTrimmer::get_swap_to_finish_calls()
     return m_swap_calls;
 }
 
+std::unordered_map<unsigned, std::unique_ptr<trace::Call>>&
+FrameTrimmer::get_overriden_calls()
+{
+    return m_overriden_calls;
+}
+
 std::vector<unsigned>
 FrameTrimmer::getSortedCallIds()
 {
