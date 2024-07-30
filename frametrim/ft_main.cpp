@@ -269,6 +269,7 @@ static int trim_to_frame(const char *filename,
         }
 
         if (skip_loop_calls.find(call->no) == skip_loop_calls.end()) {
+            trimmer->modify_last_frame_call(*call.get());
             call->no = call_id++;
             writer.writeCall(call.get());
         }

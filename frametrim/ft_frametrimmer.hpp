@@ -74,6 +74,8 @@ public:
 
     virtual void switch_thread(int new_thread) {}
 
+    virtual void modify_last_frame_call(trace::Call& call) {}
+
 protected:
     virtual void emitState() {};
     virtual void finalize() {};
