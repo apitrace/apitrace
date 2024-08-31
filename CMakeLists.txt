@@ -369,19 +369,28 @@ endif ()
 
 if (MINGW)
     if (NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
-        # We use our C++11 threads implementation to avoid depending on winpthreads
         execute_process (
-            COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_HAS_GTHREADS\n#error _GLIBCXX_HAS_GTHREADS\n#endif"
+            COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_GCC_GTHR_POSIX_H\n#error _GLIBCXX_GCC_GTHR_POSIX_H\n#endif"
             COMMAND "${CMAKE_CXX_COMPILER}" -x c++ -E -
-            RESULT_VARIABLE STATUS_CXX11_THREADS
+            RESULT_VARIABLE STATUS_GTHREADS_POSIX
             OUTPUT_QUIET
             ERROR_QUIET
         )
-        if (NOT STATUS_CXX11_THREADS EQUAL 0)
+        if (NOT STATUS_GTHREADS_POSIX EQUAL 0)
             message (WARNING "MinGW with POSIX threads detected; Win32 threads recommended.")
         else ()
-            # TODO: Consider https://github.com/meganz/mingw-std-threads
-            include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+            # On older GCC versions use our C++11 threads implementation to avoid depending on winpthreads.
+            # Newer GCC versions already support win32 threads.
+            execute_process (
+                COMMAND "${CMAKE_COMMAND}" -E echo "#include <thread>\n#ifdef _GLIBCXX_HAS_GTHREADS\n#error _GLIBCXX_HAS_GTHREADS\n#endif"
+                COMMAND "${CMAKE_CXX_COMPILER}" -x c++ -E -
+                RESULT_VARIABLE STATUS_GTHREADS
+                OUTPUT_QUIET
+                ERROR_QUIET
+            )
+            if (STATUS_GTHREADS EQUAL 0)
+                include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+            endif ()
         endif ()
     endif ()
 
