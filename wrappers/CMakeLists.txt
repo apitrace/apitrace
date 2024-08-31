@@ -250,7 +250,9 @@ if (WIN32)
         # in order for the {dxgi,d3d10,d3d11}.dll's Xxx exports are resolved to
         # dxgitrace import library's Xxx@NN symbols.
         if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT CMAKE_VERSION VERSION_LESS "3.24")
-            set (DXGITRACE "$<LINK_LIBRARY:WHOLE_ARCHIVE,dxgitrace>")
+            # Unfortunately $<LINK_LIBRARY:WHOLE_ARCHIVE,...> fails because
+            # subsequent CMake versions ignore it with shared libraries
+            set (DXGITRACE -Wl,--whole-archive dxgitrace -Wl,--no-whole-archive)
         else ()
             set (DXGITRACE dxgitrace)
         endif ()
