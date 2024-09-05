@@ -76,6 +76,7 @@ struct CallQuery
     int64_t rssEnd;
 };
 
+static bool supportsDisjoint = false;
 static bool supportsElapsed = true;
 static bool supportsTimestamp = true;
 static bool supportsOcclusion = true;
@@ -217,6 +218,7 @@ static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
     int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0, vsizeDuration = 0, rssDuration = 0;
+    bool gpuDisjoint = false;
 
     if (query.isDraw) {
         if (retrace::profilingGpuTimes) {
@@ -438,8 +440,9 @@ initContext() {
 
     /* Ensure we have adequate extension support */
     glfeatures::Profile currentProfile = currentContext->actualProfile();
+    supportsDisjoint    = currentContext->hasExtension("GL_EXT_disjoint_timer_query");
     supportsTimestamp   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 3, 3) ||
-                          currentContext->hasExtension("GL_ARB_timer_query");
+                          currentContext->hasExtension("GL_ARB_timer_query") || supportsDisjoint;
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentProfile.versionGreaterOrEqual(glfeatures::API_GL, 1, 5);
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
@@ -459,7 +462,7 @@ initContext() {
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
-            std::cout << "error: cannot profile, GL_ARB_timer_query or GL_EXT_timer_query extensions are not supported." << std::endl;
+            std::cout << "error: cannot profile, GL_ARB_timer_query, GL_EXT_timer_query or GL_EXT_disjoint_timer_query extensions are not supported." << std::endl;
             exit(-1);
         }
 

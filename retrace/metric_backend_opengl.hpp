@@ -99,6 +99,7 @@ private:
         METRIC_CPU_DURATION,
         METRIC_GPU_START,
         METRIC_GPU_DURATION,
+        METRIC_GPU_DISJOINT,
         METRIC_GPU_PIXELS,
         METRIC_CPU_VSIZE_START,
         METRIC_CPU_VSIZE_DURATION,
@@ -120,7 +121,7 @@ private:
     std::map<std::string, Metric_opengl*> nameLookup;
 
     // bools
-    bool supportsTimestamp, supportsElapsed, supportsOcclusion;
+    bool supportsDisjoint, supportsTimestamp, supportsElapsed, supportsOcclusion;
     bool glQueriesNeeded[QUERY_BOUNDARY_LIST_END];
     bool glQueriesNeededAnyBoundary;
     bool cpugpuSync;
@@ -130,6 +131,7 @@ private:
     GLint timestamp_bits_precision;
 
     unsigned curPass;
+    int64_t curDisjoint;
 
     std::vector<Metric_opengl> metrics;
     // storage for metrics
@@ -145,6 +147,7 @@ private:
     int64_t vsizeEnd[QUERY_BOUNDARY_LIST_END];
     int64_t rssStart[QUERY_BOUNDARY_LIST_END];
     int64_t rssEnd[QUERY_BOUNDARY_LIST_END];
+    int64_t disjointStart[QUERY_BOUNDARY_LIST_END];
 
     MetricBackend_opengl(glretrace::Context* context, MmapAllocator<char> &alloc);
 
