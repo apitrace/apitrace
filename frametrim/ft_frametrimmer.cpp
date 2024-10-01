@@ -26,6 +26,7 @@
  *********************************************************************/
 
 #include "ft_frametrimmer.hpp"
+#include "ft_d3d11.hpp"
 #include "ft_opengl.hpp"
 
 #include <algorithm>
@@ -44,7 +45,7 @@ FrameTrimmer::FrameTrimmer(bool keep_all_states, bool swap_to_finish):
 bool
 FrameTrimmer::isSupported(trace::API api)
 {
-    return (api == trace::API_GL || api == trace::API_EGL);
+    return (api == trace::API_GL || api == trace::API_EGL || api == trace::API_DXGI);
 }
 
 std::shared_ptr<FrameTrimmer>
@@ -53,16 +54,21 @@ FrameTrimmer::create(trace::API api, bool keep_all_states, bool swap_to_finish)
     if (api == trace::API_GL || api == trace::API_EGL) {
         std::cerr << "Creating OpenGL trimmer" << std::endl;
         return std::make_shared<OpenGLImpl>(keep_all_states, swap_to_finish);
+    } else if (api == trace::API_DXGI) {
+        std::cerr << "Creating D3D11 trimmer" << std::endl;
+        return std::make_shared<D3D11Impl>(keep_all_states);
     } else {
         assert(0);
     }
 }
 
 void
-FrameTrimmer::call(const trace::Call& call, Frametype frametype)
+FrameTrimmer::call(const trace::Call& call, Frametype frametype, unsigned frame)
 {
     const char *call_name = call.name();
     bool end_frame = (call.flags & trace::CALL_FLAG_END_FRAME);
+
+    m_current_frame = frame;
 
     if (!m_recording_frame && (frametype != ft_none)) {
         std::cerr << "Start recording\n";
@@ -145,6 +151,12 @@ FrameTrimmer::end_last_frame()
     finalize();
     if (m_last_swap)
         m_required_calls.insert(m_last_swap);
+}
+
+unsigned
+FrameTrimmer::get_frame() const
+{
+    return m_current_frame;
 }
 
 std::unordered_set<unsigned>
