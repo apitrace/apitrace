@@ -142,9 +142,9 @@ if (WIN32 OR APPLE OR X11_FOUND)
                 #"-framework OpenGL" # CGL*
             )
 
-            # Bundle Info.plist.  Set sdk version to 10.13.0 to avoid blank screen on Mojave
+            # Bundle Info.plist.  Set platform_version to the one available on the system to avoid blank screen on Mojave
             set_target_properties (glretrace PROPERTIES
-                LINK_FLAGS "-sectcreate __TEXT __info_plist ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist -Wl,-sdk_version,10.13.0"
+                LINK_FLAGS "-sectcreate __TEXT __info_plist ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist -Wl,\"-platform_version\",\"macos\",\"${CMAKE_HOST_SYSTEM_VERSION}\",\"${CMAKE_HOST_SYSTEM_VERSION}\""
                 LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
             )
         else ()
