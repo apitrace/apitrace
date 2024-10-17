@@ -347,6 +347,46 @@ class GlRetracer(Retracer):
             print(r'        retrace::warning(call) << " renderbuffer targets unsupported (https://git.io/JOMRC)\n";')
             print(r'    }')
 
+        if function.name in('glUniformHandleui64ARB', 'glProgramUniformHandleui64ARB', 'glUniformHandleui64NV', 'glProgramUniformHandleui64NV'):
+            print(r'    if (_textureHandle_map.find(value) != _textureHandle_map.end())')
+            print(r'    {')
+            print(r'        value = _textureHandle_map[value];')
+            print(r'    }')
+            print(r'    else if(_imageHandle_map.find(value) != _imageHandle_map.end())')
+            print(r'    {')
+            print(r'        value = _imageHandle_map[value];')
+            print(r'    }')
+
+        if function.name in('glUniformHandleui64vARB', 'glUniformHandleui64vNV'):
+            print(r'    const trace::Array* handleInfo = (call.arg(2)).toArray();')
+            print(r'    if (handleInfo) {')
+            print(r'        for (size_t i = 0; i < handleInfo->values.size(); ++i) {')
+            print(r'            if (_textureHandle_map.find(value[i]) != _textureHandle_map.end())')
+            print(r'            {')
+            print(r'                value[i] = _textureHandle_map[value[i]];' )
+            print(r'            }')
+            print(r'            else if (_imageHandle_map.find(value[i]) != _imageHandle_map.end())')
+            print(r'            {')
+            print(r'                value[i] = _imageHandle_map[value[i]];' )
+            print(r'            }')
+            print(r'        }')
+            print(r'    }')
+
+        if function.name in('glProgramUniformHandleui64vARB', 'glProgramUniformHandleui64vNV'):
+            print(r'    const trace::Array* handleInfo = (call.arg(3)).toArray();')
+            print(r'    if (handleInfo) {')
+            print(r'        for (size_t i = 0; i < handleInfo->values.size(); ++i) {')
+            print(r'            if (_textureHandle_map.find(values[i]) != _textureHandle_map.end())')
+            print(r'            {')
+            print(r'                values[i] = _textureHandle_map[values[i]];' )
+            print(r'            }')
+            print(r'            else if (_imageHandle_map.find(values[i]) != _imageHandle_map.end())')
+            print(r'            {')
+            print(r'                values[i] = _imageHandle_map[values[i]];' )
+            print(r'            }')
+            print(r'        }')
+            print(r'    }')
+
         is_draw_arrays = self.draw_arrays_function_regex.match(function.name) is not None
         is_draw_elements = self.draw_elements_function_regex.match(function.name) is not None
         is_misc_draw = self.misc_draw_function_regex.match(function.name) is not None
