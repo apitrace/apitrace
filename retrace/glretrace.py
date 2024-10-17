@@ -186,6 +186,17 @@ class GlRetracer(Retracer):
             print('    glretrace::frame_complete(call);')
             return
 
+        # GL_ARB_cl_event workaround: create a dummy fence sync
+        if function.name == 'glCreateSyncFromCLeventARB':
+            print('    trace::FunctionSig sig = { 795, "glFenceSync", 2, nullptr };')
+            print('    trace::Call fakeCall(&sig, trace::CALL_FLAG_FAKE, call.thread_id);')
+            print('    fakeCall.args[0].value = new trace::SInt(GL_SYNC_GPU_COMMANDS_COMPLETE);')
+            print('    fakeCall.args[1].value = new trace::UInt(0);')
+            print('    fakeCall.ret = call.ret;')
+            print('    retrace_glFenceSync(fakeCall);')
+            print('    fakeCall.ret = NULL;')
+            return
+
         Retracer.retraceFunctionBody(self, function)
 
         # If we have a query buffer or if we execute the query we have to loop until the
@@ -670,6 +681,9 @@ _getActiveProgram(void);
 
 static void
 _validateActiveProgram(trace::Call &call);
+
+static void
+retrace_glFenceSync(trace::Call &call);
 
 ''')
     api = stdapi.API()
