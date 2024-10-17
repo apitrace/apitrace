@@ -369,6 +369,8 @@ class GlTracer(Tracer):
         "glEdgeFlagPointerEXT",
         "glFogCoordPointerEXT",
         "glSecondaryColorPointerEXT",
+        
+        "glMultiTexCoordPointerEXT",
 
         "glVertexAttribPointer",
         "glVertexAttribPointerARB",

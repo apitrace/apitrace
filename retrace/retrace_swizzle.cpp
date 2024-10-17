@@ -32,6 +32,19 @@
 #include "retrace_swizzle.hpp"
 
 
+#ifdef assert
+#undef assert
+#endif
+
+
+#define assert(expression) \
+            if (((bool)(expression)) == false) \
+            { \
+                os::log("apitrace assert! expression: (%s), FILE: %s, FUNCTION: %s, LINE: %s \n", (#expression), __FILE__, __FUNCTION__, __LINE__); \
+                os::breakpoint(); \
+            }
+
+
 namespace retrace {
 
 
