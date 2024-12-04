@@ -246,7 +246,6 @@ static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
     int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0, vsizeDuration = 0, rssDuration = 0;
-    bool gpuDisjoint = false;
 
     if (query.isDraw) {
         if (retrace::profilingGpuTimes) {
