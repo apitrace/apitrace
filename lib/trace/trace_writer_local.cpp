@@ -158,7 +158,7 @@ LocalWriter::open(void) {
         }
     } else if (hasTimestamp) {
         const char *ext = strrchr(lpFileName, '.');
-        size_t length = ext ? ext - lpFileName : strlen(lpFileName);
+        int length = ext ? ext - lpFileName : strlen(lpFileName);
 
         szFileName = os::String::format("%.*s%s%s", length, lpFileName, suffix, ext ? ext : "");
         lpFileName = szFileName;
