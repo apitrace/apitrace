@@ -693,6 +693,7 @@ exit_clean:
 static inline void
 dumpActiveTextureLevel(StateWriter &writer, Context &context,
                        GLenum target, GLint level,
+                       GLint layer, GLint num_layers,
                        const std::string & label,
                        const char *userLabel)
 {
@@ -702,6 +703,10 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
 
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
+        return;
+    }
+    if (layer < 0 || num_layers < 0 || layer + num_layers > desc.depth) {
+        std::cerr << "warning: invalid layer range\n";
         return;
     }
 
@@ -792,6 +797,19 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         } else {
             glGetTexImage(target, level, format, type, image->pixels);
         }
+
+        // If a strict subset of the texture's layers is requested, those layers
+        // need extracting from image->pixels into a new replacement
+        // image::Image. This is redundant when all layers are requested.
+        if (num_layers > 0 && num_layers < desc.depth) {
+            image::Image *image2 = new image::Image(desc.width, desc.height * num_layers, channels, true, channelType);
+            memcpy(image2->pixels,
+                   image->pixels + layer * image->bytesPerPixel * desc.width * desc.height,
+                   num_layers * image->bytesPerPixel * desc.width * desc.height);
+            delete image;
+            image = image2;
+            desc.depth = num_layers;
+        }
     }
 
     if (userLabel) {
@@ -848,7 +866,7 @@ dumpActiveTexture(StateWriter &writer, Context &context, GLenum target, GLuint t
             if (!getActiveTextureLevelDesc(context, subtarget, level, desc)) {
                 goto finished;
             }
-            dumpActiveTextureLevel(writer, context, subtarget, level, label.str(), object_label);
+            dumpActiveTextureLevel(writer, context, subtarget, level, 0, 0, label.str(), object_label);
         }
 
         if (!allowMipmaps) {
@@ -898,7 +916,7 @@ dumpTextureImages(StateWriter &writer, Context &context)
 
             glBindTexture(target, texture);
             char *object_label = getObjectLabel(context, GL_TEXTURE, texture);
-            dumpActiveTextureLevel(writer, context, target, level, label.str(),
+            dumpActiveTextureLevel(writer, context, target, level, 0, 0, label.str(),
                                    object_label);
             free(object_label);
             glBindTexture(target, previousTexture);
@@ -1727,10 +1745,22 @@ dumpFramebufferAttachment(StateWriter &writer, Context &context, GLenum target, 
         glGetFramebufferAttachmentParameteriv(target, attachment,
                                               GL_FRAMEBUFFER_ATTACHMENT_LAYERED,
                                               &layered);
-        if (layered &&
-            isGeometryShaderBound(context)) {
+
+        // OVR_multiview
+        GLint first_view = 0;
+        GLint num_views = 0;
+        if (context.OVR_multiview) {
+            glGetFramebufferAttachmentParameteriv(target, attachment,
+                                                  GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR,
+                                                  &first_view);
+            glGetFramebufferAttachmentParameteriv(target, attachment,
+                                                  GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR,
+                                                  &num_views);
+        }
+        if ((layered && isGeometryShaderBound(context)) ||
+            num_views > 0) {
             /*
-             * Dump the whole texture array.
+             * Dump multiple layers in the texture array.
              *
              * Unfortunately we can't tell whether the bound GS writes or not gl_Layer.
              */
@@ -1747,7 +1777,7 @@ dumpFramebufferAttachment(StateWriter &writer, Context &context, GLenum target, 
             glGetIntegerv(texture_binding, &bound_texture);
             glBindTexture(texture_target, object_name);
 
-            dumpActiveTextureLevel(writer, context, texture_target, level, label, object_label);
+            dumpActiveTextureLevel(writer, context, texture_target, level, first_view, num_views, label, object_label);
 
             glBindTexture(texture_target, bound_texture);
 
