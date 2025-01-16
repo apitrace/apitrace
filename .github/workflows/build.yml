@@ -134,18 +134,12 @@ jobs:
         if-no-files-found: error
 
   mac64:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 1
         submodules: recursive
-    - name: Cache Downloads
-      id: cache-downloads
-      uses: actions/cache@v4
-      with:
-        path: "qt/*qtbase-*.7z"
-        key: ${{ runner.os }}-5.15.2-1
     - name: cmake
       run: ci/build-macos.sh
 
