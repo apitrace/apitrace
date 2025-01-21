@@ -205,6 +205,34 @@ getTimeFrequency(void) {
 }
 
 static inline void
+queryTimestamp(GLuint query) {
+    if (supportsDisjoint) {
+        glQueryCounterEXT(query, GL_TIMESTAMP_EXT);
+    } else {
+        glQueryCounter(query, GL_TIMESTAMP);
+    }
+}
+
+static inline int64_t
+getQueryResult(GLuint query) {
+    int64_t result = 0;
+
+    if (supportsDisjoint) {
+        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT_EXT, &result);
+    } else if (supportsTimestamp) {
+        glGetQueryObjecti64v(query, GL_QUERY_RESULT, &result);
+    } else if (supportsElapsed) {
+        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT, &result);
+    } else {
+        uint32_t result32;
+        glGetQueryObjectuiv(query, GL_QUERY_RESULT, &result32);
+        result = static_cast<int64_t>(result32);
+    }
+
+    return result;
+}
+
+static inline void
 getCurrentVsize(int64_t& vsize) {
     vsize = os::getVsize();
 }
@@ -224,23 +252,15 @@ completeCallQuery(CallQuery& query) {
         if (retrace::profilingGpuTimes) {
             if (supportsTimestamp) {
                 /* Use ARB queries in case EXT not present */
-                glGetQueryObjecti64v(query.ids[GPU_START], GL_QUERY_RESULT, &gpuStart);
-                glGetQueryObjecti64v(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+                gpuStart = getQueryResult(query.ids[GPU_START]);
+                gpuDuration = getQueryResult(query.ids[GPU_DURATION]);
             } else {
-                glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+                gpuDuration = getQueryResult(query.ids[GPU_DURATION]);
             }
         }
 
         if (retrace::profilingPixelsDrawn) {
-            if (supportsTimestamp) {
-                glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
-            } else if (supportsElapsed) {
-                glGetQueryObjecti64vEXT(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
-            } else {
-                uint32_t pixels32;
-                glGetQueryObjectuiv(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels32);
-                pixels = static_cast<int64_t>(pixels32);
-            }
+            pixels = getQueryResult(query.ids[OCCLUSION]);
         }
 
     } else {
@@ -315,10 +335,7 @@ beginProfile(trace::Call &call, bool isDraw) {
     /* GPU profiling only for draw calls */
     if (isDraw) {
         if (retrace::profilingGpuTimes) {
-            if (supportsTimestamp) {
-                glQueryCounter(query.ids[GPU_START], GL_TIMESTAMP);
-            }
-
+            queryTimestamp(query.ids[GPU_START]);
             glBeginQuery(GL_TIME_ELAPSED, query.ids[GPU_DURATION]);
         }
 

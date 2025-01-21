@@ -198,6 +198,10 @@ private:
 
     int64_t getTimeFrequency(void);
 
+    void queryTimestamp(GLuint query);
+
+    int64_t getQueryResult(GLuint query);
+
     void processQueries();
 };
 
