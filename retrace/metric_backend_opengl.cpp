@@ -152,6 +152,32 @@ int64_t MetricBackend_opengl::getTimeFrequency(void) {
     }
 }
 
+void MetricBackend_opengl::queryTimestamp(GLuint query) {
+    if (supportsDisjoint) {
+        glQueryCounterEXT(query, GL_TIMESTAMP_EXT);
+    } else {
+        glQueryCounter(query, GL_TIMESTAMP);
+    }
+}
+
+int64_t MetricBackend_opengl::getQueryResult(GLuint query) {
+    int64_t result;
+
+    if (supportsDisjoint) {
+        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT_EXT, &result);
+    } else if (supportsTimestamp) {
+        glGetQueryObjecti64v(query, GL_QUERY_RESULT, &result);
+    } else if (supportsElapsed) {
+        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT, &result);
+    } else {
+        uint32_t result32;
+        glGetQueryObjectuiv(query, GL_QUERY_RESULT, &result32);
+        result = static_cast<int64_t>(result32);
+    }
+
+    return result;
+}
+
 
 bool MetricBackend_opengl::isSupported() {
     return true;
@@ -332,8 +358,7 @@ void MetricBackend_opengl::processQueries() {
         while (!queries[i].empty()) {
             auto &query = queries[i].front();
             if (metrics[METRIC_GPU_START].profiled[i]) {
-                glGetQueryObjecti64v(query[QUERY_GPU_START], GL_QUERY_RESULT,
-                                      &timestamp);
+                timestamp = getQueryResult(query[QUERY_GPU_START]);
                 if (timestamp < gpuStart && timestamp_bits_precision < 64) {
                     // Correct clock domain of baseTime after roll-over
                     baseTime -= (UINT64_C(2) << timestamp_bits_precision) - 1;
@@ -345,32 +370,21 @@ void MetricBackend_opengl::processQueries() {
             if (metrics[METRIC_GPU_DURATION].profiled[i]) {
                 if (supportsTimestamp) {
                     if (!metrics[METRIC_GPU_START].profiled[i]) {
-                        glGetQueryObjecti64v(query[QUERY_GPU_START], GL_QUERY_RESULT,
-                                             &gpuStart);
+                        gpuStart = getQueryResult(query[QUERY_GPU_START]);
                     }
-                    glGetQueryObjecti64v(query[QUERY_GPU_DURATION], GL_QUERY_RESULT,
-                                         &gpuEnd);
+                    gpuEnd = getQueryResult(query[QUERY_GPU_START]);
                     if (gpuEnd < gpuStart && timestamp_bits_precision < 64) {
                         // Correct the roll-over
                         gpuEnd += (UINT64_C(2) << timestamp_bits_precision) - 1;
                     }
                     gpuEnd -= gpuStart;
                 } else {
-                    glGetQueryObjecti64vEXT(query[QUERY_GPU_DURATION], GL_QUERY_RESULT,
-                                            &gpuEnd);
+                    gpuEnd = getQueryResult(query[QUERY_GPU_DURATION]);
                 }
                 data[METRIC_GPU_DURATION][i]->addData(boundary, gpuEnd);
             }
             if (metrics[METRIC_GPU_PIXELS].profiled[i]) {
-                if (supportsTimestamp) {
-                    glGetQueryObjecti64v(query[QUERY_OCCLUSION], GL_QUERY_RESULT, &pixels);
-                } else if (supportsElapsed) {
-                    glGetQueryObjecti64vEXT(query[QUERY_OCCLUSION], GL_QUERY_RESULT, &pixels);
-                } else {
-                    uint32_t pixels32;
-                    glGetQueryObjectuiv(query[QUERY_OCCLUSION], GL_QUERY_RESULT, &pixels32);
-                    pixels = static_cast<int64_t>(pixels32);
-                }
+                pixels = getQueryResult(query[QUERY_OCCLUSION]);
                 data[METRIC_GPU_PIXELS][i]->addData(boundary, pixels);
             }
             glDeleteQueries(QUERY_LIST_END, query.data());
@@ -409,7 +423,7 @@ void MetricBackend_opengl::beginQuery(QueryBoundary boundary) {
                 curDisjoint += disjointOccurred;
                 disjointStart[boundary] = curDisjoint;
             }
-            glQueryCounter(query[QUERY_GPU_START], GL_TIMESTAMP);
+            queryTimestamp(query[QUERY_GPU_START]);
         }
         if (metrics[METRIC_GPU_DURATION].profiled[boundary] && !supportsTimestamp) {
             glBeginQuery(GL_TIME_ELAPSED, query[QUERY_GPU_DURATION]);
@@ -481,7 +495,7 @@ void MetricBackend_opengl::endQuery(QueryBoundary boundary) {
             if (metrics[METRIC_GPU_DURATION].profiled[boundary] && supportsTimestamp) {
                 // GL_TIME_ELAPSED cannot be used in nested queries
                 // so prefer this if timestamps are supported
-                glQueryCounter(query[QUERY_GPU_DURATION], GL_TIMESTAMP);
+                queryTimestamp(query[QUERY_GPU_DURATION]);
                 if (metrics[METRIC_GPU_DISJOINT].profiled[boundary]) {
                     GLint disjointOccurred = 0;
                     glGetIntegerv(GL_GPU_DISJOINT_EXT, &disjointOccurred);
