@@ -90,7 +90,7 @@ _getPublicProcAddress(const char *procName)
     if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
         static void *libEGL = NULL;
         if (!libEGL) {
-            libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
+            libEGL = dlopen("libEGL.so.1", RTLD_LOCAL | RTLD_LAZY);
             if (!libEGL) {
                 return NULL;
             }
