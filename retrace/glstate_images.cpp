@@ -1061,6 +1061,10 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 #elif defined(HAVE_X11)
 
+    if (!_getPublicProcAddress("glXGetCurrentDisplay")) {
+        return false;
+    }
+
     Display *display;
     GLXDrawable drawable;
 
