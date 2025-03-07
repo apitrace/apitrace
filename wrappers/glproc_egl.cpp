@@ -102,30 +102,6 @@ _getPublicProcAddress(const char *procName)
     }
 
     /*
-     * This might happen when:
-     *
-     * - the application is querying non-extensions functions via
-     *   eglGetProcAddress (either because EGL_KHR_get_all_proc_addresses
-     *   is advertised, or merely because the EGL implementation supports
-     *   it regardless, like Mesa does)
-     *
-     * - libGLES*.so nor libGL*.so was ever loaded.
-     *
-     * - we need to resolve entrypoints that application never asked (e.g.,
-     *   glGetIntegerv), for internal purposes
-     *
-     * Therefore, we try to fallback to eglGetProcAddress.
-     *
-     * See https://github.com/apitrace/apitrace/issues/301#issuecomment-68532248
-     */
-    if (strcmp(procName, "eglGetProcAddress") != 0) {
-        proc = (void *) _eglGetProcAddress(procName);
-        if (proc) {
-            return proc;
-        }
-    }
-
-    /*
      * TODO: We could futher mitigate against using the wrong SO by:
      * - using RTLD_NOLOAD to ensure we only use an existing SO
      * - the determine the right SO via eglQueryAPI and glGetString(GL_VERSION)
