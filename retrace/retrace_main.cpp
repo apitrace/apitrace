@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <atomic>
+#include <chrono>
 #include <limits.h> // for CHAR_MAX
 #include <memory> // for unique_ptr
 #include <iostream>
