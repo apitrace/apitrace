@@ -153,6 +153,7 @@ static int trim_to_frame(const char *filename,
 
     unsigned calls_in_this_frame = 0;
     uint32_t last_frame_start = 0;
+    uint32_t last_frame_end = 0;
 
     while (call) {
         /* There's no use doing any work past the last call and frame
@@ -192,9 +193,12 @@ static int trim_to_frame(const char *filename,
         ++calls_in_this_frame;
     }
 
+    last_frame_end = call->no - 1;
+
     trimmer->end_last_frame();
     auto skip_loop_calls = trimmer->get_skip_loop_calls();
     auto swap_calls = trimmer->get_swap_to_finish_calls();
+    auto& overriden_calls = trimmer->get_overriden_calls();
 
     std::cerr << "\nDone scanning frames\n";
 
@@ -218,10 +222,10 @@ static int trim_to_frame(const char *filename,
     const trace::FunctionSig glFinishSig = {0, "glFinish", 0, NULL};
 
     while (1) {
-        while (call && call_ids.find(call->no) == call_ids.end())
+        while (call && call_ids.find(call->no) == call_ids.end() && call->no < last_frame_end)
             call.reset(p.parse_call());
 
-        if (!call)
+        if (!call || call->no > last_frame_end)
             break;
 
         // Write setup calls in last frame  before last frame starts
@@ -231,6 +235,11 @@ static int trim_to_frame(const char *filename,
             if (options.swap_to_finish &&
                     swap_calls.find(call->no) != swap_calls.end()) {
                 call.reset(new trace::Call(&glFinishSig, 0, call->thread_id));
+            }
+
+            auto override_call = overriden_calls.find(call->no);
+            if (override_call != overriden_calls.end()) {
+                call = std::move(override_call->second);
             }
 
             call->no = call_id++;
@@ -248,13 +257,19 @@ static int trim_to_frame(const char *filename,
     while (1) {
         while (call &&
                (call->no < last_frame_start ||
-                call_ids.find(call->no) == call_ids.end()))
+                call_ids.find(call->no) == call_ids.end()) && call->no < last_frame_end)
             call.reset(p.parse_call());
 
-        if (!call)
+        if (!call || call->no > last_frame_end)
             break;
 
+        auto override_call = overriden_calls.find(call->no);
+        if (override_call != overriden_calls.end()) {
+            call = std::move(override_call->second);
+        }
+
         if (skip_loop_calls.find(call->no) == skip_loop_calls.end()) {
+            trimmer->modify_last_frame_call(*call.get());
             call->no = call_id++;
             writer.writeCall(call.get());
         }

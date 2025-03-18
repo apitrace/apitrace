@@ -67,11 +67,14 @@ public:
 
     std::unordered_set<unsigned> get_skip_loop_calls();
     std::unordered_set<unsigned> get_swap_to_finish_calls();
+    std::unordered_map<unsigned, std::unique_ptr<trace::Call>>& get_overriden_calls();
 
     std::vector<unsigned> getSortedCallIds();
     std::unordered_set<unsigned> getUniqueCallIds();
 
     virtual void switch_thread(int new_thread) {}
+
+    virtual void modify_last_frame_call(trace::Call& call) {}
 
 protected:
     virtual void emitState() {};
@@ -93,6 +96,7 @@ protected:
     std::set<std::string> m_unhandled_calls;
     std::unordered_set<unsigned> m_swap_calls;
     std::unordered_set<unsigned> m_skip_loop_calls;
+    std::unordered_map<unsigned, std::unique_ptr<trace::Call>> m_overriden_calls;
 };
 
 }
