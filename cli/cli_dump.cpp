@@ -273,7 +273,7 @@ command(int argc, char *argv[])
         while ((call = p.parse_call())) {
             // Give a few calls of tolerance before bailing out to allow pending
             // multi-threaded calls out of order to dump
-            const unsigned call_no_tol = 100;
+            const unsigned long long call_no_tol = 100;
 
             if (call->no > calls.getLast() + call_no_tol) {
                 delete call;
