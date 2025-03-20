@@ -281,7 +281,7 @@ class PythonDiffer(Differ):
 
     def readTrace(self, trace, calls):
         stream = pickleTrace(trace, apitrace=self.apitrace, symbolic=True, calls=calls)
-        parser = Loader(p.stdout)
+        parser = Loader(stream)
         parser.parse()
         return parser.calls
 
