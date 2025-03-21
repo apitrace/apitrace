@@ -28,6 +28,7 @@
 #pragma once
 
 #include "ft_tracecall.hpp"
+#include <stdint.h>
 
 namespace frametrim {
 
