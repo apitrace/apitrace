@@ -24,6 +24,7 @@
  **************************************************************************/
 
 #include <iostream>
+#include <stdint.h>
 
 #include "metric_writer.hpp"
 
