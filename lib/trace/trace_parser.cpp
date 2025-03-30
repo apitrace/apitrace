@@ -279,11 +279,11 @@ Parser::parse_function_sig(void) {
                 api = trace::API_GL;
             } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl[A-Z]*
                 api = trace::API_EGL;
-            } else if ((n[0] == 'D' &&
-                        ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
-                         (n[1] == '3' && n[2] == 'D'))) || // D3D*
+            } else if ((n[0] == 'D' && n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
                        (n[0] == 'C' && n[1] == 'r' && n[2] == 'e' && n[3] == 'a' && n[4] == 't' && n[5] == 'e')) { // Create*
                 api = trace::API_DX;
+            } else if (n[0] == 'D' && n[1] == '3' && n[2] == 'D' && n[3] == '1' && (n[4] == '0' || n[4] == '1')) { // D3D1{0,1}*
+                api = trace::API_DXGI;
             } else {
                 /* TODO */
             }
