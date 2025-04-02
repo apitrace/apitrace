@@ -99,7 +99,6 @@ add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
 target_link_libraries (qapitrace
     Qt::Widgets
-    Qt::Network
     qubjson
     image
     common
