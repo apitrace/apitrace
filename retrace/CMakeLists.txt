@@ -191,6 +191,8 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
         glproc_egl.cpp
     )
 
+    target_compile_definitions (eglretrace PRIVATE -DHAVE_WAFFLE)
+
     add_dependencies (eglretrace glproc)
 
     target_link_libraries (eglretrace

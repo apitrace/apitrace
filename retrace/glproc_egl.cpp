@@ -32,6 +32,10 @@
 #include <dlfcn.h>
 #endif
 
+#ifdef HAVE_WAFFLE
+#include "waffle.h"
+#endif
+
 
 /*
  * Handle to the true OpenGL library.
@@ -107,11 +111,13 @@ _getPublicProcAddress(const char *procName)
 
     /*
      * TODO: We could further mitigate against using the wrong SO by:
-     * - the determine the right SO via eglQueryAPI and glGetString(GL_VERSION)
-     * - defer to waffle_get_proc_address when using Waffle
+     * - determining the right SO via eglQueryAPI and glGetString(GL_VERSION)
      */
 
     if (procName[0] == 'g' && procName[1] == 'l') {
+#ifdef HAVE_WAFFLE
+        return waffle_get_proc_address(procName);
+#else
         if (!libGL) {
             libGL = dlopen("libGL.so.1", RTLD_LOCAL | RTLD_LAZY | RTLD_NOLOAD);
         }
@@ -145,6 +151,7 @@ _getPublicProcAddress(const char *procName)
                 return proc;
             }
         }
+#endif
     }
 
     return NULL;
@@ -164,6 +171,9 @@ _getPublicProcAddress(const char *procName)
 void *
 _getPrivateProcAddress(const char *procName)
 {
+#ifdef HAVE_WAFFLE
+    return waffle_get_proc_address(procName);
+#else
     void *proc;
     proc = _getPublicProcAddress(procName);
     if (!proc &&
@@ -173,6 +183,7 @@ _getPrivateProcAddress(const char *procName)
     }
 
     return proc;
+#endif
 }
 
 #endif
