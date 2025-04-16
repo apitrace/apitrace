@@ -102,7 +102,7 @@ _getPublicProcAddress(const char *procName)
     }
 
     /*
-     * TODO: We could futher mitigate against using the wrong SO by:
+     * TODO: We could further mitigate against using the wrong SO by:
      * - using RTLD_NOLOAD to ensure we only use an existing SO
      * - the determine the right SO via eglQueryAPI and glGetString(GL_VERSION)
      */
@@ -112,24 +112,24 @@ _getPublicProcAddress(const char *procName)
 
         static void *libGLESv2 = NULL;
         if (!libGLESv2) {
-            libGLESv2 = _dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
+            libGLESv2 = _dlopen("libGLESv2.so.2", RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
         }
         if (libGLESv2) {
             proc = dlsym(libGLESv2, procName);
-        }
-        if (proc) {
-            return proc;
+            if (proc) {
+                return proc;
+            }
         }
 
         static void *libGLESv1 = NULL;
         if (!libGLESv1) {
-            libGLESv1 = _dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
+            libGLESv1 = _dlopen("libGLESv1_CM.so.1", RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
         }
         if (libGLESv1) {
             proc = dlsym(libGLESv1, procName);
-        }
-        if (proc) {
-            return proc;
+            if (proc) {
+                return proc;
+            }
         }
     }
 
