@@ -53,7 +53,7 @@ jobs:
     - name: check
       run: cmake --build build --use-stderr --target check
 
-  ubuntu-18_04:
+  ubuntu-20_04:
     runs-on: ubuntu-24.04
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
@@ -63,12 +63,12 @@ jobs:
         fetch-depth: 1
         submodules: recursive
     - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
-    - run: ci/build-ubuntu-18.04.sh
+    - run: ci/build-ubuntu-20.04.sh
     - if: env.PACKAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: apitrace-ubuntu-18.04
-        path: build/docker-ubuntu-18.04/apitrace-*.tar.bz2
+        name: apitrace-ubuntu-20.04
+        path: build/docker-ubuntu-20.04/apitrace-*.tar.bz2
         if-no-files-found: error
 
   ubuntu-arm64-cross:
@@ -145,7 +145,7 @@ jobs:
 
   release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [ubuntu-18_04, ubuntu-arm64-cross, msvc]
+    needs: [ubuntu-20_04, ubuntu-arm64-cross, msvc]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

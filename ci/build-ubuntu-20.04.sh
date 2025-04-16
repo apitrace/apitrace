@@ -1,5 +1,5 @@
 #!/bin/sh
-exec ci/build-docker.sh ubuntu-18.04 \
+exec ci/build-docker.sh ubuntu-20.04 \
     -G Ninja \
     -DENABLE_GUI=OFF \
     -DENABLE_STATIC_LIBGCC=OFF \
