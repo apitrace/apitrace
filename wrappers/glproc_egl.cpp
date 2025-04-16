@@ -131,6 +131,17 @@ _getPublicProcAddress(const char *procName)
                 return proc;
             }
         }
+
+        static void *libGL = NULL;
+        if (!libGL) {
+            libGL = _dlopen("libGL.so.1", RTLD_LOCAL | RTLD_LAZY | RTLD_DEEPBIND);
+        }
+        if (libGL) {
+            proc = dlsym(libGL, procName);
+            if (proc) {
+                return proc;
+            }
+        }
     }
 
     return NULL;
