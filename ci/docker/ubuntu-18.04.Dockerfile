@@ -17,6 +17,7 @@ RUN \
   libx11-dev \
   libgl-dev \
   libwaffle-dev \
+  pkg-config \
   python3 \
   ninja-build \
   cmake \
