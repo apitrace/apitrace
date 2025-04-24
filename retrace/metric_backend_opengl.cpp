@@ -372,7 +372,7 @@ void MetricBackend_opengl::processQueries() {
                     if (!metrics[METRIC_GPU_START].profiled[i]) {
                         gpuStart = getQueryResult(query[QUERY_GPU_START]);
                     }
-                    gpuEnd = getQueryResult(query[QUERY_GPU_START]);
+                    gpuEnd = getQueryResult(query[QUERY_GPU_DURATION]);
                     if (gpuEnd < gpuStart && timestamp_bits_precision < 64) {
                         // Correct the roll-over
                         gpuEnd += (UINT64_C(2) << timestamp_bits_precision) - 1;
