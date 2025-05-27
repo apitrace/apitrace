@@ -22,6 +22,8 @@
 #define DISASM_OUTPUT(x)
 #endif
 
+#define printf(...) fprintf(stderr, __VA_ARGS__)
+
 #include "disasm_x86_tables.h"
 
 #ifdef _WIN64
