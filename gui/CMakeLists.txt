@@ -73,11 +73,6 @@ set(qapitrace_UIS
    ui/shaderssourcewidget.ui
    )
 
-# https://cmake.org/cmake/help/v3.11/policy/CMP0071.html
-if (POLICY CMP0071)
-    cmake_policy (SET CMP0071 NEW)
-endif()
-
 set (CMAKE_AUTOMOC ON)
 
 # Silence `Note: No relevant classes found. No output generated.`
