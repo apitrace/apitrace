@@ -114,8 +114,8 @@ endif ()
 
 ########### install files ###############
 
-install (TARGETS qapitrace RUNTIME DESTINATION bin)
-install_pdb (qapitrace RUNTIME DESTINATION bin)
+install (TARGETS qapitrace)
+install_pdb (qapitrace TYPE BIN)
 #install (FILES qapitrace.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
 
 # Deployt Qt dependencies
@@ -164,7 +164,7 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
                 \"VCINSTALLDIR=${VCINSTALLDIR}\"
                 \"${QT_WINDEPLOYQT_EXECUTABLE}\"
                 \${QT_WINDEPLOYQT_FLAGS}
-                \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
+                \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/qapitrace.exe\"
             )
         ")
     endif ()
