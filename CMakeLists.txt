@@ -9,6 +9,7 @@ endif ()
 
 project (apitrace)
 
+include(GNUInstallDirs)
 
 ##############################################################################
 # Options
@@ -489,12 +490,16 @@ endif ()
 ##############################################################################
 # Installation directories
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    # Debian multiarch support
-    execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
-        OUTPUT_VARIABLE ARCH_SUBDIR
-        ERROR_QUIET
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+if(DEFINED LIB_SUFFIX)
+    message(WARNING
+        "LIB_SUFFIX is no longer recognized, "
+        "use the standard CMAKE_INSTALL_LIBDIR instead"
+    )
+endif()
+if(DEFINED ARCH_SUBDIR)
+    message(WARNING
+        "ARCH_SUBDIR is no longer recognized, "
+        "use the standard CMAKE_INSTALL_LIBDIR instead"
     )
 endif()
 
@@ -502,24 +507,20 @@ if (WIN32 OR APPLE)
     # On Windows/MacOSX, applications are usually installed on a directory of
     # their own
     set (DOC_DEFAULT_INSTALL_DIR doc)
-    set (LIB_INSTALL_DIR lib)
-    set (LIB_ARCH_INSTALL_DIR lib)
+    set (LIB_INSTALL_DIR lib CACHE PATH "")
+    set (LIB_ARCH_INSTALL_DIR lib CACHE PATH "")
 else ()
-    set (DOC_DEFAULT_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
-    set (LIB_INSTALL_DIR lib${LIB_SUFFIX}/${CMAKE_PROJECT_NAME})
-    if (ARCH_SUBDIR)
-        set (LIB_ARCH_INSTALL_DIR lib/${ARCH_SUBDIR}/${CMAKE_PROJECT_NAME})
-    else ()
-        set (LIB_ARCH_INSTALL_DIR lib${LIB_SUFFIX}/${CMAKE_PROJECT_NAME})
-    endif ()
+    set (DOC_DEFAULT_INSTALL_DIR ${CMAKE_INSTALL_DOCDIR})
+    set (LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME} CACHE PATH "")
+    set (LIB_ARCH_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME} CACHE PATH "")
 endif ()
 
 # Allow customization of the doc installation dir (Slackware uses different
 # location)
-set (DOC_INSTALL_DIR "${DOC_DEFAULT_INSTALL_DIR}" CACHE STRING "Documentation installation directory")
+set (DOC_INSTALL_DIR "${DOC_DEFAULT_INSTALL_DIR}" CACHE PATH "Documentation installation directory")
 
-set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
-set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
+set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts CACHE PATH "")
+set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers CACHE PATH "")
 
 
 ##############################################################################
