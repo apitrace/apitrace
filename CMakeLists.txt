@@ -1,13 +1,6 @@
 message (STATUS "Using CMake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
-cmake_minimum_required (VERSION 3.15.0)
-
-# Enable CMAKE_MSVC_RUNTIME_LIBRARY
-cmake_policy (SET CMP0091 NEW)
-# http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
-cmake_policy (SET CMP0042 NEW)
-# https://cmake.org/cmake/help/v3.20/policy/CMP0048.html
-cmake_policy (SET CMP0048 NEW)
+cmake_minimum_required (VERSION 3.15...4.0)
 
 if (CMAKE_GENERATOR STREQUAL "Xcode")
     message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
@@ -178,9 +171,6 @@ if (ENABLE_GUI)
     if (NOT (ENABLE_GUI STREQUAL "AUTO"))
         set (REQUIRE_GUI REQUIRED)
     endif ()
-    if (POLICY CMP0020)
-        cmake_policy (SET CMP0020 NEW)
-    endif()
     if (ENABLE_QT6)
         find_package (Qt6 COMPONENTS Widgets ${REQUIRE_GUI})
     else ()
