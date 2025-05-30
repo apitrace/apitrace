@@ -160,8 +160,8 @@ if (WIN32 OR APPLE OR X11_FOUND)
         )
     endif ()
 
-    install (TARGETS glretrace RUNTIME DESTINATION bin) 
-    install_pdb (glretrace DESTINATION bin)
+    install (TARGETS glretrace)
+    install_pdb (glretrace TYPE BIN)
 endif ()
 
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
@@ -182,7 +182,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
-    install (TARGETS eglretrace RUNTIME DESTINATION bin)
+    install (TARGETS eglretrace)
 endif ()
 
 if (ENABLE_EGL AND ENABLE_WAFFLE)
@@ -205,7 +205,7 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
         ${CMAKE_THREAD_LIBS_INIT}
         ${CMAKE_DL_LIBS}
     )
-    install (TARGETS eglretrace RUNTIME DESTINATION bin)
+    install (TARGETS eglretrace)
 endif ()
 
 if (WIN32)
@@ -351,6 +351,6 @@ if (WIN32)
         target_link_libraries (d3dretrace directxtex)
     endif ()
 
-    install (TARGETS d3dretrace RUNTIME DESTINATION bin)
-    install_pdb (d3dretrace DESTINATION bin)
+    install (TARGETS d3dretrace)
+    install_pdb (d3dretrace TYPE BIN)
 endif ()
