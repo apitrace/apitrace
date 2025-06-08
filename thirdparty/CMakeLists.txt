@@ -60,7 +60,7 @@ if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
 endif ()
 
 # We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
-if (NOT GTEST_FOUND)
+if (BUILD_TESTING AND NOT GTEST_FOUND)
     message (STATUS "Using bundled GTest")
     include_with_scope (gtest.cmake)
 endif ()

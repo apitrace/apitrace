@@ -566,7 +566,9 @@ if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
         pkg_check_modules (BROTLIENC IMPORTED_TARGET libbrotlienc>=1.0.7)
     endif ()
 
-    find_package (GTest)
+    if (BUILD_TESTING)
+        find_package (GTest)
+    endif ()
 endif ()
 
 add_subdirectory (thirdparty)
@@ -578,12 +580,15 @@ add_subdirectory (thirdparty)
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 # Convenience macro for adding unit tests
-macro (add_gtest)
-    add_executable (${ARGV})
-    target_link_libraries (${ARGV0} GTest::GTest)
-    add_dependencies (check ${ARGV0})
-    add_test (NAME ${ARGV0} COMMAND ${ARGV0})
-endmacro ()
+# Should only be invoked when BUILD_TESTING is enabled
+if (BUILD_TESTING)
+  macro (add_gtest)
+      add_executable (${ARGV})
+      target_link_libraries (${ARGV0} GTest::GTest)
+      add_dependencies (check ${ARGV0})
+      add_test (NAME ${ARGV0} COMMAND ${ARGV0})
+  endmacro ()
+endif ()
 
 
 ##############################################################################
