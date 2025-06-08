@@ -545,7 +545,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat)
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
 
     if (NOT ENABLE_STATIC_SNAPPY)
-        find_package (Snappy)
+        find_package (Snappy CONFIG)
     endif ()
 
     # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
