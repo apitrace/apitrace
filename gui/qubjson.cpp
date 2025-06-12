@@ -148,7 +148,7 @@ readChar(QDataStream &stream)
     qint8 c;
     stream >> c;
     Q_ASSERT(c >= 0);
-    return QChar(c);
+    return QChar(static_cast<char>(c));
 }
 
 
