@@ -283,6 +283,19 @@ if (WIN32)
         )
         install (TARGETS d3d10stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 
+        add_library (d3d10_1stub MODULE
+            d3d10_1.def
+            stub.cpp
+        )
+        target_link_libraries (d3d10_1stub
+            ${DXGITRACE}
+        )
+        set_target_properties (d3d10_1stub PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME "d3d10_1"
+        )
+        install (TARGETS d3d10_1stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+
         add_library (d3d11stub MODULE
             d3d11.def
             stub.cpp

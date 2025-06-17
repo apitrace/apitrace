@@ -1,0 +1,3 @@
+EXPORTS
+	D3D10CreateDevice1
+	D3D10CreateDeviceAndSwapChain1
