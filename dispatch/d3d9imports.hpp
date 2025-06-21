@@ -84,6 +84,14 @@
 #define D3DFMT_RESZ ((D3DFORMAT)MAKEFOURCC('R','E','S','Z'))
 #endif
 
+#ifndef D3DFMT_AL16
+#define D3DFMT_AL16 ((D3DFORMAT)MAKEFOURCC('A','L','1','6'))
+#endif
+
+#ifndef D3DFMT_R16
+#define D3DFMT_R16 ((D3DFORMAT)MAKEFOURCC(' ','R','1','6'))
+#endif
+
 #ifndef RESZ_CODE
 #define RESZ_CODE 0x7fa05000
 #endif

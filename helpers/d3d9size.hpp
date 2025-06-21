@@ -90,6 +90,7 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
     case D3DFMT_R16F:
     case D3DFMT_CxV8U8:
     case D3DFMT_DF16:
+    case D3DFMT_R16:
         BlockSize = 16;
         break;
 
@@ -123,6 +124,7 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
     case D3DFMT_INTZ:
     case D3DFMT_AYUV:
     case D3DFMT_RAWZ:
+    case D3DFMT_AL16:
         BlockSize = 32;
         break;
 
