@@ -36,6 +36,14 @@
 #include <d3d8.h>
 
 
+#ifndef D3DFMT_AL16
+#define D3DFMT_AL16 ((D3DFORMAT)MAKEFOURCC('A','L','1','6'))
+#endif
+
+#ifndef D3DFMT_R16
+#define D3DFMT_R16 ((D3DFORMAT)MAKEFOURCC(' ','R','1','6'))
+#endif
+
 #ifndef D3DSI_INSTLENGTH_MASK
 #define D3DSI_INSTLENGTH_MASK 0x0F000000
 #endif

@@ -117,6 +117,8 @@ formatToString(D3DFORMAT fmt)
     case D3DFMT_NULL: return "D3DFMT_NULL";
     case D3DFMT_AYUV: return "D3DFMT_AYUV";
     case D3DFMT_RAWZ: return "D3DFMT_RAWZ";
+    case D3DFMT_AL16: return "D3DFMT_AL16";
+    case D3DFMT_R16: return "D3DFMT_R16";
     default:
         static char buf[12];
 
