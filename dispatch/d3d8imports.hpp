@@ -36,6 +36,10 @@
 #include <d3d8.h>
 
 
+#ifndef D3DFMT_NULL
+#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
+#endif
+
 #ifndef D3DFMT_AL16
 #define D3DFMT_AL16 ((D3DFORMAT)MAKEFOURCC('A','L','1','6'))
 #endif
