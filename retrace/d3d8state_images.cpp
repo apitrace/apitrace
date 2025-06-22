@@ -59,6 +59,11 @@ getSurfaceImage(IDirect3DDevice8 *pDevice,
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
+
     D3DLOCKED_RECT LockedRect;
     hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK);
     if (FAILED(hr)) {
@@ -85,6 +90,11 @@ getRenderTargetImage(IDirect3DDevice8 *pDevice,
     D3DSURFACE_DESC Desc;
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
+
+    if (Desc.Format == D3DFMT_NULL) {
+        // dummy rendertarget
+        return NULL;
+    }
 
     com_ptr<IDirect3DSurface8> pStagingSurface;
     hr = pDevice->CreateImageSurface(Desc.Width, Desc.Height, Desc.Format, &pStagingSurface);

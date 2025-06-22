@@ -615,6 +615,7 @@ D3DFORMAT = Enum("D3DFORMAT", [
     "D3DFMT_INDEX32",
 
     # Unofficial formats
+    "D3DFMT_NULL",
     "D3DFMT_AL16",
     "D3DFMT_R16",
 ])

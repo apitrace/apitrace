@@ -123,6 +123,7 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
 
     case D3DFMT_UNKNOWN:
     case D3DFMT_VERTEXDATA:
+    case D3DFMT_NULL:
         os::log("apitrace: warning: %s: unexpected D3DFMT %u\n", __FUNCTION__, Format);
         BlockSize = 0;
         break;
