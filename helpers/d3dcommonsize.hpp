@@ -96,6 +96,8 @@ _indexDataSize(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, D3DFORMAT In
 static inline size_t
 _shaderSize(const DWORD *pFunction)
 {
+    assert(pFunction != nullptr);
+
     DWORD dwLength = 0;
 
     // Version token

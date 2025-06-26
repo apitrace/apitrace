@@ -37,6 +37,12 @@
 
 void DumpShader(trace::Writer &writer, const DWORD *tokens)
 {
+    // tokens may be null with IDirect3DDevice8::CreateVertexShader when using fixed-function pipeline.
+    if (!tokens) {
+        writer.writeNull();
+        return;
+    }
+
     IDisassemblyBuffer *pDisassembly = NULL;
     HRESULT hr = DisassembleShader(tokens, &pDisassembly);
 
