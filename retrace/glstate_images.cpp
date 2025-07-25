@@ -1295,7 +1295,7 @@ getDrawBufferImage(int n, bool backBuffer)
      * TODO: Use alpha for non-FBOs once we are able to match the traced
      * visuals.
      */
-    if (draw_framebuffer) {
+    if (draw_framebuffer || retrace::snapshotAlpha) {
         format = GL_RGBA;
     }
 
