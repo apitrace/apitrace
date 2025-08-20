@@ -378,7 +378,13 @@ static int
 command(int argc, char *argv[])
 {
     int verbose = 0;
-    trace::API api = trace::API_GL;
+    trace::API api =
+#if defined(__linux__) && !defined(HAVE_X11)
+        trace::API_EGL
+#else
+        trace::API_GL
+#endif
+    ;
     const char *output = NULL;
     bool debug = false;
     bool mhook = false;
