@@ -23,8 +23,8 @@ else ()
         set_target_properties (injectee_iat PROPERTIES LINK_FLAGS "-Wl,--entry=DllMainStartup")
     endif ()
 endif ()
-install (TARGETS injectee_iat LIBRARY DESTINATION bin)
-install_pdb (injectee_iat DESTINATION bin)
+install (TARGETS injectee_iat LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
+install_pdb (injectee_iat TYPE BIN)
 
 if (HAVE_X86)
     add_library (injectee_mhook MODULE
@@ -46,8 +46,8 @@ if (HAVE_X86)
         advapi32
         mhook
     )
-    install (TARGETS injectee_mhook LIBRARY DESTINATION bin)
-    install_pdb (injectee_mhook DESTINATION bin)
+    install (TARGETS injectee_mhook LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install_pdb (injectee_mhook TYPE BIN)
 endif ()
 
 add_executable (injector
@@ -62,5 +62,5 @@ target_link_libraries (injector
     psapi
     advapi32
 )
-install (TARGETS injector RUNTIME DESTINATION bin)
-install_pdb (injector DESTINATION bin)
+install (TARGETS injector)
+install_pdb (injector TYPE BIN)
