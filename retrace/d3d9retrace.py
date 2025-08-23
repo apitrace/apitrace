@@ -240,7 +240,15 @@ class D3DRetracer(Retracer):
             print(r'    if (retrace::forceWindowed) {')
             print(r'        pPresentationParameters->Windowed = TRUE;')
             print(r'        pPresentationParameters->FullScreen_RefreshRateInHz = 0;')
+            if interface.name.startswith('IDirect3DDevice9'):
+                print(r'        if (pPresentationParameters->PresentationInterval == D3DPRESENT_INTERVAL_TWO')
+                print(r'            || pPresentationParameters->PresentationInterval == D3DPRESENT_INTERVAL_THREE')
+                print(r'            || pPresentationParameters->PresentationInterval == D3DPRESENT_INTERVAL_FOUR)')
+                print(r'            pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;')
+            if interface.name.startswith('IDirect3DDevice8'):
+                print(r'        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;')
             print(r'    }')
+
             # resize window
             print(r'    if (pPresentationParameters->Windowed) {')
             print(r'        d3dretrace::resizeWindow(pPresentationParameters->hDeviceWindow, pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);')
