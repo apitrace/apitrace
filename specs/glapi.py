@@ -2497,6 +2497,12 @@ glapi.addFunctions([
     GlFunction(GLmap, "glMapBufferRangeEXT", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield_access, "access")]),
     GlFunction(Void, "glFlushMappedBufferRangeEXT", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
 
+    # GL_EXT_mesh_shader
+    GlFunction(Void, "glDrawMeshTasksEXT", [(GLuint, "num_groups_x"), (GLuint, "num_groups_y"), (GLuint, "num_groups_z")]),
+    GlFunction(Void, "glDrawMeshTasksIndirectEXT", [(GLpointerConst, "indirect")]),
+    GlFunction(Void, "glMultiDrawMeshTasksIndirectEXT", [(GLpointerConst, "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawMeshTasksIndirectCountEXT", [(GLpointerConst, "indirect"), (GLsizei, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+
     # GL_EXT_multi_draw_arrays
     GlFunction(Void, "glMultiDrawArraysEXT", [(GLenum_mode, "mode"), (Array(Const(GLint), "drawcount"), "first"), (Array(Const(GLsizei), "drawcount"), "count"), (GLsizei, "drawcount")]),
     GlFunction(Void, "glMultiDrawElementsEXT", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "drawcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "drawcount"), "indices"), (GLsizei, "drawcount")]),

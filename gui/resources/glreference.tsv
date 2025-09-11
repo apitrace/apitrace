@@ -463,6 +463,10 @@ glDrawElementsInstancedBaseVertex	https://www.opengl.org/sdk/docs/man/html/glDra
 glDrawElementsInstancedBaseVertexBaseInstance	https://www.opengl.org/registry/specs/ARB/base_instance.txt
 glDrawElementsInstancedEXT	https://www.opengl.org/registry/specs/EXT/draw_instanced.txt
 glDrawMeshArraysSUN	https://www.opengl.org/registry/specs/SUN/mesh_array.txt
+glDrawMeshTasksEXT      https://www.opengl.org/registry/specs/EXT/mesh_shader.txt
+glDrawMeshTasksIndirectEXT      https://www.opengl.org/registry/specs/EXT/mesh_shader.txt
+glMultiDrawMeshTasksIndirectEXT      https://www.opengl.org/registry/specs/EXT/mesh_shader.txt
+glMultiDrawMeshTasksIndirectCountEXT      https://www.opengl.org/registry/specs/EXT/mesh_shader.txt
 glDrawPixels	https://www.opengl.org/sdk/docs/man2/xhtml/glDrawPixels.xml
 glDrawRangeElementArrayAPPLE	https://www.opengl.org/registry/specs/APPLE/element_array.txt
 glDrawRangeElementArrayATI	https://www.opengl.org/registry/specs/ATI/element_array.txt
