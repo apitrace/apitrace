@@ -307,6 +307,7 @@ init(void) {
 void
 cleanup(void) {
     if (eglDisplay != EGL_NO_DISPLAY) {
+        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglTerminate(eglDisplay);
     }
 
