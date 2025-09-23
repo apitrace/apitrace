@@ -1475,8 +1475,7 @@ int main(int argc, char **argv)
 
     delete snapshotter;
 
-    // XXX: X often hangs on XCloseDisplay
-    //retrace::cleanUp();
+    retrace::cleanUp();
 
 #ifdef _WIN32
     if (mmRes == MMSYSERR_NOERROR) {
