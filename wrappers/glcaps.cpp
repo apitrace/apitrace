@@ -40,7 +40,7 @@
 #include <string>
 #include <map>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "gltrace.hpp"
 #include "os.hpp"
 #include "config.hpp"

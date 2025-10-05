@@ -32,7 +32,7 @@
 #include <sstream>
 
 #include "retrace.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glstate.hpp"
 #include "glretrace.hpp"
 #include "os_time.hpp"
