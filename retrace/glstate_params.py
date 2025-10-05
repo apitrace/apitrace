@@ -295,7 +295,7 @@ class StateDumper:
         print()
         print('#include "state_writer.hpp"')
         print('#include "scoped_allocator.hpp"')
-        print('#include "glproc.hpp"')
+        print('#include "glproc.h"')
         print('#include "glsize.hpp"')
         print('#include "glstate.hpp"')
         print('#include "glstate_internal.hpp"')

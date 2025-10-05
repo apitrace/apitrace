@@ -661,7 +661,7 @@ if __name__ == '__main__':
     print(r'''
 #include <string.h>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glretrace.hpp"
 #include "glstate.hpp"
 #include "glsize.hpp"

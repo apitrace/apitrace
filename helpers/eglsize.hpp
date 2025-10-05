@@ -33,7 +33,7 @@
 
 #ifndef _WIN32
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 
 struct image_info
