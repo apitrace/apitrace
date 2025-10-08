@@ -592,6 +592,8 @@ if __name__ == '__main__':
     print()
     print('#pragma once')
     print()
+    print('#include <stdbool.h>')
+    print()
     print('#include "glimports.h"')
     print()
     print('#if defined(_WIN32)')

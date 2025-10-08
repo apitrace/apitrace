@@ -63,8 +63,6 @@
 #include "version.h"
 
 
-static bool waitOnFinish = false;
-
 static const char *snapshotPrefix = "";
 static enum {
     PNM_FMT,
@@ -82,6 +80,7 @@ retrace::Retracer retracer;
 
 namespace retrace {
 
+bool waitOnFinish = false;
 
 trace::AbstractParser *parser;
 trace::Profiler profiler;
@@ -100,10 +99,15 @@ bool watchdogEnabled = false;
 bool ignoreCalls = false;
 trace::CallSet callsToIgnore;
 
+bool generateC = false;
+std::string Cpath;
+
 bool resolveMSAA = true;
 
 Driver driver = DRIVER_DEFAULT;
 const char *driverModule = NULL;
+
+const char *trace_filename = NULL;
 
 bool doubleBuffer = true;
 unsigned samples = 1;
@@ -398,7 +402,7 @@ takeSnapshot(unsigned call_no, bool backBuffer)
  * Take snapshots before/after retracing (as appropriate) and dispatch it to
  * the respective handler.
  */
-static void
+void
 retraceCall(trace::Call *call) {
     callNo = call->no;
 
@@ -431,6 +435,7 @@ retraceCall(trace::Call *call) {
 
 static void
 mainLoop() {
+    retracer.addCallbacks(generateC ? stdc_codegen_callbacks : stdc_callbacks);
     addCallbacks(retracer);
 
     long long startTime = 0;
@@ -542,6 +547,7 @@ usage(const char *argv0) {
         "      --no-context-check  don't check that the actual GL context version matches the requested version\n"
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
         "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
+        "      --generate-c=PATH   Generate a C project that can be compiled into an executable for fast replay.\n"
         "      --version           display version information and exit\n"
     ;
 }
@@ -583,6 +589,7 @@ enum {
     QUERY_HANDLING_OPT,
     QUERY_CHECK_TOLARANCE_OPT,
     IGNORE_CALLS_OPT,
+    GENERATE_C_OPT,
     VERSION_OPT,
 };
 
@@ -637,6 +644,7 @@ longOptions[] = {
     {"no-context-check", no_argument, 0, NO_CONTEXT_CHECK},
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
     {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
+    {"generate-c", required_argument, 0, GENERATE_C_OPT},
     {"version", no_argument, 0, VERSION_OPT},
     {0, 0, 0, 0}
 };
@@ -1008,7 +1016,7 @@ int main(int argc, char **argv)
             ++retrace::verbosity;
             break;
         case 'w':
-            waitOnFinish = true;
+            retrace::waitOnFinish = true;
             break;
         case MIN_FRAME_DURATION_OPT:
             minFrameDurationUsec = trace::intOption(optarg, 0);
@@ -1115,6 +1123,11 @@ int main(int argc, char **argv)
 
             retrace::callsToIgnore.merge(optarg);
             break;
+        case GENERATE_C_OPT:
+            retrace::singleThread = true;
+            retrace::generateC = true;
+            retrace::Cpath = optarg;
+            break;
         case VERSION_OPT:
             std::cout << "apitrace " APITRACE_VERSION << std::endl;
             return 0;
@@ -1166,12 +1179,18 @@ int main(int argc, char **argv)
          retrace::curPass++)
     {
         for (i = optind; i < argc; ++i) {
+            trace_filename = argv[i];
+            if (strlen(trace_filename) >= 3 && !strcmp(trace_filename + strlen(trace_filename) - 3, ".so")) {
+                retrace::replayBinary(retracer, trace_filename);
+                continue;
+            }
+
             parser = new trace::Parser;
             if (loopCount) {
                 parser = lastFrameLoopParser(parser, loopCount);
             }
 
-            if (!parser->open(argv[i])) {
+            if (!parser->open(trace_filename)) {
                 return 1;
             }
 

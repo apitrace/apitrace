@@ -3,6 +3,7 @@
 
 include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_BINARY_DIR} # for version.h
     ${CMAKE_SOURCE_DIR}/lib/highlight
     ${CMAKE_SOURCE_DIR}/helpers
@@ -37,6 +38,118 @@ add_custom_command (
         ${CMAKE_SOURCE_DIR}/specs/stdapi.py
 )
 
+add_custom_command (
+    OUTPUT trace_model_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/trace/trace_model.hpp trace_model_hpp > ${CMAKE_CURRENT_BINARY_DIR}/trace_model_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/trace/trace_model.hpp
+)
+
+add_custom_command (
+    OUTPUT trace_model_cpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/trace/trace_model.cpp trace_model_cpp > ${CMAKE_CURRENT_BINARY_DIR}/trace_model_cpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/trace/trace_model.cpp
+)
+
+add_custom_command (
+    OUTPUT glproc_h.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_BINARY_DIR}/dispatch/glproc.h glproc_h > ${CMAKE_CURRENT_BINARY_DIR}/glproc_h.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_BINARY_DIR}/dispatch/glproc.h
+)
+
+add_custom_command (
+    OUTPUT glproc_cpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_BINARY_DIR}/dispatch/glproc.cpp glproc_cpp > ${CMAKE_CURRENT_BINARY_DIR}/glproc_cpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_BINARY_DIR}/dispatch/glproc.cpp
+)
+
+add_custom_command (
+    OUTPUT os_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/os/os.hpp os_hpp > ${CMAKE_CURRENT_BINARY_DIR}/os_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/os/os.hpp
+)
+
+add_custom_command (
+    OUTPUT os_posix_cpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/os/os_posix.cpp os_posix_cpp > ${CMAKE_CURRENT_BINARY_DIR}/os_posix_cpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/os/os_posix.cpp
+)
+
+add_custom_command (
+    OUTPUT os_string_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/os/os_string.hpp os_string_hpp > ${CMAKE_CURRENT_BINARY_DIR}/os_string_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/os/os_string.hpp
+)
+
+add_custom_command (
+    OUTPUT os_backtrace_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/os/os_backtrace.hpp os_backtrace_hpp > ${CMAKE_CURRENT_BINARY_DIR}/os_backtrace_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/os/os_backtrace.hpp
+)
+
+add_custom_command (
+    OUTPUT os_backtrace_cpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/lib/os/os_backtrace.cpp os_backtrace_cpp > ${CMAKE_CURRENT_BINARY_DIR}/os_backtrace_cpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/lib/os/os_backtrace.cpp
+)
+
+add_custom_command (
+    OUTPUT eglimports_h.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/dispatch/eglimports.h eglimports_h > ${CMAKE_CURRENT_BINARY_DIR}/eglimports_h.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/dispatch/eglimports.h
+)
+
+add_custom_command (
+    OUTPUT glimports_h.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_SOURCE_DIR}/dispatch/glimports.h glimports_h > ${CMAKE_CURRENT_BINARY_DIR}/glimports_h.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_SOURCE_DIR}/dispatch/glimports.h
+)
+
+add_custom_command (
+    OUTPUT retrace_library_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_CURRENT_SOURCE_DIR}/retrace_library.hpp retrace_library_hpp > ${CMAKE_CURRENT_BINARY_DIR}/retrace_library_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/retrace_library.hpp
+)
+
+add_custom_command (
+    OUTPUT retrace_swizzle_hpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_CURRENT_SOURCE_DIR}/retrace_swizzle.hpp retrace_swizzle_hpp > ${CMAKE_CURRENT_BINARY_DIR}/retrace_swizzle_hpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/retrace_swizzle.hpp
+)
+
+add_custom_command (
+    OUTPUT retrace_swizzle_cpp.h
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/file_to_string.py ${CMAKE_CURRENT_SOURCE_DIR}/retrace_swizzle.cpp retrace_swizzle_cpp > ${CMAKE_CURRENT_BINARY_DIR}/retrace_swizzle_cpp.h
+    DEPENDS
+        file_to_string.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/retrace_swizzle.cpp
+)
+
 if (WIN32)
     set (ws_os ws_win32.cpp)
 endif ()
@@ -46,6 +159,7 @@ add_library (retrace_common STATIC
     process_name.hpp
     process_name.cpp
     retrace.cpp
+    retrace_codegen.cpp
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
@@ -54,6 +168,16 @@ add_library (retrace_common STATIC
     state_writer_json.cpp
     state_writer_ubjson.cpp
     ws.cpp
+    trace_model_hpp.h
+    trace_model_cpp.h
+    os_hpp.h
+    os_posix_cpp.h
+    os_string_hpp.h
+    os_backtrace_hpp.h
+    os_backtrace_cpp.h
+    retrace_library_hpp.h
+    retrace_swizzle_cpp.h
+    retrace_swizzle_hpp.h
     ${ws_os}
 )
 target_link_libraries (retrace_common
@@ -77,6 +201,7 @@ add_library (glretrace_common STATIC
     glretrace.hpp
     glretrace_gl.cpp
     glretrace_cgl.cpp
+    glretrace_codegen.cpp
     glretrace_glx.cpp
     glretrace_wgl.cpp
     glretrace_wgl_font_bitmaps.cpp
@@ -95,6 +220,10 @@ add_library (glretrace_common STATIC
     metric_backend_amd_perfmon.cpp
     metric_backend_intel_perfquery.cpp
     metric_backend_opengl.cpp
+    glproc_h.h
+    glproc_cpp.h
+    eglimports_h.h
+    glimports_h.h
 )
 add_dependencies (glretrace_common glproc)
 target_link_libraries (glretrace_common
