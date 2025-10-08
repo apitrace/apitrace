@@ -305,6 +305,208 @@ waitForInput(void);
 void
 cleanUp(void);
 
+enum class ValueTypeKind {
+    _void,
+    literal,
+    _const,
+    pointer,
+    int_pointer,
+    obj_pointer,
+    linear_pointer,
+    reference,
+    handle,
+    _enum,
+    bitmask,
+    array,
+    attrib_array,
+    blob,
+    _struct,
+    alias,
+    string,
+    opaque,
+    polymorphic,
+};
+
+class ValueType {
+public:
+    ValueTypeKind kind;
+    std::string c_decl;
+
+    ValueType(ValueTypeKind kind, const std::string &c_decl) : kind(kind), c_decl(c_decl) {}
+};
+
+class VoidType : public ValueType {
+public:
+    VoidType() : ValueType(ValueTypeKind::_void, "void") {}
+};
+
+class LiteralType : public ValueType {
+public:
+    const char *encodedKind;
+
+    LiteralType(const std::string &c_decl, const char *encodedKind) : ValueType(ValueTypeKind::literal, c_decl), encodedKind(encodedKind) {}
+};
+
+class ConstType : public ValueType {
+public:
+    const ValueType *type;
+
+    ConstType(const ValueType *type) : ValueType(ValueTypeKind::_const, type->c_decl + " const"), type(type) {}
+};
+
+class PointerType : public ValueType {
+public:
+    const ValueType *type;
+
+    PointerType(const ValueType *type) : ValueType(ValueTypeKind::pointer, type->c_decl + "*"), type(type) {}
+};
+
+class IntPointerType : public ValueType {
+public:
+    IntPointerType(const std::string &c_decl) : ValueType(ValueTypeKind::int_pointer, c_decl) {}
+};
+
+class ObjPointerType : public ValueType {
+public:
+    const ValueType *type;
+
+    ObjPointerType(const ValueType *type) : ValueType(ValueTypeKind::obj_pointer, type->c_decl + "*"), type(type) {}
+};
+
+class LinearPointerType : public ValueType {
+public:
+    const ValueType *type;
+    const char *size;
+
+    LinearPointerType(const ValueType *type, const char *size) : ValueType(ValueTypeKind::linear_pointer, type->c_decl + "*"), type(type), size(size) {}
+};
+
+class ReferenceType : public ValueType {
+public:
+    const ValueType *type;
+
+    ReferenceType(const ValueType *type) : ValueType(ValueTypeKind::reference, type->c_decl + "&"), type(type) {}
+};
+
+class HandleType : public ValueType {
+public:
+    const ValueType *type;
+    const char *name;
+    const char *range;
+    const ValueType *key_type;
+    const char *key_name;
+
+    HandleType(const ValueType *type, const char *name, const char *range, const ValueType *key_type, const char *key_name)
+        : ValueType(ValueTypeKind::handle, type->c_decl), type(type), name(name), range(range), key_type(key_type), key_name(key_name) {}
+};
+
+class EnumType : public ValueType {
+public:
+    std::vector<const char *> values;
+
+    EnumType(const char *name, const std::vector<const char *> &values) : ValueType(ValueTypeKind::_enum, name), values(values) {}
+};
+
+class BitmaskType : public ValueType {
+public:
+    const ValueType *type;
+    std::vector<const char *> values;
+
+    BitmaskType(const ValueType *type, const std::vector<const char *> &values) : ValueType(ValueTypeKind::bitmask, type->c_decl), type(type), values(values) {}
+};
+
+class ArrayType : public ValueType {
+public:
+    const ValueType *type;
+    const char *length;
+
+    ArrayType(const ValueType *type, const char *length) : ValueType(ValueTypeKind::array, type->c_decl + "*"), type(type), length(length) {}
+};
+
+class AttribArrayType : public ValueType {
+public:
+    const ValueType *type;
+    std::vector<const ValueType *> valueTypes;
+    const char *terminator;
+
+    AttribArrayType(const ValueType *type, const std::vector<const ValueType *> &valueTypes, const char *terminator)
+        : ValueType(ValueTypeKind::attrib_array, type->c_decl), type(type), valueTypes(valueTypes), terminator(terminator) {
+    }
+
+};
+
+class BlobType : public ValueType {
+public:
+    const ValueType *type;
+    const char *size;
+
+    BlobType(const ValueType *type, const char *size) : ValueType(ValueTypeKind::blob, type->c_decl + "*"), type(type), size(size) {}
+};
+
+struct StructMemberType {
+    const ValueType *type;
+    const char *name;
+};
+
+class StructType : public ValueType {
+public:
+    const char *name;
+    std::vector<StructMemberType> members;
+
+    StructType(const char *name, const std::vector<StructMemberType> &members) : ValueType(ValueTypeKind::_struct, name), name(name), members(members) {}
+};
+
+class AliasType : public ValueType {
+public:
+    const char *name;
+    const ValueType *type;
+
+    AliasType(const char *name, const ValueType *type) : ValueType(ValueTypeKind::alias, name), name(name), type(type) {}
+};
+
+class StringType : public ValueType {
+public:
+    const ValueType *type;
+    const char *length;
+    bool wide;
+
+    StringType(const ValueType *type, const char *length, bool wide)
+        : ValueType(ValueTypeKind::string, type->c_decl + "*"), type(type), length(length), wide(wide) {
+    }
+};
+
+class OpaqueType : public ValueType {
+public:
+    OpaqueType(const std::string &c_decl) : ValueType(ValueTypeKind::opaque, c_decl) {}
+};
+
+class PolymorphicType : public ValueType {
+public:
+    const char *switchExpr;
+    std::vector<const ValueType *> switchTypes;
+    const ValueType *defaultType;
+    bool contextLess;
+
+    PolymorphicType(const char *switchExpr, const std::vector<const ValueType *> &switchTypes, const ValueType *defaultType, bool contextLess)
+        : ValueType(ValueTypeKind::polymorphic, defaultType ? defaultType->c_decl : ""), switchExpr(switchExpr), switchTypes(switchTypes),
+          defaultType(defaultType), contextLess(contextLess) {
+    }
+};
+
+// TODO: Interface
+
+struct ArgType {
+    const ValueType *type;
+    const char *name;
+    bool input;
+    bool output;
+};
+
+struct FunctionType {
+    const ValueType *return_type;
+    std::vector<ArgType> parameter_types; 
+};
+
 
 } /* namespace retrace */
 

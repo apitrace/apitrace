@@ -1039,3 +1039,166 @@ CString = String(Char)
 WString = String(WChar, wide=True)
 ConstCString = String(Const(Char))
 ConstWString = String(Const(WChar), wide=True)
+
+class TypePrintState:
+    def __init__(self):
+        self.type_names = dict()
+        self.type_index = 0
+
+    def alloc_type_name(self):
+        self.type_index += 1
+        return f'type{self.type_index}'
+
+def print_type_as_c(type, state):
+    if not type:
+        return None
+
+    if type in state.type_names:
+        return state.type_names[type]
+    
+    name = state.alloc_type_name()
+    state.type_names[type] = name
+
+    if isinstance(type, _Void):
+        print(f'static const retrace::VoidType {name};')
+        return name
+    
+    if isinstance(type, Literal):
+        print(f'static const retrace::LiteralType {name}("{type}", "{type.kind}");')
+        return name
+    
+    if isinstance(type, Const):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::ConstType {name}(&{child_name});')
+        return name
+    
+    if isinstance(type, Pointer):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::PointerType {name}(&{child_name});')
+        return name
+
+    if isinstance(type, IntPointer):
+        print(f'static const retrace::IntPointerType {name}("{type}");')
+        return name
+
+    if isinstance(type, ObjPointer):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::ObjPointerType {name}(&{child_name});')
+        return name
+
+    if isinstance(type, LinearPointer):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::LinearPointerType {name}(&{child_name}, "{type.size}");')
+        return name
+
+    if isinstance(type, Reference):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::ReferenceType {name}(&{child_name});')
+        return name
+
+    if isinstance(type, Handle):
+        child_name = print_type_as_c(type.type, state)
+        print('static const retrace::HandleType %s(&%s, "%s", %s, %s);'
+              % (name, child_name, type.name, f'"{type.range}"' if type.range else 'nullptr',
+                 f'&{print_type_as_c(type.key[1], state)}, "{type.key[0]}"' if type.key else 'nullptr, nullptr'))
+        return name
+    
+    if isinstance(type, Enum):
+        print(f'static const retrace::EnumType {name}("{type}", {{', end='')
+        for i in range(len(type.values)):
+            if i > 0:
+                print(', ', end='')
+            print(f'"{type.values[i]}"', end='')
+        print('});')
+        return name
+
+    if isinstance(type, Bitmask):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::BitmaskType {name}(&{child_name}, {{', end='')
+        for i in range(len(type.values)):
+            if i > 0:
+                print(', ', end='')
+            print(f'"{type.values[i]}"', end='')
+        print('});')
+        return name
+
+    if isinstance(type, Array):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::ArrayType {name}(&{child_name}, "{type.length}");')
+        return name
+    
+    if isinstance(type, AttribArray):
+        child_name = print_type_as_c(type.baseType, state)
+        value_type_names = [print_type_as_c(value, state) for key, value in type.valueTypes]
+        print(f'static const retrace::AttribArrayType {name}(&{child_name}, {{', end='')
+        for i in range(len(value_type_names)):
+            if i > 0:
+                print(', ', end='')
+            print(f'&{value_type_names[i]}' if value_type_names[i] else 'nullptr', end='')
+        print(f'}}, "{type.terminator}");')
+        return name
+
+    if isinstance(type, Blob):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::BlobType {name}(&{child_name}, "{type.size}");')
+        return name
+    
+    if isinstance(type, Struct):
+        member_type_names = [(print_type_as_c(memberType, state), memberName) for memberType, memberName in type.members]
+        print(f'static const retrace::StructType {name}("{type.name}", {{', end='')
+        for i in range(len(member_type_names)):
+            if i > 0:
+                print(', ', end='')
+            print(f' {{&{member_type_names[i][0]}, "{member_type_names[i][1]}"}}', end='')
+        print(f'}});')
+        return name
+
+    if isinstance(type, Alias):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::AliasType {name}("{type}", &{child_name});')
+        return name
+
+    if isinstance(type, String):
+        child_name = print_type_as_c(type.type, state)
+        print(f'static const retrace::StringType {name}(&{child_name}, "{type.length}", {'true' if type.wide else 'false'});')
+        return name
+    
+    if isinstance(type, Opaque):
+        print(f'static const retrace::OpaqueType {name}("{type}");')
+        return name
+    
+    if isinstance(type, Polymorphic):
+        default_type_name = print_type_as_c(type.defaultType, state)
+        switch_type_names = [print_type_as_c(switch_type, state) for switch_expr, switch_type in type.switchTypes]
+        print(f'static const retrace::PolymorphicType {name}("{type.switchExpr}", {{', end='')
+        for i in range(len(switch_type_names)):
+            if i > 0:
+                print(', ', end='')
+            print(f'&{switch_type_names[i]}', end='')
+        print(f'}}, &{default_type_name}, {'true' if type.contextLess else 'false'});')
+        return name
+
+    # TODO: Interface
+
+    sys.stderr.write(f'{type.__class__.__name__}: {type}\n')
+    raise NotImplementedError
+
+def print_api_types_table(api, name):
+    state = TypePrintState()
+    for function in api.getAllFunctions():
+        print_type_as_c(function.type, state)
+        for arg in function.args:
+            print_type_as_c(arg.type, state)
+
+    print(f'const std::unordered_map<std::string, retrace::FunctionType> {name} = {{')
+
+    for function in api.getAllFunctions():
+        print(f'    {{"{function.name}", {{&{state.type_names[function.type]}, {{', end='')
+        for i in range(len(function.args)):
+            if i > 0:
+                print(', ', end='')
+            print(f'{{&{state.type_names[function.args[i].type]}, "{function.args[i].name}" ,{'true' if function.args[i].input else 'false'} ,{'true' if function.args[i].output else 'false'}}}', end='')
+
+        print('}}},')
+
+    print('};')
