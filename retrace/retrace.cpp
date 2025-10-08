@@ -108,7 +108,7 @@ void unsupported(trace::Call &call) {
     warning(call) << "unsupported " << call.name() << " call\n";
 }
 
-inline void Retracer::addCallback(const Entry *entry) {
+void Retracer::addCallback(const Entry *entry) {
     assert(entry->name);
     assert(entry->callback);
     map[entry->name] = entry->callback;
