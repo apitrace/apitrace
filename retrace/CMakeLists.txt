@@ -49,6 +49,7 @@ add_library (retrace_common STATIC
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
+    retrace_threads.cpp
     state_writer.cpp
     state_writer_json.cpp
     state_writer_ubjson.cpp
