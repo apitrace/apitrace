@@ -32,8 +32,9 @@
 #include <string.h>
 
 #include "highlight.hpp"
+#if defined _WIN32 || defined __CYGWIN__
 #include "guids.hpp"
-
+#endif
 
 namespace trace {
 
@@ -149,6 +150,7 @@ Dumper::visitMembers(Struct *s, const char *sep) {
 }
 
 void Dumper::visit(Struct *s) {
+#if defined _WIN32 || defined __CYGWIN__
     // Replace GUIDs with their symbolic name
     // TODO: Move this to parsing, so it can be shared everywhere
     if (s->members.size() == 4 &&
@@ -167,7 +169,7 @@ void Dumper::visit(Struct *s) {
         os << literal << name << normal;
         return;
     }
-
+#endif
     os << "{";
     visitMembers(s);
     os << "}";

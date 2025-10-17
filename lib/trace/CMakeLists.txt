@@ -27,14 +27,24 @@ add_convenience_library (common
     trace_ostream_zlib.cpp
 )
 
+if (WIN32)
 target_link_libraries (common
+    highlight
+    os
+    Snappy::snappy
+    ZLIB::ZLIB
+    PkgConfig::BROTLIDEC
     guids
+)
+else ()
+target_link_libraries (common
     highlight
     os
     Snappy::snappy
     ZLIB::ZLIB
     PkgConfig::BROTLIDEC
 )
+endif ()
 
 if (BUILD_TESTING)
     add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)

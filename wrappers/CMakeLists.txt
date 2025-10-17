@@ -76,7 +76,6 @@ add_convenience_library (trace
 )
 target_link_libraries (trace
     common
-    guids
     crc32c
 )
 
@@ -125,6 +124,7 @@ if (WIN32)
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace
             trace
+            guids
         )
         set_target_properties (ddrawtrace PROPERTIES
             PREFIX ""
@@ -159,6 +159,7 @@ if (WIN32)
         target_link_libraries (d3d8trace
             d3dhelpers
             trace
+            guids
         )
         set_target_properties (d3d8trace PROPERTIES
             PREFIX ""
@@ -194,6 +195,7 @@ if (WIN32)
         target_link_libraries (d3d9trace
             d3dhelpers
             trace
+            guids
         )
         set_target_properties (d3d9trace PROPERTIES
             PREFIX ""
@@ -233,6 +235,7 @@ if (WIN32)
         target_link_libraries (dxgitrace
             d3dhelpers
             trace
+            guids
         )
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
@@ -331,6 +334,7 @@ if (WIN32)
         add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace
             trace
+            guids
         )
         set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
@@ -366,6 +370,7 @@ if (WIN32)
         gltrace_common
         glproc
         gdi32
+        guids
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
