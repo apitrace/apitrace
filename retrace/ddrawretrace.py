@@ -83,8 +83,11 @@ class D3DRetracer(Retracer):
 
         # notify frame has been completed
         # process events after presents
-        if interface.name == 'IDirectDrawSurface7' and method.name == 'Blt':
-            print(r'    DDSCAPS2 ddsCaps;')
+        if interface.name.startswith('IDirectDrawSurface') and method.name == 'Blt':
+            if interface.name in ('IDirectDrawSurface4', 'IDirectDrawSurface7'):
+                print(r'    DDSCAPS2 ddsCaps;')
+            else:
+                print(r'    DDSCAPS ddsCaps;')
             print(r'    if (SUCCEEDED(_this->GetCaps(&ddsCaps)) &&')
             print(r'        (ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)) {')
             print(r'        retrace::frameComplete(call);')
