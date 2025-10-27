@@ -31,7 +31,7 @@
 #include <string>
 #include <queue>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "metric_backend.hpp"
 #include "glretrace.hpp"
 #include "mmap_allocator.hpp"
