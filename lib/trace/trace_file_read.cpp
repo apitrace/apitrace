@@ -29,6 +29,7 @@
 #include "os.hpp"
 #include "trace_file.hpp"
 #include "trace_snappy.hpp"
+#include "zstd.h"
 
 
 using namespace trace;
@@ -42,16 +43,19 @@ File::createForRead(const char *filename)
         os::log("error: failed to open %s\n", filename);
         return NULL;
     }
-    unsigned char byte1, byte2;
-    stream >> byte1;
-    stream >> byte2;
+    unsigned char magic[4];
+    for (int i = 0; i < 4; ++i)
+        stream >> magic[i];
     stream.close();
 
     File *file;
-    if (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2) {
+
+    if (magic[0] == SNAPPY_BYTE1 && magic[1] == SNAPPY_BYTE2) {
         file = File::createSnappy();
-    } else if (byte1 == 0x1f && byte2 == 0x8b) {
+    } else if (magic[0] == 0x1f && magic[1] == 0x8b) {
         file = File::createZLib();
+    } else if (((magic[0] << 0) | (magic[1] << 8) | (magic[2] << 16) | (magic[3] << 24)) == ZSTD_MAGICNUMBER) {
+        file = File::createZstd();
     } else  {
         // XXX: Brotli has no magic header
         file = File::createBrotli();

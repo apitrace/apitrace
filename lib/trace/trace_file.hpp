@@ -47,6 +47,7 @@ public:
     static File *createZLib(void);
     static File *createBrotli(void);
     static File *createSnappy(void);
+    static File *createZstd(void);
     static File *createForRead(const char *filename);
 public:
     File(void);

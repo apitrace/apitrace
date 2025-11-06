@@ -54,18 +54,20 @@ usage(void)
         << "\n"
         << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality " << BROTLI_MIN_QUALITY << "-" << BROTLI_MAX_QUALITY << ", default " << BROTLI_DEFAULT_QUALITY << ")\n"
         << "    -s,--snappy            Use Snappy compression (default format; recommended for qapitrace)\n"
+        << "    -t,--zstd              Use Zstandard (seekable) compression\n"
         << "    -z,--zlib              Use ZLib compression\n"
         << "\n";
 }
 
 const static char *
-shortOptions = "hbsz";
+shortOptions = "hbstz";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"brotli", optional_argument, 0, 'b'},
     {"snappy", no_argument, 0, 's'},
+    {"zstd", optional_argument, 0, 't'},
     {"zlib", no_argument, 0, 'z'},
     {0, 0, 0, 0}
 };
@@ -74,6 +76,7 @@ enum Format {
     FORMAT_SNAPPY = 0,
     FORMAT_ZLIB,
     FORMAT_BROTLI,
+    FORMAT_ZSTD,
 };
 
 
@@ -206,6 +209,8 @@ repack(const char *inFileName, const char *outFileName, Format format, int quali
         return ret;
     } else if (format == FORMAT_ZLIB) {
         outFile = trace::createZLibStream(outFileName);
+    } else if (format == FORMAT_ZSTD) {
+        outFile = trace::createZstdStream(outFileName, quality);
     }
     if (outFile) {
         ret = repack_generic(inFile, outFile);
@@ -222,7 +227,7 @@ command(int argc, char *argv[])
 {
     Format format = FORMAT_SNAPPY;
     int opt;
-    int quality = BROTLI_DEFAULT_QUALITY;
+    int quality = 0;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
@@ -232,14 +237,13 @@ command(int argc, char *argv[])
             format = FORMAT_BROTLI;
             if (optarg) {
                 quality = atoi(optarg);
-                if (quality < BROTLI_MIN_QUALITY || quality > BROTLI_MAX_QUALITY) {
-                    std::cerr << "error: brotli quality must be between " << BROTLI_MIN_QUALITY << " and " << BROTLI_MAX_QUALITY << std::endl;
-                    return 1;
-                }
             }
             break;
         case 's':
             format = FORMAT_SNAPPY;
+            break;
+        case 't':
+            format = FORMAT_ZSTD;
             break;
         case 'z':
             format = FORMAT_ZLIB;
@@ -247,6 +251,22 @@ command(int argc, char *argv[])
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
+            return 1;
+        }
+    }
+
+    if (format == FORMAT_BROTLI) {
+        if (quality == 0)
+            quality = BROTLI_DEFAULT_QUALITY;
+        if (quality < BROTLI_MIN_QUALITY || quality > BROTLI_MAX_QUALITY) {
+            std::cerr << "error: brotli quality must be between " << BROTLI_MIN_QUALITY << " and " << BROTLI_MAX_QUALITY << std::endl;
+            return 1;
+        }
+    } else if (format == FORMAT_ZSTD) {
+        if (quality == 0)
+            quality = 3;
+        if (quality < 1 || quality > 22) {
+            std::cerr << "error: zstd quality must be between 1 and 22" << std::endl;
             return 1;
         }
     }
