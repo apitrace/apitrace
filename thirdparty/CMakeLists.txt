@@ -24,6 +24,7 @@ foreach (path IN ITEMS
     libpng/LICENSE
     snappy/COPYING
     zlib/README
+    zstd/LICENSE
     directxmath/LICENSE
 )
     if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
@@ -54,6 +55,33 @@ if (NOT BROTLIDEC_FOUND OR NOT BROTLIENC_FOUND)
     message (STATUS "Using bundled Brotli")
     include_with_scope (brotli.cmake)
 endif ()
+
+if (NOT ZSTD_FOUND)
+    message (STATUS "Using bundled zstd")
+    include_with_scope (zstd.cmake)
+endif ()
+
+# Seekable format (builds on top of Zstd -- included in the source but not part
+# of the shipped library)
+add_convenience_library(zstd_seekable STATIC EXCLUDE_FROM_ALL
+    zstd/contrib/seekable_format/zstdseek_compress.c
+    zstd/contrib/seekable_format/zstdseek_decompress.c
+    zstd/lib/common/xxhash.c
+)
+target_include_directories(zstd_seekable PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format
+)
+target_link_libraries (zstd_seekable PUBLIC
+    PkgConfig::ZSTD
+)
+
+if(NOT MSVC)
+    # Disable specific warnings that are common in zstd
+    target_compile_options(zstd_seekable PRIVATE -Wno-uninitialized)
+endif()
+
+target_optimize(zstd_seekable)
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     include_with_scope (libbacktrace.cmake)

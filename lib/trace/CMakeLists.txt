@@ -13,6 +13,7 @@ add_convenience_library (common
     trace_file_zlib.cpp
     trace_file_brotli.cpp
     trace_file_snappy.cpp
+    trace_file_zstd_seekable.cpp
     trace_format.hpp
     trace_model.cpp
     trace_parser.cpp
@@ -25,15 +26,17 @@ add_convenience_library (common
     trace_option.cpp
     trace_ostream_snappy.cpp
     trace_ostream_zlib.cpp
+    trace_ostream_zstd.cpp
 )
 
-target_link_libraries (common
+target_link_libraries(common
     guids
     highlight
     os
     Snappy::snappy
     ZLIB::ZLIB
     PkgConfig::BROTLIDEC
+    zstd_seekable
 )
 
 if (BUILD_TESTING)
