@@ -48,5 +48,8 @@ createSnappyStream(const char *filename);
 OutStream *
 createZLibStream(const char *filename);
 
+OutStream *
+createZstdStream(const char *filename, int compressionLevel);
+
 
 } /* namespace trace */
