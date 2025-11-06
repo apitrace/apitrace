@@ -30,3 +30,7 @@
 	path = thirdparty/directxmath
 	url = https://github.com/microsoft/DirectXMath
 	shallow = true
+[submodule "thirdparty/zstd"]
+	path = thirdparty/zstd
+	url = https://github.com/facebook/zstd.git
+	shallow = true
