@@ -27,7 +27,7 @@ add_convenience_library (common
     trace_ostream_zlib.cpp
 )
 
-target_link_libraries (common
+target_link_libraries(common
     guids
     highlight
     os

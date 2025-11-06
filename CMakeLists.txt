@@ -564,6 +564,7 @@ if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
     if (PKG_CONFIG_FOUND)
         pkg_check_modules (BROTLIDEC IMPORTED_TARGET libbrotlidec>=1.0.7)
         pkg_check_modules (BROTLIENC IMPORTED_TARGET libbrotlienc>=1.0.7)
+        pkg_check_modules (ZSTD IMPORTED_TARGET libzstd>=1.4.0)
     endif ()
 
     find_package (GTest)
