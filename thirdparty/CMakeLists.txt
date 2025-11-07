@@ -72,6 +72,9 @@ target_include_directories(zstd_seekable PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common
     ${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format
 )
+target_link_libraries (zstd_seekable PUBLIC
+    PkgConfig::ZSTD
+)
 
 if(NOT MSVC)
     # Disable specific warnings that are common in zstd

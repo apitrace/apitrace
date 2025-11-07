@@ -36,7 +36,6 @@ target_link_libraries(common
     Snappy::snappy
     ZLIB::ZLIB
     PkgConfig::BROTLIDEC
-    PkgConfig::ZSTD
     zstd_seekable
 )
 
