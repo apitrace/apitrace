@@ -30,6 +30,7 @@
 #include "trace_file.hpp"
 #include "trace_snappy.hpp"
 #include "zstd.h"
+#include "zstd_seekable.h"
 
 
 using namespace trace;
@@ -43,9 +44,18 @@ File::createForRead(const char *filename)
         os::log("error: failed to open %s\n", filename);
         return NULL;
     }
+
+    // Read first 4 bytes (magic number)
     unsigned char magic[4];
     for (int i = 0; i < 4; ++i)
         stream >> magic[i];
+
+    // Read last 4 bytes to check for seekable zstd magic
+    stream.seekg(-4, std::ios::end);
+    unsigned char last_magic[4];
+    for (int i = 0; i < 4; ++i)
+        stream >> last_magic[i];
+
     stream.close();
 
     File *file;
@@ -55,7 +65,12 @@ File::createForRead(const char *filename)
     } else if (magic[0] == 0x1f && magic[1] == 0x8b) {
         file = File::createZLib();
     } else if (((magic[0] << 0) | (magic[1] << 8) | (magic[2] << 16) | (magic[3] << 24)) == ZSTD_MAGICNUMBER) {
-        file = File::createZstdSeekable();
+        unsigned int lastMagicValue = (last_magic[0] << 0) | (last_magic[1] << 8) | (last_magic[2] << 16) | (last_magic[3] << 24);
+        if (lastMagicValue == ZSTD_SEEKABLE_MAGICNUMBER) {
+            file = File::createZstdSeekable();
+        } else {
+            file = File::createZstd();
+        }
     } else  {
         // XXX: Brotli has no magic header
         file = File::createBrotli();
