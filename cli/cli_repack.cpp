@@ -54,7 +54,7 @@ usage(void)
         << "\n"
         << "    -b,--brotli[=QUALITY]  Use Brotli compression (quality " << BROTLI_MIN_QUALITY << "-" << BROTLI_MAX_QUALITY << ", default " << BROTLI_DEFAULT_QUALITY << ")\n"
         << "    -s,--snappy            Use Snappy compression (default format; recommended for qapitrace)\n"
-        << "    -z,--zlib              Use ZLib compression\n"
+        << "    -g,--zlib              Use ZLib (Gzip) compression\n"
         << "\n";
 }
 
@@ -66,7 +66,7 @@ longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"brotli", optional_argument, 0, 'b'},
     {"snappy", no_argument, 0, 's'},
-    {"zlib", no_argument, 0, 'z'},
+    {"zlib", no_argument, 0, 'g'},
     {0, 0, 0, 0}
 };
 
@@ -241,7 +241,7 @@ command(int argc, char *argv[])
         case 's':
             format = FORMAT_SNAPPY;
             break;
-        case 'z':
+        case 'g':
             format = FORMAT_ZLIB;
             break;
         default:
