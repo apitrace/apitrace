@@ -48,7 +48,6 @@ public:
 protected:
     virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
-    virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
 
     size_t containerSizeInBytes(void) const override;
@@ -133,15 +132,6 @@ size_t BrotliFile::rawRead(void *buffer, size_t length)
     m_dataBytesRead += static_cast<size_t>(next_out - output);
 
     return next_out - output;
-}
-
-int BrotliFile::rawGetc()
-{
-    unsigned char c;
-    if (rawRead(&c, 1) != 1) {
-        return -1;
-    }
-    return c;
 }
 
 void BrotliFile::rawClose()

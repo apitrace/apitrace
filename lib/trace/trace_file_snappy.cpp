@@ -82,7 +82,6 @@ public:
 protected:
     virtual bool rawOpen(const char *filename) override;
     virtual size_t rawRead(void *buffer, size_t length) override;
-    virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
     virtual bool rawSkip(size_t length) override;
 
@@ -203,14 +202,6 @@ size_t SnappyFile::rawRead(void *buffer, size_t length)
     }
 
     return length;
-}
-
-int SnappyFile::rawGetc(void)
-{
-    unsigned char c = 0;
-    if (rawRead(&c, 1) != 1)
-        return -1;
-    return c;
 }
 
 void SnappyFile::rawClose(void)

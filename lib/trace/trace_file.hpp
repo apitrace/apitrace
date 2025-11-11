@@ -76,7 +76,7 @@ public:
 protected:
     virtual bool rawOpen(const char *filename) = 0;
     virtual size_t rawRead(void *buffer, size_t length) = 0;
-    virtual int rawGetc(void) = 0;
+    virtual int rawGetc(void);
     virtual void rawClose(void) = 0;
     virtual bool rawSkip(size_t length);
 

@@ -58,6 +58,15 @@ void File::setCurrentOffset(const File::Offset &offset)
     assert(0);
 }
 
+int File::rawGetc()
+{
+    unsigned char c;
+    if (rawRead(&c, 1) != 1) {
+        return -1;
+    }
+    return c;
+}
+
 bool File::rawSkip(size_t)
 {
     return false;
