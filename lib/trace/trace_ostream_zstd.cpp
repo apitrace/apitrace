@@ -200,8 +200,9 @@ void ZstdOutStream::flush(void)
     // helper library.
     //
     // If the trace isn't close()d properly, it won't be reopenable by
-    // trace_file_zstd_seekable.cpp, but it will be valid zstd parseable by
-    // non-seekable zstd, and we could potentially recover from it.
+    // trace_file_zstd_seekable.cpp, but we will fall back to
+    // trace_file_zstd.cpp, which parses it but just doesn't allow seeking.  You
+    // can repack to get a seekable file.
     ZSTD_outBuffer output = { m_outputBuffer, m_outputBufferSize, 0 };
     ZSTD_seekable_endFrame(m_cstream, nullptr);
     if (output.pos > 0) {
