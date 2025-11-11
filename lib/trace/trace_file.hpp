@@ -78,7 +78,7 @@ protected:
     virtual size_t rawRead(void *buffer, size_t length) = 0;
     virtual int rawGetc(void) = 0;
     virtual void rawClose(void) = 0;
-    virtual bool rawSkip(size_t length) = 0;
+    virtual bool rawSkip(size_t length);
 
 protected:
     bool m_isOpened = false;
@@ -140,7 +140,6 @@ inline bool File::skip(size_t length)
     }
     return rawSkip(length);
 }
-
 
 inline bool
 operator<(const File::Offset &one, const File::Offset &two)

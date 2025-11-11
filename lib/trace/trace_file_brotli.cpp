@@ -50,7 +50,6 @@ protected:
     virtual size_t rawRead(void *buffer, size_t length) override;
     virtual int rawGetc(void) override;
     virtual void rawClose(void) override;
-    virtual bool rawSkip(size_t length) override;
 
     size_t containerSizeInBytes(void) const override;
     size_t containerBytesRead(void) const override;
@@ -148,11 +147,6 @@ int BrotliFile::rawGetc()
 void BrotliFile::rawClose()
 {
     m_stream.close();
-}
-
-bool BrotliFile::rawSkip(size_t)
-{
-    return false;
 }
 
 size_t BrotliFile::containerSizeInBytes(void) const {
