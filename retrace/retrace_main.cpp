@@ -363,12 +363,6 @@ takeSnapshot(trace::Call *call, bool backBuffer)
         return;
 
     long long call_no = call->no;
-    static signed long long last_call_no = -1;
-    if (call_no == last_call_no) {
-        return;
-    }
-    last_call_no = call_no;
-
     static unsigned snapshot_no = 0;
     int cnt = dumper->getSnapshotCount();
 
