@@ -137,9 +137,6 @@ long long lastFrameTime = 0;
 long long perFrameDelayUsec = 0;
 long long minFrameDurationUsec = 0;
 
-static void
-takeSnapshot(unsigned call_no, bool backBuffer);
-
 /**
  * Retrace watchdog.
  *
@@ -252,13 +249,6 @@ frameComplete(trace::Call &call)
         }
     }
 
-    if (snapshotFrequency.contains(call)) {
-        takeSnapshot(call.no, snapshotForceBackbuffer);
-        if (call.no >= snapshotFrequency.getLast()) {
-            exit(0);
-        }
-    }
-
     if (bNeedFrameDelay) {
         lastFrameTime = os::getTime();
     }
@@ -367,8 +357,12 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no, bool backBuffer) {
 }
 
 static void
-takeSnapshot(unsigned call_no, bool backBuffer)
+takeSnapshot(trace::Call *call, bool backBuffer)
 {
+    if (!snapshotFrequency.contains(*call))
+        return;
+
+    long long call_no = call->no;
     static signed long long last_call_no = -1;
     if (call_no == last_call_no) {
         return;
@@ -387,6 +381,10 @@ takeSnapshot(unsigned call_no, bool backBuffer)
     }
 
     snapshot_no++;
+
+    if (call_no >= snapshotFrequency.getLast()) {
+        exit(0);
+    }
 }
 
 
@@ -404,13 +402,16 @@ retraceCall(trace::Call *call) {
         return;
     }
 
+    if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET) {
+        /* Take any snapshots before a swapbuffers. */
+        takeSnapshot(call, snapshotForceBackbuffer);
+    }
+
     retracer.retrace(*call);
 
-    if (snapshotFrequency.contains(*call)) {
-        takeSnapshot(call->no, snapshotForceBackbuffer);
-        if (call->no >= snapshotFrequency.getLast()) {
-            exit(0);
-        }
+    if (!(call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET)) {
+        /* Take any other snapshots after the call. */
+        takeSnapshot(call, snapshotForceBackbuffer);
     }
 
     // dumpStateCallNo is 0 when fetching default state
