@@ -109,9 +109,11 @@ DDBLTFX = Struct("DDBLTFX", [
     (DWORD, "dwZBufferBaseDest"),
     (DWORD, "dwZDestConstBitDepth"),
 
-    # FIXME: Anonymous union
-    (DWORD, "dwZDestConst"),
-    #(LPDIRECTDRAWSURFACE, "lpDDSZBufferDest"),
+    (Union("(dwFlags & (DDBLT_ZBUFFERDESTCONSTOVERRIDE|DDBLT_ZBUFFERDESTOVERRIDE))", [
+        ("0", None, None),
+        ("DDBLT_ZBUFFERDESTCONSTOVERRIDE", DWORD, "dwZDestConst"),
+        ("DDBLT_ZBUFFERDESTOVERRIDE", LPDIRECTDRAWSURFACE, "lpDDSZBufferDest"),
+    ]), None),
 
     (DWORD, "dwZSrcConstBitDepth"),
 

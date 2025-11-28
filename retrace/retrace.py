@@ -111,6 +111,9 @@ class ValueAllocator(stdapi.Visitor):
 
 class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
+    def visitVoid(self, void, lvalue, rvalue):
+        pass
+
     def visitLiteral(self, literal, lvalue, rvalue):
         print('    %s = (%s).to%s();' % (lvalue, rvalue, literal.kind))
 

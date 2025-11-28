@@ -343,7 +343,10 @@ class Struct(Type):
 def Union(kindExpr, kindTypes, contextLess=True):
     switchTypes = []
     for kindCase, kindType, kindMemberName in kindTypes:
-        switchType = Struct(None, [(kindType, kindMemberName)])
+        if kindType is None:
+            switchType = Void
+        else:
+            switchType = Struct(None, [(kindType, kindMemberName)])
         switchTypes.append((kindCase, switchType))
     return Polymorphic(kindExpr, switchTypes, contextLess=contextLess)
 

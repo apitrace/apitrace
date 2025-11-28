@@ -174,6 +174,9 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
     ComplexValueSerializer visitor above.
     '''
 
+    def visitVoid(self, literal, instance):
+        pass
+
     def visitLiteral(self, literal, instance):
         print('    trace::localWriter.write%s(%s);' % (literal.kind, instance))
 
@@ -342,7 +345,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 print('        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
-                print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,))
+                print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, static_cast<int>(%s));' % (switchExpr,))
                 print(r'        trace::localWriter.writeNull();')
                 print(r'        break;')
             print('    }')
@@ -404,9 +407,24 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
     def visitInterfacePointer(self, interface, instance):
         print("    Wrap%s::_wrap(__FUNCTION__, &%s);" % (interface.name, instance))
     
-    def visitPolymorphic(self, type, instance):
-        # XXX: There might be polymorphic values that need wrapping in the future
-        raise NotImplementedError
+    def visitPolymorphic(self, polymorphic, instance):
+        # There are polymorphic values that need wrapping, for example, DDBLTFX::lpDDSZBufferDest absolutely requires this.
+        switchExpr = self.expand(polymorphic.switchExpr)
+        print('    switch (%s) {' % switchExpr)
+        for cases, type in polymorphic.iterSwitch():
+            for case in cases:
+                print('    %s:' % case)
+            caseInstance = instance
+            if type.expr is not None:
+                caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+            self.visit(type, caseInstance)
+            print('        break;')
+        if polymorphic.defaultType is None:
+            print(r'    default:')
+            print(r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, static_cast<int>(%s));' % (switchExpr,))
+            print(r'        trace::localWriter.writeNull();')
+            print(r'        break;')
+        print('    }')
 
 
 class ValueUnwrapper(ValueWrapper):
