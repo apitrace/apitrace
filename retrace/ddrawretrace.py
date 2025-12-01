@@ -74,7 +74,13 @@ class D3DRetracer(Retracer):
                 print(r'    dwFlags &= ~DDLOCK_DONOTWAIT;')
                 print(r'    dwFlags |= DDLOCK_WAIT;')
 
+        if method.name == 'ReleaseDC':
+            print(r'    // FIXME: BitBlt here')
+
         Retracer.invokeInterfaceMethod(self, interface, method)
+
+        if method.name == 'GetDC':
+            print(r'    // FIXME')
 
         if method.name == 'CreateDevice':
             print(r'    if (FAILED(_result)) {')
