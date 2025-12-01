@@ -597,12 +597,15 @@ DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
     (DWORD, "dwStencilBitMask"),
     (DWORD, "dwBumpLuminanceBitMask"),
 
-    # FIXME: Anonymous union
-    (DWORD, "dwRGBAlphaBitMask"),
-    (DWORD, "dwYUVAlphaBitMask"),
-    (DWORD, "dwLuminanceAlphaBitMask"),
-    (DWORD, "dwRGBZBitMask"),
-    (DWORD, "dwYUVZBitMask"),
+    # Anonymous union
+    (Union("({self}.dwFlags & (DDPF_LUMINANCE|DDPF_YUV|DDPF_RGB|DDPF_ZBUFFER|DDPF_ALPHAPIXELS))", [
+        ("0", None, None),
+        ("(DDPF_RGB      |DDPF_ALPHAPIXELS)", DWORD, "dwRGBAlphaBitMask"),
+        ("(DDPF_YUV      |DDPF_ALPHAPIXELS)", DWORD, "dwYUVAlphaBitMask"),
+        ("(DDPF_LUMINANCE|DDPF_ALPHAPIXELS)", DWORD, "dwLuminanceAlphaBitMask"),
+        ("(DDPF_RGB      |DDPF_ZBUFFER)",     DWORD, "dwRGBZBitMask"),
+        ("(DDPF_YUV      |DDPF_ZBUFFER)",     DWORD, "dwYUVZBitMask"),
+    ]), None),
 ])
 LPDDPIXELFORMAT = Pointer(DDPIXELFORMAT)
 
