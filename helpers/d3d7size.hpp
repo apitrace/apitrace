@@ -113,6 +113,249 @@ _getVertexSize(DWORD dwFVF) {
     return size;
 }
 
+static inline void
+_getFormatSize(LPDDPIXELFORMAT fmt, size_t& BlockSize, UINT& BlockWidth, UINT& BlockHeight) {
+    BlockSize = 0;
+    BlockWidth = 1;
+    BlockHeight = 1;
 
+    if (fmt->dwFlags & DDPF_RGB) {
+        BlockSize = fmt->dwRGBBitCount;
+    }
+    else if ((fmt->dwFlags & DDPF_ZBUFFER)) {
+        BlockSize = fmt->dwZBufferBitDepth;
+    }
+    else if ((fmt->dwFlags & DDPF_LUMINANCE)) {
+        BlockSize = fmt->dwLuminanceBitCount;
+    }
+    else if ((fmt->dwFlags & DDPF_BUMPDUDV)) {
+        BlockSize = fmt->dwBumpBitCount;
+    }
+    else if ((fmt->dwFlags & DDPF_FOURCC)) {
+        switch (fmt->dwFourCC) {
+        case MAKEFOURCC('D', 'X', 'T', '1'):
+            BlockHeight = BlockWidth = 4;
+            BlockSize = 64;
+            break;
+        case MAKEFOURCC('D', 'X', 'T', '2'):
+        case MAKEFOURCC('D', 'X', 'T', '3'):
+        case MAKEFOURCC('D', 'X', 'T', '4'):
+        case MAKEFOURCC('D', 'X', 'T', '5'):
+            BlockHeight = BlockWidth = 4;
+            BlockSize = 128;
+            break;
+        default:
+            os::log("apitrace: warning: %s: unknown FOURCC DDPIXELFORMAT %lu\n", __FUNCTION__, fmt->dwFlags);
+            BlockSize = 0;
+            break;
+        }
+    }
+    else {
+        os::log("apitrace: warning: %s: unknown DDPIXELFORMAT %lu\n", __FUNCTION__, fmt->dwFlags);
+        BlockSize = 0;
+    }
+}
 
+#define PACKED_PITCH 0x7ffffff
+
+static inline size_t
+_getLockSize(LPDDPIXELFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPitch = PACKED_PITCH, UINT Depth = 1, INT SlicePitch = 0) {
+    if (Width == 0 || Height == 0 || Depth == 0) {
+        return 0;
+    }
+
+    if (RowPitch < 0) {
+        os::log("apitrace: warning: %s: negative row pitch %i\n", __FUNCTION__, RowPitch);
+        return 0;
+    }
+
+    size_t size;
+    {
+        size_t BlockSize;
+        UINT BlockWidth;
+        UINT BlockHeight;
+        _getFormatSize(Format, BlockSize, BlockWidth, BlockHeight);
+        assert(BlockHeight);
+        Height = (Height + BlockHeight - 1) / BlockHeight;
+
+        if (RowPitch == PACKED_PITCH) {
+            RowPitch = ((Width + BlockWidth - 1) / BlockWidth * BlockSize + 7) / 8;
+        }
+
+        size = Height * RowPitch;
+
+        if (Partial || Height == 1) {
+            // Must take pixel size in consideration
+            if (BlockWidth) {
+                Width = (Width + BlockWidth - 1) / BlockWidth;
+                size = (Width * BlockSize + 7) / 8;
+                if (Height > 1) {
+                    size += (Height - 1) * RowPitch;
+                }
+            }
+        }
+    }
+
+    if (Depth > 1) {
+        if (SlicePitch < 0) {
+            os::log("apitrace: warning: %s: negative slice pitch %i\n", __FUNCTION__, SlicePitch);
+            return 0;
+        }
+
+        size += (Depth - 1) * SlicePitch;
+    }
+
+    return size;
+}
+
+static inline void
+_getMapInfo(IDirectDrawSurface* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+    MappedSize = 0;
+    pLockedData = nullptr;
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width = pRect->right - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    }
+    else {
+        Width = pDesc->dwWidth;
+        Height = pDesc->dwHeight;
+    }
+
+    pLockedData = pDesc->lpSurface;
+    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
+}
+
+static inline void
+_getMapInfo(IDirectDrawSurface2* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+    MappedSize = 0;
+    pLockedData = nullptr;
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width = pRect->right - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    }
+    else {
+        Width = pDesc->dwWidth;
+        Height = pDesc->dwHeight;
+    }
+
+    pLockedData = pDesc->lpSurface;
+    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
+}
+
+static inline void
+_getMapInfo(IDirectDrawSurface3* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+    MappedSize = 0;
+    pLockedData = nullptr;
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width = pRect->right - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    }
+    else {
+        Width = pDesc->dwWidth;
+        Height = pDesc->dwHeight;
+    }
+
+    pLockedData = pDesc->lpSurface;
+    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
+}
+
+static inline void
+_getMapInfo(IDirectDrawSurface4* pSurface, RECT* pRect, DDSURFACEDESC2* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+    MappedSize = 0;
+    pLockedData = nullptr;
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width = pRect->right - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    }
+    else {
+        Width = pDesc->dwWidth;
+        Height = pDesc->dwHeight;
+    }
+
+    pLockedData = pDesc->lpSurface;
+    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
+}
+
+static inline void
+_getMapInfo(IDirectDrawSurface7* pSurface, RECT* pRect, DDSURFACEDESC2* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+    MappedSize = 0;
+    pLockedData = nullptr;
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width = pRect->right - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    }
+    else {
+        Width = pDesc->dwWidth;
+        Height = pDesc->dwHeight;
+    }
+
+    pLockedData = pDesc->lpSurface;
+    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
+}
+
+static inline void
+_getMapInfo(IDirect3DVertexBuffer* pBuffer, void** ppbData,
+    void*& pLockedData, size_t& MappedSize) {
+    pLockedData = nullptr;
+    MappedSize = 0;
+
+    D3DVERTEXBUFFERDESC desc;
+    ZeroMemory(&desc, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    HRESULT hr = pBuffer->GetVertexBufferDesc(&desc);
+    if (FAILED(hr)) {
+        return;
+    }
+
+    pLockedData = *ppbData;
+    MappedSize = _getVertexSize(desc.dwFVF) * desc.dwNumVertices;
+}
+
+static inline void
+_getMapInfo(IDirect3DVertexBuffer7* pBuffer, void** ppbData,
+    void*& pLockedData, size_t& MappedSize) {
+    pLockedData = nullptr;
+    MappedSize = 0;
+
+    D3DVERTEXBUFFERDESC desc;
+    ZeroMemory(&desc, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    HRESULT hr = pBuffer->GetVertexBufferDesc(&desc);
+    if (FAILED(hr)) {
+        return;
+    }
+
+    if (ppbData && *ppbData) {
+        pLockedData = *ppbData;
+        MappedSize = _getVertexSize(desc.dwFVF) * desc.dwNumVertices;
+    }
+}
+
+static inline void
+_getMapInfo(IDirect3DExecuteBuffer* pBuffer, D3DEXECUTEBUFFERDESC* pDesc,
+    void*& pLockedData, size_t& MappedSize) {
+
+    pLockedData = pDesc->lpData;
+    MappedSize = pDesc->dwBufferSize;
+}
 

@@ -440,7 +440,7 @@ IDirect3DViewport3.methods += [
 ]
 
 IDirect3DVertexBuffer.methods += [
-    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
+    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "lplpData"), Out(LPDWORD, "lpdwSize")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "ProcessVertices", [(DWORD, "dwVertexOp"), (DWORD, "dwDestIndex"), (DWORD, "dwCount"), (LPDIRECT3DVERTEXBUFFER, "lpSrcBuffer"), (DWORD, "dwSrcIndex"), (LPDIRECT3DDEVICE3, "lpD3DDevice"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")], sideeffects=False),
@@ -448,7 +448,7 @@ IDirect3DVertexBuffer.methods += [
 ]
 
 IDirect3DVertexBuffer7.methods += [
-    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LPVOID), "lplpData"), (LPDWORD, "lpdwSize")]),
+    StdMethod(HRESULT, "Lock", [(DirectDrawSurfaceLockFlags, "dwFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "lplpData"), Out(LPDWORD, "lpdwSize")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "ProcessVertices", [(DWORD, "dwVertexOp"), (DWORD, "dwDestIndex"), (DWORD, "dwCount"), (LPDIRECT3DVERTEXBUFFER7, "lpSrcBuffer"), (DWORD, "dwSrcIndex"), (LPDIRECT3DDEVICE7, "lpD3DDevice"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetVertexBufferDesc", [Out(LPD3DVERTEXBUFFERDESC, "lpD3DVertexBufferDesc")], sideeffects=False),

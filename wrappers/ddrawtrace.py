@@ -30,15 +30,47 @@ from specs.d3d import ddraw, interfaces
 
 
 class DDrawTracer(DllTracer):
-
-    pass
-
     # FIXME: emit fake memcpy calls for IDirectDrawSurface7::EnumAttachedSurfaces
 
     # FIXME: wrap objects passed to IDirectDrawSurface7::EnumAttachedSurfaces
     # callback -- we don't really care for tracing these calls, but we do want
     # to trace everything done inside the callback.
+    def enumWrapperInterfaceVariables(self, interface):
+        variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
 
+        # Add additional members to track locks
+        if interface.getMethodByName('Lock') is not None:
+            variables += [
+                ('size_t', '_MappedSize', '0'),
+                ('VOID *', 'm_pbData', '0'),
+            ]
+
+        return variables
+
+    def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        if method.name == 'Unlock':
+            print('    if (_MappedSize && m_pbData) {')
+            self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
+            print('    }')
+
+        DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
+
+        if method.name == 'Lock':
+            # FIXME: handle recursive locks, directdraw allows simultaneous surface locks with different rects.
+            if interface.name.startswith("IDirectDrawSurface"):
+                print('    if (SUCCEEDED(_result) && !(dwFlags & DDLOCK_READONLY)) {')
+            else:
+                print('    if (SUCCEEDED(_result)) {')
+            if interface.name.startswith("IDirectDrawSurface"):
+                print('        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-2]))
+            elif interface.name.startswith("IDirect3DVertexBuffer"):
+                print('        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[1:-1]))
+            else:
+                print('        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()))
+            print('    } else {')
+            print('        m_pbData = nullptr;')
+            print('        _MappedSize = 0;')
+            print('    }')
 
 if __name__ == '__main__':
     print('#define INITGUID')
