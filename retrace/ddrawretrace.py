@@ -97,11 +97,21 @@ class D3DRetracer(Retracer):
         if method.name == 'Lock':
             print('    VOID *_pbData = NULL;')
             print('    size_t _MappedSize = 0;')
-            # FIXME: determine the mapping size
-            #print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+
+            if interface.name.startswith("IDirectDrawSurface"):
+                print('    if (!(dwFlags & DDLOCK_READONLY)) {')
+            else:
+                print('    if (true) {')
+            if interface.name.startswith("IDirectDrawSurface"):
+                print('        _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-2]))
+            elif interface.name.startswith("IDirect3DVertexBuffer"):
+                print('        _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[1:-1]))
+            else:
+                print('        _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()))
+            print('    }')
             print('    if (_MappedSize) {')
             print('        _maps[_this] = _pbData;')
-            # TODO: check pitches match
+            self.checkPitchMismatch(method);
             print('    } else {')
             print('        return;')
             print('    }')
@@ -138,6 +148,7 @@ def main():
     api = API()
     
     print(r'#include "d3dimports.hpp"')
+    print(r'#include "d3d7size.hpp"')
     api.addModule(ddraw)
     print()
     print('''static d3dretrace::D3DDumper<IDirect3DDevice7> d3d7Dumper;''')
