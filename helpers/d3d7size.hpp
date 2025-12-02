@@ -113,6 +113,28 @@ _getVertexSize(DWORD dwFVF) {
     return size;
 }
 
+static inline size_t
+_getStridedVertexSize(D3DDP_PTRSTRIDE * stride, D3DDRAWPRIMITIVESTRIDEDDATA * data, DWORD dwVertexType) {
+    size_t total = 0;
+
+    if (stride == &data->position && (dwVertexType & D3DFVF_POSITION_MASK) && data->position.lpvData)
+        total += data->position.dwStride;
+    if (stride == &data->normal && (dwVertexType & D3DFVF_NORMAL) && data->normal.lpvData)
+        total += data->normal.dwStride;
+    if (stride == &data->diffuse && (dwVertexType & D3DFVF_DIFFUSE) && data->diffuse.lpvData)
+        total += data->diffuse.dwStride;
+    if (stride == &data->specular && (dwVertexType & D3DFVF_SPECULAR) && data->specular.lpvData)
+        total += data->specular.dwStride;
+
+    DWORD dwNumTextures = (dwVertexType & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+    for (DWORD i = 0; i < dwNumTextures; i++) {
+        if (stride == &data->textureCoords[i] && data->textureCoords[i].lpvData)
+            total += data->textureCoords[i].dwStride;
+    }
+
+    return total;
+}
+
 static inline void
 _getFormatSize(LPDDPIXELFORMAT fmt, size_t& BlockSize, UINT& BlockWidth, UINT& BlockHeight) {
     BlockSize = 0;
