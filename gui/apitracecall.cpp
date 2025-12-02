@@ -3,6 +3,7 @@
 #include "apitrace.h"
 #include "traceloader.h"
 #include "trace_model.hpp"
+#include "guids.hpp"
 
 #include <QDebug>
 #include <QLocale>
@@ -361,12 +362,30 @@ QString ApiStruct::toString(bool multiLine) const
     QString str;
 
     str += QLatin1String("{");
-    for (unsigned i = 0; i < m_members.count(); ++i) {
-        str += m_sig.memberNames[i] %
-               QLatin1String(" = ") %
-               apiVariantToString(m_members[i], multiLine);
-        if (i < m_members.count() - 1)
-            str += QLatin1String(", ");
+
+    // Replace GUIDs with their symbolic name
+    // TODO: This is basically slightly adapted to QT copy of the same code block from trace_dump.
+    if (m_members.count() == 4 && m_sig.name == "GUID") {
+        GUID guid;
+        guid.Data1 = m_members[0].toUInt();
+        guid.Data2 = m_members[1].toUInt();
+        guid.Data3 = m_members[2].toUInt();
+        QVector<QVariant> data4 = m_members[3].value<ApiArray>().values();
+        assert(data4.count() == 8);
+        int i = 0;
+        for (QVariant d : data4) {
+            guid.Data4[i++] = d.toUInt();
+        }
+        const char* name = getGuidName(guid);
+        str += QString(name);
+    } else {
+        for (unsigned i = 0; i < m_members.count(); ++i) {
+            str += m_sig.memberNames[i] %
+                   QLatin1String(" = ") %
+                   apiVariantToString(m_members[i], multiLine);
+            if (i < m_members.count() - 1)
+                str += QLatin1String(", ");
+        }
     }
     str += QLatin1String("}");
 
