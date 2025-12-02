@@ -420,7 +420,7 @@ class Retracer:
         if function.type is not stdapi.Void:
             self.checkOrigResult(function)
 
-        self.deserializeArgs(function)
+        self.deserializeArgs(None, function)
 
         self.overrideArgs(function)
         
@@ -440,7 +440,7 @@ class Retracer:
 
         self.deserializeThisPointer(interface)
 
-        self.deserializeArgs(method)
+        self.deserializeArgs(interface, method)
         
         self.declareRet(method)
         self.invokeInterfaceMethod(interface, method)
@@ -466,7 +466,7 @@ class Retracer:
         print(r'        return;')
         print(r'    }')
 
-    def deserializeArgs(self, function):
+    def deserializeArgs(self, interface, function):
         print('    retrace::ScopedAllocator _allocator;')
         print('    (void)_allocator;')
         success = True
@@ -485,7 +485,10 @@ class Retracer:
         if not success:
             print('    if (1) {')
             self.failFunction(function)
-            sys.stderr.write('warning: unsupported %s call\n' % function.name)
+            if interface is not None:
+                sys.stderr.write('warning: unsupported %s:%s call\n' % (interface.name, function.name))
+            else:
+                sys.stderr.write('warning: unsupported %s call\n' % function.name)
             print('    }')
 
     def swizzleValues(self, function):
