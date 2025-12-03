@@ -715,7 +715,7 @@ DDSURFACEDESC = Struct("DDSURFACEDESC", [
 
     (DWORD, "dwAlphaBitDepth"),
     (DWORD, "dwReserved"),
-    (IntPointer("LPVOID"), "lpSurface"),
+    (LinearPointer(Void, "_MappedSize"), "lpSurface"),
     (DDCOLORKEY, "ddckCKDestOverlay"),
     (DDCOLORKEY, "ddckCKDestBlt"),
     (DDCOLORKEY, "ddckCKSrcOverlay"),
@@ -746,7 +746,7 @@ DDSURFACEDESC2 = Struct("DDSURFACEDESC2", [
 
     (DWORD, "dwAlphaBitDepth"),
     (DWORD, "dwReserved"),
-    (IntPointer("LPVOID"), "lpSurface"),
+    (LinearPointer(Void, "_MappedSize"), "lpSurface"),
 
     # FIXME: Anonymous union
     (DDCOLORKEY, "ddckCKDestOverlay"),
@@ -1482,7 +1482,7 @@ IDirectDrawSurface.methods += [
     StdMethod(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
     StdMethod(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
     StdMethod(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
-    StdMethod(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    StdMethod(DDRESULT, "Unlock", [(LinearPointer(Void, "_MappedSize"), "lp")]),
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE, "lpDDSReference")]),
@@ -1518,7 +1518,7 @@ IDirectDrawSurface2.methods += [
     StdMethod(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
     StdMethod(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
     StdMethod(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
-    StdMethod(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    StdMethod(DDRESULT, "Unlock", [(LinearPointer(Void, "_MappedSize"), "lp")]),
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE2, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE2, "lpDDSReference")]),
@@ -1557,7 +1557,7 @@ IDirectDrawSurface3.methods += [
     StdMethod(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
     StdMethod(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
     StdMethod(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
-    StdMethod(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    StdMethod(DDRESULT, "Unlock", [(LinearPointer(Void, "_MappedSize"), "lp")]),
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE3, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE3, "lpDDSReference")]),

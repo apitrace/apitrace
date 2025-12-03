@@ -954,7 +954,7 @@ D3DFVF = Flags(DWORD, [
 ])
 
 D3DDP_PTRSTRIDE = Struct("D3DDP_PTRSTRIDE", [
-    (LPVOID, "lpvData"),
+    (Blob(Void, "dwVertexCount * _getStridedVertexSize(&{self}, lpStrideData, dwVertexType)"), "lpvData"),
     (DWORD, "dwStride"),
 ])
 
@@ -963,7 +963,8 @@ D3DDRAWPRIMITIVESTRIDEDDATA = Struct("D3DDRAWPRIMITIVESTRIDEDDATA", [
     (D3DDP_PTRSTRIDE, "normal"),
     (D3DDP_PTRSTRIDE, "diffuse"),
     (D3DDP_PTRSTRIDE, "specular"),
-    (Array(D3DDP_PTRSTRIDE, "D3DDP_MAXTEXCOORD"), "textureCoords"),
+    # FIXME: 8 is D3DDP_MAXTEXCOORD, but can't be passed directly due to isinstance(array.length, int) check
+    (Array(D3DDP_PTRSTRIDE, 8), "textureCoords"),
 ])
 LPD3DDRAWPRIMITIVESTRIDEDDATA = Pointer(D3DDRAWPRIMITIVESTRIDEDDATA)
 
