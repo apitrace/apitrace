@@ -276,10 +276,6 @@ if (NOT WIN32)
 endif ()
 
 if (MSVC)
-    # No RTTI required
-    string (REGEX REPLACE "/GR *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
-
     # Disable C++ exceptions
     add_definitions (-D_HAS_EXCEPTIONS=0)
     string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -325,9 +321,6 @@ else ()
     if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         add_compiler_flags (-Wno-pointer-bool-conversion)
     endif ()
-
-    # No RTTI required
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Disable C++ exceptions
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
