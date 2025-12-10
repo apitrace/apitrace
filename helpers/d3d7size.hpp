@@ -167,13 +167,14 @@ _getFormatSize(LPDDPIXELFORMAT fmt, size_t& BlockSize, UINT& BlockWidth, UINT& B
             BlockSize = 128;
             break;
         default:
-            os::log("apitrace: warning: %s: unknown FOURCC DDPIXELFORMAT %lu\n", __FUNCTION__, fmt->dwFlags);
+            os::log("apitrace: warning: %s: unknown FOURCC DDPIXELFORMAT %lu (%c%c%c%c)\n", __FUNCTION__, fmt->dwFourCC,
+                fmt->dwFourCC & 0xFF, (fmt->dwFourCC >> 8) & 0xFF, (fmt->dwFourCC >> 16) & 0xFF, (fmt->dwFourCC >> 24) & 0xFF);
             BlockSize = 0;
             break;
         }
     }
     else {
-        os::log("apitrace: warning: %s: unknown DDPIXELFORMAT %lu\n", __FUNCTION__, fmt->dwFlags);
+        os::log("apitrace: warning: %s: unknown DDPIXELFORMAT %0xlx\n", __FUNCTION__, fmt->dwFlags);
         BlockSize = 0;
     }
 }
@@ -230,8 +231,9 @@ _getLockSize(LPDDPIXELFORMAT Format, bool Partial, UINT Width, UINT Height, INT 
     return size;
 }
 
+template<typename S, typename D>
 static inline void
-_getMapInfo(IDirectDrawSurface* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
+_getMapInfo(S* pSurface, RECT* pRect, D* pDesc,
     void*& pLockedData, size_t& MappedSize) {
     MappedSize = 0;
     pLockedData = nullptr;
@@ -251,92 +253,9 @@ _getMapInfo(IDirectDrawSurface* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
     MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
 }
 
+template<typename B>
 static inline void
-_getMapInfo(IDirectDrawSurface2* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
-    void*& pLockedData, size_t& MappedSize) {
-    MappedSize = 0;
-    pLockedData = nullptr;
-
-    UINT Width;
-    UINT Height;
-    if (pRect) {
-        Width = pRect->right - pRect->left;
-        Height = pRect->bottom - pRect->top;
-    }
-    else {
-        Width = pDesc->dwWidth;
-        Height = pDesc->dwHeight;
-    }
-
-    pLockedData = pDesc->lpSurface;
-    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
-}
-
-static inline void
-_getMapInfo(IDirectDrawSurface3* pSurface, RECT* pRect, DDSURFACEDESC* pDesc,
-    void*& pLockedData, size_t& MappedSize) {
-    MappedSize = 0;
-    pLockedData = nullptr;
-
-    UINT Width;
-    UINT Height;
-    if (pRect) {
-        Width = pRect->right - pRect->left;
-        Height = pRect->bottom - pRect->top;
-    }
-    else {
-        Width = pDesc->dwWidth;
-        Height = pDesc->dwHeight;
-    }
-
-    pLockedData = pDesc->lpSurface;
-    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
-}
-
-static inline void
-_getMapInfo(IDirectDrawSurface4* pSurface, RECT* pRect, DDSURFACEDESC2* pDesc,
-    void*& pLockedData, size_t& MappedSize) {
-    MappedSize = 0;
-    pLockedData = nullptr;
-
-    UINT Width;
-    UINT Height;
-    if (pRect) {
-        Width = pRect->right - pRect->left;
-        Height = pRect->bottom - pRect->top;
-    }
-    else {
-        Width = pDesc->dwWidth;
-        Height = pDesc->dwHeight;
-    }
-
-    pLockedData = pDesc->lpSurface;
-    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
-}
-
-static inline void
-_getMapInfo(IDirectDrawSurface7* pSurface, RECT* pRect, DDSURFACEDESC2* pDesc,
-    void*& pLockedData, size_t& MappedSize) {
-    MappedSize = 0;
-    pLockedData = nullptr;
-
-    UINT Width;
-    UINT Height;
-    if (pRect) {
-        Width = pRect->right - pRect->left;
-        Height = pRect->bottom - pRect->top;
-    }
-    else {
-        Width = pDesc->dwWidth;
-        Height = pDesc->dwHeight;
-    }
-
-    pLockedData = pDesc->lpSurface;
-    MappedSize = _getLockSize(&pDesc->ddpfPixelFormat, pRect, Width, Height, pDesc->lPitch);
-}
-
-static inline void
-_getMapInfo(IDirect3DVertexBuffer* pBuffer, void** ppbData,
+_getMapInfo(B* pBuffer, void** ppbData,
     void*& pLockedData, size_t& MappedSize) {
     pLockedData = nullptr;
     MappedSize = 0;
@@ -351,26 +270,6 @@ _getMapInfo(IDirect3DVertexBuffer* pBuffer, void** ppbData,
 
     pLockedData = *ppbData;
     MappedSize = _getVertexSize(desc.dwFVF) * desc.dwNumVertices;
-}
-
-static inline void
-_getMapInfo(IDirect3DVertexBuffer7* pBuffer, void** ppbData,
-    void*& pLockedData, size_t& MappedSize) {
-    pLockedData = nullptr;
-    MappedSize = 0;
-
-    D3DVERTEXBUFFERDESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.dwSize = sizeof(desc);
-    HRESULT hr = pBuffer->GetVertexBufferDesc(&desc);
-    if (FAILED(hr)) {
-        return;
-    }
-
-    if (ppbData && *ppbData) {
-        pLockedData = *ppbData;
-        MappedSize = _getVertexSize(desc.dwFVF) * desc.dwNumVertices;
-    }
 }
 
 static inline void
