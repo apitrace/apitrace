@@ -28,8 +28,8 @@
 
 #include <stdint.h>
 
-#include "glimports.hpp"
-#include "glproc.hpp"
+#include "glimports.h"
+#include "glproc.h"
 #include "glfeatures.hpp"
 #include "image.hpp"
 
