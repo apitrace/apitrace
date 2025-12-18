@@ -366,15 +366,16 @@ takeSnapshot(unsigned call_no, int mrt, unsigned snapshot_no, bool backBuffer) {
     return;
 }
 
+/**
+ * Saved state for whether takeSnapshot() has already happened for the call, as
+ * in when the window system drives the snapshot before executing a swapbuffers
+ * operation.
+ */
+static bool snapshot_done;
+
 static void
 takeSnapshot(unsigned call_no, bool backBuffer)
 {
-    static signed long long last_call_no = -1;
-    if (call_no == last_call_no) {
-        return;
-    }
-    last_call_no = call_no;
-
     static unsigned snapshot_no = 0;
     int cnt = dumper->getSnapshotCount();
 
@@ -387,6 +388,7 @@ takeSnapshot(unsigned call_no, bool backBuffer)
     }
 
     snapshot_no++;
+    snapshot_done = true;
 }
 
 
@@ -404,9 +406,11 @@ retraceCall(trace::Call *call) {
         return;
     }
 
+    snapshot_done = false;
+
     retracer.retrace(*call);
 
-    if (snapshotFrequency.contains(*call)) {
+    if (snapshotFrequency.contains(*call) && !snapshot_done) {
         takeSnapshot(call->no, snapshotForceBackbuffer);
         if (call->no >= snapshotFrequency.getLast()) {
             exit(0);
