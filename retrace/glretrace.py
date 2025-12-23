@@ -227,7 +227,7 @@ class GlRetracer(Retracer):
         print(r'    if (currentContext && currentContext->features().pixel_buffer_object) {')
         print(r'        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);')
         print(r'    }')
-        print(r'     std::vector<char> buffer;')
+        print(r'    std::vector<char> buffer;')
         print(r'    if (!_pack_buffer) {')
         # if no pack buffer is bound we have to read back
         data_param_name = "pixels"
@@ -241,7 +241,10 @@ class GlRetracer(Retracer):
         elif function.name == "glReadPixels":
             print(r'     GLsizei _w = call.arg(2).toSInt();')
             print(r'     GLsizei _h = call.arg(3).toSInt();')
-            print(r'     buffer.resize(_w * _h * 64);')
+            print(r'     GLenum _format = call.arg(4).toSInt();')
+            print(r'     GLenum _type = call.arg(5).toSInt();')
+            print(r'     unsigned _pixel_size = _gl_format_size(_format, _type) / 8;')
+            print(r'     buffer.resize(_w * _h * _pixel_size);')
         elif function.name == "glReadnPixels":
             print(r'     buffer.resize(call.arg(6).toSInt());')
             data_param_name = "data"
