@@ -359,7 +359,11 @@ void Retracer::run()
         prog = QLatin1String("glretrace");
         break;
     case trace::API_EGL:
+#ifdef Q_OS_WIN
+        prog = QLatin1String("glretrace");
+#else
         prog = QLatin1String("eglretrace");
+#endif
         break;
     case trace::API_DX:
     case trace::API_D3D7:
