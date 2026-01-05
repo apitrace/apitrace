@@ -243,8 +243,9 @@ class GlRetracer(Retracer):
             print(r'     GLsizei _h = call.arg(3).toSInt();')
             print(r'     GLenum _format = call.arg(4).toSInt();')
             print(r'     GLenum _type = call.arg(5).toSInt();')
-            print(r'     unsigned _pixel_size = _gl_format_size(_format, _type) / 8;')
-            print(r'     buffer.resize(_w * _h * _pixel_size);')
+            print(r'     unsigned _bits_per_pixel = _gl_format_size(_format, _type);')
+            print(r'     GLsizei _stride = (_w * _bits_per_pixel + 7) / 8;')
+            print(r'     buffer.resize(_h * _stride);')
         elif function.name == "glReadnPixels":
             print(r'     buffer.resize(call.arg(6).toSInt());')
             data_param_name = "data"
