@@ -33,6 +33,7 @@ import sys
 from retrace import Retracer
 import specs.stdapi as stdapi
 import specs.glapi as glapi
+import specs.glxapi as glxapi
 
 
 class GlRetracer(Retracer):
@@ -665,7 +666,7 @@ if __name__ == '__main__':
     print(r'''
 #include <string.h>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glretrace.hpp"
 #include "glstate.hpp"
 #include "glsize.hpp"
@@ -749,3 +750,6 @@ _validateActiveProgram(trace::Call &call)
 }
 
 ''')
+    
+    api.addModule(glxapi.glxapi)
+    stdapi.print_api_types_table(api, "glretrace::gl_func_types")

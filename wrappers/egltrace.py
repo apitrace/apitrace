@@ -113,7 +113,7 @@ if __name__ == '__main__':
     print('#define GL_GLEXT_PROTOTYPES')
     print('#define EGL_EGLEXT_PROTOTYPES')
     print()
-    print('#include "glproc.hpp"')
+    print('#include "glproc.h"')
     print('#include "glsize.hpp"')
     print('#include "eglsize.hpp"')
     print()

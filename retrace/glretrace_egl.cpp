@@ -28,7 +28,7 @@
  **************************************************************************/
 
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "retrace.hpp"
 #include "glretrace.hpp"
 #include "os.hpp"

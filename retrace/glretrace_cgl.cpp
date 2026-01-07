@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "retrace.hpp"
 #include "retrace_swizzle.hpp"
 #include "glretrace.hpp"
