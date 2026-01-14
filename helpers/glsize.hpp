@@ -40,7 +40,7 @@
 #include <algorithm>
 
 #include "os.hpp"
-#include "glimports.hpp"
+#include "glimports.h"
 
 
 // Vertex/element formats

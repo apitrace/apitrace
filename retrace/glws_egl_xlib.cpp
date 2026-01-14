@@ -31,7 +31,7 @@
 
 #include <dlfcn.h>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glws.hpp"
 #include "glws_xlib.hpp"
 

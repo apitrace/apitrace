@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 #include <string>
 

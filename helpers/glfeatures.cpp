@@ -31,7 +31,7 @@
 #include <sstream>
 
 #include "os.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 
 
 namespace glfeatures {

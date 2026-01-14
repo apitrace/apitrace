@@ -26,7 +26,7 @@
 #pragma once
 
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glsize.hpp"
 
 

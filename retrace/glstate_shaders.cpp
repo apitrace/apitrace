@@ -35,7 +35,7 @@
 #include <vector>
 
 #include "state_writer.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glsize.hpp"
 #include "glstate.hpp"
 #include "glstate_internal.hpp"

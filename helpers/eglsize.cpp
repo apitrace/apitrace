@@ -34,8 +34,8 @@
 #include <string.h>
 
 #include "os_thread.hpp"
-#include "glimports.hpp"
-#include "glproc.hpp"
+#include "glimports.h"
+#include "glproc.h"
 #include "glsize.hpp"
 #include "eglsize.hpp"
 #include "assert.h"

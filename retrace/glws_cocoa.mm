@@ -38,7 +38,7 @@
  */
 
 
-#include "glproc.hpp"
+#include "glproc.h"
 
 #include <stdlib.h>
 #include <string.h>
