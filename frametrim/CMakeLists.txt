@@ -12,13 +12,20 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
 )
 
+if (DirectX_D3D9_INCLUDE_FOUND)
+   include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
+   add_definitions (-DHAVE_D3D9)
+   set (D3D9_SOURCES ft_d3d9.cpp)
+endif ()
+
 add_executable(gltrim
    ft_dependecyobject.cpp
    ft_frametrimmer.cpp
    ft_main.cpp
    ft_matrixstate.cpp
    ft_opengl.cpp
-   ft_tracecall.cpp)
+   ft_tracecall.cpp
+   ${D3D9_SOURCES})
 
 target_link_libraries (gltrim
     retrace_common
