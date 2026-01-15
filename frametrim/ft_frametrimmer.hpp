@@ -61,9 +61,10 @@ public:
     static bool isSupported(trace::API api);
     static std::shared_ptr<FrameTrimmer> create(trace::API api, bool keep_all_states, bool swap_to_finish);
 
-    void call(const trace::Call& call, Frametype target_frame_type);
+    void call(const trace::Call& call, Frametype target_frame_type, unsigned frame);
     void start_last_frame(uint32_t callno);
     void end_last_frame();
+    unsigned get_frame() const;
 
     std::unordered_set<unsigned> get_skip_loop_calls();
     std::unordered_set<unsigned> get_swap_to_finish_calls();
@@ -86,6 +87,7 @@ protected:
     bool m_recording_frame;
     bool m_keep_all_state_calls;
     bool m_swaps_to_finish;
+    unsigned m_current_frame;
     unsigned m_last_frame_start;
     int m_current_thread;
 

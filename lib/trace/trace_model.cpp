@@ -44,13 +44,22 @@ Call::~Call() {
     delete ret;
 }
 
-Value &
-Call::argByName(const char *argName) {
+int
+Call::findArg(const char *argName) const {
     for (unsigned i = 0; i < sig->num_args; ++i) {
         if (strcmp(sig->arg_names[i], argName) == 0) {
-            return arg(i);
+            return i;
         }
     }
+
+    return -1;
+}
+
+Value &
+Call::argByName(const char *argName) {
+    int i = findArg(argName);
+    if (i >= 0)
+        return arg(i);
     return null;
 }
 
