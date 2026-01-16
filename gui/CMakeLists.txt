@@ -98,6 +98,10 @@ add_dependencies(apitrace version)
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
+# Turn off Linktime Optimization because it causes issues with Qt signal slot connections.
+# See https://bugreports.qt.io/browse/QTBUG-115731
+set_property(TARGET qapitrace PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+
 target_link_libraries (qapitrace
     Qt::Widgets
     qubjson
