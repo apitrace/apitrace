@@ -70,7 +70,8 @@ protected slots:
     void verticalScrollAction(int action);
 
     /* Update child elements when selection changes */
-    void updateSelection(bool emitSignal = true);
+    void updateSelection(bool emitSignal);
+    void updateSelection() { updateSelection(true); }
 
 signals:
     void selectionChanged(SelectionState state);
