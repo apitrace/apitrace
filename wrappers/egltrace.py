@@ -125,3 +125,21 @@ if __name__ == '__main__':
     api.addModule(module)
     tracer = EglTracer()
     tracer.traceApi(api)
+
+    # Epoxy checks for the symbol glXGetCurrentContext (which they won't use later)
+    # https://github.com/apitrace/apitrace/pull/855
+    print('''
+#ifndef HAVE_X11
+typedef void * GLXContext;
+#endif
+
+extern "C" PUBLIC
+GLXContext glXGetCurrentContext(void)
+{
+#if HAVE_X11
+    return _glXGetCurrentContext();
+#else
+    return nullptr;
+#endif
+}
+''')
