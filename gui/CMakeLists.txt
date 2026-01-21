@@ -73,11 +73,6 @@ set(qapitrace_UIS
    ui/shaderssourcewidget.ui
    )
 
-# https://cmake.org/cmake/help/v3.11/policy/CMP0071.html
-if (POLICY CMP0071)
-    cmake_policy (SET CMP0071 NEW)
-endif()
-
 set (CMAKE_AUTOMOC ON)
 
 # Silence `Note: No relevant classes found. No output generated.`
@@ -119,8 +114,8 @@ endif ()
 
 ########### install files ###############
 
-install (TARGETS qapitrace RUNTIME DESTINATION bin)
-install_pdb (qapitrace RUNTIME DESTINATION bin)
+install (TARGETS qapitrace)
+install_pdb (qapitrace TYPE BIN)
 #install (FILES qapitrace.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
 
 # Deployt Qt dependencies
@@ -169,7 +164,7 @@ if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
                 \"VCINSTALLDIR=${VCINSTALLDIR}\"
                 \"${QT_WINDEPLOYQT_EXECUTABLE}\"
                 \${QT_WINDEPLOYQT_FLAGS}
-                \"\${CMAKE_INSTALL_PREFIX}/bin/qapitrace.exe\"
+                \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/qapitrace.exe\"
             )
         ")
     endif ()

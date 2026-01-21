@@ -25,7 +25,7 @@ target_link_libraries (gltrim
     glretrace_common
     )
 
-install (TARGETS gltrim RUNTIME DESTINATION bin)
+install (TARGETS gltrim)
 
 option (ENABLE_GLTRIM_TESTS "Enable running the gltrim tests." OFF)
 
