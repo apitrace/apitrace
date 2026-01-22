@@ -17,6 +17,7 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
       m_zoomtoFit()
 {
     setupUi(this);
+    setWindowFlags(Qt::Window);
     opaqueCheckBox->setChecked(opaque);
     alphaCheckBox->setChecked(alpha);
 
