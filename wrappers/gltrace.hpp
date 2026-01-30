@@ -32,6 +32,8 @@
 
 #include "glmemshadow.hpp"
 
+#include "os.hpp"
+
 #include <map>
 #include <vector>
 #include <memory>
@@ -110,12 +112,22 @@ is_coherent_write_map(GLbitfield access)
         return false;
     }
 
-    if (access & GL_MAP_COHERENT_BIT) {
-        return true;
+    // Ignore GL_MAP_COHERENT_BIT when GL_MAP_FLUSH_EXPLICIT_BIT is also set.
+    //
+    // XXX: This will cause troubles if the application doesn't actually call
+    // glFlushMappedBufferRange, but it will avoid broken traces if the app
+    // does call glFlushMappedBufferRange.
+    if (access & GL_MAP_FLUSH_EXPLICIT_BIT) {
+        static bool warned = false;
+        if ((access & GL_MAP_COHERENT_BIT) && !warned) {
+            os::log("apitrace: warning: combining GL_MAP_COHERENT_BIT|GL_MAP_FLUSH_EXPLICIT_BIT might lead to inconsistent traces (https://github.com/apitrace/apitrace/issues/974)\n");
+            warned = true;
+        }
+        return false;
     }
 
-    if (access & GL_MAP_FLUSH_EXPLICIT_BIT) {
-        return false;
+    if (access & GL_MAP_COHERENT_BIT) {
+        return true;
     }
 
     // Uncomment to workaround https://github.com/apitrace/apitrace/issues/900
