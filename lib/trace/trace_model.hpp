@@ -336,6 +336,12 @@ public:
         bound = false;
     }
 
+    Blob(size_t _size, char *_buf) {
+        size = _size;
+        buf = _buf;
+        bound = false;
+    }
+
     ~Blob();
 
     bool toBool(void) const override;

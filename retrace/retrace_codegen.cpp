@@ -163,6 +163,21 @@ createBitmask(trace::Id sig_id, const std::vector<trace::BitmaskFlag> &flags,
     return new trace::Bitmask(sig, value);
 }
 
+static trace::Enum *
+createEnum(trace::Id sig_id, const std::vector<trace::EnumValue> &values,
+           signed long long value) {
+    trace::EnumSig *sig = new trace::EnumSig;
+    sig->id = sig_id;
+    sig->num_values = values.size();
+    sig->values = new trace::EnumValue[sig->num_values];
+    trace::EnumValue *values_copy = new trace::EnumValue[sig->num_values];
+    for (uint32_t i = 0; i < sig->num_values; i++)
+        values_copy[i] = values[i];
+    sig->values = values_copy;
+
+    return new trace::Enum(sig, value);
+}
+
 trace::Null null_value;
 trace::Bool true_value(true);
 trace::Bool false_value(false);
@@ -437,17 +452,30 @@ Codegen::get_value_construction(trace::Value *value)
     }
 
     if (auto v = dynamic_cast<trace::String *>(value)) {
-        return deduplicate_value_construction("new trace::String(\"" + std::string(v->value) + "\")");
+        return deduplicate_value_construction("new trace::String(R\"(" + std::string(v->value) + ")\")");
     }
 
-    if (dynamic_cast<trace::WString *>(value)) {
-        abort();
-        return "nullptr";
+    if (auto v = dynamic_cast<trace::WString *>(value)) {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+        return deduplicate_value_construction(converter.to_bytes(std::wstring(L"new trace::WString(R\"(") + std::wstring(v->value) + std::wstring(L")\")")));
     }
 
-    if (dynamic_cast<trace::Enum *>(value)) {
-        abort();
-        return "nullptr";
+    if (auto v = dynamic_cast<trace::Enum *>(value)) {
+        const trace::EnumSig *sig = v->sig;
+        std::string expr = "createEnum(" + std::to_string(sig->id) + ", {";
+        for (uint32_t i = 0; i < sig->num_values; i++) {
+            if (i)
+                expr += ", ";
+            expr += "{\"";
+            expr += sig->values[i].name;
+            expr += "\", ";
+            expr += sig->values[i].value;
+            expr += "}";
+        }
+        expr += "}, ";
+        expr += v->toSInt();
+        expr += ")";
+        return deduplicate_value_construction(expr);
     }
 
     if (auto v = dynamic_cast<trace::Struct *>(value)) {
@@ -477,9 +505,15 @@ Codegen::get_value_construction(trace::Value *value)
         return deduplicate_value_construction(expr);
     }
 
-    if (dynamic_cast<trace::Blob *>(value)) {
-        abort();
-        return "nullptr";
+    if (auto v = dynamic_cast<trace::Blob *>(value)) {
+        std::string expr = "new trace::Blob(" + std::to_string(v->size) + "lu, new char[" + std::to_string(v->size) + "]{";
+        for (uint32_t i = 0; i < v->size; i++) {
+            if (i)
+                expr += ", ";
+            expr += std::to_string(v->buf[i]);
+        }
+        expr += "})";
+        return deduplicate_value_construction(expr);
     }
 
     if (dynamic_cast<trace::Repr *>(value)) {
