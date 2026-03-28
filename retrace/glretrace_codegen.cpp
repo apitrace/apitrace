@@ -374,7 +374,7 @@ GLCodegen::emit_gl_call(trace::Call &call) {
         active_program = call.arg(0).toSInt();
     } else if (!strcmp("glBindBuffer", call.name())) {
         if (call.arg(0).toSInt() == GL_PIXEL_PACK_BUFFER)
-            active_program = call.arg(1).toSInt();
+            active_pack_buffer = call.arg(1).toSInt();
     }
 };
 
