@@ -1038,7 +1038,7 @@ public:
 };
 
 void
-retrace::replayBinary(retrace::Retracer &retracer, const char *library) {
+retrace::replayBinary(retrace::Retracer &retracer, const char *library, int loopCount) {
     retrace::addCallbacks(retracer);
 
     long long startTime = 0;
@@ -1091,6 +1091,9 @@ retrace::replayBinary(retrace::Retracer &retracer, const char *library) {
 
     startTime = os::getTime();
 
+    uint32_t last_end_of_frame_sequence_index = 0;
+    bool has_loop = !!loopCount;
+
     uint32_t sequence_index = 0;
     RelayRace race;
     race.get_next_baton = [&](Baton &next) {
@@ -1124,19 +1127,43 @@ retrace::replayBinary(retrace::Retracer &retracer, const char *library) {
 
             sequence->run_api((uintptr_t)sequence_data[sequence_index].data.load());
 
-            free(sequence_data[sequence_index].data.load());
+            /* If loopCount is set, the data needs to be kept around and can only be freed later. */
+            if (!has_loop)
+                free(sequence_data[sequence_index].data.load());
+
             streamer.consumed_data_size += sequence_data[sequence_index].size;
         } else {
             sequence->call->no = sequence->call_no;
             retrace::retraceCall(sequence->call);
+
+            if ((sequence->call->flags & trace::CALL_FLAG_END_FRAME) && sequence_index + 1 < sequence_count) {
+                for (uint32_t i = last_end_of_frame_sequence_index; i < sequence_index; i++) {
+                    if (sequences[i].run_api)
+                        free(sequence_data[i].data.load());
+                }
+
+                last_end_of_frame_sequence_index = sequence_index;
+            }
         }
 
         sequence_index++;
+
+        if (sequence_index >= sequence_count && loopCount) {
+            sequence_index = last_end_of_frame_sequence_index + 1;
+            loopCount--;
+        }
     };
     race.flush = [](){
         glFlush();
     };
     race.run();
+
+    if (has_loop) {
+        for (uint32_t i = last_end_of_frame_sequence_index; i < sequence_count; i++) {
+            if (sequences[i].run_api)
+                free(sequence_data[i].data.load());
+        }
+    }
 
     streamer.stop();
     delete[] sequence_data;

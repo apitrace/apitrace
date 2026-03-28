@@ -291,7 +291,7 @@ void
 addCallbacks(retrace::Retracer &retracer);
 
 void
-replayBinary(retrace::Retracer &retracer, const char *library);
+replayBinary(retrace::Retracer &retracer, const char *library, int loopCount);
 
 void
 retraceCall(trace::Call *call);

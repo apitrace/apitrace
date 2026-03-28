@@ -1185,7 +1185,7 @@ int main(int argc, char **argv)
         for (i = optind; i < argc; ++i) {
             trace_filename = argv[i];
             if (strlen(trace_filename) >= 3 && !strcmp(trace_filename + strlen(trace_filename) - 3, ".so")) {
-                retrace::replayBinary(retracer, trace_filename);
+                retrace::replayBinary(retracer, trace_filename, loopCount);
                 continue;
             }
 
