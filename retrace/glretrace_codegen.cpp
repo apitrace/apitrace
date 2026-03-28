@@ -21,6 +21,10 @@
  * IN THE SOFTWARE.
  */
 
+ // TODO: Port fixes:
+ // 6b5ceb77241be529221ee1039c35e9ac26070c60
+ // 972da9551bbec2956e86644334a8588e6221d617 and c0fdbfce2c659c87c576f8cf3afb7a2e35c86f0c
+
 #include "glproc.h"
 #include "glretrace.hpp"
 #include "retrace.hpp"
