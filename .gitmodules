@@ -1,6 +1,6 @@
 [submodule "frametrim/tests"]
 	path = frametrim/tests
-	url = https://github.com/apitrace/gltrim-tests.git
+	url = https://github.com/apitrace/gltrim-tests
 	shallow = true
 [submodule "thirdparty/brotli"]
 	path = thirdparty/brotli
@@ -32,5 +32,9 @@
 	shallow = true
 [submodule "thirdparty/zstd"]
 	path = thirdparty/zstd
-	url = https://github.com/facebook/zstd.git
+	url = https://github.com/facebook/zstd
+	shallow = true
+[submodule "thirdparty/mhook"]
+	path = thirdparty/mhook
+	url = https://github.com/apriorit/mhook
 	shallow = true

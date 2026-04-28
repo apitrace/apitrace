@@ -25,21 +25,31 @@ endif ()
 
 
 add_convenience_library (mhook
-    disasm-lib/cpu.c
-    disasm-lib/disasm.c
-    disasm-lib/disasm_x86.c
-    disasm-lib/misc.c
-    mhook-lib/mhook.cpp
+    mhook/disasm-lib/cpu.c
+    mhook/disasm-lib/cpu.h
+    mhook/disasm-lib/disasm.c
+    mhook/disasm-lib/disasm.h
+    mhook/disasm-lib/disasm_x86.c
+    mhook/disasm-lib/disasm_x86.h
+    mhook/disasm-lib/disasm_x86_tables.h
+    mhook/disasm-lib/misc.h
+    mhook/mhook-lib/mhook.c
+    mhook/mhook-lib/mhook.h
 )
+target_compile_definitions (mhook PRIVATE "printf(...)=fprintf(stderr,__VA_ARGS__)")
+target_include_directories (mhook INTERFACE mhook)
 
 
 add_executable (mhook-test
-    mhook-test.cpp
+    mhook/mhook-test/mhook-test.cpp
 )
 target_link_libraries (mhook-test
     mhook
     ws2_32
 )
+if (MINGW)
+    target_link_options (mhook-test PRIVATE "-municode")
+endif()
 add_test (NAME mhook-test COMMAND mhook-test)
 
 if (CMAKE_CROSSCOMPILING)
@@ -49,7 +59,7 @@ endif ()
 
 
 install (
-    FILES "COPYING"
+    FILES "mhook/COPYING"
     DESTINATION ${DOC_INSTALL_DIR}
     RENAME LICENSE-mhook.txt
 )

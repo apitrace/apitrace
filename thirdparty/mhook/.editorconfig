@@ -1,4 +1,0 @@
-[*.{c,h,cpp,hpp}]
-indent_style = tab
-indent_size = 8
-tab_width = 8

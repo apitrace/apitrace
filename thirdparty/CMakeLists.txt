@@ -106,7 +106,7 @@ if (WIN32)
     add_subdirectory (directxtex)
     add_subdirectory (devcon)
     if (HAVE_X86)
-        add_subdirectory (mhook)
+        include_with_scope (mhook.cmake)
     endif ()
 endif ()
 
