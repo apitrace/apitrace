@@ -2,7 +2,7 @@ param (
     [ValidateSet('x86','arm')][string]$arch = 'x86',
     [ValidateSet('win64','win32')][string]$target = 'win64',
     [string]$config,
-    [string]$buildRoot = 'build',
+    [string]$buildRoot,
     [string]$qtRoot = 'Qt'
 )
 
@@ -108,6 +108,13 @@ if (!$config) {
     }
 }
 
+if (!$buildRoot) {
+    if ($arch -eq 'x86') {
+	    $buildRoot = "build\$target"
+    } else {
+	    $buildRoot = "build\$target-$arch"
+    }
+}
 Write-Host "Configuring onto $buildRoot ..."
 Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" }
 
