@@ -59,4 +59,5 @@ traces
 Testing
 os_thread_test
 /build
+/Qt
 version.h
