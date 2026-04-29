@@ -93,7 +93,13 @@ if ($arch -eq 'x86') {
     $gui = 'OFF'
 }
 
-$generator = 'Visual Studio 17 2022'
+# https://github.com/microsoft/vswhere/wiki/Find-VC#powershell
+$product = & "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json | Select-Object -First 1
+$productVersion = [System.Version]$product.installationVersion
+if ($product.DisplayName -notmatch '^.* (?<year>\d\d\d\d)$') {
+	throw
+}
+$generator = "Visual Studio $($productVersion.Major) $($Matches.year)"
 
 if (!$config) {
     if ($arch -eq 'arm') {
