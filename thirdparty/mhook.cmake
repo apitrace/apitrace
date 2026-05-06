@@ -1,26 +1,19 @@
 remove_definitions (-DNOMINMAX)
 
-if (MINGW)
-    # mhook uses MSVC format specifiers
-    remove_definitions (-D__USE_MINGW_ANSI_STDIO=1)
-    add_definitions (-D__USE_MINGW_ANSI_STDIO=0)
-endif ()
-
-add_definitions (
-    -DUNICODE -D_UNICODE
-    -DMINGW_HAS_SECURE_API=1
-)
-
 if (NOT MSVC)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-comment")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-enum-compare")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pointer-to-int-cast")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-switch")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-value")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
+    target_compile_options (mhook PRIVATE
+        -Wno-comment
+        -Wno-enum-compare
+        -Wno-pointer-to-int-cast
+        -Wno-switch
+        -Wno-unused-value
+        -Wno-unused-variable
+    )
 endif ()
 if (CMAKE_C_COMPILER_ID MATCHES Clang)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-security")
+    target_compile_options (mhook PRIVATE
+        -Wno-format-security
+    )
 endif ()
 
 
@@ -36,9 +29,22 @@ add_convenience_library (mhook
     mhook/mhook-lib/mhook.c
     mhook/mhook-lib/mhook.h
 )
-target_compile_definitions (mhook PRIVATE "printf(...)=fprintf(stderr,__VA_ARGS__)")
-target_include_directories (mhook INTERFACE mhook)
+target_compile_definitions (mhook PRIVATE
+    UNICODE
+    _UNICODE
+    MINGW_HAS_SECURE_API=1
 
+    # Ensure disasm errors are written to stderr.
+    "printf(...)=fprintf(stderr,__VA_ARGS__)"
+    # Silence mhook debug messages.
+    ODPRINTF=__noop
+)
+target_include_directories (mhook INTERFACE mhook)
+if (MINGW)
+    # mhook uses MSVC format specifiers
+    remove_definitions (-D__USE_MINGW_ANSI_STDIO=1)
+    target_compile_definitions (mhook PRIVATE -D__USE_MINGW_ANSI_STDIO=0)
+endif ()
 
 add_executable (mhook-test
     mhook/mhook-test/mhook-test.cpp
