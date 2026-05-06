@@ -1,22 +1,5 @@
 remove_definitions (-DNOMINMAX)
 
-if (NOT MSVC)
-    target_compile_options (mhook PRIVATE
-        -Wno-comment
-        -Wno-enum-compare
-        -Wno-pointer-to-int-cast
-        -Wno-switch
-        -Wno-unused-value
-        -Wno-unused-variable
-    )
-endif ()
-if (CMAKE_C_COMPILER_ID MATCHES Clang)
-    target_compile_options (mhook PRIVATE
-        -Wno-format-security
-    )
-endif ()
-
-
 add_convenience_library (mhook
     mhook/disasm-lib/cpu.c
     mhook/disasm-lib/cpu.h
@@ -32,14 +15,39 @@ add_convenience_library (mhook
 target_compile_definitions (mhook PRIVATE
     UNICODE
     _UNICODE
-    MINGW_HAS_SECURE_API=1
-
-    # Ensure disasm errors are written to stderr.
-    "printf(...)=fprintf(stderr,__VA_ARGS__)"
-    # Silence mhook debug messages.
-    ODPRINTF=__noop
 )
 target_include_directories (mhook INTERFACE mhook)
+if (MSVC)
+    target_compile_definitions (mhook PRIVATE
+        # Silence mhook debug messages.
+        ODPRINTF=__noop
+        # FIXME Ensure disasm errors are written to stderr.
+        #printf=__noop
+    )
+else ()
+    target_compile_options (mhook PRIVATE
+        -Wno-comment
+        -Wno-enum-compare
+        -Wno-parentheses
+        -Wno-pointer-to-int-cast
+        -Wno-switch
+        -Wno-unknown-pragmas
+        -Wno-unused-value
+        -Wno-unused-variable
+    )
+    target_compile_definitions (mhook PRIVATE
+        MINGW_HAS_SECURE_API=1
+        # Ensure disasm errors are written to stderr.
+        "printf(...)=fprintf(stderr,__VA_ARGS__)"
+        # Silence mhook debug messages.
+        "ODPRINTF(a)=(void)0"
+    )
+endif ()
+if (CMAKE_C_COMPILER_ID MATCHES Clang)
+    target_compile_options (mhook PRIVATE
+        -Wno-format-security
+    )
+endif ()
 if (MINGW)
     # mhook uses MSVC format specifiers
     remove_definitions (-D__USE_MINGW_ANSI_STDIO=1)
