@@ -56,8 +56,6 @@ jobs:
 
   ubuntu-20_04:
     runs-on: ubuntu-24.04
-    env:
-      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -66,8 +64,7 @@ jobs:
     - uses: docker/setup-buildx-action@v4
     - uses: crazy-max/ghaction-github-runtime@v4
     - run: ci/build-ubuntu-20.04.sh
-    - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4
       with:
         name: apitrace-ubuntu-20.04
         path: build/docker-ubuntu-20.04/apitrace-*.tar.bz2
@@ -75,8 +72,6 @@ jobs:
 
   ubuntu-arm64-cross:
     runs-on: ubuntu-24.04
-    env:
-      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -85,8 +80,7 @@ jobs:
     - uses: docker/setup-buildx-action@v4
     - uses: crazy-max/ghaction-github-runtime@v4
     - run: ci/build-ubuntu-arm64-cross.sh
-    - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4
       with:
         name: apitrace-ubuntu-arm64
         path: build/docker-ubuntu-arm64-cross/apitrace-*.tar.bz2

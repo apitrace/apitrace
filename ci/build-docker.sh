@@ -59,11 +59,11 @@ else
     docker buildx build -t $docker_tag -f $source_dir/ci/docker/$distro.Dockerfile $source_dir/ci/docker
 fi
 
-if [ "$PACKAGE" = "true" ]
+if [ "${GITHUB_EVENT_NAME:-}" = "push" -a \( "${GITHUB_REF:=}" = "refs/heads/master" -o "${GITHUB_REF%/*}" = "refs/tags" \) ]
 then
-    CMAKE_BUILD_TYPE=Release
+    CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
 else
-    CMAKE_BUILD_TYPE=Debug
+    CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Debug}
 fi
 
 docker_run \
@@ -83,7 +83,7 @@ symbol_versions $build_dir/glretrace
 symbol_versions $build_dir/eglretrace
 symbol_versions $build_dir/wrappers/glxtrace.so
 
-if [ "$PACKAGE" = true ]
+if [ "$GITHUB_ACTIONS" = true ]
 then
     docker_run cmake --build $build_dir --target package
 fi
