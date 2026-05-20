@@ -1138,7 +1138,7 @@ retrace::replayBinary(retrace::Retracer &retracer, const char *library, int loop
 
             if ((sequence->call->flags & trace::CALL_FLAG_END_FRAME) && sequence_index + 1 < sequence_count) {
                 for (uint32_t i = last_end_of_frame_sequence_index; i < sequence_index; i++) {
-                    if (sequences[i].run_api)
+                    if (sequences[i].run_api && has_loop)
                         free(sequence_data[i].data.load());
                 }
 
