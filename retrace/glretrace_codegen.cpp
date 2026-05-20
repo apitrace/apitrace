@@ -52,8 +52,9 @@ static std::unordered_set<std::string> ignore_calls = {
 
 class GLCodegen : public retrace::Codegen {
 public:
-    GLCodegen(const std::string &output_dir, const std::string &trace_name)
-        : Codegen(output_dir, trace_name, glretrace::gl_func_types)
+    GLCodegen(const std::string &output_dir, const std::string &project_name,
+              const std::string &trace_name)
+        : Codegen(output_dir, project_name, trace_name, glretrace::gl_func_types)
     {
     }
 
@@ -387,8 +388,9 @@ GLCodegen *codegen = nullptr;
 void
 glretrace::codegen_start() {
     std::string trace_name = std::filesystem::path(retrace::trace_filename).stem();
+    std::string cname = (retrace::Cname.empty()) ? retrace::Cpath : retrace::Cname;
 
-    codegen = new GLCodegen(retrace::Cpath, trace_name);
+    codegen = new GLCodegen(retrace::Cpath, cname, trace_name);
     codegen->begin_trace();
 
     codegen->copy_file("glproc.h", glproc_h);

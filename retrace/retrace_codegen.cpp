@@ -40,9 +40,10 @@
 
 namespace retrace {
 
-Codegen::Codegen(const std::string &output_dir, const std::string &trace_name,
+Codegen::Codegen(const std::string &output_dir, const std::string &project_name,
+                 const std::string &trace_name,
                  const std::unordered_map<std::string, retrace::FunctionType> &function_types)
-    : output_dir(output_dir), trace_name(trace_name), function_types(function_types) {
+    : output_dir(output_dir), project_name(project_name), trace_name(trace_name), function_types(function_types) {
 }
 
 void
@@ -317,14 +318,14 @@ get_replay_sequences(const replay_sequence **out_sequences, uint32_t *out_sequen
     sequence_h.close();
 
     std::ofstream meson_build(output_dir / "meson.build");
-    meson_build << "project('" << trace_name << "', 'cpp', 'c')\n";
+    meson_build << "project('" << project_name << "', 'cpp', 'c')\n";
     meson_build << "replay_lib = shared_library(\n";
-    meson_build << "  '" << trace_name << "',\n";
+    meson_build << "  '" << project_name << "',\n";
     for (const auto &filename : source_filenames)
         meson_build << "  '" << filename << "',\n";
     meson_build << "  name_prefix: ''\n";
     meson_build << ")\n";
-    meson_build << "fs = import('fs')\nfs.copyfile('data.bin', '" << trace_name << ".so.data')\n";
+    meson_build << "fs = import('fs')\nfs.copyfile('data.bin', '" << project_name << ".so.data')\n";
     meson_build.close();
 
     data_bin.close();

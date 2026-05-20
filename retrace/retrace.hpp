@@ -209,6 +209,7 @@ extern bool waitOnFinish;
 
 extern bool generateC;
 extern std::string Cpath;
+extern std::string Cname;
 
 std::ostream &warning(trace::Call &call);
 

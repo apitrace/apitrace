@@ -101,6 +101,7 @@ trace::CallSet callsToIgnore;
 
 bool generateC = false;
 std::string Cpath;
+std::string Cname;
 
 bool resolveMSAA = true;
 
@@ -552,6 +553,7 @@ usage(const char *argv0) {
         "      --min-cpu-time=NANOSECONDS  ignore calls with less than this CPU time when profiling (default is 1000)\n"
         "      --ignore-calls=CALLSET    ignore calls in CALLSET\n"
         "      --generate-c=PATH   Generate a C project that can be compiled into an executable for fast replay.\n"
+	"      --generate-c-dso=DSO Set the DSO name for the generated C file.\n"
         "      --version           display version information and exit\n"
     ;
 }
@@ -594,6 +596,7 @@ enum {
     QUERY_CHECK_TOLARANCE_OPT,
     IGNORE_CALLS_OPT,
     GENERATE_C_OPT,
+    GENERATE_C_NAME_OPT,
     VERSION_OPT,
 };
 
@@ -649,6 +652,7 @@ longOptions[] = {
     {"min-cpu-time", required_argument, 0, MIN_CPU_TIME_OPT},
     {"ignore-calls", required_argument, 0, IGNORE_CALLS_OPT},
     {"generate-c", required_argument, 0, GENERATE_C_OPT},
+    {"generate-c-dso-name", required_argument, 0, GENERATE_C_NAME_OPT},
     {"version", no_argument, 0, VERSION_OPT},
     {0, 0, 0, 0}
 };
@@ -1131,6 +1135,9 @@ int main(int argc, char **argv)
             retrace::singleThread = true;
             retrace::generateC = true;
             retrace::Cpath = optarg;
+            break;
+        case GENERATE_C_NAME_OPT:
+            retrace::Cname = optarg;
             break;
         case VERSION_OPT:
             std::cout << "apitrace " APITRACE_VERSION << std::endl;
