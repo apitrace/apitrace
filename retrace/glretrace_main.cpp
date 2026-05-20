@@ -918,7 +918,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
 #define MAX_DATA_READ_AHEAD (1024 * 1024 * 1024)
 
 struct data_buffer {
-    std::atomic<void *> data;
+    std::atomic<void *> data = nullptr;
     uint64_t size;
 };
 
