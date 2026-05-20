@@ -160,7 +160,7 @@ GLCodegen::emit_gl_call(trace::Call &call) {
     }
 
     bool new_wsi_sequence =
-        !strncmp("glX", call.name(), 3) || !strncmp("wgl", call.name(), 3);
+        !strncmp("glX", call.name(), 3) || !strncmp("wgl", call.name(), 3) || !strncmp("egl", call.name(), 3);
     if (new_wsi_sequence) {
         end_sequence();
         emit_constructed_call(call);
