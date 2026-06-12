@@ -69,15 +69,6 @@ TraceCall::TraceCall(const trace::Call& call, const std::string& name):
     m_trace_call_no(call.no),
     m_name(name)
 {
-    std::stringstream s;
-    s << call.name();
-
-    trace::StreamVisitor sv(s);
-    for(auto&& a: call.args) {
-        s << "_";  a.value->visit(sv);
-    }
-
-    m_name_with_params = s.str();
 }
 
 TraceCall::TraceCall(const trace::Call& call, unsigned nsel):

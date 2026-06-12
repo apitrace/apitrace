@@ -58,14 +58,12 @@ public:
 
     unsigned callNo() const { return m_trace_call_no;};
     const std::string& name() const { return m_name;}
-    const std::string& nameWithParams() const { return m_name_with_params;}
 private:
 
     static std::string nameWithParamsel(const trace::Call& call, unsigned nsel);
 
     unsigned m_trace_call_no;
     std::string m_name;
-    std::string m_name_with_params;
 };
 using PTraceCall = TraceCall::Pointer;
 
