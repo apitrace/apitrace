@@ -589,6 +589,9 @@ public:
         return *(args[index].value);
     }
 
+    int
+    findArg(const char *argName) const;
+
     Value &
     argByName(const char *argName);
 };
