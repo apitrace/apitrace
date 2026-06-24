@@ -81,6 +81,13 @@ getApiName(int api) {
   return trace::API_NAMES[api];
 }
 
+static const std::string
+getProcessName(std::string name) {
+  if (name == "")
+    return "null";
+  return "\"" + name + "\"";
+}
+
 struct FrameEntry {
     size_t firstCallId, lastCallId;
     size_t totalCalls;
@@ -91,6 +98,7 @@ static int
 command(int argc, char *argv[])
 {
     bool flagDumpFrames = false;
+    std::string processName;
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
@@ -118,6 +126,9 @@ command(int argc, char *argv[])
         if (!p.open(argv[i])) {
             return 1;
         }
+
+	auto &properties = p.getProperties();
+	std::string processName = properties.find("process.name")->second;
 
         trace::Call *call;
         size_t callsInFrame = 0;
@@ -157,6 +168,7 @@ command(int argc, char *argv[])
         std::cout <<
             "{" << std::endl <<
             "  \"FileName\": \"" << argv[i] << "\"," << std::endl <<
+            "  \"ProcessName\": " << getProcessName(processName) << "," << std::endl <<
             "  \"ContainerVersion\": " << p.getVersion() << "," << std::endl <<
             "  \"ContainerType\": \"" << p.containerType() << "\"," << std::endl <<
             "  \"API\": \"" << getApiName(api) << "\"," << std::endl <<
