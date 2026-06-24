@@ -20,16 +20,16 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     opaqueCheckBox->setChecked(opaque);
     alphaCheckBox->setChecked(alpha);
 
-    connect(lowerSpinBox, SIGNAL(valueChanged(double)),
-            SLOT(slotUpdate()));
-    connect(upperSpinBox, SIGNAL(valueChanged(double)),
-            SLOT(slotUpdate()));
-    connect(flipCheckBox, SIGNAL(stateChanged(int)),
-            SLOT(slotUpdate()));
-    connect(opaqueCheckBox, SIGNAL(stateChanged(int)),
-            SLOT(slotUpdate()));
-    connect(alphaCheckBox, SIGNAL(stateChanged(int)),
-            SLOT(slotUpdate()));
+    connect(lowerSpinBox, &QDoubleSpinBox::valueChanged,
+            this, &ImageViewer::slotUpdate);
+    connect(upperSpinBox, &QDoubleSpinBox::valueChanged,
+            this, &ImageViewer::slotUpdate);
+    connect(flipCheckBox, &QCheckBox::stateChanged,
+            this, &ImageViewer::slotUpdate);
+    connect(opaqueCheckBox, &QCheckBox::stateChanged,
+            this, &ImageViewer::slotUpdate);
+    connect(alphaCheckBox, &QCheckBox::stateChanged,
+            this, &ImageViewer::slotUpdate);
 
     QPixmap px(32, 32);
     QPainter p(&px);
@@ -51,26 +51,26 @@ ImageViewer::ImageViewer(QWidget *parent, bool opaque, bool alpha)
     rectLabel->hide();
     pixelLabel->hide();
 
-    connect(m_pixelWidget, SIGNAL(zoomChanged(double)),
-            this, SLOT(zoomChangedIndirectly(double)));
-    connect(zoomSpinBox, SIGNAL(valueChanged(double)),
-            this, SLOT(zoomChangedDirectly()));
-    connect(zoomSpinBox, SIGNAL(valueChanged(double)),
-            m_pixelWidget, SLOT(setZoom(double)));
-    connect(m_pixelWidget, SIGNAL(mousePosition(int, int)),
-            this, SLOT(showPixel(int, int)));
-    connect(m_pixelWidget, SIGNAL(gridGeometry(const QRect &)),
-            this, SLOT(showGrid(const QRect &)));
-    connect(m_pixelWidget, SIGNAL(zoomStepUp()),
-            this, SLOT(zoomChangedDirectly()));
-    connect(m_pixelWidget, SIGNAL(zoomStepUp()),
-            zoomSpinBox, SLOT(stepUp()));
-    connect(m_pixelWidget, SIGNAL(zoomStepDown()),
-            this, SLOT(zoomChangedDirectly()));
-    connect(m_pixelWidget, SIGNAL(zoomStepDown()),
-            zoomSpinBox, SLOT(stepDown()));
-    connect(zoomToFitCheckBox, SIGNAL(stateChanged(int)),
-            this, SLOT(zoomToFitChanged(int)));
+    connect(m_pixelWidget, &PixelWidget::zoomChanged,
+            this, &ImageViewer::zoomChangedIndirectly);
+    connect(zoomSpinBox, &QDoubleSpinBox::valueChanged,
+            this, &ImageViewer::zoomChangedDirectly);
+    connect(zoomSpinBox, &QDoubleSpinBox::valueChanged,
+            m_pixelWidget, qOverload<double>(&PixelWidget::setZoom));
+    connect(m_pixelWidget, &PixelWidget::mousePosition,
+            this, &ImageViewer::showPixel);
+    connect(m_pixelWidget, &PixelWidget::gridGeometry,
+            this, &ImageViewer::showGrid);
+    connect(m_pixelWidget, &PixelWidget::zoomStepUp,
+            this, &ImageViewer::zoomChangedDirectly);
+    connect(m_pixelWidget, &PixelWidget::zoomStepUp,
+            zoomSpinBox, &QAbstractSpinBox::stepUp);
+    connect(m_pixelWidget, &PixelWidget::zoomStepDown,
+            this, &ImageViewer::zoomChangedDirectly);
+    connect(m_pixelWidget, &PixelWidget::zoomStepDown,
+            zoomSpinBox, &QAbstractSpinBox::stepDown);
+    connect(zoomToFitCheckBox, &QCheckBox::stateChanged,
+            this, &ImageViewer::zoomToFitChanged);
 
     const auto zoomToFit = QSettings().value("imageViewerZoomToFit");
     if (!zoomToFit.isNull()) {

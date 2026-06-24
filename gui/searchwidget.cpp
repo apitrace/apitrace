@@ -12,14 +12,14 @@ SearchWidget::SearchWidget(QWidget *parent)
     m_ui.notFoundLabel->hide();
     m_origPalette = m_ui.lineEdit->palette();
 
-    connect(m_ui.nextButton, SIGNAL(clicked()),
-            SLOT(slotSearchNext()));
-    connect(m_ui.prevButton, SIGNAL(clicked()),
-            SLOT(slotSearchPrev()));
-    connect(m_ui.closeButton, SIGNAL(clicked()),
-            SLOT(slotCancel()));
-    connect(m_ui.lineEdit, SIGNAL(returnPressed()),
-            SLOT(slotSearchNext()));
+    connect(m_ui.nextButton, &QAbstractButton::clicked,
+            this, &SearchWidget::slotSearchNext);
+    connect(m_ui.prevButton, &QAbstractButton::clicked,
+            this, &SearchWidget::slotSearchPrev);
+    connect(m_ui.closeButton, &QAbstractButton::clicked,
+            this, &SearchWidget::slotCancel);
+    connect(m_ui.lineEdit, &QLineEdit::returnPressed,
+            this, &SearchWidget::slotSearchNext);
 
     m_ui.nextButton->setShortcut(
         QKeySequence::FindNext);

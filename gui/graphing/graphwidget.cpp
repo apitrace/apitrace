@@ -245,57 +245,57 @@ void GraphWidget::updateScrollbars()
 void GraphWidget::updateConnections()
 {
     if (m_view) {
-        connect(m_view, SIGNAL(selectionChanged()), this, SLOT(updateSelection()), Qt::UniqueConnection);
+        connect(m_view, &GraphView::selectionChanged, this, qOverload<>(&GraphWidget::updateSelection), Qt::UniqueConnection);
 
-        connect(m_view, SIGNAL(horizontalViewChanged(qint64,qint64)), this, SLOT(horizontalViewChange(qint64,qint64)), Qt::UniqueConnection);
-        connect(m_view, SIGNAL(horizontalRangeChanged(qint64,qint64)), this, SLOT(horizontalRangeChange(qint64,qint64)), Qt::UniqueConnection);
+        connect(m_view, &GraphView::horizontalViewChanged, this, &GraphWidget::horizontalViewChange, Qt::UniqueConnection);
+        connect(m_view, &GraphView::horizontalRangeChanged, this, &GraphWidget::horizontalRangeChange, Qt::UniqueConnection);
 
-        connect(m_view, SIGNAL(verticalViewChanged(qint64,qint64)), this, SLOT(verticalViewChange(qint64,qint64)), Qt::UniqueConnection);
-        connect(m_view, SIGNAL(verticalRangeChanged(qint64,qint64)), this, SLOT(verticalRangeChange(qint64,qint64)), Qt::UniqueConnection);
+        connect(m_view, &GraphView::verticalViewChanged, this, &GraphWidget::verticalViewChange, Qt::UniqueConnection);
+        connect(m_view, &GraphView::verticalRangeChanged, this, &GraphWidget::verticalRangeChange, Qt::UniqueConnection);
     }
 
     if (m_axisTop) {
         if (m_view) {
-            connect(m_view, SIGNAL(horizontalViewChanged(qint64,qint64)), m_axisTop, SLOT(setView(qint64,qint64)), Qt::UniqueConnection);
-            connect(m_view, SIGNAL(horizontalRangeChanged(qint64,qint64)), m_axisTop, SLOT(setRange(qint64,qint64)), Qt::UniqueConnection);
+            connect(m_view, &GraphView::horizontalViewChanged, m_axisTop, &GraphAxisWidget::setView, Qt::UniqueConnection);
+            connect(m_view, &GraphView::horizontalRangeChanged, m_axisTop, &GraphAxisWidget::setRange, Qt::UniqueConnection);
         }
 
-        connect(m_axisTop, SIGNAL(selectionChanged()), this, SLOT(updateSelection()), Qt::UniqueConnection);
+        connect(m_axisTop, &GraphAxisWidget::selectionChanged, this, qOverload<>(&GraphWidget::updateSelection), Qt::UniqueConnection);
     }
 
     if (m_axisLeft) {
         if (m_view) {
-            connect(m_view, SIGNAL(verticalViewChanged(qint64,qint64)), m_axisLeft, SLOT(setView(qint64,qint64)), Qt::UniqueConnection);
-            connect(m_view, SIGNAL(verticalRangeChanged(qint64,qint64)), m_axisLeft, SLOT(setRange(qint64,qint64)), Qt::UniqueConnection);
+            connect(m_view, &GraphView::verticalViewChanged, m_axisLeft, &GraphAxisWidget::setView, Qt::UniqueConnection);
+            connect(m_view, &GraphView::verticalRangeChanged, m_axisLeft, &GraphAxisWidget::setRange, Qt::UniqueConnection);
         }
 
-        connect(m_axisLeft, SIGNAL(selectionChanged()), this, SLOT(updateSelection()), Qt::UniqueConnection);
+        connect(m_axisLeft, &GraphAxisWidget::selectionChanged, this, qOverload<>(&GraphWidget::updateSelection), Qt::UniqueConnection);
     }
 
     if (m_axisRight) {
         if (m_view) {
-            connect(m_view, SIGNAL(verticalViewChanged(qint64,qint64)), m_axisRight, SLOT(setView(qint64,qint64)), Qt::UniqueConnection);
-            connect(m_view, SIGNAL(verticalRangeChanged(qint64,qint64)), m_axisRight, SLOT(setRange(qint64,qint64)), Qt::UniqueConnection);
+            connect(m_view, &GraphView::verticalViewChanged, m_axisRight, &GraphAxisWidget::setView, Qt::UniqueConnection);
+            connect(m_view, &GraphView::verticalRangeChanged, m_axisRight, &GraphAxisWidget::setRange, Qt::UniqueConnection);
         }
 
-        connect(m_axisRight, SIGNAL(selectionChanged()), this, SLOT(updateSelection()), Qt::UniqueConnection);
+        connect(m_axisRight, &GraphAxisWidget::selectionChanged, this, qOverload<>(&GraphWidget::updateSelection), Qt::UniqueConnection);
     }
 
     if (m_axisBottom) {
         if (m_view) {
-            connect(m_view, SIGNAL(horizontalViewChanged(qint64,qint64)), m_axisBottom, SLOT(setView(qint64,qint64)), Qt::UniqueConnection);
-            connect(m_view, SIGNAL(horizontalRangeChanged(qint64,qint64)), m_axisBottom, SLOT(setRange(qint64,qint64)), Qt::UniqueConnection);
+            connect(m_view, &GraphView::horizontalViewChanged, m_axisBottom, &GraphAxisWidget::setView, Qt::UniqueConnection);
+            connect(m_view, &GraphView::horizontalRangeChanged, m_axisBottom, &GraphAxisWidget::setRange, Qt::UniqueConnection);
         }
 
-        connect(m_axisBottom, SIGNAL(selectionChanged()), this, SLOT(updateSelection()), Qt::UniqueConnection);
+        connect(m_axisBottom, &GraphAxisWidget::selectionChanged, this, qOverload<>(&GraphWidget::updateSelection), Qt::UniqueConnection);
     }
 
     if (m_horizontalScrollbar) {
-        connect(m_horizontalScrollbar, SIGNAL(actionTriggered(int)), this, SLOT(horizontalScrollAction(int)));
+        connect(m_horizontalScrollbar, &QAbstractSlider::actionTriggered, this, &GraphWidget::horizontalScrollAction);
     }
 
     if (m_verticalScrollbar) {
-        connect(m_verticalScrollbar, SIGNAL(actionTriggered(int)), this, SLOT(verticalScrollAction(int)));
+        connect(m_verticalScrollbar, &QAbstractSlider::actionTriggered, this, &GraphWidget::verticalScrollAction);
     }
 }
 
