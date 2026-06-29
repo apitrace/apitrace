@@ -549,6 +549,7 @@ Codegen::get_call_construction(trace::Call &call)
 void
 Codegen::emit_constructed_call(trace::Call &call)
 {
+    thread_id = call.thread_id;
     assert(!inside_sequence);
     main_cpp << "    {nullptr, " << get_call_construction(call) << ", " << call.no << ", " << call.thread_id << ", 0},\n";
 }

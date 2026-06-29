@@ -100,6 +100,15 @@ GLCodegen::emit_gl_call(trace::Call &call) {
     if ((call.flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) && !is_active_uniform_block_name)
         return;
 
+    bool new_wsi_sequence =
+        !strncmp("glX", call.name(), 3) || !strncmp("wgl", call.name(), 3) || !strncmp("egl", call.name(), 3);
+    if (new_wsi_sequence) {
+        end_sequence();
+        emit_constructed_call(call);
+    } else {
+        begin_sequence(call.thread_id);
+    }
+
     const retrace::FunctionType *func_type = nullptr;
     if (function_types.find(call.name()) != function_types.end())
         func_type = &function_types.at(call.name());
@@ -160,15 +169,8 @@ GLCodegen::emit_gl_call(trace::Call &call) {
         }
     }
 
-    bool new_wsi_sequence =
-        !strncmp("glX", call.name(), 3) || !strncmp("wgl", call.name(), 3) || !strncmp("egl", call.name(), 3);
-    if (new_wsi_sequence) {
-        end_sequence();
-        emit_constructed_call(call);
+    if (new_wsi_sequence)
         return;
-    }
-
-    begin_sequence(call.thread_id);
 
     if (is_active_uniform_block_name) {
         emit_set_handle(call, (const retrace::HandleType *)func_type->parameter_types[1].type, call.arg(1).toSInt());
