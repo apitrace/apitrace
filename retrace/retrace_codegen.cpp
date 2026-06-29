@@ -41,9 +41,8 @@
 namespace retrace {
 
 Codegen::Codegen(const std::string &output_dir, const std::string &project_name,
-                 const std::string &trace_name,
                  const std::unordered_map<std::string, retrace::FunctionType> &function_types)
-    : output_dir(output_dir), project_name(project_name), trace_name(trace_name), function_types(function_types) {
+    : output_dir(output_dir), project_name(project_name), function_types(function_types) {
 }
 
 void

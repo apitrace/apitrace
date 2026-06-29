@@ -46,7 +46,6 @@ struct HandleRange {
 class Codegen {
 public:
     Codegen(const std::string &output_dir, const std::string &project_name,
-            const std::string &trace_name,
             const std::unordered_map<std::string, retrace::FunctionType> &function_types);
     virtual ~Codegen() {}
 
@@ -77,7 +76,6 @@ public:
 
     std::filesystem::path output_dir;
     std::string project_name;
-    std::string trace_name;
 
     const std::unordered_map<std::string, retrace::FunctionType> &function_types;
 
