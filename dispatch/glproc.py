@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-"""Generated an header, glproc.hpp, which does pretty much what GLEW does, but
+"""Generated an header, glproc.h, which does pretty much what GLEW does, but
 covers all the functions we support.
 """ 
 
@@ -592,7 +592,9 @@ if __name__ == '__main__':
     print()
     print('#pragma once')
     print()
-    print('#include "glimports.hpp"')
+    print('#include <stdbool.h>')
+    print()
+    print('#include "glimports.h"')
     print()
     print('#if defined(_WIN32)')
     print('extern HMODULE _libGlHandle;')
@@ -600,8 +602,11 @@ if __name__ == '__main__':
     print('extern void * _libGlHandle;')
     print('#endif')
     print()
+    print('#ifdef __cplusplus')
     print('void * _getPublicProcAddress(const char *procName);')
     print('void * _getPrivateProcAddress(const char *procName);')
+    print('extern "C" {')
+    print('#endif')
     print()
     dispatcher = GlDispatcher()
     print()
@@ -623,10 +628,14 @@ if __name__ == '__main__':
     print()
     dispatcher.dispatchModuleDecl(glapi)
     print()
+    print('#ifdef __cplusplus')
+    print('}')
+    print('#endif')
+    print()
 
     sys.stdout = open(impl, 'wt')
     print()
-    print('#include "glproc.hpp"')
+    print('#include "glproc.h"')
     print('#include "os.hpp"')
     print()
     dispatcher = GlDispatcher()

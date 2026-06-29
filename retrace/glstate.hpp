@@ -28,7 +28,7 @@
 
 #include <ostream>
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 
 #ifndef ARRAYSIZE

@@ -232,6 +232,6 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 #endif
 
 
-#include "eglimports.hpp"
+#include "eglimports.h"
 
 
