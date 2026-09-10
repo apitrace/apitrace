@@ -499,7 +499,7 @@ main(int argc, char *argv[])
                 szDll = optarg;
                 break;
             case 'm':
-                szDllName = "injectee_mhook.dll";
+                szDllName = "injectee_detours.dll";
                 break;
             case 'p':
                 dwProcessId = strtoul(optarg, NULL, 0);

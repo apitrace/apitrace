@@ -354,7 +354,7 @@ usage(void)
         "    -d,  --debug        run inside debugger (gdb/lldb)\n"
 #endif
 #ifdef _WIN32
-        "    -m,  --mhook        use Mhook (instead of IAT patching)\n"
+        "    -m,  --mhook        use Detours (instead of IAT patching)\n"
 #endif
     ;
 }

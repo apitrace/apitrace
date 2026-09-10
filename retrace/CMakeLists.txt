@@ -11,7 +11,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
     ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
-    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
+    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
 )
 
 add_definitions (-DRETRACE)
@@ -66,7 +66,7 @@ endif ()
 if (WIN32)
     target_link_libraries (retrace_common dxerr winmm psapi)
     if (HAVE_X86)
-        target_link_libraries (retrace_common mhook)
+        target_link_libraries (retrace_common detours)
     endif ()
 endif ()
 add_dependencies (retrace_common version)

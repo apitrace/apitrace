@@ -131,7 +131,23 @@ setProcessCommandLine(const char* processCommandLine)
 #elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64))
 
 #include <windows.h>
-#include "mhook.h"
+#include "detours.h"
+
+static bool
+DetourSetHook(PVOID *ppPointer, PVOID pDetour)
+{
+    LONG error = DetourTransactionBegin();
+    if (error == NO_ERROR) {
+        DetourUpdateThread(GetCurrentThread());
+        error = DetourAttach(ppPointer, pDetour);
+        if (error == NO_ERROR) {
+            error = DetourTransactionCommit();
+        } else {
+            DetourTransactionAbort();
+        }
+    }
+    return error == NO_ERROR;
+}
 
 typedef DWORD (WINAPI *PFNGETMODULEFILENAMEA)(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
 static PFNGETMODULEFILENAMEA pfnGetModuleFileNameA = &GetModuleFileNameA;
@@ -237,7 +253,7 @@ setProcessName(const char *processName)
         if (lpOrigAddress) {
             LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameA;
             LPVOID lpRealAddress = lpOrigAddress;
-            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+            if (!DetourSetHook(&lpRealAddress, lpHookAddress)) {
                 std::cerr << "error: failed to GetModuleFileNameA\n";
             }
             pfnGetModuleFileNameA = (PFNGETMODULEFILENAMEA)lpRealAddress;
@@ -247,7 +263,7 @@ setProcessName(const char *processName)
         if (lpOrigAddress) {
             LPVOID lpHookAddress = (LPVOID)&MyGetModuleFileNameW;
             LPVOID lpRealAddress = lpOrigAddress;
-            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+            if (!DetourSetHook(&lpRealAddress, lpHookAddress)) {
                 std::cerr << "error: failed to GetModuleFileNameW\n";
             }
             pfnGetModuleFileNameW = (PFNGETMODULEFILENAMEW)lpRealAddress;
@@ -286,7 +302,7 @@ setProcessCommandLine(const char* processCommandLine)
         LPVOID lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetCommandLineA");
         if (lpOrigAddress) {
             LPVOID lpHookAddress = (LPVOID)&MyGetCommandLineA;
-            if (!Mhook_SetHook(&lpOrigAddress, lpHookAddress)) {
+            if (!DetourSetHook(&lpOrigAddress, lpHookAddress)) {
                 std::cerr << "error: failed to hook GetCommandLineA\n";
             }
         }
@@ -294,7 +310,7 @@ setProcessCommandLine(const char* processCommandLine)
         lpOrigAddress = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32"), "GetCommandLineW");
         if (lpOrigAddress) {
             LPVOID lpHookAddress = (LPVOID)&MyGetCommandLineW;
-            if (!Mhook_SetHook(&lpOrigAddress, lpHookAddress)) {
+            if (!DetourSetHook(&lpOrigAddress, lpHookAddress)) {
                 std::cerr << "error: failed to hook GetCommandLineW\n";
             }
         }

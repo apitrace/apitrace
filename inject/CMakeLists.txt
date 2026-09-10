@@ -2,7 +2,7 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include_directories (
     ${CMAKE_SOURCE_DIR}/thirdparty/devcon
-    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
+    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
 )
 
 add_library (injectee_iat MODULE
@@ -27,27 +27,27 @@ install (TARGETS injectee_iat LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
 install_pdb (injectee_iat TYPE BIN)
 
 if (HAVE_X86)
-    add_library (injectee_mhook MODULE
-        injectee_mhook.cpp
+    add_library (injectee_detours MODULE
+        injectee_detours.cpp
     )
-    set_target_properties (injectee_mhook PROPERTIES
+    set_target_properties (injectee_detours PROPERTIES
         PREFIX ""
     )
     if (MSVC)
-        set_target_properties (injectee_mhook PROPERTIES LINK_FLAGS "/ENTRY:DllMainStartup")
+        set_target_properties (injectee_detours PROPERTIES LINK_FLAGS "/ENTRY:DllMainStartup")
     else ()
         if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-            set_target_properties (injectee_mhook PROPERTIES LINK_FLAGS "-Wl,--entry=_DllMainStartup@12")
+            set_target_properties (injectee_detours PROPERTIES LINK_FLAGS "-Wl,--entry=_DllMainStartup@12")
         else ()
-            set_target_properties (injectee_mhook PROPERTIES LINK_FLAGS "-Wl,--entry=DllMainStartup")
+            set_target_properties (injectee_detours PROPERTIES LINK_FLAGS "-Wl,--entry=DllMainStartup")
         endif ()
     endif ()
-    target_link_libraries (injectee_mhook
+    target_link_libraries (injectee_detours
         advapi32
-        mhook
+        detours
     )
-    install (TARGETS injectee_mhook LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install_pdb (injectee_mhook TYPE BIN)
+    install (TARGETS injectee_detours LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install_pdb (injectee_detours TYPE BIN)
 endif ()
 
 add_executable (injector

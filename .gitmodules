@@ -34,3 +34,7 @@
 	path = thirdparty/zstd
 	url = https://github.com/facebook/zstd.git
 	shallow = true
+[submodule "thirdparty/detours"]
+	path = thirdparty/detours
+	url = https://github.com/microsoft/detours
+	shallow = true

@@ -9,7 +9,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/lib/image
     ${CMAKE_SOURCE_DIR}/lib/ubjson
     ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
-    ${CMAKE_SOURCE_DIR}/thirdparty/mhook/mhook-lib
+    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
 )
 
 add_executable(gltrim

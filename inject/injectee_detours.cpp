@@ -54,9 +54,42 @@
 #include <delayimp.h>
 
 #include "inject.h"
-#include "mhook.h"
+#include "detours.h"
 
 #include "os_symbols.hpp"
+
+
+static bool
+DetourSetHook(PVOID *ppPointer, PVOID pDetour)
+{
+    LONG error = DetourTransactionBegin();
+    if (error == NO_ERROR) {
+        DetourUpdateThread(GetCurrentThread());
+        error = DetourAttach(ppPointer, pDetour);
+        if (error == NO_ERROR) {
+            error = DetourTransactionCommit();
+        } else {
+            DetourTransactionAbort();
+        }
+    }
+    return error == NO_ERROR;
+}
+
+static bool
+DetourRemoveHook(PVOID *ppPointer, PVOID pDetour)
+{
+    LONG error = DetourTransactionBegin();
+    if (error == NO_ERROR) {
+        DetourUpdateThread(GetCurrentThread());
+        error = DetourDetach(ppPointer, pDetour);
+        if (error == NO_ERROR) {
+            error = DetourTransactionCommit();
+        } else {
+            DetourTransactionAbort();
+        }
+    }
+    return error == NO_ERROR;
+}
 
 
 static int VERBOSITY = 0;
@@ -422,7 +455,7 @@ patchModule(HMODULE hModule,
             LPVOID lpHookAddress = (LPVOID)RealGetProcAddress(g_hHookModule, szFunctionName);
             assert(lpHookAddress);
 
-            // With mhook we intercept the inner gl* calls, so no need to trace the
+            // With Detours we intercept the inner gl* calls, so no need to trace the
             // outer wglUseFont* calls.
             if (strncmp(szFunctionName, "wglUseFont", strlen("wglUseFont")) == 0) {
                 debugPrintf("inject: not hooking %s!%s\n", szBaseName, szFunctionName);
@@ -434,7 +467,7 @@ patchModule(HMODULE hModule,
             }
 
             LPVOID lpRealAddress = lpOrigAddress;
-            if (!Mhook_SetHook(&lpRealAddress, lpHookAddress)) {
+            if (!DetourSetHook(&lpRealAddress, lpHookAddress)) {
                 debugPrintf("inject: error: failed to hook %s!%s\n", szModule, szFunctionName);
             }
 
@@ -700,7 +733,7 @@ setHooks(void)
         Real##_name = reinterpret_cast<decltype(Real##_name)>(RealGetProcAddress(hKernel32, #_name)); \
         assert(Real##_name); \
         assert(Real##_name != My##_name); \
-        if (!Mhook_SetHook((PVOID*)&Real##_name, (PVOID)My##_name)) { \
+        if (!DetourSetHook((PVOID*)&Real##_name, (PVOID)My##_name)) { \
             debugPrintf("inject: error: failed to hook " #_name "\n"); \
         }
 
@@ -806,7 +839,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             FreeLibrary(g_hHookModule);
         }
 
-        Mhook_Unhook((PVOID*)&RealGetProcAddress);
+        DetourRemoveHook((PVOID*)&RealGetProcAddress, (PVOID)MyGetProcAddress);
 
         break;
     }
