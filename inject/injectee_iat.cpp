@@ -386,7 +386,9 @@ getOptionalHeader(HMODULE hModule,
      * LOAD_LIBRARY_AS_DATAFILE.
      */
     const WORD Machine =
-#ifdef _WIN64
+#if defined(_M_ARM64) || defined(__aarch64__)
+        IMAGE_FILE_MACHINE_ARM64
+#elif defined(_WIN64)
         IMAGE_FILE_MACHINE_AMD64
 #else
         IMAGE_FILE_MACHINE_I386
