@@ -26,7 +26,7 @@ endif ()
 install (TARGETS injectee_iat LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR})
 install_pdb (injectee_iat TYPE BIN)
 
-if (HAVE_X86)
+if (HAVE_DETOURS)
     add_library (injectee_detours MODULE
         injectee_detours.cpp
     )

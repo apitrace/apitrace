@@ -128,7 +128,7 @@ setProcessCommandLine(const char* processCommandLine)
 {
 }
 
-#elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64))
+#elif defined(_WIN32) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64) || defined(__aarch64__) || defined(_M_ARM64))
 
 #include <windows.h>
 #include "detours.h"

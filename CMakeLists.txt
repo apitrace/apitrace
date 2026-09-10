@@ -148,6 +148,15 @@ endif ()
 # Check whether we're targeting Intel X86 architecture
 check_cxx_source_compiles ("#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)\nint main() { return 0; }\n#else\n#error\n#endif" HAVE_X86)
 
+# Check whether we're targeting the Arm64 architecture
+check_cxx_source_compiles ("#if defined(__aarch64__) || defined(_M_ARM64)\nint main() { return 0; }\n#else\n#error\n#endif" HAVE_ARM64)
+
+# Microsoft Detours supports both x86/x64 and Arm64
+set (HAVE_DETOURS FALSE)
+if (WIN32 AND (HAVE_X86 OR HAVE_ARM64))
+    set (HAVE_DETOURS TRUE)
+endif ()
+
 # CMake fails to detect we're crosscompiling when using MSVC Arm cross compilation toolchain
 if (MSVC AND NOT HAVE_X86)
     set (CMAKE_CROSSCOMPILING TRUE)
