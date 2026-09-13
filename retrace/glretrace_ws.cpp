@@ -234,6 +234,14 @@ updateDrawable(int width, int height) {
         return;
     }
 
+    if (width < 0 && height < 0) {
+        width = currentContext->width;
+        height = currentContext->height;
+    } else if (width > 0 && height > 0) {
+        currentContext->width = width;
+        currentContext->height = height;
+    }
+
     if (currentDrawable->pbuffer) {
         return;
     }

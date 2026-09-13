@@ -80,6 +80,8 @@ public:
     bool insideBeginEnd = false;
     bool insideList = false;
     bool needsFlush = false;
+    int width;
+    int height;
 
     bool used = false;
 
