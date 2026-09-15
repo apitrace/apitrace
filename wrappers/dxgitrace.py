@@ -170,7 +170,8 @@ class D3DCommonTracer(DllTracer):
                 print('    std::unique_lock<std::mutex> _ordering_lock{ g_D3D12FenceOrderingMutex };')
 
             if method.name == 'GetCPUDescriptorHandleForHeapStart':
-                print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
+                # ptr is only SIZE_T wide, hence the cast on 32-bit.
+                print('    D3D12_CPU_DESCRIPTOR_HANDLE _fake_result = D3D12_CPU_DESCRIPTOR_HANDLE { static_cast<SIZE_T>(m_DescriptorSlab) };')
 
             if method.name == 'GetGPUDescriptorHandleForHeapStart':
                 print('    D3D12_GPU_DESCRIPTOR_HANDLE _fake_result = D3D12_GPU_DESCRIPTOR_HANDLE { m_DescriptorSlab };')
