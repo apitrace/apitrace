@@ -93,6 +93,17 @@ private:
 
 constexpr UINT _DescriptorIncrementSize = 64;
 
+/*
+ * A fake descriptor handle packs the slab index above the offset within the
+ * heap.  Unlike a GPU virtual address, D3D12_CPU_DESCRIPTOR_HANDLE::ptr is
+ * only SIZE_T wide, so on 32-bit the split has to be narrower than the 32/32
+ * used for addresses.  8 bits still allow far more descriptor heaps than
+ * applications create, and 24 bits of offset cover 2^24/64 descriptors in
+ * each of them.
+ */
+constexpr unsigned _DescriptorSlabShift = sizeof(SIZE_T) > 4 ? 32 : 24;
+constexpr UINT64 _DescriptorSlabOffsetMask = (UINT64(1) << _DescriptorSlabShift) - 1;
+
 struct _D3D12_DESCRIPTOR_INFO
 {
     D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle;
@@ -136,7 +147,7 @@ public:
             return D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
 
         _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
-        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
+        UINT offset = static_cast<UINT>(Handle.ptr & _DescriptorSlabOffsetMask);
         offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
         assert(info.CPUHandle.ptr);
         return D3D12_CPU_DESCRIPTOR_HANDLE { info.CPUHandle.ptr + offset };
@@ -148,13 +159,13 @@ public:
             return D3D12_GPU_DESCRIPTOR_HANDLE{ 0 };
 
         _D3D12_DESCRIPTOR_INFO info = m_slabs[GetIdx(Handle.ptr)];
-        UINT offset = static_cast<UINT>(Handle.ptr & 0xFFFFFFFFull);
+        UINT offset = static_cast<UINT>(Handle.ptr & _DescriptorSlabOffsetMask);
         offset = (offset / _DescriptorIncrementSize) * info.IncrementSize;
         assert(info.GPUHandle.ptr);
         return D3D12_GPU_DESCRIPTOR_HANDLE{ info.GPUHandle.ptr + offset };
     }
 
-    inline size_t GetIdx(UINT64 value) { return (value >> 32ull) - 1ull; }
+    inline size_t GetIdx(UINT64 value) { return (value >> _DescriptorSlabShift) - 1ull; }
 
 private:
     std::array<_D3D12_DESCRIPTOR_INFO, SlabCount> m_slabs;
@@ -173,7 +184,7 @@ public:
         const _D3D12_DESCRIPTOR_INFO info = { CPUHandle, GPUHandle, IncrementSize };
 
         const uint32_t idx = ++m_count;
-        const UINT64 ptr = static_cast<UINT64>(idx) << 32ull;
+        const UINT64 ptr = static_cast<UINT64>(idx) << _DescriptorSlabShift;
 
         m_resolver.RegisterSlab(ptr, info);
         return ptr;

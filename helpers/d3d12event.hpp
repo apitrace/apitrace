@@ -30,6 +30,7 @@
 #include <set>
 #include <mutex>
 #include "detours.h"
+#include "os.hpp"
 
 namespace trace
 {
@@ -94,6 +95,18 @@ namespace D3D12EventHooks
 
 static void _setup_event_hooking()
 {
+#ifndef _WIN64
+    /*
+     * The 32-bit ntdll Zw* stubs dispatch through a WOW64 thunk whose
+     * instructions Detours cannot relocate, and attaching to them crashes the
+     * traced process.  Carry on without the hook: fence waits then go
+     * unrecorded, which costs retrace the waits but is no worse than the rest
+     * of D3D12 not being traced at all.
+     */
+    os::log("apitrace: warning: not tracing D3D12 fence waits on 32-bit\n");
+    return;
+#endif
+
     LONG error = DetourTransactionBegin();
     if (error != NO_ERROR) {
         return;
