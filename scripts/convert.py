@@ -111,6 +111,8 @@ def detectApiFromCsv(inCsv):
             return "d3d10"
         if event.startswith("D3D11CreateDevice"):
             return "d3d11"
+        if event.startswith("D3D12CreateDevice"):
+            return "d3d12"
     assert False
 
 
