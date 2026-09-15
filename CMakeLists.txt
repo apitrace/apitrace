@@ -486,14 +486,18 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 if (BUILD_TESTING)
     enable_testing ()
 endif ()
+# Note that CMAKE_BUILD_TYPE cannot be used to tell the two apart: recent CMake
+# gives it a default value even for multiple configuration generators, which
+# would leave ctest without the `-C` it needs to find the test commands.
+get_property (GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
     add_custom_target (check)
-elseif (DEFINED CMAKE_BUILD_TYPE)
-    # Single configuration
-    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure USES_TERMINAL)
-else ()
+elseif (GENERATOR_IS_MULTI_CONFIG)
     # Multiple configuration
     add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} -C "$<CONFIG>" --output-on-failure USES_TERMINAL)
+else ()
+    # Single configuration
+    add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure USES_TERMINAL)
 endif ()
 
 
