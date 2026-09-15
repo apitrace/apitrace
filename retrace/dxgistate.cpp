@@ -36,6 +36,8 @@
 #include "d3d10state.hpp"
 #include "d3d11state.hpp"
 #include "d3d11imports.hpp"
+#include "d3d12imports.hpp"
+#include "d3dstate.hpp"
 
 #include "DirectXTex.h"
 
@@ -361,6 +363,17 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
      * the appropriate D3D10/D3D11 interfaces, and use them instead.
      */
 
+    /*
+     * Probe for D3D12 first: GetDevice on a D3D11.1 or later runtime succeeds
+     * regardless of the interface asked for, so the D3D11 paths below would
+     * otherwise claim a D3D12 swapchain and then fail to read it.
+     */
+    com_ptr<ID3D12Device> pD3D12Device;
+    hr = pSwapChain->GetDevice(IID_ID3D12Device, (void **)&pD3D12Device);
+    if (SUCCEEDED(hr)) {
+        return getRenderTargetImage(pSwapChain, pD3D12Device);
+    }
+
     com_ptr<ID3D11Device1> pD3D11Device1;
     hr = pSwapChain->GetDevice(IID_ID3D11Device1, (void **)&pD3D11Device1);
     if (SUCCEEDED(hr)) {
@@ -448,6 +461,14 @@ dumpDevice(StateWriter &writer, IDXGISwapChain *pSwapChain)
     HRESULT hr;
 
     if (pSwapChain) {
+        // As in getRenderTargetImage above, D3D12 must be probed first.
+        com_ptr<ID3D12Device> pD3D12Device;
+        hr = pSwapChain->GetDevice(IID_ID3D12Device, (void **)&pD3D12Device);
+        if (SUCCEEDED(hr)) {
+            dumpDevice(writer, pSwapChain, pD3D12Device);
+            return;
+        }
+
         com_ptr<ID3D10Device> pD3D10Device;
         hr = pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pD3D10Device);
         if (SUCCEEDED(hr)) {

@@ -294,6 +294,7 @@ if (WIN32)
             d3d10state_images.cpp
             d3d11state.cpp
             d3d11state_images.cpp
+            d3d12state_images.cpp
             d3dretrace_dxgi.cpp
             d3dretrace_dxgi_misc.cpp
         )

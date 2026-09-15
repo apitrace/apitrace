@@ -44,6 +44,8 @@ struct ID3D10Device;
 struct ID3D10Resource;
 struct ID3D11DeviceContext;
 struct ID3D11Resource;
+struct ID3D12Device;
+struct ID3D12CommandQueue;
 
 
 class StateWriter;
@@ -158,6 +160,26 @@ dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
 
 void
 dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
+
+
+/*
+ * D3D12
+ */
+
+image::Image *
+getRenderTargetImage(IDXGISwapChain *pSwapChain, ID3D12Device *pDevice);
+
+void
+dumpDevice(StateWriter &writer, IDXGISwapChain *pSwapChain, ID3D12Device *pDevice);
+
+void
+bindCommandQueue(ID3D12CommandQueue *pCommandQueue);
+
+void
+unbindCommandQueue(ID3D12CommandQueue *pCommandQueue);
+
+void
+notifyPresent(IDXGISwapChain *pSwapChain);
 
 
 #endif /* HAVE_DXGI */

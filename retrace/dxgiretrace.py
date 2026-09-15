@@ -309,7 +309,15 @@ class D3DRetracer(Retracer):
                 print(r'    }')
             else:
                 print(r'    d3d11Dumper.bindDevice(_this);')
-        # TODO(Josh): d3d12 command queue???
+        # Keep track of the last command queue, so that reading back the
+        # swapchain can be ordered against the work that drew it.
+        if interface.name.startswith('ID3D12CommandQueue'):
+            if method.name == 'Release':
+                print(r'    if (call.ret->toUInt() == 0) {')
+                print(r'        d3dstate::unbindCommandQueue(_this);')
+                print(r'    }')
+            else:
+                print(r'    d3dstate::bindCommandQueue(_this);')
 
         # intercept private interfaces
         if method.name == 'QueryInterface':
@@ -365,11 +373,15 @@ class D3DRetracer(Retracer):
                 print(r'    ComPtr<IDXGISwapChain> pSwapChain;')
                 print(r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, &pSwapChain))) {')
                 print(r'        dxgiDumper.bindDevice(pSwapChain.Get());')
+                # Note which back buffer is being presented, while it still is.
+                print(r'        d3dstate::notifyPresent(pSwapChain.Get());')
                 print(r'    } else {')
                 print(r'        assert(0);')
                 print(r'    }')
             else:
                 print(r'    dxgiDumper.bindDevice(_this);')
+                # Note which back buffer is being presented, while it still is.
+                print(r'    d3dstate::notifyPresent(_this);')
             print(r'    if ((Flags & DXGI_PRESENT_TEST) == 0) {')
             print(r'        retrace::frameComplete(call);')
             print(r'    }')
