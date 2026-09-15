@@ -50,6 +50,8 @@ def lookupHandle(handle, value, lval=False):
         else:
             return "_%s_map[%s][%s]" % (handle.name, key_name, value)
 
+def getPolymorphStructOffset(enumType, type):
+    return 'align(sizeof(%s), alignof(%s))' % (enumType, type)
 
 class ValueAllocator(stdapi.Visitor):
 
@@ -134,6 +136,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print('    if (%s) {' % (tmp,))
 
         length = '%s->values.size()' % (tmp,)
+        lvalue_tmp = lvalue
         if self.insideStruct:
             if isinstance(array.length, int):
                 # Member is an array
@@ -143,16 +146,20 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
                 print(r'    assert( %s->size() == %s );' % (tmp, array.length))
                 length = str(array.length)
             else:
+                lvalue_tmp = '_a_' + array.tag + '_' + str(self.seq)
+                self.seq += 1
                 # Member is a pointer to an array, hence must be allocated
                 print(r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue)
-                print(r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue))
+                print(r'    std::remove_const< %s >::type * %s = _allocator.allocArray< std::remove_const< %s >::type >(&%s);' % (array.type, lvalue_tmp, array.type, rvalue))
 
         index = '_j' + array.tag
         print('        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length))
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
+            self.visit(array.type, '%s[%s]' % (lvalue_tmp, index), '*%s->values[%s]' % (tmp, index))
         finally:
             print('        }')
+            if lvalue_tmp != lvalue:
+                print(r'%s = %s;' % (lvalue, lvalue_tmp))
             print('    }')
 
     def visitAttribArray(self, array, lvalue, rvalue):
@@ -177,16 +184,21 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         tmp = '_a_' + pointer.tag + '_' + str(self.seq)
         self.seq += 1
 
+        lvalue_tmp = lvalue
         if self.insideStruct:
+            lvalue_tmp = '_a_' + pointer.tag + '_' + str(self.seq)
+            self.seq += 1
             # Member is a pointer to an object, hence must be allocated
             print(r'    static_assert( std::is_pointer< std::remove_reference< decltype( %s ) >::type >::value , "lvalue must be a pointer" );' % lvalue)
-            print(r'    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue))
+            print(r'    std::remove_const< %s >::type * %s = _allocator.allocArray<std::remove_const< std::remove_const< %s >::type >::type>(&%s);' % (pointer.type, lvalue_tmp, pointer.type, rvalue))
 
-        print('    if (%s) {' % (lvalue,))
+        print('    if (%s) {' % (lvalue_tmp,))
         print('        const trace::Array *%s = (%s).toArray();' % (tmp, rvalue))
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*%s->values[0]' % (tmp,))
+            self.visit(pointer.type, '%s[0]' % (lvalue_tmp,), '*%s->values[0]' % (tmp,))
         finally:
+            if lvalue_tmp != lvalue:
+                print(r'%s = %s;' % (lvalue, lvalue_tmp))
             print('    }')
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
@@ -245,26 +257,51 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         self.insideStruct -= 1
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
-        if polymorphic.defaultType is None:
+        if polymorphic.defaultType is None or polymorphic.stream:
             switchExpr = self.expand(polymorphic.switchExpr)
+            if polymorphic.stream:
+                print(r'    void* _blob = _allocator.alloc(%s);' % polymorphic.streamSize)
+                print(r'    char* _blob_ptr = reinterpret_cast<char*>(_blob);')
+                print(r'    char* _blob_tmp = reinterpret_cast<char*>(_blob);')
+                print(r'    char* _blob_end = _blob_ptr + %s;' % polymorphic.streamSize)
+                print(r'    size_t _array_index = 0;')
+                print(r'    %s= _blob;' % lvalue)
+                print(r'    while(_blob_ptr < _blob_end) {')
+                print(r'        %s _type = (%s) (%s).toArray()->values[_array_index++]->toUInt();' % (polymorphic.streamEnum, polymorphic.streamEnum, rvalue))
+                switchExpr = '_type'
             print(r'    switch (%s) {' % switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
                     print(r'    %s:' % case)
                 caseLvalue = lvalue
+                caseRvalue = rvalue
                 if type.expr is not None:
                     caseLvalue = 'static_cast<%s>(%s)' % (type, caseLvalue)
                 print(r'        {')
+                if polymorphic.stream:
+                    print(r'        *reinterpret_cast<%s*>(_blob_ptr) = _type;' % polymorphic.streamEnum)
+                    print(r'        _blob_tmp = _blob_ptr + %s;' % getPolymorphStructOffset(polymorphic.streamEnum, type.type))
+                    caseLvalue = '*reinterpret_cast<%s>(_blob_tmp)' % (type)
+                    caseRvalue = '%s->toArray()->values[_array_index]->toArray()->values[0]' % rvalue
                 try:
-                    self.visit(type, caseLvalue, rvalue)
+                    if polymorphic.stream:
+                        self.visit(type.type, caseLvalue, caseRvalue)
+                    else:
+                        self.visit(type, caseLvalue, caseRvalue)
                 finally:
                     print(r'        }')
+                if polymorphic.stream:
+                    print(r'    _blob_ptr += align(%s + sizeof(%s), sizeof(void*));' % (getPolymorphStructOffset(polymorphic.streamEnum, type.type), type.type))
+                    print(r'    _array_index++;')
                 print(r'        break;')
             if polymorphic.defaultType is None:
                 print(r'    default:')
-                print(r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,))
+                if not polymorphic.stream:
+                    print(r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,))
                 print(r'        break;')
             print(r'    }')
+            if polymorphic.stream:
+                print('    }')
         else:
             self.visit(polymorphic.defaultType, lvalue, rvalue)
     
@@ -645,6 +682,15 @@ class Retracer:
         print('#include "retrace.hpp"')
         print('#include "retrace_swizzle.hpp"')
         print()
+
+        print('#ifdef _WIN32')
+        print('#  include <malloc.h> // alloca')
+        print('#  ifndef alloca')
+        print('#    define alloca _alloca')
+        print('#  endif')
+        print('#else')
+        print('#  include <alloca.h> // alloca')
+        print('#endif')
 
         types = api.getAllTypes()
         handles = [type for type in types if isinstance(type, stdapi.Handle)]
