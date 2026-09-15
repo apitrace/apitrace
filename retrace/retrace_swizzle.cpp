@@ -117,7 +117,6 @@ addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned 
 
     if (!address) {
         // Ignore NULL pointer
-        assert(buffer == nullptr);
         return;
     }
 
@@ -198,6 +197,17 @@ void
 delRegionByPointer(void *ptr) {
     for (RegionMap::iterator it = regionMap.begin(); it != regionMap.end(); ++it) {
         if (it->second.buffer == ptr) {
+            regionMap.erase(it);
+            return;
+        }
+    }
+    assert(0);
+}
+
+void
+delRegionByPointerAndSize(void *ptr, size_t size) {
+    for (RegionMap::iterator it = regionMap.begin(); it != regionMap.end(); ++it) {
+        if (it->second.buffer == ptr && it->second.size == size) {
             regionMap.erase(it);
             return;
         }
