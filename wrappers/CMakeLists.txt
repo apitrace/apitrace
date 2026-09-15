@@ -50,6 +50,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/lib/guids
     ${CMAKE_SOURCE_DIR}/thirdparty/crc32c
+    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
 )
 
 if (NOT WIN32 AND NOT APPLE)
@@ -215,6 +216,8 @@ if (WIN32)
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d12.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d12sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/dcomp.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
@@ -234,6 +237,9 @@ if (WIN32)
             d3dhelpers
             trace
         )
+        if (HAVE_DETOURS)
+            target_link_libraries (dxgitrace detours)
+        endif ()
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
         )
@@ -308,6 +314,19 @@ if (WIN32)
             OUTPUT_NAME "d3d11"
         )
         install (TARGETS d3d11stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+
+        add_library (d3d12stub MODULE
+            d3d12.def
+            stub.cpp
+        )
+        target_link_libraries (d3d12stub
+            ${DXGITRACE}
+        )
+        set_target_properties (d3d12stub PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME "d3d12"
+        )
+        install (TARGETS d3d12stub LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll
