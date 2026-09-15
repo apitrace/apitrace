@@ -168,13 +168,13 @@ _getFormatSize(LPDDPIXELFORMAT fmt, size_t& BlockSize, UINT& BlockWidth, UINT& B
             break;
         default:
             os::log("apitrace: warning: %s: unknown FOURCC DDPIXELFORMAT %lu (%c%c%c%c)\n", __FUNCTION__, fmt->dwFourCC,
-                fmt->dwFourCC & 0xFF, (fmt->dwFourCC >> 8) & 0xFF, (fmt->dwFourCC >> 16) & 0xFF, (fmt->dwFourCC >> 24) & 0xFF);
+                char(fmt->dwFourCC & 0xFF), char(fmt->dwFourCC >> 8), char(fmt->dwFourCC >> 16), char(fmt->dwFourCC >> 24));
             BlockSize = 0;
             break;
         }
     }
     else {
-        os::log("apitrace: warning: %s: unknown DDPIXELFORMAT %0xlx\n", __FUNCTION__, fmt->dwFlags);
+        os::log("apitrace: warning: %s: unknown DDPIXELFORMAT 0x%lx\n", __FUNCTION__, fmt->dwFlags);
         BlockSize = 0;
     }
 }
