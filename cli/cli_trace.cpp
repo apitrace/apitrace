@@ -416,7 +416,8 @@ command(int argc, char *argv[])
                        strcmp(optarg, "d3d10") == 0 ||
                        strcmp(optarg, "d3d10_1") == 0 ||
                        strcmp(optarg, "d3d11") == 0 ||
-                       strcmp(optarg, "d3d11_1") == 0) {
+                       strcmp(optarg, "d3d11_1") == 0 ||
+                       strcmp(optarg, "d3d12") == 0) {
                 api = trace::API_DXGI;
             } else if (strcmp(optarg, "d2d") == 0 ||
                        strcmp(optarg, "d2d1") == 0) {
