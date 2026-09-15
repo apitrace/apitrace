@@ -307,6 +307,7 @@ else ()
     add_compiler_flags (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_compiler_flags (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+    add_compiler_flags (-Wno-address) # the address of ‘struct::member’ will never be NULL
 
     # Disable strict aliasing assumptions.  We generate a lot of C++ code, and
     # it's not always easy to guarantee or spot when strict aliasing

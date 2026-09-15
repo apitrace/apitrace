@@ -20,6 +20,7 @@ if (NOT MSVC)
     target_compile_options (detours PRIVATE
         -Wno-unused-parameter
         -Wno-unused-variable
+        -Wno-unknown-pragmas
     )
 endif ()
 
