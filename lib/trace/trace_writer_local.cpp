@@ -327,5 +327,133 @@ void fakeMemcpy(const void *ptr, size_t size) {
 }
 
 
+void fakeMalloc(const void *ptr, size_t size) {
+    assert(ptr);
+    if (!size) {
+        return;
+    }
+
+    unsigned _call = localWriter.beginEnter(&malloc_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(size);
+    localWriter.endArg();
+    localWriter.endEnter();
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writePointer((uintptr_t)ptr);
+    localWriter.endReturn();
+    localWriter.endLeave();
+}
+
+#ifdef _WIN32
+
+static const char *WaitForSingleObject_args[3] = { "hHandle", "bAlertable", "pTimeout" };
+const FunctionSig WaitForSingleObject_sig = { 4, "WaitForSingleObject", 3, WaitForSingleObject_args };
+
+static const char* WaitForMultipleObjects_args[5] = { "nCount", "lpHandles", "bWaitAny", "bAlertable", "pTimeout" };
+const FunctionSig WaitForMultipleObjects_sig = { 5, "WaitForMultipleObjects", 5, WaitForMultipleObjects_args };
+
+static const trace::EnumValue _bool_values[] = {
+    {"TRUE",  TRUE},
+    {"FALSE", FALSE},
+};
+
+static const trace::EnumSig _bool_sig = {
+    1, 2, _bool_values
+};
+
+using _ZwWaitForSingleObject = NTSTATUS(*)(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+static _ZwWaitForSingleObject TrueZwWaitForSingleObject = (_ZwWaitForSingleObject) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForSingleObject");
+
+using _ZwWaitForMultipleObjects = NTSTATUS(*)(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+static _ZwWaitForMultipleObjects TrueZwWaitForMultipleObjects = (_ZwWaitForMultipleObjects) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForMultipleObjects");
+
+NTSTATUS fakeWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForSingleObject_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writePointer((uintptr_t)hHandle);
+    localWriter.endArg();
+    localWriter.beginArg(1);
+    localWriter.writeEnum(&_bool_sig, bAlertable);
+    localWriter.endArg();
+    localWriter.beginArg(2);
+    if (pTimeout) {
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        localWriter.writeSInt(pTimeout->QuadPart);
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+    }
+    else {
+        localWriter.writeNull();
+    }
+    localWriter.endArg();
+    localWriter.endEnter();
+    DWORD _result = TrueZwWaitForSingleObject(hHandle, bAlertable, pTimeout);
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
+
+NTSTATUS fakeWaitForMultipleObjects(DWORD nRealCount, const HANDLE* lpRealHandles, DWORD nFakeCount, const HANDLE* lpFakeHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout)
+{
+    unsigned _call = localWriter.beginEnter(&WaitForMultipleObjects_sig, true);
+
+    localWriter.beginArg(0);
+    localWriter.writeUInt(nFakeCount);
+    localWriter.endArg();
+
+    localWriter.beginArg(1);
+    localWriter.beginArray(nFakeCount);
+    for (DWORD i = 0; i < nFakeCount; i++)
+    {
+        localWriter.beginElement();
+        localWriter.writePointer((uintptr_t)lpFakeHandles[i]);
+        localWriter.endElement();
+    }
+    localWriter.endArray();
+    localWriter.endArg();
+
+    localWriter.beginArg(2);
+    localWriter.writeEnum(&_bool_sig, bWaitAny);
+    localWriter.endArg();
+
+    localWriter.beginArg(3);
+    localWriter.writeEnum(&_bool_sig, bAlertable);
+    localWriter.endArg();
+
+    localWriter.beginArg(4);
+    if (pTimeout) {
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        localWriter.writeSInt(pTimeout->QuadPart);
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+    }
+    else {
+        localWriter.writeNull();
+    }
+    localWriter.endArg();
+
+    localWriter.endEnter();
+
+    DWORD _result = TrueZwWaitForMultipleObjects(nRealCount, lpRealHandles, bWaitAny, bAlertable, pTimeout);
+
+    localWriter.beginLeave(_call);
+    localWriter.beginReturn();
+    localWriter.writeUInt(_result);
+    localWriter.endReturn();
+    localWriter.endLeave();
+    return _result;
+}
+
+#endif /* _WIN32 */
+
 } /* namespace trace */
 
