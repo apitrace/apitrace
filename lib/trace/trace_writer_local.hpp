@@ -120,6 +120,12 @@ namespace trace {
     extern LocalWriter localWriter;
 
     void fakeMemcpy(const void *ptr, size_t size);
+    void fakeMalloc(const void *ptr, size_t size);
+
+#ifdef _WIN32
+    NTSTATUS fakeWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+    NTSTATUS fakeWaitForMultipleObjects(DWORD nRealCount, const HANDLE* lpRealHandles, DWORD nFakeCount, const HANDLE* lpFakeHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+#endif
 
 } /* namespace trace */
 
