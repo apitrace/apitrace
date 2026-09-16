@@ -363,10 +363,10 @@ static const trace::EnumSig _bool_sig = {
     1, 2, _bool_values
 };
 
-using _ZwWaitForSingleObject = NTSTATUS(*)(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+using _ZwWaitForSingleObject = NTSTATUS(NTAPI *)(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout);
 static _ZwWaitForSingleObject TrueZwWaitForSingleObject = (_ZwWaitForSingleObject) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForSingleObject");
 
-using _ZwWaitForMultipleObjects = NTSTATUS(*)(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
+using _ZwWaitForMultipleObjects = NTSTATUS(NTAPI *)(DWORD nCount, const HANDLE* lpHandles, BOOL bWaitAny, BOOL bAlertable, PLARGE_INTEGER pTimeout);
 static _ZwWaitForMultipleObjects TrueZwWaitForMultipleObjects = (_ZwWaitForMultipleObjects) GetProcAddress(GetModuleHandleA("ntdll"), "ZwWaitForMultipleObjects");
 
 NTSTATUS fakeWaitForSingleObject(HANDLE hHandle, BOOL bAlertable, PLARGE_INTEGER pTimeout)
