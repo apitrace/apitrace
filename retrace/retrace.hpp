@@ -189,6 +189,7 @@ enum Driver {
     DRIVER_SOFTWARE,
     DRIVER_REFERENCE,
     DRIVER_NULL,
+    DRIVER_D3D11ON12, // force D3D11 replay on top of D3D12 via D3D11On12CreateDevice
     DRIVER_MODULE,
 };
 

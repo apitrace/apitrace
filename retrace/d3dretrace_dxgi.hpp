@@ -30,6 +30,7 @@
 
 #include "retrace.hpp"
 #include "d3dretrace.hpp"
+#include "d3dretrace_dxgi_d3d11on12.hpp"
 
 
 /*

@@ -797,7 +797,7 @@ usage(const char *argv0) {
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
         "      --samples=N         use GL_ARB_multisample (default is 1)\n"
-        "      --driver=DRIVER     force driver type (`hw`, `dgpu`, `igpu`, `sw`, `ref`, `null`, or driver module name)\n"
+        "      --driver=DRIVER     force driver type (`hw`, `dgpu`, `igpu`, `sw`, `ref`, `null`, `d3d11on12`, or driver module name)\n"
         "      --fullscreen        allow fullscreen\n"
         "      --headless          don't show windows\n"
         "      --sb                use a single buffer visual\n"
@@ -1204,6 +1204,8 @@ int main(int argc, char **argv)
                 driver = DRIVER_REFERENCE;
             } else if (strcasecmp(optarg, "null") == 0) {
                 driver = DRIVER_NULL;
+            } else if (strcasecmp(optarg, "d3d11on12") == 0) {
+                driver = DRIVER_D3D11ON12;
             } else {
                 driver = DRIVER_MODULE;
                 driverModule = optarg;
