@@ -106,6 +106,22 @@ class D3DRetracer(Retracer):
             print(r'        }')
             print(r'    }')
 
+    def doInvokeFunction(self, function):
+        if function.name == 'Direct3DCreate9':
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D9ON12) {')
+            print(r'        _result = d3dretrace::d3d9on12::createDirect3D9(%s);' % ", ".join(function.argNames()))
+            print(r'    } else {')
+            Retracer.doInvokeFunction(self, function)
+            print(r'    }')
+        elif function.name == 'Direct3DCreate9Ex':
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D9ON12) {')
+            print(r'        _result = d3dretrace::d3d9on12::createDirect3D9Ex(%s);' % ", ".join(function.argNames()))
+            print(r'    } else {')
+            Retracer.doInvokeFunction(self, function)
+            print(r'    }')
+        else:
+            Retracer.doInvokeFunction(self, function)
+
     createDeviceMethodNames = [
         'CreateDevice',
         'CreateDeviceEx',
@@ -155,6 +171,7 @@ class D3DRetracer(Retracer):
             print(r'    case retrace::DRIVER_HARDWARE:')
             print(r'    case retrace::DRIVER_DISCRETE:')
             print(r'    case retrace::DRIVER_INTEGRATED:')
+            print(r'    case retrace::DRIVER_D3D9ON12:')
             print(r'        DeviceType = D3DDEVTYPE_HAL;')
             print(r'        break;')
             print(r'    case retrace::DRIVER_SOFTWARE:')
@@ -351,7 +368,7 @@ class D3DRetracer(Retracer):
             print('    } else {')
             print('        return;')
             print('    }')
-        
+
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print('    VOID *_pbData = nullptr;')
             print('    MappingKey _mappingKey(_this, %s);' % mapping_subkey())
@@ -400,7 +417,7 @@ def main():
     support = int(sys.argv[2])
 
     api = API()
-    
+
     if support:
         if moduleName == 'd3d9':
             from specs.d3d9 import d3d9, d3dperf
@@ -408,6 +425,7 @@ def main():
             print(r'#include "d3d9imports.hpp"')
             print(r'#include "d3d9size.hpp"')
             print(r'#include "dxva2imports.hpp"')
+            print(r'#include "d3dretrace_d3d9on12.hpp"')
             d3d9.mergeModule(d3dperf)
             api.addModule(d3d9)
             api.addModule(dxva2)
