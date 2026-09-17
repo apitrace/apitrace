@@ -29,7 +29,7 @@
 
 #include <iostream>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glws.hpp"
 #include "retrace.hpp"
 

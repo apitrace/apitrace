@@ -36,7 +36,7 @@
 
 #include "os_thread.hpp"
 #include "retrace.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glstate.hpp"
 #include "glretrace.hpp"
 

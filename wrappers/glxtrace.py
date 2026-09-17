@@ -174,7 +174,7 @@ if __name__ == '__main__':
     print('#define GL_GLEXT_PROTOTYPES')
     print('#define GLX_GLXEXT_PROTOTYPES')
     print()
-    print('#include "glproc.hpp"')
+    print('#include "glproc.h"')
     print('#include "glsize.hpp"')
     print()
 
