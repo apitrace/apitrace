@@ -225,7 +225,7 @@ bool
 isBackBufferMultisampled(ID3D11Resource *pResource)
 {
     ComPtr<ID3D11Texture2D> pTexture2D;
-    if (!pResource || FAILED(pResource->QueryInterface(IID_PPV_ARGS(&pTexture2D)))) {
+    if (!pResource || FAILED(pResource->QueryInterface(IID_ID3D11Texture2D, reinterpret_cast<void**>(pTexture2D.GetAddressOf())))) {
         return false;
     }
     D3D11_TEXTURE2D_DESC desc;
@@ -282,7 +282,7 @@ protected:
         }
 
         ComPtr<ID3D11On12Device> pDevice11On12;
-        if (FAILED(m_pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11On12)))) {
+        if (FAILED(m_pDevice->QueryInterface(IID_ID3D11On12Device, reinterpret_cast<void**>(pDevice11On12.GetAddressOf())))) {
             return false;
         }
 
@@ -327,7 +327,7 @@ protected:
         }
 
         ComPtr<ID3D11On12Device> pDevice11On12;
-        if (FAILED(m_pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11On12)))) {
+        if (FAILED(m_pDevice->QueryInterface(IID_ID3D11On12Device, reinterpret_cast<void**>(pDevice11On12.GetAddressOf())))) {
             return;
         }
 
@@ -373,7 +373,7 @@ protected:
         UINT index = m_pSwapChain->GetCurrentBackBufferIndex();
 
         ComPtr<ID3D12Resource> pRealBuffer;
-        if (FAILED(m_pSwapChain->GetBuffer(index, IID_PPV_ARGS(&pRealBuffer)))) {
+        if (FAILED(m_pSwapChain->GetBuffer(index, IID_ID3D12Resource, reinterpret_cast<void**>(pRealBuffer.GetAddressOf())))) {
             return;
         }
 
@@ -598,8 +598,8 @@ public:
 
         ComPtr<ID3D12Resource> pPrivateResource;
         hr = pDevState->d3d12Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc,
-                                                             D3D12_RESOURCE_STATE_PRESENT, &clearValue,
-                                                             IID_PPV_ARGS(&pPrivateResource));
+                                                             D3D12_RESOURCE_STATE_PRESENT, &clearValue, IID_ID3D12Resource,
+                                                             reinterpret_cast<void**>(pPrivateResource.GetAddressOf()));
         if (FAILED(hr)) {
             std::cerr << "error: ID3D12Device::CreateCommittedResource failed for --driver=d3d11on12 back buffer "
                       << Buffer << " (0x" << std::hex << (unsigned long)hr << std::dec << ")\n";
@@ -607,7 +607,7 @@ public:
         }
 
         ComPtr<ID3D11On12Device> pDevice11On12;
-        hr = m_pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11On12));
+        hr = m_pDevice->QueryInterface(IID_ID3D11On12Device, reinterpret_cast<void**>(pDevice11On12.GetAddressOf()));
         if (FAILED(hr)) {
             return hr;
         }
@@ -624,7 +624,7 @@ public:
         ComPtr<ID3D11Resource> pWrapped;
         hr = pDevice11On12->CreateWrappedResource(pPrivateResource.Get(), &resourceFlags,
                                                   D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_PRESENT,
-                                                  IID_PPV_ARGS(&pWrapped));
+                                                  IID_ID3D11Resource, reinterpret_cast<void**>(pWrapped.GetAddressOf()));
         if (FAILED(hr)) {
             std::cerr << "error: ID3D11On12Device::CreateWrappedResource failed for swapchain buffer "
                       << Buffer << " (0x" << std::hex << (unsigned long)hr << std::dec << ")\n";
@@ -861,7 +861,8 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
     (void)SDKVersion;
 
     ComPtr<ID3D12Device> pD3D12Device;
-    HRESULT hr = loadedD3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pD3D12Device));
+    HRESULT hr = loadedD3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_11_0,
+                                         IID_ID3D12Device, reinterpret_cast<void**>(pD3D12Device.GetAddressOf()));
     if (FAILED(hr)) {
         std::cerr << "error: D3D12CreateDevice failed for --driver=d3d11on12 (0x" << std::hex
                   << (unsigned long)hr << std::dec << ")\n";
@@ -874,7 +875,8 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
         queueDesc.Flags |= D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT;
     }
     ComPtr<ID3D12CommandQueue> pCommandQueue;
-    hr = pD3D12Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue));
+    hr = pD3D12Device->CreateCommandQueue(&queueDesc, IID_ID3D12CommandQueue,
+                                          reinterpret_cast<void**>(pCommandQueue.GetAddressOf()));
     if (FAILED(hr)) {
         std::cerr << "error: ID3D12Device::CreateCommandQueue failed for --driver=d3d11on12 (0x" << std::hex
                   << (unsigned long)hr << std::dec << ")\n";
@@ -899,16 +901,18 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
     state.commandQueue = pCommandQueue;
     state.immediateContext = pContext11;
 
-    hr = pD3D12Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&state.copyCommandAllocator));
+    hr = pD3D12Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_ID3D12CommandAllocator,
+                                              reinterpret_cast<void**>(state.copyCommandAllocator.GetAddressOf()));
     if (SUCCEEDED(hr)) {
-        hr = pD3D12Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, state.copyCommandAllocator.Get(),
-                                             nullptr, IID_PPV_ARGS(&state.copyCommandList));
+        hr = pD3D12Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, state.copyCommandAllocator.Get(), nullptr,
+                                             IID_ID3D12GraphicsCommandList, reinterpret_cast<void**>(state.copyCommandList.GetAddressOf()));
         if (SUCCEEDED(hr)) {
             state.copyCommandList->Close();
         }
     }
     if (SUCCEEDED(hr)) {
-        hr = pD3D12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&state.copyFence));
+        hr = pD3D12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_ID3D12Fence,
+                                       reinterpret_cast<void**>(state.copyFence.GetAddressOf()));
     }
     if (SUCCEEDED(hr)) {
         state.copyFenceEvent = CreateEventA(nullptr, FALSE, FALSE, nullptr);
@@ -961,7 +965,7 @@ createDeviceAndSwapChain(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMO
         assert(pDevState);
 
         ComPtr<IDXGIFactory1> pFactory;
-        hr = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
+        hr = CreateDXGIFactory1(IID_IDXGIFactory1, reinterpret_cast<void**>(pFactory.GetAddressOf()));
         if (SUCCEEDED(hr)) {
             DXGI_SWAP_CHAIN_DESC swapChainDesc = *pSwapChainDesc;
             DXGI_USAGE appBufferUsage = swapChainDesc.BufferUsage;
@@ -1075,7 +1079,7 @@ wrapSwapChain(IDXGISwapChain *pSwapChain, IUnknown *pDevice, DXGI_USAGE bufferUs
     }
 
     ComPtr<ID3D11Device> pDevice11;
-    if (!pDevice || FAILED(pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11))) ||
+    if (!pDevice || FAILED(pDevice->QueryInterface(IID_ID3D11Device, reinterpret_cast<void**>(pDevice11.GetAddressOf()))) ||
         !getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState)) {
         /*
          * Not a device created via --driver=d3d11on12.
@@ -1084,7 +1088,7 @@ wrapSwapChain(IDXGISwapChain *pSwapChain, IUnknown *pDevice, DXGI_USAGE bufferUs
     }
 
     ComPtr<IDXGISwapChain3> pSwapChain3;
-    if (FAILED(pSwapChain->QueryInterface(IID_PPV_ARGS(&pSwapChain3)))) {
+    if (FAILED(pSwapChain->QueryInterface(IID_IDXGISwapChain3, reinterpret_cast<void**>(pSwapChain3.GetAddressOf())))) {
         std::cerr << "error: swapchain doesn't support IDXGISwapChain3, required for --driver=d3d11on12\n";
         return pSwapChain;
     }
@@ -1092,7 +1096,7 @@ wrapSwapChain(IDXGISwapChain *pSwapChain, IUnknown *pDevice, DXGI_USAGE bufferUs
 
     DeviceState *pDevState = getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState);
     if (pDevState && !pDevState->factory) {
-        pSwapChain3->GetParent(IID_PPV_ARGS(&pDevState->factory));
+        pSwapChain3->GetParent(IID_IDXGIFactory, reinterpret_cast<void**>(pDevState->factory.GetAddressOf()));
     }
 
     return new CDXGISwapChainD3D11On12(pSwapChain3.Detach(), pDevice11.Get(), bufferUsage, sampleDesc);
@@ -1103,7 +1107,7 @@ IUnknown *
 getCommandQueue(IUnknown *pDevice)
 {
     ComPtr<ID3D11Device> pDevice11;
-    if (pDevice && SUCCEEDED(pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11)))) {
+    if (pDevice && SUCCEEDED(pDevice->QueryInterface(IID_ID3D11Device, reinterpret_cast<void**>(pDevice11.GetAddressOf())))) {
         DeviceState *pDevState = getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState);
         if (pDevState) {
             return pDevState->commandQueue.Get();
@@ -1117,7 +1121,7 @@ bool
 isDevice(IUnknown *pDevice)
 {
     ComPtr<ID3D11Device> pDevice11;
-    if (pDevice && SUCCEEDED(pDevice->QueryInterface(IID_PPV_ARGS(&pDevice11)))) {
+    if (pDevice && SUCCEEDED(pDevice->QueryInterface(IID_ID3D11Device, reinterpret_cast<void**>(pDevice11.GetAddressOf())))) {
         return getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState) != nullptr;
     }
     return false;
