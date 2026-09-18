@@ -100,7 +100,27 @@ class D3DRetracer(Retracer):
         Retracer.invokeFunction(self, function)
 
     def doInvokeFunction(self, function):
-        Retracer.doInvokeFunction(self, function)
+        # Currently we don't intercept D3D10CreateDevice for d3d10 traces.
+        # So we silently fall back to a native call (equal to --driver=hw).
+        if function.name.startswith('D3D10CreateDevice'):
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        std::cerr << "warning: --driver=d3d11on12 does not intercept %s, falling back to --driver=hw\n";' % (function.name))
+            print(r'    }')
+
+        if function.name == 'D3D11CreateDevice':
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        _result = d3dretrace::d3d11on12::createDevice(%s);' % ", ".join(function.argNames()))
+            print(r'    } else {')
+            Retracer.doInvokeFunction(self, function)
+            print(r'    }')
+        elif function.name == 'D3D11CreateDeviceAndSwapChain':
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        _result = d3dretrace::d3d11on12::createDeviceAndSwapChain(%s);' % ", ".join(function.argNames()))
+            print(r'    } else {')
+            Retracer.doInvokeFunction(self, function)
+            print(r'    }')
+        else:
+            Retracer.doInvokeFunction(self, function)
 
         # Handle missing reference drivers and missing debug layers.
         #
@@ -122,12 +142,20 @@ class D3DRetracer(Retracer):
             print(r'        if (_result == DXGI_ERROR_UNSUPPORTED && DriverType == D3D_DRIVER_TYPE_REFERENCE) {')
             print(r'            retrace::warning(call) << "reference driver not available, continuing with WARP\n";')
             print(r'            DriverType = D3D_DRIVER_TYPE_WARP;')
+            print(r'            if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'                _result = d3dretrace::d3d11on12::%s(%s);' % ("createDevice" if function.name == 'D3D11CreateDevice' else "createDeviceAndSwapChain", ", ".join(function.argNames())))
+            print(r'            } else {')
             Retracer.doInvokeFunction(self, function)
+            print(r'            }')
             print(r'        }')
             print(r'        if ((_result == E_FAIL || _result == DXGI_ERROR_SDK_COMPONENT_MISSING) && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {')
             print(r'            retrace::warning(call) << "Direct3D 11.x SDK Debug Layer (d3d11*sdklayers.dll) not available, continuing without debug output\n";')
             print(r'            Flags &= ~D3D11_CREATE_DEVICE_DEBUG;')
+            print(r'            if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'                _result = d3dretrace::d3d11on12::%s(%s);' % ("createDevice" if function.name == 'D3D11CreateDevice' else "createDeviceAndSwapChain", ", ".join(function.argNames())))
+            print(r'            } else {')
             Retracer.doInvokeFunction(self, function)
+            print(r'            }')
             print(r'        }')
 
     def handleFailure(self, interface, methodOrFunction):
@@ -158,6 +186,114 @@ class D3DRetracer(Retracer):
         print(r'    }')
 
     def doInvokeInterfaceMethod(self, interface, method):
+        if interface.name.startswith('ID3D11VideoDevice') and method.name == 'CreateVideoDecoder':
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        std::cerr << "warning: --driver=d3d11on12 does not support ID3D11VideoDevice::CreateVideoDecoder. Hardware video decode will corrupt and cause GPU device to remove\n";')
+            print(r'    }')
+
+        # A --driver=d3d11on12 wrapped back buffer is backed by a typeless
+        # resource (see CDXGISwapChainD3D11On12::GetBuffer), so D3D11 cannot
+        # infer a default view format for it from a NULL pDesc. Substitute a
+        # concrete default desc using the swapchain's own format in case of
+        # CreateRenderTargetView, CreateShaderResourceView, and
+        # CreateUnorderedAccessView. Don't need to handle CreateDepthStencilView
+        # since its back buffers are never depth/stencil resources.
+        if interface.name.startswith('ID3D11Device') and method.name == 'CreateRenderTargetView':
+            print(r'    D3D11_RENDER_TARGET_VIEW_DESC _d3d11on12ViewDesc;')
+            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        DXGI_FORMAT _d3d11on12Format;')
+            print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
+            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
+            print(r'            if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
+            print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;')
+            print(r'            } else {')
+            print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;')
+            print(r'                _d3d11on12ViewDesc.Texture2D.MipSlice = 0;')
+            print(r'            }')
+            print(r'            pDesc = &_d3d11on12ViewDesc;')
+            print(r'        }')
+            print(r'    }')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            return
+
+        if interface.name.startswith('ID3D11Device') and method.name == 'CreateShaderResourceView':
+            print(r'    D3D11_SHADER_RESOURCE_VIEW_DESC _d3d11on12ViewDesc;')
+            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        DXGI_FORMAT _d3d11on12Format;')
+            print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
+            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
+            print(r'            if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
+            print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;')
+            print(r'            } else {')
+            print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;')
+            print(r'                _d3d11on12ViewDesc.Texture2D.MostDetailedMip = 0;')
+            print(r'                _d3d11on12ViewDesc.Texture2D.MipLevels = 1;')
+            print(r'            }')
+            print(r'            pDesc = &_d3d11on12ViewDesc;')
+            print(r'        }')
+            print(r'    }')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            return
+
+        if interface.name.startswith('ID3D11Device') and method.name == 'CreateUnorderedAccessView':
+            print(r'    D3D11_UNORDERED_ACCESS_VIEW_DESC _d3d11on12ViewDesc;')
+            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'        DXGI_FORMAT _d3d11on12Format;')
+            print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
+            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
+            print(r'            _d3d11on12ViewDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;')
+            print(r'            _d3d11on12ViewDesc.Texture2D.MipSlice = 0;')
+            print(r'            pDesc = &_d3d11on12ViewDesc;')
+            print(r'        }')
+            print(r'    }')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            return
+
+        # Rule out undocumented IDXGIFactoryDWM interface for now
+        isRealFactory = interface.name.startswith('IDXGIFactory') and not interface.name.startswith('IDXGIFactoryDWM')
+        if isRealFactory and method.name == 'CreateSwapChain':
+            # Intercept CreateSwapChain only if pDevice is actually one of our
+            # own wrapped D3D11On12 devices.
+            print(r'    IUnknown *_origDevice = pDevice;')
+            print(r'    bool _isD3D11On12 = retrace::driver == retrace::DRIVER_D3D11ON12 && d3dretrace::d3d11on12::isDevice(pDevice);')
+            print(r'    DXGI_USAGE _d3d11on12AppBufferUsage = 0;')
+            print(r'    DXGI_SAMPLE_DESC _d3d11on12AppSampleDesc = {1, 0};')
+            print(r'    if (_isD3D11On12) {')
+            print(r'        pDevice = d3dretrace::d3d11on12::getCommandQueue(pDevice);')
+            print(r'        if (pDesc) {')
+            print(r'            _d3d11on12AppBufferUsage = pDesc->BufferUsage;')
+            print(r'            _d3d11on12AppSampleDesc = pDesc->SampleDesc;')
+            print(r'            d3dretrace::d3d11on12::fixupSwapChainDesc(&pDesc->SwapEffect, &pDesc->BufferCount, &pDesc->BufferDesc.Format, &pDesc->BufferUsage, &pDesc->SampleDesc, &pDesc->Flags);')
+            print(r'        }')
+            print(r'    }')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print(r'    if (_isD3D11On12 && SUCCEEDED(_result) && ppSwapChain && *ppSwapChain) {')
+            print(r'        *ppSwapChain = d3dretrace::d3d11on12::wrapSwapChain(*ppSwapChain, _origDevice, _d3d11on12AppBufferUsage, _d3d11on12AppSampleDesc);')
+            print(r'    }')
+            return
+
+        if isRealFactory and method.name == 'CreateSwapChainForHwnd':
+            print(r'    IUnknown *_origDevice = pDevice;')
+            print(r'    bool _isD3D11On12 = retrace::driver == retrace::DRIVER_D3D11ON12 && d3dretrace::d3d11on12::isDevice(pDevice);')
+            print(r'    DXGI_SWAP_CHAIN_DESC1 _fixedDesc1;')
+            print(r'    DXGI_USAGE _d3d11on12AppBufferUsage = 0;')
+            print(r'    DXGI_SAMPLE_DESC _d3d11on12AppSampleDesc = {1, 0};')
+            print(r'    if (_isD3D11On12) {')
+            print(r'        pDevice = d3dretrace::d3d11on12::getCommandQueue(pDevice);')
+            print(r'        if (pDesc) {')
+            print(r'            _fixedDesc1 = *pDesc;')
+            print(r'            _d3d11on12AppBufferUsage = _fixedDesc1.BufferUsage;')
+            print(r'            _d3d11on12AppSampleDesc = _fixedDesc1.SampleDesc;')
+            print(r'            d3dretrace::d3d11on12::fixupSwapChainDesc(&_fixedDesc1.SwapEffect, &_fixedDesc1.BufferCount, &_fixedDesc1.Format, &_fixedDesc1.BufferUsage, &_fixedDesc1.SampleDesc, &_fixedDesc1.Flags);')
+            print(r'            pDesc = &_fixedDesc1;')
+            print(r'        }')
+            print(r'    }')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print(r'    if (_isD3D11On12 && SUCCEEDED(_result) && ppSwapChain && *ppSwapChain) {')
+            print(r'        *ppSwapChain = static_cast<IDXGISwapChain1 *>(d3dretrace::d3d11on12::wrapSwapChain(*ppSwapChain, _origDevice, _d3d11on12AppBufferUsage, _d3d11on12AppSampleDesc));')
+            print(r'    }')
+            return
+
         if interface.name.startswith('IDXGIAdapter') and method.name == 'EnumOutputs':
             print(r'    if (Output != 0) {')
             print(r'        retrace::warning(call) << "ignoring output " << Output << "\n";')
