@@ -26,7 +26,6 @@
 #include <iostream>
 
 #include <d3d9.h>
-#include <d3d9on12.h>
 
 #include "d3dretrace.hpp"
 #include "d3dretrace_d3d9on12.hpp"
@@ -34,6 +33,15 @@
 
 namespace d3dretrace {
 namespace d3d9on12 {
+
+
+typedef struct D3D9ON12_ARGS {
+    BOOL Enable9On12;
+    IUnknown *pD3D12Device;
+    IUnknown *ppD3D12Queues[2];
+    UINT NumQueues;
+    UINT NodeMask;
+} D3D9ON12_ARGS;
 
 
 typedef IDirect3D9 *
