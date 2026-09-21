@@ -27,6 +27,10 @@
 
 #include <d3d9.h>
 
+#ifndef __MINGW32__
+#include <d3d9on12.h>
+#endif
+
 #include "d3dretrace.hpp"
 #include "d3dretrace_d3d9on12.hpp"
 
@@ -35,6 +39,7 @@ namespace d3dretrace {
 namespace d3d9on12 {
 
 
+#ifdef __MINGW32__
 typedef struct D3D9ON12_ARGS {
     BOOL Enable9On12;
     IUnknown *pD3D12Device;
@@ -42,6 +47,7 @@ typedef struct D3D9ON12_ARGS {
     UINT NumQueues;
     UINT NodeMask;
 } D3D9ON12_ARGS;
+#endif
 
 
 typedef IDirect3D9 *
