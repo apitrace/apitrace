@@ -180,6 +180,7 @@ struct Features
     unsigned query_buffer_object:1;
     unsigned primitive_restart:1;
     unsigned unpack_subimage:1;
+    unsigned pack_subimage:1;
 
     Features(void);
 
