@@ -296,6 +296,7 @@ if (WIN32)
             d3d11state_images.cpp
             d3dretrace_dxgi.cpp
             d3dretrace_dxgi_misc.cpp
+            d3dretrace_dxgi_d3d11on12.cpp
         )
         add_custom_command (
             OUTPUT dxgistate_so.cpp

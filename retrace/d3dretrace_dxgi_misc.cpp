@@ -52,6 +52,7 @@ createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
         GpuPreference = DXGI_GPU_PREFERENCE_MINIMUM_POWER;
         break;
     case retrace::DRIVER_DISCRETE:
+    case retrace::DRIVER_D3D11ON12:
         GpuPreference = DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE;
         break;
     case retrace::DRIVER_REFERENCE:
@@ -87,7 +88,7 @@ createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter)
             hr = DXGI_ERROR_NOT_FOUND;
         }
     } else {
-        hr = pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter **>(ppvAdapter));
+        hr = pFactory->EnumAdapters(0, &pAdapter);
     }
 
     if (SUCCEEDED(hr)) {
