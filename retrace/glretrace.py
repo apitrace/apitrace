@@ -243,9 +243,13 @@ class GlRetracer(Retracer):
             print(r'     GLsizei _h = call.arg(3).toSInt();')
             print(r'     GLenum _format = call.arg(4).toSInt();')
             print(r'     GLenum _type = call.arg(5).toSInt();')
-            print(r'     unsigned _bits_per_pixel = _gl_format_size(_format, _type);')
-            print(r'     GLsizei _stride = (_w * _bits_per_pixel + 7) / 8;')
-            print(r'     buffer.resize(_h * _stride);')
+            print(r'     if (currentContext) {')
+            print(r'         buffer.resize(_glReadPixels_size(_format, _type, _w, _h));')
+            print(r'     } else {')
+            print(r'         unsigned _bits_per_pixel = _gl_format_size(_format, _type);')
+            print(r'         GLsizei _stride = (_w * _bits_per_pixel + 7) / 8;')
+            print(r'         buffer.resize(_h * _stride);')
+            print(r'     }')
         elif function.name == "glReadnPixels":
             print(r'     buffer.resize(call.arg(6).toSInt());')
             data_param_name = "data"
@@ -669,6 +673,14 @@ if __name__ == '__main__':
 #include "glretrace.hpp"
 #include "glstate.hpp"
 #include "glsize.hpp"
+
+
+static inline bool
+can_pack_subimage(void)
+{
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    return currentContext && currentContext->features().pack_subimage;
+}
 
 
 static GLint
