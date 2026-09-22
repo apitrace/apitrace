@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include "glretrace_wgl.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 
 
 enum Function {

@@ -26,7 +26,7 @@
 #pragma once
 
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 #include "glfeatures.hpp"
 

@@ -31,7 +31,7 @@
 
 #include "image.hpp"
 #include "state_writer.hpp"
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glws.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"

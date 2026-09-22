@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "glws.hpp"
 #include "ws_win32.hpp"
 
