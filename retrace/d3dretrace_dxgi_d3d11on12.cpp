@@ -99,12 +99,18 @@ struct DeviceState {
     ComPtr<IDXGIFactory> factory;
     ComPtr<ID3D12Device> d3d12Device;
     ComPtr<ID3D12CommandQueue> commandQueue;
-    ComPtr<ID3D11DeviceContext> immediateContext;
+    ID3D11DeviceContext *immediateContext = nullptr;
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator;
     ComPtr<ID3D12GraphicsCommandList> copyCommandList;
     ComPtr<ID3D12Fence> copyFence;
     UINT64 copyFenceValue = 0;
     HANDLE copyFenceEvent = nullptr;
+
+    ~DeviceState() {
+        if (copyFenceEvent) {
+            CloseHandle(copyFenceEvent);
+        }
+    }
 };
 
 
