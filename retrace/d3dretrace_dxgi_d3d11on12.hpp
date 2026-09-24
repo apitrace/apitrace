@@ -77,6 +77,9 @@ bool
 isDevice(IUnknown *pDevice);
 
 bool
+overrideGetParent(IUnknown *pObject, REFIID riid, void **ppParent, HRESULT *pResult);
+
+bool
 getBackBufferFormat(ID3D11Resource *pResource, DXGI_FORMAT *pFormat);
 
 bool

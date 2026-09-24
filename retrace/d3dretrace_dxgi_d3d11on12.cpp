@@ -1130,5 +1130,43 @@ isDevice(IUnknown *pDevice)
 }
 
 
+/*
+ * Report the adapter the trace asked for, rather than the one the D3D11On12
+ * device actually sits on. This keeps object identity stable across the whole
+ * trace, matching what every other driver type does. Otherwise, the D3D11On12
+ * device's DXGI parent chain resolves through its internal D3D12 device's own
+ * adapter/factory instances, distinct from the ones the trace enumerated,
+ * causing over-releasing.
+ */
+bool
+overrideGetParent(IUnknown *pObject, REFIID riid, void **ppParent, HRESULT *pResult)
+{
+    if (!ppParent ||
+        (riid != IID_IDXGIAdapter && riid != IID_IDXGIAdapter1 &&
+         riid != IID_IDXGIAdapter2 && riid != IID_IDXGIAdapter3 &&
+         riid != IID_IDXGIAdapter4)) {
+        return false;
+    }
+
+    ComPtr<ID3D11Device> pDevice11;
+    if (!pObject ||
+        FAILED(pObject->QueryInterface(IID_ID3D11Device, reinterpret_cast<void**>(pDevice11.GetAddressOf())))) {
+        return false;
+    }
+
+    DeviceState *pDevState = getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState);
+    if (!pDevState || !pDevState->adapter) {
+        /*
+         * Not a d3d11on12 device, or the trace passed a null adapter to
+         * D3D11CreateDevice and there is nothing to preserve.
+         */
+        return false;
+    }
+
+    *pResult = pDevState->adapter->QueryInterface(riid, ppParent);
+    return true;
+}
+
+
 } /* namespace d3d11on12 */
 } /* namespace d3dretrace */
