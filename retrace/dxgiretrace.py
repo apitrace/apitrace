@@ -316,8 +316,6 @@ class D3DRetracer(Retracer):
                 print(r'    _result = _this->CreateQuery(&_queryDesc, reinterpret_cast<ID3D11Query **>(ppCounter));')
                 return
 
-        Retracer.doInvokeInterfaceMethod(self, interface, method)
-
         # Force driver
         if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapters'):
             print(r'    if (Adapter != 0) {')
@@ -377,7 +375,9 @@ class D3DRetracer(Retracer):
             print(r'    if (!Module) {')
             print(r'        retrace::warning(call) << "failed to load " << szSoftware << "\n";')
             print(r'    }')
-            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            # falls through to the generic invocation below
+
+        Retracer.doInvokeInterfaceMethod(self, interface, method)
 
         # Keep retrying ID3D11VideoContext::DecoderBeginFrame when returns E_PENDING
         if interface.name == 'ID3D11VideoContext' and method.name == 'DecoderBeginFrame':
