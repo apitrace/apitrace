@@ -1,0 +1,3 @@
+sed -e s/GL_MODELVIEW/GL_PROJECTION/ -o sed-replace-enum.src.trace tri_glsl.trace
+diff --tool=python --suppress-common-lines --calls=0-99999999 --call-nos tri_glsl.trace sed-replace-enum.src.trace
+| 6924 glMatrixMode(mode = GL_MODELVIEW -> GL_PROJECTION)

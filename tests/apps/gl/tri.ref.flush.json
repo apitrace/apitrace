@@ -1,0 +1,10 @@
+{
+  "parameters": {
+    "GL_CURRENT_COLOR": [0, 0, 0.7, 1],
+    "GL_VIEWPORT": [0, 0, 250, 250],
+    "GL_PROJECTION_MATRIX": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -0.001999001, 0, 0, 0, -0.9990005, 1],
+    "GL_SCISSOR_BOX": [0, 0, 250, 250],
+    "GL_COLOR_CLEAR_VALUE": [0.3, 0.1, 0.3, 1],
+    "GL_TRANSPOSE_PROJECTION_MATRIX": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -0.001999001, -0.9990005, 0, 0, 0, 1]
+  }
+}

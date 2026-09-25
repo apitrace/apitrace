@@ -55,7 +55,7 @@ install_manifest.txt
 qapitrace
 qubjson_test
 trace_parser_flags_test
-traces
+/traces
 Testing
 os_thread_test
 /build

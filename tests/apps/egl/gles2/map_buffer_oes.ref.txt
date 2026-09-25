@@ -1,0 +1,19 @@
+//!map_buffer map_buffer_oes
+glGenBuffers(n = 2, buffer = {<buffer1>, <buffer2>})
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+glBufferData(target = GL_ARRAY_BUFFER, size = 1000, data = NULL, usage = GL_STATIC_DRAW)
+glMapBufferOES(target = GL_ARRAY_BUFFER, access = GL_WRITE_ONLY) = <map1>
+memcpy(dest = <map1>, src = blob(1000), n = 1000)
+glUnmapBufferOES(target = GL_ARRAY_BUFFER) = GL_TRUE
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer2>)
+glBufferData(target = GL_ARRAY_BUFFER, size = 2000, data = NULL, usage = GL_STATIC_DRAW)
+glMapBufferOES(target = GL_ARRAY_BUFFER, access = GL_WRITE_ONLY) = <map2>
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+glMapBufferOES(target = GL_ARRAY_BUFFER, access = GL_WRITE_ONLY) = <map3>
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer2>)
+memcpy(dest = <map2>, src = blob(2000), n = 2000)
+glUnmapBufferOES(target = GL_ARRAY_BUFFER) = GL_TRUE
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+memcpy(dest = <map3>, src = blob(1000), n = 1000)
+glUnmapBufferOES(target = GL_ARRAY_BUFFER) = GL_TRUE
+glDeleteBuffers(n = 2, buffer = {<buffer1>, <buffer2>})

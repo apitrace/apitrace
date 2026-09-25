@@ -1,0 +1,62 @@
+//!fvf
+Direct3DCreate9(SDKVersion = 32) = <pD3D>
+IDirect3D9::CreateDevice(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, hFocusWindow = <hWnd>, BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING, pPresentationParameters = &{BackBufferWidth = 250, BackBufferHeight = 250, BackBufferFormat = D3DFMT_X8R8G8B8, BackBufferCount = 1, MultiSampleType = D3DMULTISAMPLE_NONE, MultiSampleQuality = 0, SwapEffect = D3DSWAPEFFECT_DISCARD, hDeviceWindow = <hWnd>, Windowed = TRUE, EnableAutoDepthStencil = FALSE, AutoDepthStencilFormat = D3DFMT_UNKNOWN, Flags = 0x0, FullScreen_RefreshRateInHz = 0, PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE}, ppReturnedDeviceInterface = &<pDevice>) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_RESERVED0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZ) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZRHW) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZB1) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZB2) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZB3) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZB4) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZB5) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZW) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_NORMAL) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_PSIZE) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_DIFFUSE) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_SPECULAR) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX1) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX2) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX3) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX4) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX5) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX6) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX7) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEX8) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_LASTBETA_UBYTE4) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_LASTBETA_D3DCOLOR) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_RESERVED2) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(0)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(0)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(0)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(1)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(1)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(1)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(2)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(2)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(2)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(3)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(3)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(3)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(4)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(4)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(4)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(5)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(5)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(5)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE1(6)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE3(6)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_TEXCOORDSIZE4(6)) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0xc0000000) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x0) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x40000000) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = 0x80000000) = D3D_OK
+IDirect3DDevice9::Release(this = <pDevice>) = 0
+IDirect3D9::Release(this = <pD3D>) = 0

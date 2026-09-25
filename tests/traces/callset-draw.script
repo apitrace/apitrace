@@ -1,0 +1,3 @@
+dump --verbose --calls=draw tri.trace
+19 glClear(mask = GL_COLOR_BUFFER_BIT)
+27 glEnd()

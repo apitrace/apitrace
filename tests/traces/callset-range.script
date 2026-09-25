@@ -1,0 +1,7 @@
+dump --verbose --calls=2-7 tri.trace
+2 glXGetVisualFromFBConfig(dpy = 0xfc52b0, config = 0xfe3620) = &{visual = 0xfd00e8, visualid = 154, screen = 0, depth = 24, c_class = 4, red_mask = 16711680, green_mask = 65280, blue_mask = 255, colormap_size = 256, bits_per_rgb = 8}
+3 glXCreateNewContext(dpy = 0xfc52b0, config = 0xfe3620, renderType = GLX_RGBA_TYPE, shareList = NULL, direct = True) = 0xfdd650
+4 glXIsDirect(dpy = 0xfc52b0, ctx = 0xfdd650) = True
+5 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+6 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+7 glGetString(name = GL_RENDERER) = "Mesa DRI Mobile Intel\2\556 GM45 Express Chipset "

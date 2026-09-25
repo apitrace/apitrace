@@ -1,0 +1,4 @@
+!*.trace
+*-trim*.trace
+*-ref
+*-src

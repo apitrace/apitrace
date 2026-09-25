@@ -1,0 +1,27 @@
+//!map_buffer map_buffer_range_3_0
+glGenBuffers(n = 2, buffer = {<buffer1>, <buffer2>})
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+glBufferData(target = GL_ARRAY_BUFFER, size = 1000, data = NULL, usage = GL_STATIC_DRAW)
+glMapBufferRange(target = GL_ARRAY_BUFFER, offset = 100, length = 200, access = GL_MAP_WRITE_BIT) = <map1>
+memcpy(dest = <map1>, src = blob(200), n = 200)
+glUnmapBuffer(target = GL_ARRAY_BUFFER) = GL_TRUE
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer2>)
+glBufferData(target = GL_ARRAY_BUFFER, size = 2000, data = NULL, usage = GL_STATIC_DRAW)
+glMapBufferRange(target = GL_ARRAY_BUFFER, offset = 200, length = 300, access = GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) = <map2>
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+glMapBufferRange(target = GL_ARRAY_BUFFER, offset = 100, length = 200, access = GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) = <map3>
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer2>)
+memcpy(dest = <map2> + 20, src = blob(30), n = 30)
+glFlushMappedBufferRange(target = GL_ARRAY_BUFFER, offset = 20, length = 30)
+memcpy(dest = <map2> + 40, src = blob(50), n = 50)
+glFlushMappedBufferRange(target = GL_ARRAY_BUFFER, offset = 40, length = 50)
+glUnmapBuffer(target = GL_ARRAY_BUFFER) = GL_TRUE
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <buffer1>)
+memcpy(dest = <map3> + 10, src = blob(20), n = 20)
+glFlushMappedBufferRange(target = GL_ARRAY_BUFFER, offset = 10, length = 20)
+memcpy(dest = <map3> + 30, src = blob(40), n = 40)
+glFlushMappedBufferRange(target = GL_ARRAY_BUFFER, offset = 30, length = 40)
+glUnmapBuffer(target = GL_ARRAY_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_ARRAY_BUFFER, offset = 100, length = 200, access = GL_MAP_READ_BIT) = <map4>
+glUnmapBuffer(target = GL_ARRAY_BUFFER) = GL_TRUE
+glDeleteBuffers(n = 2, buffer = {<buffer1>, <buffer2>})

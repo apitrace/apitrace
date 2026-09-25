@@ -1,0 +1,3 @@
+dump --verbose --calls=frame tri.trace
+30 glXSwapBuffers(dpy = 0xfc52b0, drawable = 44040194)
+

@@ -1,0 +1,56 @@
+//!program_binary
+glViewport(x = 0, y = 0, width = 250, height = 250)
+glScissor(x = 0, y = 0, width = 250, height = 250)
+glGetIntegerv(pname = GL_NUM_PROGRAM_BINARY_FORMATS, params = &0)
+glGetIntegerv(pname = GL_PROGRAM_BINARY_FORMATS, params = {})
+glClearColor(red = 0.3, green = 0.1, blue = 0.3, alpha = 1)
+glCreateShader(type = GL_FRAGMENT_SHADER) = <fs>
+glShaderSource(shader = <fs>, count = 1, string = &"#version 150
+in vec4 v_color;
+out vec4 f_color;
+void main() {
+    f_color = v_color;
+}
+", length = NULL)
+glCompileShader(shader = <fs>)
+glGetShaderiv(shader = <fs>, pname = GL_COMPILE_STATUS, params = &1)
+glCreateShader(type = GL_VERTEX_SHADER) = <vs>
+glShaderSource(shader = <vs>, count = 1, string = &"#version 150
+uniform mat4 modelviewProjection;
+in vec4 pos;
+in vec4 color;
+out vec4 v_color;
+void main() {
+    gl_Position = modelviewProjection * pos;
+    v_color = color;
+}
+", length = NULL)
+glCompileShader(shader = <vs>)
+glGetShaderiv(shader = <vs>, pname = GL_COMPILE_STATUS, params = &1)
+glCreateProgram() = <program>
+glAttachShader(program = <program>, shader = <fs>)
+glAttachShader(program = <program>, shader = <vs>)
+glBindAttribLocation(program = <program>, index = 0, name = "pos")
+glBindAttribLocation(program = <program>, index = 1, name = "color")
+glLinkProgram(program = <program>)
+glGetProgramiv(program = <program>, pname = GL_LINK_STATUS, params = &1)
+glViewport(x = 0, y = 0, width = 250, height = 250)
+glBindFragDataLocation(program = <program>, color = 0, name = "f_color")
+glUseProgram(program = <program>)
+glGetAttribLocation(program = <program>, name = "pos") = 0
+glGetAttribLocation(program = <program>, name = "color") = 1
+glGetUniformLocation(program = <program>, name = "modelviewProjection") = 0
+glGenBuffers(n = 1, buffer = &<vbo>)
+glUniformMatrix4fv(location = 0, count = 1, transpose = GL_FALSE, value = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1})
+glClear(mask = GL_COLOR_BUFFER_BIT)
+glGenVertexArrays(n = 1, arrays = &<vao>)
+glBindVertexArray(array = <vao>)
+glBindBuffer(target = GL_ARRAY_BUFFER, buffer = <vbo>)
+glBufferData(target = GL_ARRAY_BUFFER, size = 60, data = blob(60), usage = GL_STATIC_DRAW)
+glVertexAttribPointer(index = 0, size = 2, type = GL_FLOAT, normalized = GL_FALSE, stride = 20, pointer = NULL)
+glEnableVertexAttribArray(index = 0)
+glVertexAttribPointer(index = 1, size = 3, type = GL_FLOAT, normalized = GL_FALSE, stride = 20, pointer = 0x8)
+glEnableVertexAttribArray(index = 1)
+<draw> glDrawArrays(mode = GL_TRIANGLES, first = 0, count = 3)
+glDisableVertexAttribArray(index = 0)
+glDisableVertexAttribArray(index = 1)

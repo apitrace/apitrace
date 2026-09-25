@@ -1,0 +1,14 @@
+Direct3DCreate8(SDKVersion = 220) = <pD3D>
+IDirect3D8::GetDeviceCaps(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, pCaps = &<>) = D3D_OK
+IDirect3D8::GetAdapterDisplayMode(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, pMode = &{Width = <>, Height = <>, RefreshRate = <>, Format = <Format>}) = D3D_OK
+IDirect3D8::CreateDevice(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, hFocusWindow = <hWnd>, BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING, pPresentationParameters = &{BackBufferWidth = 250, BackBufferHeight = 250, BackBufferFormat = <Format>, BackBufferCount = 1, MultiSampleType = D3DMULTISAMPLE_NONE, SwapEffect = D3DSWAPEFFECT_DISCARD, hDeviceWindow = <hWnd>, Windowed = TRUE, EnableAutoDepthStencil = FALSE, AutoDepthStencilFormat = D3DFMT_UNKNOWN, Flags = 0x0, FullScreen_RefreshRateInHz = 0, FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT}, ppReturnedDeviceInterface = &<pDevice>) = D3D_OK
+IDirect3DDevice8::Clear(this = <pDevice>, Count = 0, pRects = NULL, Flags = D3DCLEAR_TARGET, Color = 0xff4c194c, Z = 1, Stencil = 0) = D3D_OK
+IDirect3DDevice8::BeginScene(this = <pDevice>) = D3D_OK
+IDirect3DDevice8::SetRenderState(this = <pDevice>, State = D3DRS_LIGHTING, Value = FALSE) = D3D_OK
+IDirect3DDevice8::SetRenderState(this = <pDevice>, State = D3DRS_CULLMODE, Value = D3DCULL_NONE) = D3D_OK
+IDirect3DDevice8::SetVertexShader(this = <pDevice>, Handle = 66) = D3D_OK
+IDirect3DDevice8::DrawPrimitiveUP(this = <pDevice>, PrimitiveType = D3DPT_TRIANGLELIST, PrimitiveCount = 1, pVertexStreamZeroData = blob(48), VertexStreamZeroStride = 16) = D3D_OK
+IDirect3DDevice8::EndScene(this = <pDevice>) = D3D_OK
+<present> IDirect3DDevice8::Present(this = <pDevice>, pSourceRect = NULL, pDestRect = NULL, hDestWindowOverride = NULL, pDirtyRegion = NULL) = <>
+IDirect3DDevice8::Release(this = <pDevice>) = 0
+IDirect3D8::Release(this = <pD3D>) = 0
