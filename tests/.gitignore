@@ -1,0 +1,17 @@
+.*.sw?
+*.a
+*.diff.*
+*.o
+*.pyc
+*.so
+*.src.*
+*.thumb.*
+*.trace
+index.html
+CMakeCache.txt
+CMakeFiles
+CTestTestfile.cmake
+Makefile
+Testing
+build
+cmake_install.cmake

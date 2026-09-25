@@ -1,0 +1,2 @@
+//!subprocess CreateProcessAsUserW
+D3DPERF_SetMarker(col = 4294967295, wszName = "Child")

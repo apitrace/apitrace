@@ -1,0 +1,7 @@
+//!debug_marker
+glInsertEventMarkerEXT(length = 4, marker = "Init")
+glClearColor(red = 0.4, green = 0.4, blue = 0.4, alpha = 0)
+glViewport(x = 0, y = 0, width = 300, height = 300)
+glPushGroupMarkerEXT(length = 0, marker = "draw")
+glClear(mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+glPopGroupMarkerEXT()

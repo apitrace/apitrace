@@ -1,0 +1,7 @@
+EXPECT_FAILURE: apitrace diff-images --verbose images/white-1x1/ images/black-1x1/
+
+# In addition to getting the return value indicating an error, let's
+# also require that "apitrace diff-images" gave us the output we
+# expect.
+
+expect "Comparing images/white-1x1/0.png and images/black-1x1/0.png ... MISMATCH\n"

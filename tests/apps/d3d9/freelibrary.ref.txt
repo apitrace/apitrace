@@ -1,0 +1,5 @@
+//!freelibrary
+Direct3DCreate9(SDKVersion = 32) = <pD3D_0>
+IDirect3D9::Release(this = <pD3D_0>) = 0
+Direct3DCreate9(SDKVersion = 32) = <pD3D_1>
+IDirect3D9::Release(this = <pD3D_1>) = 0

@@ -1,0 +1,29 @@
+//!tex_sysmem
+Direct3DCreate9Ex(SDKVersion = 32, ppD3D = &<pD3D>) = D3D_OK
+IDirect3D9Ex::GetDeviceCaps(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, pCaps = &<Caps>) = D3D_OK
+IDirect3D9Ex::CreateDeviceEx(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, hFocusWindow = <hWnd>, BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING, pPresentationParameters = &{BackBufferWidth = 256, BackBufferHeight = 256, BackBufferFormat = D3DFMT_X8R8G8B8, BackBufferCount = 1, MultiSampleType = D3DMULTISAMPLE_NONE, MultiSampleQuality = 0, SwapEffect = D3DSWAPEFFECT_DISCARD, hDeviceWindow = <hWnd>, Windowed = TRUE, EnableAutoDepthStencil = FALSE, AutoDepthStencilFormat = D3DFMT_UNKNOWN, Flags = 0x0, FullScreen_RefreshRateInHz = 0, PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE}, pFullscreenDisplayMode = NULL, ppReturnedDeviceInterface = &<pDevice>) = D3D_OK
+IDirect3DDevice9Ex::CreateTexture(this = <pDevice>, Width = 32, Height = 32, Levels = 1, Usage = 0x0, Format = D3DFMT_A8R8G8B8, Pool = D3DPOOL_DEFAULT, ppTexture = &<pTexture>, pSharedHandle = NULL) = D3D_OK
+IDirect3DDevice9Ex::CreateTexture(this = <pDevice>, Width = 32, Height = 32, Levels = 1, Usage = 0x0, Format = D3DFMT_A8R8G8B8, Pool = D3DPOOL_SYSTEMMEM, ppTexture = &<pStagingTexture>, pSharedHandle = &blob(4096)) = D3D_OK
+IDirect3DDevice9Ex::UpdateTexture(this = <pDevice>, pSourceTexture = <pStagingTexture>, pDestinationTexture = <pTexture>) = D3D_OK
+IDirect3DTexture9::Release(this = <pStagingTexture>) = 0
+IDirect3DDevice9Ex::Clear(this = <pDevice>, Count = 0, pRects = NULL, Flags = D3DCLEAR_TARGET, Color = 4278190335, Z = 1, Stencil = 0) = D3D_OK
+IDirect3DDevice9Ex::BeginScene(this = <pDevice>) = D3D_OK
+IDirect3DDevice9Ex::SetRenderState(this = <pDevice>, State = D3DRS_LIGHTING, Value = FALSE) = D3D_OK
+IDirect3DDevice9Ex::SetRenderState(this = <pDevice>, State = D3DRS_CULLMODE, Value = D3DCULL_NONE) = D3D_OK
+IDirect3DDevice9Ex::SetRenderState(this = <pDevice>, State = D3DRS_ZENABLE, Value = D3DZB_FALSE) = D3D_OK
+IDirect3DDevice9Ex::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZ | D3DFVF_TEX1) = D3D_OK
+IDirect3DDevice9Ex::SetTexture(this = <pDevice>, Stage = 0, pTexture = <pTexture>) = D3D_OK
+IDirect3DDevice9Ex::SetSamplerState(this = <pDevice>, Sampler = 0, Type = D3DSAMP_MAGFILTER, Value = D3DTEXF_LINEAR) = D3D_OK
+IDirect3DDevice9Ex::SetSamplerState(this = <pDevice>, Sampler = 0, Type = D3DSAMP_MINFILTER, Value = D3DTEXF_LINEAR) = D3D_OK
+IDirect3DDevice9Ex::SetSamplerState(this = <pDevice>, Sampler = 0, Type = D3DSAMP_MIPFILTER, Value = D3DTEXF_LINEAR) = D3D_OK
+IDirect3DDevice9Ex::SetTextureStageState(this = <pDevice>, Stage = 0, Type = D3DTSS_COLOROP, Value = D3DTOP_SELECTARG1) = D3D_OK
+IDirect3DDevice9Ex::SetTextureStageState(this = <pDevice>, Stage = 0, Type = D3DTSS_COLORARG1, Value = D3DTA_TEXTURE) = D3D_OK
+IDirect3DDevice9Ex::SetTextureStageState(this = <pDevice>, Stage = 0, Type = D3DTSS_ALPHAOP, Value = D3DTOP_SELECTARG1) = D3D_OK
+IDirect3DDevice9Ex::SetTextureStageState(this = <pDevice>, Stage = 0, Type = D3DTSS_ALPHAARG1, Value = D3DTA_TEXTURE) = D3D_OK
+IDirect3DDevice9Ex::DrawPrimitiveUP(this = <pDevice>, PrimitiveType = D3DPT_TRIANGLESTRIP, PrimitiveCount = 2, pVertexStreamZeroData = blob(80), VertexStreamZeroStride = 20) = D3D_OK
+IDirect3DDevice9Ex::EndScene(this = <pDevice>) = D3D_OK
+<present> IDirect3DDevice9Ex::Present(this = <pDevice>, pSourceRect = NULL, pDestRect = NULL, hDestWindowOverride = NULL, pDirtyRegion = NULL) = D3D_OK
+
+IDirect3DTexture9::Release(this = <pTexture>) = 0
+IDirect3DDevice9Ex::Release(this = <pDevice>) = 0
+IDirect3D9Ex::Release(this = <pD3D>) = 0

@@ -1,0 +1,7 @@
+//!config
+glGetString(name = GL_VERSION) = "2.0"
+glGetString(name = GL_VENDOR) = "Acme, Inc."
+glGetString(name = GL_EXTENSIONS) = "GL_EXT_texture_swizzle GL_ARB_multitexture GL_GREMEDY_string_marker GL_GREMEDY_frame_terminator GL_ARB_debug_output GL_AMD_debug_output GL_KHR_debug GL_EXT_debug_marker GL_EXT_debug_label GL_VMWX_map_buffer_debug "
+glGetString(name = GL_RENDERER) = "Acme rasterizer"
+glGetString(name = GL_SHADING_LANGUAGE_VERSION) = "1.30"
+glGetIntegerv(pname = GL_MAX_TEXTURE_SIZE, params = &1024)

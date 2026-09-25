@@ -38,3 +38,7 @@
 	path = thirdparty/detours
 	url = https://github.com/microsoft/detours
 	shallow = true
+[submodule "tests/thirdparty/glfw"]
+	path = tests/thirdparty/glfw
+	url = https://github.com/glfw/glfw.git
+	shallow = true

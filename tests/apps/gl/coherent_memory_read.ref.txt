@@ -1,0 +1,760 @@
+//!coherent_memory_read
+glCreateProgram() = 1
+glCreateShader(type = GL_COMPUTE_SHADER) = <>
+glShaderSource(shader = <>, count = 1, string = &"#version 430 core
+#extension GL_ARB_uniform_buffer_object : require
+layout(local_size_x = 1000) in; 
+
+layout(location = 0) uniform uint stride; 
+layout(location = 1) uniform uint start_bound; 
+layout(location = 2) uniform uint end_bound; 
+layout(location = 3) uniform int value; 
+
+layout(std430, binding=0) buffer Fragments { int data[]; }; 
+
+void main()
+{
+   if (gl_GlobalInvocationID.x >= start_bound && gl_GlobalInvocationID.x < end_bound) 
+   {
+       if (mod(gl_GlobalInvocationID.x, stride) == 0)
+           data[gl_GlobalInvocationID.x] = value; 
+   }
+}
+", length = NULL)
+glCompileShader(shader = <>)
+glGetShaderiv(shader = <>, pname = GL_COMPILE_STATUS, params = &1)
+glAttachShader(program = 1, shader = <>)
+glLinkProgram(program = 1)
+glGetProgramiv(program = 1, pname = GL_LINK_STATUS, params = &1)
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 0)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 0)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 0)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = 2)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(175904), n = 175904) // fake
+memcpy(dest = <>, src = blob(175904), n = 175904) // fake
+memcpy(dest = <>, src = blob(175904), n = 175904) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(175908), n = 175908) // fake
+memcpy(dest = <>, src = blob(175908), n = 175908) // fake
+memcpy(dest = <>, src = blob(175908), n = 175908) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(175900), n = 175900) // fake
+memcpy(dest = <>, src = blob(175900), n = 175900) // fake
+memcpy(dest = <>, src = blob(175900), n = 175900) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(171808), n = 171808) // fake
+memcpy(dest = <>, src = blob(171808), n = 171808) // fake
+memcpy(dest = <>, src = blob(171808), n = 171808) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(171804), n = 171804) // fake
+memcpy(dest = <>, src = blob(171804), n = 171804) // fake
+memcpy(dest = <>, src = blob(171804), n = 171804) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glGenBuffers(n = 1, buffers = &<>)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glBufferStorage(target = GL_SHADER_STORAGE_BUFFER, size = 180000, data = NULL, flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+memcpy(dest = <>, src = blob(180000), n = 180000) // fake
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glGetError() = GL_NO_ERROR
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = <>, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glUseProgram(program = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 15000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+memcpy(dest = <>, src = blob(171812), n = 171812) // fake
+memcpy(dest = <>, src = blob(171812), n = 171812) // fake
+memcpy(dest = <>, src = blob(171812), n = 171812) // fake
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = <>)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 45000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 1715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glGetUniformLocation(program = 1, name = "stride") = 0
+glUniform1ui(location = 0, v0 = <>)
+glGetUniformLocation(program = 1, name = "start_bound") = 1
+glUniform1ui(location = 1, v0 = 15000)
+glGetUniformLocation(program = 1, name = "end_bound") = 2
+glUniform1ui(location = 2, v0 = 30000)
+glGetUniformLocation(program = 1, name = "value") = 3
+glUniform1i(location = 3, v0 = 715827882)
+glDispatchCompute(num_groups_x = 45, num_groups_y = 1, num_groups_z = 1)
+glFenceSync(condition = GL_SYNC_GPU_COMMANDS_COMPLETE, flags = 0) = <>
+glClientWaitSync(sync = <>, flags = GL_SYNC_FLUSH_COMMANDS_BIT, timeout = <>) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
+glBindBufferBase(target = GL_SHADER_STORAGE_BUFFER, index = 0, buffer = <>)
+glUnmapBuffer(target = GL_SHADER_STORAGE_BUFFER) = GL_TRUE
+glMapBufferRange(target = GL_SHADER_STORAGE_BUFFER, offset = 0, length = <>, access = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT) = <>
