@@ -112,6 +112,8 @@ class IDeviceState : public IUnknown {
 public:
     DeviceState state;
 
+    virtual ~IDeviceState() {}
+
     HRESULT STDMETHODCALLTYPE
     QueryInterface(REFIID riid, void **ppvObj) override
     {
