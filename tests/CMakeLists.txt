@@ -132,9 +132,6 @@ if (MINGW)
         set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++")
         set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libstdc++")
     endif ()
-
-    # Avoid https://sourceforge.net/p/mingw-w64/bugs/892/
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wrl)
 endif ()
 
 if (APPLE)
