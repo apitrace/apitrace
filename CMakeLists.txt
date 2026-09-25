@@ -419,6 +419,9 @@ if (MINGW)
         endif ()
     endif ()
 
+    # Avoid https://sourceforge.net/p/mingw-w64/bugs/892/
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wrl)
+
 elseif (ENABLE_STATIC_EXE)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
