@@ -193,23 +193,27 @@ class D3DRetracer(Retracer):
 
         # A --driver=d3d11on12 wrapped back buffer is backed by a typeless
         # resource (see CDXGISwapChainD3D11On12::GetBuffer), so D3D11 cannot
-        # infer a default view format for it from a NULL pDesc. Substitute a
-        # concrete default desc using the swapchain's own format in case of
-        # CreateRenderTargetView, CreateShaderResourceView, and
-        # CreateUnorderedAccessView. Don't need to handle CreateDepthStencilView
-        # since its back buffers are never depth/stencil resources.
+        # infer a view format for it from a NULL pDesc or pDesc->Format ==
+        # DXGI_FORMAT_UNKNOWN. Substitute a concrete default desc using the
+        # swapchain's own format in cases of CreateRenderTargetView,
+        # CreateShaderResourceView, and CreateUnorderedAccessView. Don't need
+        # to handle CreateDepthStencilView since its back buffers are never
+        # depth/stencil resources.
         if interface.name.startswith('ID3D11Device') and method.name == 'CreateRenderTargetView':
             print(r'    D3D11_RENDER_TARGET_VIEW_DESC _d3d11on12ViewDesc;')
-            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12 &&')
+            print(r'        (!pDesc || pDesc->Format == DXGI_FORMAT_UNKNOWN)) {')
             print(r'        DXGI_FORMAT _d3d11on12Format;')
             print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
-            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
-            print(r'            if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
+            print(r'            if (pDesc) {')
+            print(r'                _d3d11on12ViewDesc = *pDesc;')
+            print(r'            } else if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
             print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;')
             print(r'            } else {')
             print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;')
             print(r'                _d3d11on12ViewDesc.Texture2D.MipSlice = 0;')
             print(r'            }')
+            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
             print(r'            pDesc = &_d3d11on12ViewDesc;')
             print(r'        }')
             print(r'    }')
@@ -218,17 +222,20 @@ class D3DRetracer(Retracer):
 
         if interface.name.startswith('ID3D11Device') and method.name == 'CreateShaderResourceView':
             print(r'    D3D11_SHADER_RESOURCE_VIEW_DESC _d3d11on12ViewDesc;')
-            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12 &&')
+            print(r'        (!pDesc || pDesc->Format == DXGI_FORMAT_UNKNOWN)) {')
             print(r'        DXGI_FORMAT _d3d11on12Format;')
             print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
-            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
-            print(r'            if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
+            print(r'            if (pDesc) {')
+            print(r'                _d3d11on12ViewDesc = *pDesc;')
+            print(r'            } else if (d3dretrace::d3d11on12::isBackBufferMultisampled(pResource)) {')
             print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;')
             print(r'            } else {')
             print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;')
             print(r'                _d3d11on12ViewDesc.Texture2D.MostDetailedMip = 0;')
             print(r'                _d3d11on12ViewDesc.Texture2D.MipLevels = 1;')
             print(r'            }')
+            print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
             print(r'            pDesc = &_d3d11on12ViewDesc;')
             print(r'        }')
             print(r'    }')
@@ -237,12 +244,17 @@ class D3DRetracer(Retracer):
 
         if interface.name.startswith('ID3D11Device') and method.name == 'CreateUnorderedAccessView':
             print(r'    D3D11_UNORDERED_ACCESS_VIEW_DESC _d3d11on12ViewDesc;')
-            print(r'    if (!pDesc && retrace::driver == retrace::DRIVER_D3D11ON12) {')
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12 &&')
+            print(r'        (!pDesc || pDesc->Format == DXGI_FORMAT_UNKNOWN)) {')
             print(r'        DXGI_FORMAT _d3d11on12Format;')
             print(r'        if (d3dretrace::d3d11on12::getBackBufferFormat(pResource, &_d3d11on12Format)) {')
+            print(r'            if (pDesc) {')
+            print(r'                _d3d11on12ViewDesc = *pDesc;')
+            print(r'            } else {')
+            print(r'                _d3d11on12ViewDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;')
+            print(r'                _d3d11on12ViewDesc.Texture2D.MipSlice = 0;')
+            print(r'            }')
             print(r'            _d3d11on12ViewDesc.Format = _d3d11on12Format;')
-            print(r'            _d3d11on12ViewDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;')
-            print(r'            _d3d11on12ViewDesc.Texture2D.MipSlice = 0;')
             print(r'            pDesc = &_d3d11on12ViewDesc;')
             print(r'        }')
             print(r'    }')
