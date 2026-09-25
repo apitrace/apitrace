@@ -1,0 +1,9 @@
+dump --verbose incomplete-call.trace
+0 glXQueryExtension(dpy = 0xa7d2a0, errorb = NULL, event = NULL) = True
+1 glXChooseFBConfig(dpy = 0xa7d2a0, screen = 0, attribList = {GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, GLX_ALPHA_SIZE, 1, GLX_DOUBLEBUFFER, 1, 0}, nitems = &12) = {0xa9c480, 0xa9c570, 0xa9e260, 0xa9e350, 0xa9c750, 0xa9c840, 0xa9ccf0, 0xa9e530, 0xa9e620, 0xa9ead0, 0xa9cde0, 0xa9ebc0}
+2 glXGetVisualFromFBConfig(dpy = 0xa7d2a0, config = 0xa9c480) = &{visual = 0xa88178, visualid = 154, screen = 0, depth = 24, c_class = 4, red_mask = 16711680, green_mask = 65280, blue_mask = 255, colormap_size = 256, bits_per_rgb = 8}
+3 glXCreateNewContext(dpy = 0xa7d2a0, config = 0xa9c480, renderType = GLX_RGBA_TYPE, shareList = NULL, direct = True) = 0xa95660
+4 glXIsDirect(dpy = 0xa7d2a0, ctx = 0xa95660) = True
+5 glXMakeContextCurrent(dpy = 0xa7d2a0, draw = 67108866, read = 67108866, ctx = 0xa95660) = True
+6 glXMakeContextCurrent(dpy = 0xa7d2a0, draw = 67108866, read = 67108866, ctx = 0xa95660) = True
+7 glGetIntegerv(pname = GL_RED_BITS, params = ?) // incomplete

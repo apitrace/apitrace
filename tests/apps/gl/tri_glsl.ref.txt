@@ -1,0 +1,44 @@
+//!tri_glsl
+glCreateShader(type = GL_FRAGMENT_SHADER) = <fs>
+glShaderSource(shader = <fs>, count = 1, string = &"void main() {
+   gl_FragColor = gl_Color;
+}
+", length = &-1)
+glCompileShader(shader = <fs>)
+glGetShaderiv(shader = <fs>, pname = GL_COMPILE_STATUS, params = &1)
+glCreateShader(type = GL_VERTEX_SHADER) = <vs>
+glShaderSource(shader = <vs>, count = 1, string = &"void main() {
+   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+   gl_FrontColor = gl_Color;
+}
+", length = &-1)
+glCompileShader(shader = <vs>)
+glGetShaderiv(shader = <vs>, pname = GL_COMPILE_STATUS, params = &1)
+glCreateProgram() = <program>
+glAttachShader(program = <program>, shader = <fs>)
+glAttachShader(program = <program>, shader = <vs>)
+glLinkProgram(program = <program>)
+glGetProgramiv(program = <program>, pname = GL_LINK_STATUS, params = &1)
+glDetachShader(program = <program>, shader = <fs>)
+glDetachShader(program = <program>, shader = <vs>)
+glDeleteShader(shader = <fs>)
+glDeleteShader(shader = <vs>)
+glUseProgram(program = <program>)
+glClearColor(red = 0.3, green = 0.1, blue = 0.3, alpha = 1)
+glViewport(x = 0, y = 0, width = 250, height = 250)
+glMatrixMode(mode = GL_PROJECTION)
+glLoadIdentity()
+glOrtho(left = -1, right = 1, bottom = -1, top = 1, zNear = -0.5, zFar = 1000)
+glMatrixMode(mode = GL_MODELVIEW)
+glClear(mask = GL_COLOR_BUFFER_BIT)
+glBegin(mode = GL_TRIANGLES)
+glColor3f(red = 0.8, green = 0, blue = 0)
+glVertex3f(x = -0.9, y = -0.9, z = -30)
+glColor3f(red = 0, green = 0.9, blue = 0)
+glVertex3f(x = 0.9, y = -0.9, z = -30)
+glColor3f(red = 0, green = 0, blue = 0.7)
+glVertex3f(x = 0, y = 0.9, z = -30)
+glEnd()
+<flush> glFlush()
+
+glDeleteProgram(program = <program>)

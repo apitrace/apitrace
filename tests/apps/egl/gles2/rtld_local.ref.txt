@@ -1,0 +1,16 @@
+//!rtld_local
+eglGetDisplay(display_id = <display_id>) = <dpy>
+eglInitialize(dpy = <dpy>, major = &<major>, minor = &<minor>) = EGL_TRUE
+eglBindAPI(api = EGL_OPENGL_ES_API) = EGL_TRUE
+eglCreateContext(dpy = <dpy>, config = <config>, share_context = NULL, attrib_list = <>) = <ctx>
+eglCreateWindowSurface(dpy = <dpy>, config = <config>, win = <win>, attrib_list = <>) = <surface>
+eglMakeCurrent(dpy = <dpy>, draw = <surface>, read = <surface>, ctx = <ctx>) = EGL_TRUE
+glViewport(x = 0, y = 0, width = 300, height = 300)
+glScissor(x = 0, y = 0, width = 300, height = 300)
+glClearColor(red = 0.4, green = 0.4, blue = 0.4, alpha = 1)
+glClear(mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+eglSwapBuffers(dpy = <dpy>, surface = <surface>) = EGL_TRUE
+eglMakeCurrent(dpy = <dpy>, draw = NULL, read = NULL, ctx = NULL) = EGL_TRUE
+eglDestroySurface(dpy = <dpy>, surface = <surface>) = EGL_TRUE
+eglDestroyContext(dpy = <dpy>, ctx = <ctx>) = EGL_TRUE
+eglTerminate(dpy = <dpy>) = EGL_TRUE

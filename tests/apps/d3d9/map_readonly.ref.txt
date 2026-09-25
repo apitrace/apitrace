@@ -1,0 +1,20 @@
+//!map_readonly
+Direct3DCreate9(SDKVersion = 32) = <pD3D>
+IDirect3D9::CreateDevice(this = <pD3D>, Adapter = D3DADAPTER_DEFAULT, DeviceType = D3DDEVTYPE_HAL, hFocusWindow = <hWnd>, BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING, pPresentationParameters = &{BackBufferWidth = 250, BackBufferHeight = 250, BackBufferFormat = D3DFMT_X8R8G8B8, BackBufferCount = 1, MultiSampleType = D3DMULTISAMPLE_NONE, MultiSampleQuality = 0, SwapEffect = D3DSWAPEFFECT_DISCARD, hDeviceWindow = <hWnd>, Windowed = TRUE, EnableAutoDepthStencil = FALSE, AutoDepthStencilFormat = D3DFMT_UNKNOWN, Flags = 0x0, FullScreen_RefreshRateInHz = 0, PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE}, ppReturnedDeviceInterface = &<pDevice>) = D3D_OK
+IDirect3DDevice9::Clear(this = <pDevice>, Count = 0, pRects = NULL, Flags = D3DCLEAR_TARGET, Color = 4283177292, Z = 1, Stencil = 0) = D3D_OK
+IDirect3DDevice9::BeginScene(this = <pDevice>) = D3D_OK
+IDirect3DDevice9::SetRenderState(this = <pDevice>, State = D3DRS_LIGHTING, Value = FALSE) = D3D_OK
+IDirect3DDevice9::SetRenderState(this = <pDevice>, State = D3DRS_CULLMODE, Value = D3DCULL_NONE) = D3D_OK
+IDirect3DDevice9::CreateVertexBuffer(this = <pDevice>, Length = 48, Usage = 0x0, FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE, Pool = D3DPOOL_DEFAULT, ppVertexBuffer = &<pVertexBuffer>, pSharedHandle = NULL) = D3D_OK
+IDirect3DVertexBuffer9::Lock(this = <pVertexBuffer>, OffsetToLock = 0, SizeToLock = 0, ppbData = &<pMap>, Flags = D3DLOCK_READONLY) = D3D_OK
+memcpy(dest = <pMap>, src = blob(48), n = 48)
+IDirect3DVertexBuffer9::Unlock(this = <pVertexBuffer>) = D3D_OK
+IDirect3DDevice9::SetStreamSource(this = <pDevice>, StreamNumber = 0, pStreamData = <pVertexBuffer>, OffsetInBytes = 0, Stride = 16) = D3D_OK
+IDirect3DDevice9::SetFVF(this = <pDevice>, FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE) = D3D_OK
+IDirect3DDevice9::DrawPrimitive(this = <pDevice>, PrimitiveType = D3DPT_TRIANGLELIST, StartVertex = 0, PrimitiveCount = 1) = D3D_OK
+IDirect3DDevice9::EndScene(this = <pDevice>) = D3D_OK
+<present> IDirect3DDevice9::Present(this = <pDevice>, pSourceRect = NULL, pDestRect = NULL, hDestWindowOverride = NULL, pDirtyRegion = NULL) = D3D_OK
+
+IDirect3DVertexBuffer9::Release(this = <pVertexBuffer>) = 0
+IDirect3DDevice9::Release(this = <pDevice>) = 0
+IDirect3D9::Release(this = <pD3D>) = 0

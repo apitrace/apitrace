@@ -1,0 +1,3 @@
+!*.trace
+*.src.trace
+*-trim.trace

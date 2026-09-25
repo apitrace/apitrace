@@ -1,0 +1,3 @@
+sed -e s/@file(sed-replace-file-search.txt)/@file(sed-replace-file-replace.txt)/ -o sed-replace-file.src.trace tri_glsl.trace
+diff --tool=python --suppress-common-lines --calls=0-99999999 --call-nos tri_glsl.trace sed-replace-file.src.trace
+| 6901 glShaderSource(shader = 1, count = 1, string = &'void main() {\n   gl_FragColor = gl_Color;\n}\n' -> &'void main() {\n   gl_FragColor = 2 * gl_Color;\n}\n', length = &-1)

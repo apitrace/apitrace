@@ -1,0 +1,5 @@
+dump --verbose --calls=2-11/3 tri.trace
+2 glXGetVisualFromFBConfig(dpy = 0xfc52b0, config = 0xfe3620) = &{visual = 0xfd00e8, visualid = 154, screen = 0, depth = 24, c_class = 4, red_mask = 16711680, green_mask = 65280, blue_mask = 255, colormap_size = 256, bits_per_rgb = 8}
+5 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+8 glGetString(name = GL_VERSION) = "2.1 Mesa 7.11.2"
+11 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
