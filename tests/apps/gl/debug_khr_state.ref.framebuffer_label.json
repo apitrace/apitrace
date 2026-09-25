@@ -1,0 +1,21 @@
+{
+  "parameters": {
+    "GL_DRAW_FRAMEBUFFER": {
+      "GL_COLOR_ATTACHMENT0": {
+        "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE": "GL_TEXTURE",
+        "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME": 1,
+        "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_LABEL": "texture"
+      }
+    }
+  },
+  "framebuffer": {
+    "GL_COLOR_ATTACHMENT0": {
+      "__class__": "image",
+      "__width__": 1,
+      "__height__": 1,
+      "__depth__": 1,
+      "__format__": "GL_RGB8",
+      "__label__": "texture"
+    }
+  }
+}

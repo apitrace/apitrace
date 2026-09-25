@@ -1,0 +1,30 @@
+{
+  "parameters": {},
+  "shaders": {
+    "VS": "vs_4_0
+dcl_input v0.xyzw
+dcl_input v1.xyzw
+dcl_output_siv o0.xyzw, position
+dcl_output o1.xyzw
+mov o0.xyzw, v0.xyzw
+mov o1.xyzw, v1.xyzw
+ret",
+    "PS": "ps_4_0
+dcl_input_ps linear v1.xyzw
+dcl_output o0.xyzw
+mov o0.xyzw, v1.xyzw
+ret"
+  },
+  "uniforms": {},
+  "buffers": {},
+  "textures": {},
+  "framebuffer": {
+    "RENDER_TARGET_0": {
+      "__class__": "image",
+      "__width__": 250,
+      "__height__": 250,
+      "__depth__": 1,
+      "__format__": "DXGI_FORMAT_R8G8B8A8_UNORM"
+    }
+  }
+}

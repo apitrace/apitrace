@@ -1,0 +1,8 @@
+{
+  "parameters": {
+    "GL_DRAW_BUFFER": "GL_FRONT",
+    "GL_DRAW_BUFFER0": "GL_FRONT",
+    "GL_READ_BUFFER": "GL_FRONT",
+    "GL_DOUBLEBUFFER": "GL_FALSE"
+  }
+}

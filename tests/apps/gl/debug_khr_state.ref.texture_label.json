@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "GL_TEXTURE0": {
+      "GL_TEXTURE_2D": {
+        "GL_TEXTURE_LABEL": "texture"
+      }
+    }
+  },
+  "textures": {
+    "GL_TEXTURE0, GL_TEXTURE_2D, level = 0": {
+      "__class__": "image",
+      "__width__": 1,
+      "__height__": 1,
+      "__depth__": 1,
+      "__format__": "GL_RGB8",
+      "__label__": "texture"
+    }
+  }
+}

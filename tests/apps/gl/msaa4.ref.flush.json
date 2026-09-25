@@ -1,0 +1,9 @@
+{
+  "parameters": {
+    "GL_SAMPLES": 4
+  },
+  "shaders": {},
+  "uniforms": {},
+  "textures": {},
+  "framebuffer": {}
+}
