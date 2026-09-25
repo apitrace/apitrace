@@ -108,11 +108,11 @@ struct DeviceState {
 };
 
 
-class IDeviceState : public IUnknown {
+class CDeviceState : public IUnknown {
 public:
     DeviceState state;
 
-    virtual ~IDeviceState() {}
+    virtual ~CDeviceState() {}
 
     HRESULT STDMETHODCALLTYPE
     QueryInterface(REFIID riid, void **ppvObj) override
@@ -165,7 +165,7 @@ getDeviceState(T *pObject, REFGUID guid)
     }
 
     pUnk.Attach(pRaw);
-    return &static_cast<IDeviceState *>(pRaw)->state;
+    return &static_cast<CDeviceState *>(pRaw)->state;
 }
 
 
@@ -896,8 +896,8 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
         return hr;
     }
 
-    IDeviceState *pIDeviceState = new IDeviceState();
-    DeviceState &state = pIDeviceState->state;
+    CDeviceState *pDeviceState = new CDeviceState();
+    DeviceState &state = pDeviceState->state;
     state.adapter = pAdapter;
     state.d3d12Device = pD3D12Device;
     state.commandQueue = pCommandQueue;
@@ -922,7 +922,7 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
     if (FAILED(hr) || !state.copyFenceEvent) {
         std::cerr << "error: failed to set up the D3D11On12 present-time copy command list (0x"
                   << std::hex << (unsigned long)hr << std::dec << ")\n";
-        pIDeviceState->Release();
+        pDeviceState->Release();
         pDevice11->Release();
         if (pContext11) {
             pContext11->Release();
@@ -930,8 +930,8 @@ createDevice(IDXGIAdapter *pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Softwar
         return FAILED(hr) ? hr : E_FAIL;
     }
 
-    pDevice11->SetPrivateDataInterface(GUID_D3D11On12DeviceState, pIDeviceState);
-    pIDeviceState->Release();
+    pDevice11->SetPrivateDataInterface(GUID_D3D11On12DeviceState, pDeviceState);
+    pDeviceState->Release();
 
     if (ppDevice) {
         *ppDevice = pDevice11;
