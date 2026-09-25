@@ -1,0 +1,20 @@
+trim --frames=0-5/draw,0-5/frame glxsimple.trace
+dump --verbose glxsimple-trim.trace
+0 glClear(mask = GL_COLOR_BUFFER_BIT)
+1 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
+2 glEnd()
+3 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
+4 glEnd()
+5 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
+6 glClear(mask = GL_COLOR_BUFFER_BIT)
+7 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
+8 glEnd()
+9 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
+10 glEnd()
+11 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+

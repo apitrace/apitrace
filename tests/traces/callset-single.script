@@ -1,0 +1,2 @@
+dump --verbose --calls=10 tri.trace
+10 glClearColor(red = 0.3, green = 0.1, blue = 0.3, alpha = 0)

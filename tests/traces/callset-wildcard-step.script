@@ -1,0 +1,9 @@
+dump --verbose --calls=*/5 tri.trace
+0 glXQueryExtension(dpy = 0xfc52b0, errorb = NULL, event = NULL) = True
+5 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+10 glClearColor(red = 0.3, green = 0.1, blue = 0.3, alpha = 0)
+15 glOrtho(left = -1, right = 1, bottom = -1, top = 1, zNear = -0.5, zFar = 1000)
+20 glBegin(mode = GL_TRIANGLES)
+25 glColor3f(red = 0, green = 0, blue = 0.7)
+30 glXSwapBuffers(dpy = 0xfc52b0, drawable = 44040194)
+

@@ -1,0 +1,36 @@
+trim -o trim-identity.src.trace tri.trace
+dump --verbose trim-identity.src.trace
+0 glXQueryExtension(dpy = 0xfc52b0, errorb = NULL, event = NULL) = True
+1 glXChooseFBConfig(dpy = 0xfc52b0, screen = 0, attribList = {GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, GLX_ALPHA_SIZE, 1, GLX_DOUBLEBUFFER, 1, 0}, nitems = &12) = {0xfe3620, 0xfe3710, 0xfe53e0, 0xfe54d0, 0xfe38f0, 0xfe39e0, 0xfe3e90, 0xfe56b0, 0xfe57a0, 0xfe5c50, 0xfe3f80, 0xfe5d40}
+2 glXGetVisualFromFBConfig(dpy = 0xfc52b0, config = 0xfe3620) = &{visual = 0xfd00e8, visualid = 154, screen = 0, depth = 24, c_class = 4, red_mask = 16711680, green_mask = 65280, blue_mask = 255, colormap_size = 256, bits_per_rgb = 8}
+3 glXCreateNewContext(dpy = 0xfc52b0, config = 0xfe3620, renderType = GLX_RGBA_TYPE, shareList = NULL, direct = True) = 0xfdd650
+4 glXIsDirect(dpy = 0xfc52b0, ctx = 0xfdd650) = True
+5 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+6 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+7 glGetString(name = GL_RENDERER) = "Mesa DRI Mobile Intel\2\556 GM45 Express Chipset "
+8 glGetString(name = GL_VERSION) = "2.1 Mesa 7.11.2"
+9 glGetString(name = GL_VENDOR) = "Tungsten Graphics, Inc"
+10 glClearColor(red = 0.3, green = 0.1, blue = 0.3, alpha = 0)
+11 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+12 glViewport(x = 0, y = 0, width = 250, height = 250)
+13 glMatrixMode(mode = GL_PROJECTION)
+14 glLoadIdentity()
+15 glOrtho(left = -1, right = 1, bottom = -1, top = 1, zNear = -0.5, zFar = 1000)
+16 glMatrixMode(mode = GL_MODELVIEW)
+17 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+18 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+19 glClear(mask = GL_COLOR_BUFFER_BIT)
+20 glBegin(mode = GL_TRIANGLES)
+21 glColor3f(red = 0.8, green = 0, blue = 0)
+22 glVertex3f(x = -0.9, y = -0.9, z = -30)
+23 glColor3f(red = 0, green = 0.9, blue = 0)
+24 glVertex3f(x = 0.9, y = -0.9, z = -30)
+25 glColor3f(red = 0, green = 0, blue = 0.7)
+26 glVertex3f(x = 0, y = 0.9, z = -30)
+27 glEnd()
+28 glFlush()
+29 glFlush()
+30 glXSwapBuffers(dpy = 0xfc52b0, drawable = 44040194)
+
+31 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True
+32 glXMakeContextCurrent(dpy = 0xfc52b0, draw = 44040194, read = 44040194, ctx = 0xfdd650) = True

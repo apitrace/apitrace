@@ -1,0 +1,5 @@
+trim -o trim-frames-and-calls-trim.trace --frames=5/frame --calls=2 glxsimple.trace
+dump --verbose trim-frames-and-calls-trim.trace
+0 glXMakeCurrent(dpy = 0x236a280, drawable = 41943041, ctx = 0x2384330) = True
+1 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
+
