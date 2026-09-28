@@ -242,6 +242,172 @@ isBackBufferMultisampled(ID3D11Resource *pResource)
 }
 
 
+static bool
+isBlockCompressed(DXGI_FORMAT format)
+{
+    return (format >= DXGI_FORMAT_BC1_TYPELESS && format <= DXGI_FORMAT_BC5_SNORM) ||
+           (format >= DXGI_FORMAT_BC6H_TYPELESS && format <= DXGI_FORMAT_BC7_UNORM_SRGB);
+}
+
+
+/*
+ * Retrieves subresource dimensions (width, height, depth) for any resource type.
+ * Returns false if the resource pointer is NULL or Subresource is out of range.
+ */
+static bool
+getSubresourceSize(ID3D11Resource *pResource, UINT Subresource, UINT *pWidth, UINT *pHeight, UINT *pDepth)
+{
+    if (!pResource) {
+        return false;
+    }
+
+    D3D11_RESOURCE_DIMENSION dimension;
+    pResource->GetType(&dimension);
+
+    UINT width = 1, height = 1, depth = 1;
+
+    switch (dimension) {
+    case D3D11_RESOURCE_DIMENSION_BUFFER: {
+        if (Subresource != 0) {
+            return false;
+        }
+        ComPtr<ID3D11Buffer> pBuffer;
+        if (FAILED(pResource->QueryInterface(IID_ID3D11Buffer, reinterpret_cast<void**>(pBuffer.GetAddressOf())))) {
+            return false;
+        }
+        D3D11_BUFFER_DESC desc;
+        pBuffer->GetDesc(&desc);
+        width = desc.ByteWidth;
+        break;
+    }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE1D: {
+        ComPtr<ID3D11Texture1D> pTex1D;
+        if (FAILED(pResource->QueryInterface(IID_ID3D11Texture1D, reinterpret_cast<void**>(pTex1D.GetAddressOf())))) {
+            return false;
+        }
+        D3D11_TEXTURE1D_DESC desc;
+        pTex1D->GetDesc(&desc);
+
+        UINT mipLevels = desc.MipLevels ? desc.MipLevels : 1;
+        UINT arraySize = desc.ArraySize ? desc.ArraySize : 1;
+        if (Subresource >= mipLevels * arraySize) {
+            return false;
+        }
+
+        UINT mipSlice = Subresource % mipLevels;
+        width = std::max(1, desc.Width >> mipSlice);
+        break;
+    }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE2D: {
+        ComPtr<ID3D11Texture2D> pTex2D;
+        if (FAILED(pResource->QueryInterface(IID_ID3D11Texture2D, reinterpret_cast<void**>(pTex2D.GetAddressOf())))) {
+            return false;
+        }
+        D3D11_TEXTURE2D_DESC desc;
+        pTex2D->GetDesc(&desc);
+
+        UINT mipLevels = desc.MipLevels ? desc.MipLevels : 1;
+        UINT arraySize = desc.ArraySize ? desc.ArraySize : 1;
+        if (Subresource >= mipLevels * arraySize) {
+            return false;
+        }
+
+        UINT mipSlice = Subresource % mipLevels;
+        width = std::max(1, desc.Width >> mipSlice);
+        height = std::max(1, desc.Height >> mipSlice);
+
+        if (isBlockCompressed(desc.Format)) {
+            /*
+             * A block compressed mip is stored as whole 4x4 blocks, so the last
+             * few mips occupy more space than their logical size. Roundup width
+             * and height to block-aligned size (4 bytes).
+             */
+            width = (width + 3) & ~3u;
+            height = (height + 3) & ~3u;
+        }
+        break;
+    }
+    case D3D11_RESOURCE_DIMENSION_TEXTURE3D: {
+        ComPtr<ID3D11Texture3D> pTex3D;
+        if (FAILED(pResource->QueryInterface(IID_ID3D11Texture3D, reinterpret_cast<void**>(pTex3D.GetAddressOf())))) {
+            return false;
+        }
+        D3D11_TEXTURE3D_DESC desc;
+        pTex3D->GetDesc(&desc);
+
+        UINT mipLevels = desc.MipLevels ? desc.MipLevels : 1;
+        if (Subresource >= mipLevels) {
+            return false;
+        }
+
+        UINT mipSlice = Subresource;
+        width = std::max(1, desc.Width >> mipSlice);
+        height = std::max(1, desc.Height >> mipSlice);
+        depth = std::max(1, desc.Depth >> mipSlice);
+
+        if (isBlockCompressed(desc.Format)) {
+            /*
+             * Roundup width and height to block-aligned size (4 bytes).
+             */
+            width = (width + 3) & ~3u;
+            height = (height + 3) & ~3u;
+        }
+        break;
+    }
+    default:
+        return false;
+    }
+
+    *pWidth = width;
+    *pHeight = height;
+    *pDepth = depth;
+    return true;
+}
+
+
+/*
+ * Returns true if CopySubresourceRegion would read or write outside resource
+ * bounds. The D3D11 runtime validates the region and silently drops such a copy,
+ * but D3D11On12 forwards it to D3D12 without runtime bounds checking, causing
+ * out-of-range access and device removal.
+ */
+bool
+isCopyRegionOutOfBounds(ID3D11Resource *pDstResource, UINT DstSubresource, UINT DstX, UINT DstY, UINT DstZ,
+                        ID3D11Resource *pSrcResource, UINT SrcSubresource, const D3D11_BOX *pSrcBox)
+{
+    UINT srcWidth, srcHeight, srcDepth;
+    UINT dstWidth, dstHeight, dstDepth;
+    UINT copyWidth, copyHeight, copyDepth;
+
+    if (!getSubresourceSize(pSrcResource, SrcSubresource, &srcWidth, &srcHeight, &srcDepth) ||
+        !getSubresourceSize(pDstResource, DstSubresource, &dstWidth, &dstHeight, &dstDepth)) {
+        return true;
+    }
+
+    copyWidth = srcWidth;
+    copyHeight = srcHeight;
+    copyDepth = srcDepth;
+
+    if (pSrcBox) {
+        if (pSrcBox->left >= pSrcBox->right ||
+            pSrcBox->top >= pSrcBox->bottom ||
+            pSrcBox->front >= pSrcBox->back ||
+            pSrcBox->right > srcWidth ||
+            pSrcBox->bottom > srcHeight ||
+            pSrcBox->back > srcDepth) {
+            return true;
+        }
+        copyWidth = pSrcBox->right - pSrcBox->left;
+        copyHeight = pSrcBox->bottom - pSrcBox->top;
+        copyDepth = pSrcBox->back - pSrcBox->front;
+    }
+
+    return (static_cast<uint64_t>(DstX) + static_cast<uint64_t>(copyWidth) > dstWidth) ||
+           (static_cast<uint64_t>(DstY) + static_cast<uint64_t>(copyHeight) > dstHeight) ||
+           (static_cast<uint64_t>(DstZ) + static_cast<uint64_t>(copyDepth) > dstDepth);
+}
+
+
 class CDXGISwapChainD3D11On12 : public IDXGISwapChain3
 {
 protected:

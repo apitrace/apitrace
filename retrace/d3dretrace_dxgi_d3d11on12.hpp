@@ -44,6 +44,7 @@
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 struct ID3D11Resource;
+struct D3D11_BOX;
 
 
 typedef HRESULT
@@ -81,6 +82,10 @@ overrideGetParent(IUnknown *pObject, REFIID riid, void **ppParent, HRESULT *pRes
 
 bool
 overrideGetAdapter(IUnknown *pObject, void **ppAdapter, HRESULT *pResult);
+
+bool
+isCopyRegionOutOfBounds(ID3D11Resource *pDstResource, UINT DstSubresource, UINT DstX, UINT DstY, UINT DstZ,
+                        ID3D11Resource *pSrcResource, UINT SrcSubresource, const D3D11_BOX *pSrcBox);
 
 bool
 getBackBufferFormat(ID3D11Resource *pResource, DXGI_FORMAT *pFormat);

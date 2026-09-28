@@ -191,6 +191,19 @@ class D3DRetracer(Retracer):
             print(r'        std::cerr << "warning: --driver=d3d11on12 does not support ID3D11VideoDevice::CreateVideoDecoder. Hardware video decode will corrupt and cause GPU device to remove\n";')
             print(r'    }')
 
+        # D3D11 validates a copy region and drops the call when it doesn't fit,
+        # but D3D11On12 forwards it to D3D12, which fails the GPU instead.
+        # Drop it here the way the D3D11 runtime would.
+        if interface.name.startswith('ID3D11DeviceContext') and method.name.startswith('CopySubresourceRegion'):
+            print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12 &&')
+            print(r'        d3dretrace::d3d11on12::isCopyRegionOutOfBounds(pDstResource, DstSubresource, DstX, DstY, DstZ,')
+            print(r'                                                       pSrcResource, SrcSubresource, pSrcBox)) {')
+            print(r'        retrace::warning(call) << "skipping out-of-bounds CopySubresourceRegion\n";')
+            print(r'    } else {')
+            Retracer.doInvokeInterfaceMethod(self, interface, method)
+            print(r'    }')
+            return
+
         # A --driver=d3d11on12 wrapped back buffer is backed by a typeless
         # resource (see CDXGISwapChainD3D11On12::GetBuffer), so D3D11 cannot
         # infer a view format for it from a NULL pDesc or pDesc->Format ==
