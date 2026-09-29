@@ -411,6 +411,17 @@ class D3DRetracer(Retracer):
             print(r'    }')
             return
 
+        # A D3D11On12 device parents to the underlying D3D12 device's private
+        # DXGI objects, not the ones the trace enumerated.  Keep the traced
+        # adapter/factory identities instead, so their reference counts stay
+        # consistent with the trace.
+        if method.name == 'GetParent':
+            print(r'    if (retrace::driver != retrace::DRIVER_D3D11ON12 ||')
+            print(r'        !d3dretrace::d3d11on12::overrideGetParent(_this, riid, ppParent, &_result)) {')
+            Retracer.invokeInterfaceMethod(self, interface, method)
+            print(r'    }')
+            return
+
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
             print(r'    d3dretrace::createWindowForSwapChain(pDesc);')
