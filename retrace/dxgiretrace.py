@@ -331,6 +331,7 @@ class D3DRetracer(Retracer):
 
         if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapterByLuid'):
             print(r'    retrace::warning(call) << "ignoring adapter LUID, returning adapter 0\n";')
+            print(r'    (void)AdapterLuid;')
             print(r'    if (retrace::driver != retrace::DRIVER_DEFAULT) {')
             print(r'        _result = d3dretrace::createAdapter(_this, riid, ppvAdapter);')
             print(r'    } else {')
