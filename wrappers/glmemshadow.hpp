@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 #include <stdlib.h>
 #include <stdint.h>

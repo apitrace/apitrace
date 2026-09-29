@@ -32,6 +32,7 @@
 #include "os_thread.hpp"
 #include "retrace_swizzle.hpp"
 
+#include <unordered_map>
 
 class MetricWriter;
 
@@ -192,6 +193,14 @@ extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];
 extern const retrace::Entry wgl_callbacks[];
 extern const retrace::Entry egl_callbacks[];
+
+extern const std::unordered_map<std::string, retrace::FunctionType> gl_func_types;
+
+void codegen_start();
+
+void call_codegen(trace::Call &call);
+
+void codegen_end();
 
 void frame_complete(trace::Call &call);
 void initContext();
