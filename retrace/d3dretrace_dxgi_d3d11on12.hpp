@@ -80,6 +80,9 @@ bool
 overrideGetParent(IUnknown *pObject, REFIID riid, void **ppParent, HRESULT *pResult);
 
 bool
+overrideGetAdapter(IUnknown *pObject, void **ppAdapter, HRESULT *pResult);
+
+bool
 getBackBufferFormat(ID3D11Resource *pResource, DXGI_FORMAT *pFormat);
 
 bool

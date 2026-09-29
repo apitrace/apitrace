@@ -434,6 +434,14 @@ class D3DRetracer(Retracer):
             print(r'    }')
             return
 
+        # Same reason as IDXGIObject::GetParent for IDXGIDevice::GetAdapter
+        if interface.name.startswith('IDXGIDevice') and method.name == 'GetAdapter':
+            print(r'    if (retrace::driver != retrace::DRIVER_D3D11ON12 ||')
+            print(r'        !d3dretrace::d3d11on12::overrideGetAdapter(_this, (void **)pAdapter, &_result)) {')
+            Retracer.invokeInterfaceMethod(self, interface, method)
+            print(r'    }')
+            return
+
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
             print(r'    d3dretrace::createWindowForSwapChain(pDesc);')

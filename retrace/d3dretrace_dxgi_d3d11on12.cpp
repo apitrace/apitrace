@@ -1174,5 +1174,33 @@ overrideGetParent(IUnknown *pObject, REFIID riid, void **ppParent, HRESULT *pRes
 }
 
 
+/*
+ * Same reasoning and fix as overrideGetParent() for IDXGIDevice::GetAdapter.
+ * The real D3D11On12 implementation resolves it the same way: through the
+ * internal D3D12 device's own adapter, not the one the trace enumerated.
+ */
+bool
+overrideGetAdapter(IUnknown *pObject, void **ppAdapter, HRESULT *pResult)
+{
+    if (!ppAdapter) {
+        return false;
+    }
+
+    ComPtr<ID3D11Device> pDevice11;
+    if (!pObject ||
+        FAILED(pObject->QueryInterface(IID_ID3D11Device, reinterpret_cast<void**>(pDevice11.GetAddressOf())))) {
+        return false;
+    }
+
+    DeviceState *pDevState = getDeviceState(pDevice11.Get(), GUID_D3D11On12DeviceState);
+    if (!pDevState || !pDevState->adapter) {
+        return false;
+    }
+
+    *pResult = pDevState->adapter->QueryInterface(IID_IDXGIAdapter, ppAdapter);
+    return true;
+}
+
+
 } /* namespace d3d11on12 */
 } /* namespace d3dretrace */
