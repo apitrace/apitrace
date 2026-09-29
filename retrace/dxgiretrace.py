@@ -415,7 +415,8 @@ class D3DRetracer(Retracer):
         # adapter/factory identities instead, so their reference counts stay
         # consistent with the trace.
         if method.name == 'GetParent':
-            print(r'    if (!d3dretrace::d3d11on12::overrideGetParent(_this, riid, ppParent, &_result)) {')
+            print(r'    if (retrace::driver != retrace::DRIVER_D3D11ON12 ||')
+            print(r'        !d3dretrace::d3d11on12::overrideGetParent(_this, riid, ppParent, &_result)) {')
             Retracer.invokeInterfaceMethod(self, interface, method)
             print(r'    }')
             return
