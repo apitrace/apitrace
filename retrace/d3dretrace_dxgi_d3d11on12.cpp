@@ -295,7 +295,7 @@ getSubresourceSize(ID3D11Resource *pResource, UINT Subresource, UINT *pWidth, UI
         }
 
         UINT mipSlice = Subresource % mipLevels;
-        width = std::max(1, desc.Width >> mipSlice);
+        width = std::max(1u, desc.Width >> mipSlice);
         break;
     }
     case D3D11_RESOURCE_DIMENSION_TEXTURE2D: {
@@ -313,8 +313,8 @@ getSubresourceSize(ID3D11Resource *pResource, UINT Subresource, UINT *pWidth, UI
         }
 
         UINT mipSlice = Subresource % mipLevels;
-        width = std::max(1, desc.Width >> mipSlice);
-        height = std::max(1, desc.Height >> mipSlice);
+        width = std::max(1u, desc.Width >> mipSlice);
+        height = std::max(1u, desc.Height >> mipSlice);
 
         if (isBlockCompressed(desc.Format)) {
             /*
@@ -341,9 +341,9 @@ getSubresourceSize(ID3D11Resource *pResource, UINT Subresource, UINT *pWidth, UI
         }
 
         UINT mipSlice = Subresource;
-        width = std::max(1, desc.Width >> mipSlice);
-        height = std::max(1, desc.Height >> mipSlice);
-        depth = std::max(1, desc.Depth >> mipSlice);
+        width = std::max(1u, desc.Width >> mipSlice);
+        height = std::max(1u, desc.Height >> mipSlice);
+        depth = std::max(1u, desc.Depth >> mipSlice);
 
         if (isBlockCompressed(desc.Format)) {
             /*
