@@ -678,6 +678,12 @@ public:
         releaseWrappedResources(&pDevState, false);
         m_wrappedBuffers.clear();
         m_privateBuffers.clear();
+        /*
+         * When original BufferCount is 1, reset it to 0 to preserve the existing number of buffers in the swapchain
+         */
+        if (BufferCount == 1) {
+            BufferCount = 0;
+        }
         return m_pSwapChain->ResizeBuffers(BufferCount, Width, Height, stripSrgb(NewFormat), SwapChainFlags);
     }
 
@@ -854,6 +860,12 @@ public:
         releaseWrappedResources(&pDevState, /*saveOM=*/false);
         m_wrappedBuffers.clear();
         m_privateBuffers.clear();
+        /*
+         * See ResizeBuffers.
+         */
+        if (BufferCount == 1) {
+            BufferCount = 0;
+        }
         return m_pSwapChain->ResizeBuffers1(BufferCount, Width, Height, stripSrgb(Format), SwapChainFlags, pCreationNodeMask, ppPresentQueue);
     }
 };
