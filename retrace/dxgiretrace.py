@@ -59,6 +59,14 @@ class D3DRetracer(Retracer):
     ]
 
     def invokeFunction(self, function):
+        if function.name == 'CreateDXGIFactory2':
+            # Toggle DXGI debug layer
+            print(r'    if (retrace::debug >= 2) {')
+            print(r'        Flags |= DXGI_CREATE_FACTORY_DEBUG;')
+            print(r'    } else if (retrace::debug < 0) {')
+            print(r'        Flags &= ~DXGI_CREATE_FACTORY_DEBUG;')
+            print(r'    }')
+
         if function.name in self.createDeviceFunctionNames:
             # create windows as neccessary
             if 'pSwapChainDesc' in function.argNames():
@@ -107,7 +115,9 @@ class D3DRetracer(Retracer):
             print(r'        std::cerr << "warning: --driver=d3d11on12 does not intercept %s, falling back to --driver=hw\n";' % (function.name))
             print(r'    }')
 
-        if function.name == 'D3D11CreateDevice':
+        if function.name in ('CreateDXGIFactory', 'CreateDXGIFactory1'):
+            print(r'        _result = d3dretrace::createFactory(%s);' % ", ".join(function.argNames()))
+        elif function.name == 'D3D11CreateDevice':
             print(r'    if (retrace::driver == retrace::DRIVER_D3D11ON12) {')
             print(r'        _result = d3dretrace::d3d11on12::createDevice(%s);' % ", ".join(function.argNames()))
             print(r'    } else {')
@@ -173,7 +183,7 @@ class D3DRetracer(Retracer):
         print(r'    ComPtr<IDXGIFactory1> _pFactory;')
         print(r'    ComPtr<IDXGIAdapter> _pAdapter;')
         print(r'    if (pAdapter == nullptr && retrace::driver != retrace::DRIVER_DEFAULT) {')
-        print(r'        _result = CreateDXGIFactory1(IID_IDXGIFactory1, &_pFactory);')
+        print(r'        _result = d3dretrace::createFactory(IID_IDXGIFactory1, &_pFactory);')
         print(r'        assert(SUCCEEDED(_result));')
         print(r'        _result = d3dretrace::createAdapter(_pFactory.Get(), IID_IDXGIAdapter1, &_pAdapter);')
         print(r'        pAdapter = _pAdapter.Get();')
