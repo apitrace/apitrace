@@ -51,6 +51,9 @@ struct ID3D11DeviceChild;
 namespace d3dretrace {
 
 HRESULT
+createFactory(REFIID riid, void **ppFactory);
+
+HRESULT
 createAdapter(IDXGIFactory *pFactory, REFIID riid, void **ppvAdapter);
 
 static inline void
