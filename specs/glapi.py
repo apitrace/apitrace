@@ -2501,7 +2501,7 @@ glapi.addFunctions([
     GlFunction(Void, "glDrawMeshTasksEXT", [(GLuint, "num_groups_x"), (GLuint, "num_groups_y"), (GLuint, "num_groups_z")]),
     GlFunction(Void, "glDrawMeshTasksIndirectEXT", [(GLpointerConst, "indirect")]),
     GlFunction(Void, "glMultiDrawMeshTasksIndirectEXT", [(GLpointerConst, "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawMeshTasksIndirectCountEXT", [(GLpointerConst, "indirect"), (GLsizei, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawMeshTasksIndirectCountEXT", [(GLpointerConst, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
 
     # GL_EXT_multi_draw_arrays
     GlFunction(Void, "glMultiDrawArraysEXT", [(GLenum_mode, "mode"), (Array(Const(GLint), "drawcount"), "first"), (Array(Const(GLsizei), "drawcount"), "count"), (GLsizei, "drawcount")]),
