@@ -588,7 +588,15 @@ public:
         resourceDesc.Height = desc.BufferDesc.Height;
         resourceDesc.DepthOrArraySize = 1;
         resourceDesc.MipLevels = 1;
-        resourceDesc.Format = toTypelessFormat(desc.BufferDesc.Format);
+        /*
+         * Feature level 9_x doesn't allow typeless resources, so
+         * CreateWrappedResource would fail with E_INVALIDARG.
+         * UNORM/SRGB view casting isn't available there anyway,
+         * so keep the exact format.
+         */
+        resourceDesc.Format = m_pDevice->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0
+                              ? toTypelessFormat(desc.BufferDesc.Format)
+                              : desc.BufferDesc.Format;
         resourceDesc.SampleDesc = m_sampleDesc;
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
