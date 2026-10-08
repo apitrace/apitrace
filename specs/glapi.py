@@ -3718,4 +3718,53 @@ glapi.addFunctions([
     # GL_WIN_swap_hint
     GlFunction(Void, "glAddSwapHintRectWIN", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
 
+    # GL_EXT_memory_object
+    GlFunction(Void, "glGetUnsignedBytevEXT", [(GLenum, "pname"), Out(OpaquePointer(GLubyte), "data")], sideeffects=False),
+    GlFunction(Void, "glGetUnsignedBytei_vEXT", [(GLenum, "target"), (GLuint, "index"), Out(OpaquePointer(GLubyte), "data")], sideeffects=False),
+    GlFunction(Void, "glDeleteMemoryObjectsEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "memoryObjects")], sideeffects=False),  # XXX sideeffects
+    GlFunction(GLboolean, "glIsMemoryObjectEXT", [(GLuint, "memoryObject")], sideeffects=False),
+    GlFunction(Void, "glCreateMemoryObjectsEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "memoryObjects")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glMemoryObjectParameterivEXT", [(GLuint, "memoryObject"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glGetMemoryObjectParameterivEXT", [(GLuint, "memoryObject"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
+    GlFunction(Void, "glTexStorageMem2DEXT", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTexStorageMem2DMultisampleEXT", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedSampleLocations"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTexStorageMem3DEXT", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTexStorageMem3DMultisampleEXT", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedSampleLocations"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glBufferStorageMemEXT", [(GLenum, "target"), (GLsizeiptr, "size"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTextureStorageMem2DEXT", [(GLtexture, "texture"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTextureStorageMem2DMultisampleEXT", [(GLtexture, "texture"), (GLsizei, "samples"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedSampleLocations"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTextureStorageMem3DEXT", [(GLtexture, "texture"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTextureStorageMem3DMultisampleEXT", [(GLtexture, "texture"), (GLsizei, "samples"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedSampleLocations"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glNamedBufferStorageMemEXT", [(GLbuffer, "buffer"), (GLsizeiptr, "size"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTexStorageMem1DEXT", [(GLenum, "target"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glTextureStorageMem1DEXT", [(GLtexture, "texture"), (GLsizei, "levels"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLuint, "memory"), (GLuint64, "offset")], sideeffects=False),  # XXX sideeffects
+
+    # GL_EXT_memory_object_fd
+    GlFunction(Void, "glImportMemoryFdEXT", [(GLuint, "memory"), (GLuint64, "size"), (GLenum, "handleType"), (GLint, "fd")], sideeffects=False),  # XXX sideeffects
+
+    # GL_EXT_memory_object_win32
+    GlFunction(Void, "glImportMemoryWin32HandleEXT", [(GLuint, "memory"), (GLuint64, "size"), (GLenum, "handleType"), (OpaquePointer(Void), "handle")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glImportMemoryWin32NameEXT", [(GLuint, "memory"), (GLuint64, "size"), (GLenum, "handleType"), (OpaquePointer(Const(Void)), "name")], sideeffects=False),  # XXX sideeffects
+
+    # GL_EXT_semaphore
+    GlFunction(Void, "glGenSemaphoresEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "semaphores")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glDeleteSemaphoresEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "semaphores")], sideeffects=False),  # XXX sideeffects
+    GlFunction(GLboolean, "glIsSemaphoreEXT", [(GLuint, "semaphore")], sideeffects=False),
+    GlFunction(Void, "glSemaphoreParameterui64vEXT", [(GLuint, "semaphore"), (GLenum, "pname"), (Pointer(Const(GLuint64)), "params")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glGetSemaphoreParameterui64vEXT", [(GLuint, "semaphore"), (GLenum, "pname"), Out(Pointer(GLuint64), "params")], sideeffects=False),
+    GlFunction(Void, "glWaitSemaphoreEXT", [(GLuint, "semaphore"), (GLuint, "numBufferBarriers"), (Array(Const(GLbuffer), "numBufferBarriers"), "buffers"), (GLuint, "numTextureBarriers"), (Array(Const(GLtexture), "numTextureBarriers"), "textures"), (Array(Const(GLenum), "numTextureBarriers"), "srcLayouts")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glSignalSemaphoreEXT", [(GLuint, "semaphore"), (GLuint, "numBufferBarriers"), (Array(Const(GLbuffer), "numBufferBarriers"), "buffers"), (GLuint, "numTextureBarriers"), (Array(Const(GLtexture), "numTextureBarriers"), "textures"), (Array(Const(GLenum), "numTextureBarriers"), "dstLayouts")], sideeffects=False),  # XXX sideeffects
+
+    # GL_EXT_semaphore_fd
+    GlFunction(Void, "glImportSemaphoreFdEXT", [(GLuint, "semaphore"), (GLenum, "handleType"), (GLint, "fd")], sideeffects=False),  # XXX sideeffects
+
+    # GL_EXT_semaphore_win32
+    GlFunction(Void, "glImportSemaphoreWin32HandleEXT", [(GLuint, "semaphore"), (GLenum, "handleType"), (OpaquePointer(Void), "handle")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glImportSemaphoreWin32NameEXT", [(GLuint, "semaphore"), (GLenum, "handleType"), (OpaquePointer(Const(Void)), "name")], sideeffects=False),  # XXX sideeffects
+
+    # GL_NV_timeline_semaphore
+    GlFunction(Void, "glCreateSemaphoresNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "semaphores")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glSemaphoreParameterivNV", [(GLuint, "semaphore"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")], sideeffects=False),  # XXX sideeffects
+    GlFunction(Void, "glGetSemaphoreParameterivNV", [(GLuint, "semaphore"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
+
 ])
