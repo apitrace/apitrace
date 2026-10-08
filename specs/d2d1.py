@@ -1173,21 +1173,21 @@ ID2D1GradientStopCollection1.methods += [
 ]
 
 ID2D1DrawingStateBlock1.methods += [
-    StdMethod(Void, "GetDescription", [Out(Pointer(D2D1_DRAWING_STATE_DESCRIPTION1), "stateDescription")], const=True, sideeffects=False),
-    StdMethod(Void, "SetDescription", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION1)), "stateDescription")]),
+    StdMethod(Void, "GetDescription", [Out(Pointer(D2D1_DRAWING_STATE_DESCRIPTION1), "stateDescription")], const=True, sideeffects=False, overloaded=True),
+    StdMethod(Void, "SetDescription", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION1)), "stateDescription")], overloaded=True),
 ]
 
 ID2D1DeviceContext.methods += [
-    StdMethod(HRESULT, "CreateBitmap", [(D2D1_SIZE_U, "size"), (OpaquePointer(Const(Void)), "sourceData"), (UINT32, "pitch"), (Pointer(Const(D2D1_BITMAP_PROPERTIES1)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap1)), "bitmap")]),
-    StdMethod(HRESULT, "CreateBitmapFromWicBitmap", [(Opaque("IWICBitmapSource *"), "wicBitmapSource"), (Pointer(Const(D2D1_BITMAP_PROPERTIES1)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap1)), "bitmap")]),
+    StdMethod(HRESULT, "CreateBitmap", [(D2D1_SIZE_U, "size"), (OpaquePointer(Const(Void)), "sourceData"), (UINT32, "pitch"), (Pointer(Const(D2D1_BITMAP_PROPERTIES1)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap1)), "bitmap")], overloaded=True),
+    StdMethod(HRESULT, "CreateBitmapFromWicBitmap", [(Opaque("IWICBitmapSource *"), "wicBitmapSource"), (Pointer(Const(D2D1_BITMAP_PROPERTIES1)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap1)), "bitmap")], overloaded=True),
     StdMethod(HRESULT, "CreateColorContext", [(D2D1_COLOR_SPACE, "space"), (Pointer(Const(BYTE)), "profile"), (UINT32, "profileSize"), Out(Pointer(ObjPointer(ID2D1ColorContext)), "colorContext")]),
     StdMethod(HRESULT, "CreateColorContextFromFilename", [(PCWSTR, "filename"), Out(Pointer(ObjPointer(ID2D1ColorContext)), "colorContext")]),
     StdMethod(HRESULT, "CreateColorContextFromWicColorContext", [(Opaque("IWICColorContext *"), "wicColorContext"), Out(Pointer(ObjPointer(ID2D1ColorContext)), "colorContext")]),
     StdMethod(HRESULT, "CreateBitmapFromDxgiSurface", [(ObjPointer(IDXGISurface), "surface"), (Pointer(Const(D2D1_BITMAP_PROPERTIES1)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap1)), "bitmap")]),
     StdMethod(HRESULT, "CreateEffect", [(REFCLSID, "effectId"), Out(Pointer(ObjPointer(ID2D1Effect)), "effect")]),
-    StdMethod(HRESULT, "CreateGradientStopCollection", [(Pointer(Const(D2D1_GRADIENT_STOP)), "straightAlphaGradientStops"), (UINT32, "straightAlphaGradientStopsCount"), (D2D1_COLOR_SPACE, "preInterpolationSpace"), (D2D1_COLOR_SPACE, "postInterpolationSpace"), (D2D1_BUFFER_PRECISION, "bufferPrecision"), (D2D1_EXTEND_MODE, "extendMode"), (D2D1_COLOR_INTERPOLATION_MODE, "colorInterpolationMode"), Out(Pointer(ObjPointer(ID2D1GradientStopCollection1)), "gradientStopCollection1")]),
+    StdMethod(HRESULT, "CreateGradientStopCollection", [(Pointer(Const(D2D1_GRADIENT_STOP)), "straightAlphaGradientStops"), (UINT32, "straightAlphaGradientStopsCount"), (D2D1_COLOR_SPACE, "preInterpolationSpace"), (D2D1_COLOR_SPACE, "postInterpolationSpace"), (D2D1_BUFFER_PRECISION, "bufferPrecision"), (D2D1_EXTEND_MODE, "extendMode"), (D2D1_COLOR_INTERPOLATION_MODE, "colorInterpolationMode"), Out(Pointer(ObjPointer(ID2D1GradientStopCollection1)), "gradientStopCollection1")], overloaded=True),
     StdMethod(HRESULT, "CreateImageBrush", [(ObjPointer(ID2D1Image), "image"), (Pointer(Const(D2D1_IMAGE_BRUSH_PROPERTIES)), "imageBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(ObjPointer(ID2D1ImageBrush)), "imageBrush")]),
-    StdMethod(HRESULT, "CreateBitmapBrush", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_BITMAP_BRUSH_PROPERTIES1)), "bitmapBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(ObjPointer(ID2D1BitmapBrush1)), "bitmapBrush")]),
+    StdMethod(HRESULT, "CreateBitmapBrush", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_BITMAP_BRUSH_PROPERTIES1)), "bitmapBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(ObjPointer(ID2D1BitmapBrush1)), "bitmapBrush")], overloaded=True),
     StdMethod(HRESULT, "CreateCommandList", [Out(Pointer(ObjPointer(ID2D1CommandList)), "commandList")]),
     StdMethod(BOOL, "IsDxgiFormatSupported", [(DXGI_FORMAT, "format")], const=True, sideeffects=False),
     StdMethod(BOOL, "IsBufferPrecisionSupported", [(D2D1_BUFFER_PRECISION, "bufferPrecision")], const=True, sideeffects=False),
@@ -1203,16 +1203,16 @@ ID2D1DeviceContext.methods += [
     StdMethod(D2D1_PRIMITIVE_BLEND, "GetPrimitiveBlend", [], const=True, sideeffects=False),
     StdMethod(Void, "SetUnitMode", [(D2D1_UNIT_MODE, "unitMode")]),
     StdMethod(D2D1_UNIT_MODE, "GetUnitMode", [], const=True, sideeffects=False),
-    StdMethod(Void, "DrawGlyphRun", [(D2D1_POINT_2F, "baselineOrigin"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (Pointer(Const(DWRITE_GLYPH_RUN_DESCRIPTION)), "glyphRunDescription"), (ObjPointer(ID2D1Brush), "foregroundBrush"), (DWRITE_MEASURING_MODE, "measuringMode")]),
+    StdMethod(Void, "DrawGlyphRun", [(D2D1_POINT_2F, "baselineOrigin"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (Pointer(Const(DWRITE_GLYPH_RUN_DESCRIPTION)), "glyphRunDescription"), (ObjPointer(ID2D1Brush), "foregroundBrush"), (DWRITE_MEASURING_MODE, "measuringMode")], overloaded=True),
     StdMethod(Void, "DrawImage", [(ObjPointer(ID2D1Image), "image"), (Pointer(Const(D2D1_POINT_2F)), "targetOffset"), (Pointer(Const(D2D1_RECT_F)), "imageRectangle"), (D2D1_INTERPOLATION_MODE, "interpolationMode"), (D2D1_COMPOSITE_MODE, "compositeMode")]),
     StdMethod(Void, "DrawGdiMetafile", [(ObjPointer(ID2D1GdiMetafile), "gdiMetafile"), (Pointer(Const(D2D1_POINT_2F)), "targetOffset")]),
-    StdMethod(Void, "DrawBitmap", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (FLOAT, "opacity"), (D2D1_INTERPOLATION_MODE, "interpolationMode"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle"), (Pointer(Const(D2D1_MATRIX_4X4_F)), "perspectiveTransform")]),
-    StdMethod(Void, "PushLayer", [(Pointer(Const(D2D1_LAYER_PARAMETERS1)), "layerParameters"), (ObjPointer(ID2D1Layer), "layer")]),
+    StdMethod(Void, "DrawBitmap", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (FLOAT, "opacity"), (D2D1_INTERPOLATION_MODE, "interpolationMode"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle"), (Pointer(Const(D2D1_MATRIX_4X4_F)), "perspectiveTransform")], overloaded=True),
+    StdMethod(Void, "PushLayer", [(Pointer(Const(D2D1_LAYER_PARAMETERS1)), "layerParameters"), (ObjPointer(ID2D1Layer), "layer")], overloaded=True),
     StdMethod(HRESULT, "InvalidateEffectInputRectangle", [(ObjPointer(ID2D1Effect), "effect"), (UINT32, "input"), (Pointer(Const(D2D1_RECT_F)), "inputRectangle")]),
     StdMethod(HRESULT, "GetEffectInvalidRectangleCount", [(ObjPointer(ID2D1Effect), "effect"), Out(Pointer(UINT32), "rectangleCount")]),
     StdMethod(HRESULT, "GetEffectInvalidRectangles", [(ObjPointer(ID2D1Effect), "effect"), Out(Pointer(D2D1_RECT_F), "rectangles"), (UINT32, "rectanglesCount")]),
     StdMethod(HRESULT, "GetEffectRequiredInputRectangles", [(ObjPointer(ID2D1Effect), "renderEffect"), (Pointer(Const(D2D1_RECT_F)), "renderImageRectangle"), (Pointer(Const(D2D1_EFFECT_INPUT_DESCRIPTION)), "inputDescriptions"), Out(Pointer(D2D1_RECT_F), "requiredInputRects"), (UINT32, "inputCount")]),
-    StdMethod(Void, "FillOpacityMask", [(ObjPointer(ID2D1Bitmap), "opacityMask"), (ObjPointer(ID2D1Brush), "brush"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")]),
+    StdMethod(Void, "FillOpacityMask", [(ObjPointer(ID2D1Bitmap), "opacityMask"), (ObjPointer(ID2D1Brush), "brush"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")], overloaded=True),
 ]
 
 ID2D1Device.methods += [
@@ -1235,9 +1235,9 @@ PD2D1_EFFECT_FACTORY = Opaque("PD2D1_EFFECT_FACTORY")
 
 ID2D1Factory1.methods += [
     StdMethod(HRESULT, "CreateDevice", [(Opaque("IDXGIDevice *"), "dxgiDevice"), Out(Pointer(ObjPointer(ID2D1Device)), "d2dDevice")]),
-    StdMethod(HRESULT, "CreateStrokeStyle", [(Pointer(Const(D2D1_STROKE_STYLE_PROPERTIES1)), "strokeStyleProperties"), (Pointer(Const(FLOAT)), "dashes"), (UINT32, "dashesCount"), Out(Pointer(ObjPointer(ID2D1StrokeStyle1)), "strokeStyle")]),
-    StdMethod(HRESULT, "CreatePathGeometry", [Out(Pointer(ObjPointer(ID2D1PathGeometry1)), "pathGeometry")]),
-    StdMethod(HRESULT, "CreateDrawingStateBlock", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION1)), "drawingStateDescription"), (ObjPointer(IDWriteRenderingParams), "textRenderingParams"), Out(Pointer(ObjPointer(ID2D1DrawingStateBlock1)), "drawingStateBlock")]),
+    StdMethod(HRESULT, "CreateStrokeStyle", [(Pointer(Const(D2D1_STROKE_STYLE_PROPERTIES1)), "strokeStyleProperties"), (Pointer(Const(FLOAT)), "dashes"), (UINT32, "dashesCount"), Out(Pointer(ObjPointer(ID2D1StrokeStyle1)), "strokeStyle")], overloaded=True),
+    StdMethod(HRESULT, "CreatePathGeometry", [Out(Pointer(ObjPointer(ID2D1PathGeometry1)), "pathGeometry")], overloaded=True),
+    StdMethod(HRESULT, "CreateDrawingStateBlock", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION1)), "drawingStateDescription"), (ObjPointer(IDWriteRenderingParams), "textRenderingParams"), Out(Pointer(ObjPointer(ID2D1DrawingStateBlock1)), "drawingStateBlock")], overloaded=True),
     StdMethod(HRESULT, "CreateGdiMetafile", [(Opaque("IStream *"), "metafileStream"), Out(Pointer(ObjPointer(ID2D1GdiMetafile)), "metafile")]),
     StdMethod(HRESULT, "RegisterEffectFromStream", [(REFCLSID, "classId"), (Opaque("IStream *"), "propertyXml"), (Pointer(Const(D2D1_PROPERTY_BINDING)), "bindings"), (UINT32, "bindingsCount"), (Const(PD2D1_EFFECT_FACTORY), "effectFactory")]),
     StdMethod(HRESULT, "RegisterEffectFromString", [(REFCLSID, "classId"), (PCWSTR, "propertyXml"), (Pointer(Const(D2D1_PROPERTY_BINDING)), "bindings"), (UINT32, "bindingsCount"), (Const(PD2D1_EFFECT_FACTORY), "effectFactory")]),

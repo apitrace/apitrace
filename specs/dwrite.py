@@ -686,20 +686,20 @@ IDWriteTextLayout.methods += [
     StdMethod(HRESULT, "SetLocaleName", [(PCWSTR, "localeName"), (DWRITE_TEXT_RANGE, "textRange")]),
     StdMethod(FLOAT, "GetMaxWidth", []),
     StdMethod(FLOAT, "GetMaxHeight", []),
-    StdMethod(HRESULT, "GetFontCollection", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontFamilyNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontFamilyName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontWeight", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_WEIGHT), "fontWeight"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontStyle", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STYLE), "fontStyle"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontStretch", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STRETCH), "fontStretch"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetFontSize", [(UINT32, "currentPosition"), Out(Pointer(FLOAT), "fontSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontCollection", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontFamilyNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontFamilyName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontWeight", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_WEIGHT), "fontWeight"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontStyle", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STYLE), "fontStyle"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontStretch", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STRETCH), "fontStretch"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetFontSize", [(UINT32, "currentPosition"), Out(Pointer(FLOAT), "fontSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
     StdMethod(HRESULT, "GetUnderline", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasUnderline"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetStrikethrough", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasStrikethrough"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetDrawingEffect", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IUnknown)), "drawingEffect"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetInlineObject", [(UINT32, "currentPosition"), Out(Pointer(OpaquePointer(IDWriteInlineObject)), "inlineObject"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetTypography", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteTypography)), "typography"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetLocaleNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "GetLocaleName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetLocaleNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
+    StdMethod(HRESULT, "GetLocaleName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")], overloaded=True),
     StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (OpaquePointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY")]),
     StdMethod(HRESULT, "GetLineMetrics", [Out(Pointer(DWRITE_LINE_METRICS), "lineMetrics"), (UINT32, "maxLineCount"), Out(Pointer(UINT32), "actualLineCount")]),
     StdMethod(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_TEXT_METRICS), "textMetrics")]),
@@ -1235,7 +1235,7 @@ IDWriteBitmapRenderTarget1 = Interface("IDWriteBitmapRenderTarget1", IDWriteBitm
 
 IDWriteFactory1.methods += [
     StdMethod(HRESULT, "GetEudcFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), (BOOL, "checkForUpdates")]),
-    StdMethod(HRESULT, "CreateCustomRenderingParams", [(FLOAT, "gamma"), (FLOAT, "enhancedContrast"), (FLOAT, "enhancedContrastGrayscale"), (FLOAT, "clearTypeLevel"), (DWRITE_PIXEL_GEOMETRY, "pixelGeometry"), (DWRITE_RENDERING_MODE, "renderingMode"), Out(Pointer(ObjPointer(IDWriteRenderingParams1)), "renderingParams")]),
+    StdMethod(HRESULT, "CreateCustomRenderingParams", [(FLOAT, "gamma"), (FLOAT, "enhancedContrast"), (FLOAT, "enhancedContrastGrayscale"), (FLOAT, "clearTypeLevel"), (DWRITE_PIXEL_GEOMETRY, "pixelGeometry"), (DWRITE_RENDERING_MODE, "renderingMode"), Out(Pointer(ObjPointer(IDWriteRenderingParams1)), "renderingParams")], overloaded=True),
 ]
 
 IDWriteFontFace1.methods += [
