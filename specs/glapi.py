@@ -2014,7 +2014,7 @@ glapi.addFunctions([
     # GL_EXT_blend_func_extended
     GlFunction(Void, "glBindFragDataLocationIndexedEXT", [(GLprogram, "program"), (GLuint, "colorNumber"), (GLuint, "index"), (GLstringConst, "name")]),
     GlFunction(Void, "glBindFragDataLocationEXT", [(GLprogram, "program"), (GLuint, "color"), (GLstringConst, "name")]),
-    GlFunction(GLlocation, "glGetProgramResourceLocationIndexEXT", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")], sideeffects=False),
+    GlFunction(GLint, "glGetProgramResourceLocationIndexEXT", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")], sideeffects=False),
     GlFunction(GLint, "glGetFragDataIndexEXT", [(GLprogram, "program"), (GLstringConst, "name")], sideeffects=False),
 
     # GL_EXT_blend_func_separate
