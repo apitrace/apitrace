@@ -2014,8 +2014,8 @@ glapi.addFunctions([
     # GL_EXT_blend_func_extended
     GlFunction(Void, "glBindFragDataLocationIndexedEXT", [(GLprogram, "program"), (GLuint, "colorNumber"), (GLuint, "index"), (GLstringConst, "name")]),
     GlFunction(Void, "glBindFragDataLocationEXT", [(GLprogram, "program"), (GLuint, "color"), (GLstringConst, "name")]),
-    GlFunction(GLlocation, "glGetProgramResourceLocationIndexEXT", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")]),
-    GlFunction(GLint, "glGetFragDataIndexEXT", [(GLprogram, "program"), (GLstringConst, "name")]),
+    GlFunction(GLlocation, "glGetProgramResourceLocationIndexEXT", [(GLprogram, "program"), (GLenum, "programInterface"), (GLstringConst, "name")], sideeffects=False),
+    GlFunction(GLint, "glGetFragDataIndexEXT", [(GLprogram, "program"), (GLstringConst, "name")], sideeffects=False),
 
     # GL_EXT_blend_func_separate
     GlFunction(Void, "glBlendFuncSeparateEXT", [(GLenum, "sfactorRGB"), (GLenum, "dfactorRGB"), (GLenum, "sfactorAlpha"), (GLenum, "dfactorAlpha")]),
@@ -2470,7 +2470,7 @@ glapi.addFunctions([
     # GL_EXT_histogram
     GlFunction(Void, "glGetHistogramEXT", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "_glGetHistogramEXT_size(target, format, type)"), "values")]),
     GlFunction(Void, "glGetHistogramParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetHistogramParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")]),
+    GlFunction(Void, "glGetHistogramParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetMinmaxEXT", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "_glGetMinmaxEXT_size(target, format, type)"), "values")]),
     GlFunction(Void, "glGetMinmaxParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetMinmaxParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
