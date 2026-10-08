@@ -3767,4 +3767,7 @@ glapi.addFunctions([
     GlFunction(Void, "glSemaphoreParameterivNV", [(GLuint, "semaphore"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")], sideeffects=False),  # XXX sideeffects
     GlFunction(Void, "glGetSemaphoreParameterivNV", [(GLuint, "semaphore"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
 
+    # GL_OVR_multiview_multisampled_render_to_texture
+    GlFunction(Void, "glFramebufferTextureMultisampleMultiviewOVR", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLsizei, "samples"), (GLint, "baseViewIndex"), (GLsizei, "numViews")]),
+
 ])
