@@ -3770,4 +3770,37 @@ glapi.addFunctions([
     # GL_OVR_multiview_multisampled_render_to_texture
     GlFunction(Void, "glFramebufferTextureMultisampleMultiviewOVR", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLsizei, "samples"), (GLint, "baseViewIndex"), (GLsizei, "numViews")]),
 
+    # GL_OES_draw_texture
+    GlFunction(Void, "glDrawTexxOES", [(GLfixed, "x"), (GLfixed, "y"), (GLfixed, "z"), (GLfixed, "width"), (GLfixed, "height")]),
+    GlFunction(Void, "glDrawTexxvOES", [(Array(Const(GLfixed), 5), "coords")]),
+
+    # GL_NV_conservative_raster
+    GlFunction(Void, "glSubpixelPrecisionBiasNV", [(GLuint, "xbits"), (GLuint, "ybits")]),
+
+    # GL_NV_conservative_raster_dilate
+    GlFunction(Void, "glConservativeRasterParameterfNV", [(GLenum, "pname"), (GLfloat, "value")]),
+
+    # GL_NV_conservative_raster_pre_snap_triangles
+    GlFunction(Void, "glConservativeRasterParameteriNV", [(GLenum, "pname"), (GLint, "param")]),
+
+    # GL_EXT_window_rectangles
+    GlFunction(Void, "glWindowRectanglesEXT", [(GLenum, "mode"), (GLsizei, "count"), (Array(Const(GLint), "count*4"), "box")]),
+
+    # GL_EXT_shader_framebuffer_fetch_non_coherent
+    GlFunction(Void, "glFramebufferFetchBarrierEXT", []),
+
+    # GL_AMD_framebuffer_multisample_advanced
+    GlFunction(Void, "glRenderbufferStorageMultisampleAdvancedAMD", [(GLenum, "target"), (GLsizei, "samples"), (GLsizei, "storageSamples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
+    GlFunction(Void, "glNamedRenderbufferStorageMultisampleAdvancedAMD", [(GLrenderbuffer, "renderbuffer"), (GLsizei, "samples"), (GLsizei, "storageSamples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
+
+    # GL_MESA_framebuffer_flip_y
+    GlFunction(Void, "glFramebufferParameteriMESA", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
+    GlFunction(Void, "glGetFramebufferParameterivMESA", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+
+    # GL_NV_viewport_swizzle
+    GlFunction(Void, "glViewportSwizzleNV", [(GLuint, "index"), (GLenum, "swizzlex"), (GLenum, "swizzley"), (GLenum, "swizzlez"), (GLenum, "swizzlew")]),
+
+    # GL_NV_alpha_to_coverage_dither_control
+    GlFunction(Void, "glAlphaToCoverageDitherControlNV", [(GLenum, "mode")]),
+
 ])

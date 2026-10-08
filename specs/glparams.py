@@ -2451,6 +2451,7 @@ parameters = [
     #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_MESA"),	# 0x8BB5
     #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_FUNC_MESA"),	# 0x8BB6
     #("",	X,	1,	"GL_VERTEX_PROGRAM_CALLBACK_DATA_MESA"),	# 0x8BB7
+    ("glGetFramebufferParameter",	B,	1,	"GL_FRAMEBUFFER_FLIP_Y_MESA"),	# 0x8BBB
     ("",	X,	1,	"GL_COUNTER_TYPE_AMD"),	# 0x8BC0
     ("",	X,	1,	"GL_COUNTER_RANGE_AMD"),	# 0x8BC1
     ("",	X,	1,	"GL_UNSIGNED_INT64_AMD"),	# 0x8BC2
