@@ -437,7 +437,7 @@ class GlRetracer(Retracer):
         elif function.name == 'glClientWaitSync':
             print(r'    _result = glretrace::clientWaitSync(call, sync, flags, timeout);')
             print(r'    (void)_result;')
-        elif function.name == 'glGetSynciv':
+        elif function.name in ('glGetSynciv', 'glGetSyncivAPPLE'):
             print(r'    if (pname == GL_SYNC_STATUS &&')
             print(r'        bufSize >= 1 &&')
             print(r'        values != NULL &&')
