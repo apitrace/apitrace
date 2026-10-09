@@ -37,6 +37,9 @@
 namespace glws {
 
 
+bool hasEGLImages = false;
+
+
 bool
 checkExtension(const char *extName, const char *extString)
 {

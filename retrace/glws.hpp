@@ -49,6 +49,8 @@ class Drawable;
 bool
 checkExtension(const char *extName, const char *extString);
 
+extern bool hasEGLImages;
+
 // Extra info for creating PBuffers
 struct pbuffer_info
 {
