@@ -301,6 +301,8 @@ init(void) {
     }
 
     eglExtensions = eglQueryString(eglDisplay, EGL_EXTENSIONS);
+    hasEGLImages = eglExtensions &&
+                   checkExtension("EGL_KHR_gl_texture_2D_image", eglExtensions);
     has_EGL_KHR_create_context = checkExtension("EGL_KHR_create_context", eglExtensions);
 }
 

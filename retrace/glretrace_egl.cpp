@@ -35,6 +35,7 @@
 #include "eglsize.hpp"
 
 #include <climits>
+#include <string.h>
 
 #ifndef EGL_OPENGL_ES_API
 #define EGL_OPENGL_ES_API		0x30A0
@@ -341,6 +342,148 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
     }
 }
 
+#if !defined(_WIN32) && !defined(__APPLE__)
+
+struct ImageState {
+    EGLImageKHR image = EGL_NO_IMAGE_KHR;
+    GLsizei width = 0;
+    GLsizei height = 0;
+};
+
+typedef std::map<unsigned long long, ImageState> ImageMap;
+static ImageMap image_map;
+
+static bool image_pending = false;
+static unsigned image_pending_thread;
+static GLenum image_pending_target;
+static unsigned long long image_pending_handle;
+
+static void
+retrace_realTexImage2D(trace::Call &call) {
+    static retrace::Callback callback = NULL;
+    if (!callback) {
+        for (const retrace::Entry *entry = glretrace::gl_callbacks; entry->name; ++entry) {
+            if (strcmp(entry->name, "glTexImage2D") == 0) {
+                callback = entry->callback;
+                break;
+            }
+        }
+    }
+    callback(call);
+}
+
+static void
+retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
+    GLenum target = call.arg(0).toSInt();
+
+    /*
+     * Other targets replay correctly through the fake glTexImage2D alone.
+     */
+    if (target != GL_TEXTURE_EXTERNAL_OES) {
+        return;
+    }
+
+    image_pending = true;
+    image_pending_thread = call.thread_id;
+    image_pending_target = target;
+    image_pending_handle = call.arg(1).toUIntPtr();
+}
+
+/*
+ * The tracer follows glEGLImageTargetTexture2DOES with a fake glTexImage2D
+ * holding the image contents, which is not a valid call for
+ * GL_TEXTURE_EXTERNAL_OES.  For that target, keep a real EGLImage per traced
+ * image, backed by an ordinary texture, refresh it from the fake call, and
+ * bind it for real.
+ */
+static void
+retrace_glTexImage2D(trace::Call &call) {
+    bool match = image_pending &&
+                 (call.flags & trace::CALL_FLAG_FAKE) &&
+                 call.thread_id == image_pending_thread &&
+                 (GLenum)call.arg(0).toSInt() == image_pending_target;
+    if (call.thread_id == image_pending_thread) {
+        image_pending = false;
+    }
+    if (!match || !glws::hasEGLImages) {
+        retrace_realTexImage2D(call);
+        return;
+    }
+
+    GLenum target = image_pending_target;
+    GLsizei width = call.arg(3).toSInt();
+    GLsizei height = call.arg(4).toSInt();
+    GLenum format = call.arg(6).toSInt();
+    GLenum type = call.arg(7).toSInt();
+    const void *pixels = call.arg(8).toPointer();
+
+    EGLDisplay dpy = eglGetCurrentDisplay();
+    ImageState &state = image_map[image_pending_handle];
+
+    GLint prev_texture = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &prev_texture);
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    if (state.image == EGL_NO_IMAGE_KHR ||
+        state.width != width || state.height != height) {
+        if (state.image != EGL_NO_IMAGE_KHR) {
+            eglDestroyImageKHR(dpy, state.image);
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, type, pixels);
+        state.image = eglCreateImageKHR(dpy, eglGetCurrentContext(), EGL_GL_TEXTURE_2D_KHR,
+                                        (EGLClientBuffer)(uintptr_t)texture, NULL);
+        state.width = width;
+        state.height = height;
+        if (state.image == EGL_NO_IMAGE_KHR) {
+            retrace::warning(call) << "failed to create a " << width << "x" << height << " EGLImage\n";
+        }
+    } else if (pixels) {
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, state.image);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, type, pixels);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, prev_texture);
+    glDeleteTextures(1, &texture);
+
+    if (state.image != EGL_NO_IMAGE_KHR) {
+        glEGLImageTargetTexture2DOES(target, state.image);
+    }
+
+    if (retrace::debug > 0) {
+        glretrace::checkGlError(call);
+    }
+}
+
+static void
+retrace_eglDestroyImage(trace::Call &call) {
+    ImageMap::iterator it = image_map.find(call.arg(1).toUIntPtr());
+    if (it == image_map.end()) {
+        return;
+    }
+    if (it->second.image != EGL_NO_IMAGE_KHR) {
+        EGLDisplay dpy = eglGetCurrentDisplay();
+        if (dpy != EGL_NO_DISPLAY) {
+            eglDestroyImageKHR(dpy, it->second.image);
+        }
+    }
+    image_map.erase(it);
+}
+
+#else
+
+static void
+retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
+}
+
+static void
+retrace_eglDestroyImage(trace::Call &call) {
+}
+
+#endif
+
 const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglGetError", &retrace::ignore},
     {"eglGetDisplay", &retrace::ignore},
@@ -384,9 +527,12 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglGetProcAddress", &retrace::ignore},
     {"eglCreateImage", &retrace::ignore},
     {"eglCreateImageKHR", &retrace::ignore},
-    {"eglDestroyImage", &retrace::ignore},
-    {"eglDestroyImageKHR", &retrace::ignore},
-    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
+    {"eglDestroyImage", &retrace_eglDestroyImage},
+    {"eglDestroyImageKHR", &retrace_eglDestroyImage},
+    {"glEGLImageTargetTexture2DOES", &retrace_glEGLImageTargetTexture2DOES},
+#if !defined(_WIN32) && !defined(__APPLE__)
+    {"glTexImage2D", &retrace_glTexImage2D},
+#endif
     {"eglGetSyncValuesCHROMIUM", &retrace::ignore},
     {"eglCreateSync", &retrace::ignore},
     {"eglCreateSyncKHR", &retrace::ignore},
