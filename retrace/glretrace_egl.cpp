@@ -33,6 +33,7 @@
 #include "glretrace.hpp"
 #include "os.hpp"
 #include "eglsize.hpp"
+#include "glstate_internal.hpp"
 
 #include <climits>
 
@@ -341,6 +342,117 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
     }
 }
 
+struct ImageState {
+    glws::Image *image;
+    GLsizei width;
+    GLsizei height;
+};
+
+typedef std::map<unsigned long long, ImageState> ImageMap;
+static ImageMap image_map;
+
+static bool image_pending = false;
+static unsigned image_pending_thread;
+static unsigned long long image_pending_handle;
+
+static void
+retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
+    GLenum target = call.arg(0).toSInt();
+
+    /*
+     * Other targets replay correctly through the fake glTexImage2D alone.
+     */
+    if (target != GL_TEXTURE_EXTERNAL_OES) {
+        return;
+    }
+
+    image_pending = true;
+    image_pending_thread = call.thread_id;
+    image_pending_handle = call.arg(1).toUIntPtr();
+}
+
+/*
+ * (Re)create the image if needed and upload pixels to it, if any.
+ */
+static bool
+updateImage(ImageState &state, Context *currentContext,
+            GLsizei width, GLsizei height, GLenum format, GLenum type,
+            const void *pixels) {
+    glstate::TempId texture(GL_TEXTURE);
+    glstate::TextureBinding binding(GL_TEXTURE_2D, texture.ID());
+
+    if (!state.image || state.width != width || state.height != height) {
+        delete state.image;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, type, NULL);
+        state.image = currentContext->wsContext->createImage(texture.ID());
+        state.width = width;
+        state.height = height;
+        if (!state.image) {
+            return false;
+        }
+    } else {
+        state.image->bind(GL_TEXTURE_2D);
+    }
+
+    if (pixels) {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, type, pixels);
+    }
+    return true;
+}
+
+/*
+ * The tracer follows glEGLImageTargetTexture2DOES with a fake glTexImage2D
+ * holding the image contents, which is not a valid call for
+ * GL_TEXTURE_EXTERNAL_OES.  For that target, keep a real image per traced
+ * image, refresh it from the fake call, and bind it for real.  Returns false
+ * when the call should be replayed as is.
+ */
+bool
+glretrace::retraceEGLImageUpload(trace::Call &call, Context *currentContext) {
+    if (!image_pending || call.thread_id != image_pending_thread) {
+        return false;
+    }
+    image_pending = false;
+
+    if (!(call.flags & trace::CALL_FLAG_FAKE) ||
+        (GLenum)call.arg(0).toSInt() != GL_TEXTURE_EXTERNAL_OES ||
+        !currentContext) {
+        return false;
+    }
+
+    GLsizei width = call.arg(3).toSInt();
+    GLsizei height = call.arg(4).toSInt();
+    GLenum format = call.arg(6).toSInt();
+    GLenum type = call.arg(7).toSInt();
+    const void *pixels = call.arg(8).toPointer();
+
+    ImageState &state = image_map[image_pending_handle];
+    bool current = state.image && state.width == width && state.height == height;
+    if ((!current || pixels) &&
+        !updateImage(state, currentContext, width, height, format, type, pixels)) {
+        image_map.erase(image_pending_handle);
+        return false;
+    }
+
+    state.image->bind(GL_TEXTURE_EXTERNAL_OES);
+
+    if (retrace::debug > 0) {
+        checkGlError(call);
+    }
+    return true;
+}
+
+static void
+retrace_eglDestroyImage(trace::Call &call) {
+    ImageMap::iterator it = image_map.find(call.arg(1).toUIntPtr());
+    if (it == image_map.end()) {
+        return;
+    }
+    delete it->second.image;
+    image_map.erase(it);
+}
+
 const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglGetError", &retrace::ignore},
     {"eglGetDisplay", &retrace::ignore},
@@ -384,9 +496,9 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglGetProcAddress", &retrace::ignore},
     {"eglCreateImage", &retrace::ignore},
     {"eglCreateImageKHR", &retrace::ignore},
-    {"eglDestroyImage", &retrace::ignore},
-    {"eglDestroyImageKHR", &retrace::ignore},
-    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
+    {"eglDestroyImage", &retrace_eglDestroyImage},
+    {"eglDestroyImageKHR", &retrace_eglDestroyImage},
+    {"glEGLImageTargetTexture2DOES", &retrace_glEGLImageTargetTexture2DOES},
     {"eglGetSyncValuesCHROMIUM", &retrace::ignore},
     {"eglCreateSync", &retrace::ignore},
     {"eglCreateSyncKHR", &retrace::ignore},

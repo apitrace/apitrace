@@ -34,10 +34,12 @@
 
 #include "waffle.h"
 #include "glws.hpp"
+#include "glws_egl.hpp"
 
 namespace glws {
 
 struct waffle_display *dpy;
+static bool egl_platform = false;
 
 class WaffleVisual : public Visual
 {
@@ -113,6 +115,14 @@ public:
             context = NULL;
         }
     }
+
+    Image *
+    createImage(unsigned texture) override {
+        if (!egl_platform) {
+            return NULL;
+        }
+        return createEglImage(eglGetCurrentDisplay(), eglGetCurrentContext(), texture);
+    }
 };
 
 /*
@@ -162,6 +172,10 @@ init(void)
     waffle_init_attrib_list.end(WAFFLE_NONE);
 
     waffle_init(waffle_init_attrib_list);
+
+    egl_platform = waffle_platform != WAFFLE_PLATFORM_CGL &&
+                   waffle_platform != WAFFLE_PLATFORM_WGL &&
+                   waffle_platform != WAFFLE_PLATFORM_GLX;
 
     dpy = waffle_display_connect(NULL);
     if (!dpy) {

@@ -33,6 +33,7 @@
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "glws_egl.hpp"
 #include "glws_xlib.hpp"
 
 #include <EGL/eglext.h>
@@ -252,6 +253,11 @@ public:
 
     ~EglContext() {
         eglDestroyContext(eglDisplay, context);
+    }
+
+    Image *
+    createImage(unsigned texture) override {
+        return createEglImage(eglDisplay, context, texture);
     }
 };
 
