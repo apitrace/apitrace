@@ -147,6 +147,13 @@ class GlRetracer(Retracer):
             print(r'        glretrace::insertCallMarker(call, currentContext);')
             print(r'    }')
 
+        # The tracer follows glEGLImageTargetTexture2DOES with a fake
+        # glTexImage2D holding the image contents
+        if function.name == 'glTexImage2D':
+            print(r'    if (glretrace::retraceEGLImageUpload(call, currentContext)) {')
+            print(r'        return;')
+            print(r'    }')
+
         # For backwards compatibility with old traces where non VBO drawing was supported
         if (is_array_pointer or is_draw_arrays or is_draw_elements) and not is_draw_indirect:
             print('    if (retrace::parser->getVersion() < 1) {')

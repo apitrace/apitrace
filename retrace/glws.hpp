@@ -160,6 +160,21 @@ public:
 };
 
 
+/*
+ * Window system image, for texture targets that can't be given contents
+ * directly, such as GL_TEXTURE_EXTERNAL_OES.
+ */
+class Image
+{
+public:
+    virtual ~Image() {}
+
+    // Bind to target of the current context, like glEGLImageTargetTexture2DOES
+    virtual void
+    bind(int target) = 0;
+};
+
+
 class Context
 {
 public:
@@ -181,6 +196,13 @@ public:
     {}
 
     virtual ~Context() {}
+
+    // Create an image from a GL_TEXTURE_2D texture of this context, which
+    // must be current, or return NULL if images are not supported
+    virtual Image *
+    createImage(unsigned texture) {
+        return NULL;
+    }
 
     // Context must have been made current once
     inline bool

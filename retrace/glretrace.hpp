@@ -165,6 +165,9 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable,
 void
 checkGlError(trace::Call &call);
 
+bool
+retraceEGLImageUpload(trace::Call &call, Context *currentContext);
+
 void
 insertCallMarker(trace::Call &call, Context *currentContext);
 
