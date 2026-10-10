@@ -1498,6 +1498,17 @@ dumpReadBufferImage(StateWriter &writer,
 }
 
 
+static void
+setDrawBufferForReadback(Context &context, GLenum drawBuffer)
+{
+    if (context.ES) {
+        glDrawBuffers(1, &drawBuffer);
+    } else {
+        glDrawBuffer(drawBuffer);
+    }
+}
+
+
 static inline GLuint
 downsampledFramebuffer(Context &context,
                        GLuint oldFbo, GLint drawbuffer,
@@ -1542,7 +1553,7 @@ downsampledFramebuffer(Context &context,
                glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
                glReadBuffer(colorAtt);
-               glDrawBuffer(colorAtt);
+               setDrawBufferForReadback(context, colorAtt);
 
                glBlitFramebuffer(0, 0, colorDesc.width, colorDesc.height, 0, 0, colorDesc.width, colorDesc.height,
                                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -1564,7 +1575,7 @@ downsampledFramebuffer(Context &context,
                                   GL_RENDERBUFFER, rbs[*numRbs]);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-        glDrawBuffer(drawbuffer);
+        setDrawBufferForReadback(context, drawbuffer);
         glReadBuffer(drawbuffer);
         glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
@@ -1580,7 +1591,7 @@ downsampledFramebuffer(Context &context,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            glDrawBuffer(drawbuffer);
+            setDrawBufferForReadback(context, drawbuffer);
             glReadBuffer(drawbuffer);
             glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                               GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -1596,7 +1607,7 @@ downsampledFramebuffer(Context &context,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            glDrawBuffer(drawbuffer);
+            setDrawBufferForReadback(context, drawbuffer);
             glReadBuffer(drawbuffer);
             glBlitFramebuffer(0, 0, stencilDesc.width, stencilDesc.height, 0, 0, stencilDesc.width, stencilDesc.height,
                               GL_STENCIL_BUFFER_BIT, GL_NEAREST);
@@ -1861,7 +1872,7 @@ dumpFramebuffer(StateWriter &writer, Context &context)
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &boundReadFbo);
     if (!boundDrawFbo) {
         dumpDrawableImages(writer, context);
-    } else if (context.ES) {
+    } else if (context.ES && !context.read_framebuffer_object) {
         dumpFramebufferAttachments(writer, context, GL_FRAMEBUFFER);
     } else {
         GLint draw_buffer0 = GL_NONE;
