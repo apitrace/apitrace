@@ -31,7 +31,7 @@
 #include <memory>
 
 #include <os_thread.hpp>
-#include <glproc.hpp>
+#include <glproc.h>
 #include <gltrace.hpp>
 #include <os.hpp>
 

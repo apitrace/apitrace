@@ -269,7 +269,7 @@ if __name__ == '__main__':
     print('#define GL_GLEXT_PROTOTYPES')
     print('#define WGL_GLXEXT_PROTOTYPES')
     print()
-    print('#include "glproc.hpp"')
+    print('#include "glproc.h"')
     print('#include "glsize.hpp"')
     print()
     print('static OS_THREAD_LOCAL uintptr_t _reentrant;')

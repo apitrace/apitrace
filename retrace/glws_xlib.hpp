@@ -30,7 +30,7 @@
 #pragma once
 
 
-#include "glimports.hpp"
+#include "glimports.h"
 
 
 namespace glws {

@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#include "glproc.hpp"
+#include "glproc.h"
 #include "os.hpp"
 #include "os_string.hpp"
 
