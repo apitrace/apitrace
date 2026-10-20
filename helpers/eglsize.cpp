@@ -280,6 +280,9 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
     GLint bound_tex = 0;
     struct image_info *info;
 
+    /* A pending error would fail the first size probe. */
+    (void)_glGetError();
+
     info = new image_info;
 
     memset(info, 0, sizeof *info);
