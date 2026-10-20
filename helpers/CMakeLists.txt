@@ -9,6 +9,7 @@ include_directories (
 
 add_convenience_library (glhelpers
     glfeatures.cpp
+    glpack.cpp
     eglsize.cpp
 )
 add_dependencies (glhelpers glproc)

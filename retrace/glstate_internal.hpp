@@ -31,6 +31,7 @@
 #include "glimports.hpp"
 #include "glproc.hpp"
 #include "glfeatures.hpp"
+#include "glpack.hpp"
 #include "image.hpp"
 
 
@@ -46,34 +47,6 @@ struct Context : public glfeatures::Features
     {
         load();
     }
-};
-
-
-class PixelPackState
-{
-public:
-    PixelPackState(const Context & context);
-
-    ~PixelPackState();
-
-private:
-    bool desktop;
-    bool texture_3d;
-    bool pixel_buffer_object;
-    bool color_buffer_float;
-
-    // Pack state
-    GLint pack_alignment;
-    GLint pack_image_height;
-    GLint pack_lsb_first;
-    GLint pack_row_length;
-    GLint pack_skip_images;
-    GLint pack_skip_pixels;
-    GLint pack_skip_rows;
-    GLint pack_swap_bytes;
-    GLint pixel_pack_buffer_binding;
-
-    GLint clamp_read_color;
 };
 
 
