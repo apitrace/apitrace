@@ -53,8 +53,8 @@ press again `Ctrl-T` to see per-draw call thumbnails.
 # Backtrace Capturing #
 
 apitrace now has the ability to capture the call stack to an OpenGL call on
-certain OSes (only Android and Linux at the moment).  This can be helpful in
-determing which piece of code made that glDrawArrays call.
+certain OSes (only Android and Linux at the moment).  This can be helpful to
+determine which piece of code made that glDrawArrays call.
 
 To use the feature you need to set an environment variable with the list of GL
 call prefixes you wish to capture stack traces to.
@@ -168,7 +168,7 @@ application's main executable, either by:
   note the highlighted _Image Name_, and search it on `C:\Program Files` or
   `C:\Program Files (x86)`.
 
-On 64 bits Windows, you'll need to determine ether the application is a 64 bits
+On 64 bits Windows, you'll need to determine whether the application is a 64 bits
 or 32 bits. 32 bits applications will have a `*32` suffix in the _Image Name_
 column of the _Processes_ tab of _Windows Task Manager_ window.
 
@@ -336,7 +336,7 @@ deleted until context destruction, it's treated as 'leaked'.  This logic doesn't
 consider multi-context in multi-thread situation, so may report incorrect
 results in such scenarios.
 
-To use this fomr the GUI, go to  menu -> Trace -> LeakTrace
+To use this from the GUI, go to  menu -> Trace -> LeakTrace
 
 ## Dump OpenGL state at a particular call ##
 
@@ -533,7 +533,7 @@ system configuration:
 
 1. It must be possible for the current user to initiate an ssh session
    that has access to the target's window system. The command to be
-   exectuted by qapitrace will be:
+   executed by qapitrace will be:
 
         ssh <HOST> glretrace
 
