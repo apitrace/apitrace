@@ -1058,6 +1058,7 @@ class GlTracer(Tracer):
         'glEnableClientState',
         'glEndList',
         'glNewList',
+        'glPixelStorei',
         'glScissor',
         'glStringMarkerGREMEDY',
         'glTexImage2D',
@@ -1271,5 +1272,8 @@ class GlTracer(Tracer):
             print('    }')
 
     def emitFakeTexture2D(self):
-        print(r'    _fake_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);')
+        print(r'    {')
+        print(r'        gltrace::FakeUnpackScope _unpack(gltrace::getContext());')
+        print(r'        _fake_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);')
+        print(r'    }')
 

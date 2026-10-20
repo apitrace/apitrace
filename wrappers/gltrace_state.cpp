@@ -209,3 +209,63 @@ Context *getContext(void)
 }
 
 }
+
+namespace gltrace {
+
+FakeUnpackScope::FakeUnpackScope(const Context *ctx)
+{
+    const glfeatures::Profile &profile = ctx->profile;
+    /* GL_EXT_unpack_subimage has no image height or skipped images */
+    bool subimage_3d = profile.desktop() ? ctx->features.texture_3d
+                                         : profile.versionGreaterOrEqual(3, 0);
+
+    params[count++] = {GL_UNPACK_ALIGNMENT, 0, 1};
+    if (profile.desktop()) {
+        params[count++] = {GL_UNPACK_SWAP_BYTES, 0, GL_FALSE};
+        params[count++] = {GL_UNPACK_LSB_FIRST, 0, GL_FALSE};
+    }
+    if (ctx->features.unpack_subimage) {
+        params[count++] = {GL_UNPACK_ROW_LENGTH, 0, 0};
+        params[count++] = {GL_UNPACK_SKIP_ROWS, 0, 0};
+        params[count++] = {GL_UNPACK_SKIP_PIXELS, 0, 0};
+    }
+    if (subimage_3d) {
+        params[count++] = {GL_UNPACK_IMAGE_HEIGHT, 0, 0};
+        params[count++] = {GL_UNPACK_SKIP_IMAGES, 0, 0};
+    }
+
+    for (unsigned i = 0; i < count; ++i) {
+        Param &param = params[i];
+        _glGetIntegerv(param.pname, &param.value);
+        if (param.value != param.tight) {
+            _glPixelStorei(param.pname, param.tight);
+            _fake_glPixelStorei(param.pname, param.tight);
+        }
+    }
+
+    if (ctx->features.pixel_buffer_object) {
+        _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &buffer);
+        if (buffer) {
+            _glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+            _fake_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        }
+    }
+}
+
+FakeUnpackScope::~FakeUnpackScope()
+{
+    for (unsigned i = 0; i < count; ++i) {
+        const Param &param = params[i];
+        if (param.value != param.tight) {
+            _glPixelStorei(param.pname, param.value);
+            _fake_glPixelStorei(param.pname, param.value);
+        }
+    }
+
+    if (buffer) {
+        _glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
+        _fake_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
+    }
+}
+
+}
