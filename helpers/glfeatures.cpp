@@ -394,13 +394,13 @@ Features::load(const Profile & profile, const Extensions & ext)
         // GL_ANGLE_framebuffer_blit requires different entry points
         // GL_APPLE_framebuffer_multisample requires different entry points
         // GL_NV_framebuffer_blit requires different entry points
-        read_framebuffer_object = 0;
+        read_framebuffer_object = profile.versionGreaterOrEqual(3, 0);
 
         query_buffer_object = 0;
 
         primitive_restart = 0;
 
-        unpack_subimage = ext.has("GL_EXT_unpack_subimage");
+        unpack_subimage = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_EXT_unpack_subimage");
         pack_subimage = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_NV_pack_subimage");
 
         instanced_arrays = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_EXT_instanced_arrays");
