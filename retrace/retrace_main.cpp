@@ -624,6 +624,7 @@ public:
 void
 RelayRunner::runnerThread(RelayRunner *_this) {
     _this->runRace();
+    retrace::finishThread();
 }
 
 

@@ -216,6 +216,18 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable,
 }
 
 
+void
+releaseCurrentContext(void)
+{
+    Context *currentContext = currentContextPtr;
+    if (currentContext) {
+        glws::makeCurrent(nullptr, nullptr, nullptr);
+        currentContextPtr = nullptr;
+        currentContext->release();
+    }
+}
+
+
 /**
  * Grow the current drawable.
  *

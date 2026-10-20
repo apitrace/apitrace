@@ -304,6 +304,13 @@ finishRendering(void);
 void
 waitForInput(void);
 
+/**
+ * Release per-thread state (called when a replay thread other than the main
+ * one finishes.)
+ */
+void
+finishThread(void);
+
 void
 cleanUp(void);
 
