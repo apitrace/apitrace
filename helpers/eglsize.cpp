@@ -180,6 +180,46 @@ _eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info,
     _glDeleteFramebuffers(1, &fbo);
 }
 
+/*
+ * Pick a readback format and an internal format for the faked upload that keep
+ * the image's precision and encoding, where the context can say what the image
+ * holds.  Anything else is read as RGBA8.
+ */
+static void
+choose_image_format(const glfeatures::Profile &profile, image_info *info)
+{
+    GLint internalformat = GL_NONE;
+    GLint red_type = GL_NONE;
+    GLint red_size = 0;
+
+    info->internalformat = GL_RGBA;
+    info->format = GL_RGBA;
+    info->type = GL_UNSIGNED_BYTE;
+
+    /* glGetTexLevelParameteriv needs GLES 3.1 */
+    if (profile.es() && !profile.versionGreaterOrEqual(3, 1))
+        return;
+
+    _glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalformat);
+    _glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_RED_TYPE, &red_type);
+    _glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_RED_SIZE, &red_size);
+
+    if (internalformat == GL_SRGB8 || internalformat == GL_SRGB8_ALPHA8) {
+        info->internalformat = GL_SRGB8_ALPHA8;
+    } else if (red_type == GL_FLOAT) {
+        info->internalformat = red_size > 16 ? GL_RGBA32F : GL_RGBA16F;
+        info->type = GL_FLOAT;
+    } else if (internalformat == GL_RGB10_A2) {
+        info->internalformat = GL_RGB10_A2;
+        info->type = GL_UNSIGNED_INT_2_10_10_10_REV;
+    } else if (red_type == GL_UNSIGNED_NORMALIZED && red_size == 16) {
+        info->internalformat = GL_RGBA16;
+        info->type = GL_UNSIGNED_SHORT;
+    } else {
+        info->internalformat = GL_RGBA8;
+    }
+}
+
 /* sized for the current pack state */
 static void
 alloc_image(image_info *info, const glfeatures::Features &features)
@@ -213,7 +253,16 @@ get_texture_2d_image(image_info *info, const glfeatures::Features &features)
     {
         PixelPackState pack(features);
         alloc_image(info, features);
+        /* Only the readback's own error should select the fallback. */
+        (void)_glGetError();
         _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+        if (_glGetError() != GL_NO_ERROR && info->type != GL_UNSIGNED_BYTE) {
+            /* The context can't read this format, fall back to RGBA8. */
+            info->internalformat = GL_RGBA8;
+            info->type = GL_UNSIGNED_BYTE;
+            alloc_image(info, features);
+            _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+        }
     }
     /* Don't leak errors to the traced application. */
     (void)_glGetError();
@@ -224,6 +273,7 @@ get_texture_2d_image(image_info *info, const glfeatures::Features &features)
 
 struct image_info *
 _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
+                            const glfeatures::Profile &profile,
                             const glfeatures::Features &features)
 {
     GLuint tex;
@@ -234,10 +284,6 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
 
     memset(info, 0, sizeof *info);
 
-    info->internalformat = GL_RGBA;
-    info->format = GL_RGBA;
-    info->type = GL_UNSIGNED_BYTE;
-
     _eglCreateImageKHR_get_image_size(image, info, features);
 
     _glGenTextures(1, &tex);
@@ -245,6 +291,7 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
     _glBindTexture(GL_TEXTURE_2D, tex);
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
+    choose_image_format(profile, info);
     get_texture_2d_image(info, features);
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteTextures(1, &tex);

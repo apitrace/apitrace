@@ -50,6 +50,7 @@ struct image_info
 
 struct image_info *
 _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
+                            const glfeatures::Profile &profile,
                             const glfeatures::Features &features);
 
 void
