@@ -40,6 +40,8 @@
 
 void APIENTRY _fake_glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 void APIENTRY _fake_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+void APIENTRY _fake_glPixelStorei(GLenum pname, GLint param);
+void APIENTRY _fake_glBindBuffer(GLenum target, GLuint buffer);
 
 namespace gltrace {
 
@@ -94,6 +96,29 @@ clearContext(void);
 
 gltrace::Context *
 getContext(void);
+
+/*
+ * Tightly packed unpack state, outside any unpack buffer, for an upload of
+ * client memory that the tracer fakes.  It is set in the context and recorded
+ * in the trace, so the serialized size and the replay read the same layout,
+ * and both are restored at the end of the scope.
+ */
+class FakeUnpackScope {
+public:
+    FakeUnpackScope(const Context *ctx);
+    ~FakeUnpackScope();
+
+private:
+    struct Param {
+        GLenum pname;
+        GLint value;
+        GLint tight;
+    };
+
+    Param params[8];
+    unsigned count = 0;
+    GLint buffer = 0;
+};
 
 const GLubyte *
 _glGetString_override(GLenum name);

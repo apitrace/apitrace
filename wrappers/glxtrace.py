@@ -143,12 +143,10 @@ class GlxTracer(GlTracer):
                 GLenum format = GL_RGBA;
                 GLenum type = GL_UNSIGNED_BYTE;
                 if (target && internalformat && height && width) {
-                    // FIXME: This assumes (UN)PACK state (in particular
-                    // GL_(UN)PACK_ROW_LENGTH) is set to its defaults. We
-                    // really should temporarily reset the state here (and emit
-                    // according fake calls) to cope when its not. At very
-                    // least we need a heads up warning that this will cause
-                    // problems.
+                    // FIXME: This assumes PACK state (in particular
+                    // GL_PACK_ROW_LENGTH) is set to its defaults. We really
+                    // should temporarily reset the state here to cope when its
+                    // not.  emitFakeTexture2D takes care of the UNPACK state.
                     GLint alignment = 4;
                     GLint row_stride = _align(width * 4, alignment);
                     std::unique_ptr<GLbyte[]> data(new GLbyte[height * row_stride]);
