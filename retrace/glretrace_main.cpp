@@ -944,6 +944,12 @@ retrace::waitForInput(void) {
 }
 
 void
+retrace::finishThread(void) {
+    /* a context left current here would outlive cleanUp() and the display */
+    glretrace::releaseCurrentContext();
+}
+
+void
 retrace::cleanUp(void) {
     glws::cleanup();
 }

@@ -74,5 +74,9 @@ retrace::waitForInput(void) {
 }
 
 void
+retrace::finishThread(void) {
+}
+
+void
 retrace::cleanUp(void) {
 }

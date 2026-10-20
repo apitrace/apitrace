@@ -157,6 +157,9 @@ createContext(Context *shareContext = 0);
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
 
+void
+releaseCurrentContext(void);
+
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable,
             glws::Drawable *readable, Context *context);
