@@ -38,6 +38,7 @@
 #include "glproc.hpp"
 #include "glsize.hpp"
 #include "eglsize.hpp"
+#include "glpack.hpp"
 #include "assert.h"
 
 
@@ -100,24 +101,55 @@ detect_size(int *width_ret, int *height_ret)
     return 0;
 }
 
-/* XXX */
-static inline bool
-can_unpack_subimage(void) {
-    return false;
+/*
+ * Framebuffer bindings to restore after the helper's own framebuffer.  Binding
+ * GL_FRAMEBUFFER replaces both the draw and the read binding, so contexts that
+ * have separate ones need both saved.
+ */
+struct framebuffer_bindings
+{
+    bool split;
+    GLint draw;
+    GLint read;
+};
+
+static void
+bind_framebuffer(const glfeatures::Features &features, GLuint fbo,
+                 framebuffer_bindings *saved)
+{
+    saved->split = features.read_framebuffer_object;
+    if (saved->split) {
+        _glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &saved->draw);
+        _glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &saved->read);
+    } else {
+        _glGetIntegerv(GL_FRAMEBUFFER_BINDING, &saved->draw);
+    }
+    _glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
 static void
-_eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info)
+restore_framebuffer(const framebuffer_bindings *saved)
+{
+    if (saved->split) {
+        _glBindFramebuffer(GL_DRAW_FRAMEBUFFER, saved->draw);
+        _glBindFramebuffer(GL_READ_FRAMEBUFFER, saved->read);
+    } else {
+        _glBindFramebuffer(GL_FRAMEBUFFER, saved->draw);
+    }
+}
+
+static void
+_eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info,
+                                  const glfeatures::Features &features)
 {
     GLuint fbo = 0;
-    GLuint orig_fbo = 0;
+    framebuffer_bindings orig_fbo;
     GLuint texture = 0;
     GLuint orig_texture;
     GLenum status;
 
-    _glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&orig_fbo);
     _glGenFramebuffers(1, &fbo);
-    _glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    bind_framebuffer(features, fbo, &orig_fbo);
 
     _glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&orig_texture);
     _glGenTextures(1, &texture);
@@ -144,15 +176,25 @@ _eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info)
     _glBindTexture(GL_TEXTURE_2D, orig_texture);
     _glDeleteTextures(1, &texture);
 
-    _glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
+    restore_framebuffer(&orig_fbo);
     _glDeleteFramebuffers(1, &fbo);
 }
 
+/* sized for the current pack state */
 static void
-get_texture_2d_image(image_info *info)
+alloc_image(image_info *info, const glfeatures::Features &features)
+{
+    free(info->pixels);
+    info->size = _gl_pack_image_size(info->format, info->type, info->width,
+                                     info->height, features.pack_subimage);
+    info->pixels = malloc(info->size);
+}
+
+static void
+get_texture_2d_image(image_info *info, const glfeatures::Features &features)
 {
     GLuint fbo = 0;
-    GLint prev_fbo = 0;
+    framebuffer_bindings prev_fbo;
     GLint texture;
     GLenum status;
 
@@ -160,25 +202,29 @@ get_texture_2d_image(image_info *info)
     if (!texture)
         return;
 
-    _glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
     _glGenFramebuffers(1, &fbo);
-    _glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    bind_framebuffer(features, fbo, &prev_fbo);
 
     _glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                             texture, 0);
     status = _glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         os::log("%s: error: %d\n", __func__, status);
-    _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+    {
+        PixelPackState pack(features);
+        alloc_image(info, features);
+        _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+    }
     /* Don't leak errors to the traced application. */
     (void)_glGetError();
 
-    _glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+    restore_framebuffer(&prev_fbo);
     _glDeleteFramebuffers(1, &fbo);
 }
 
 struct image_info *
-_EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
+_EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
+                            const glfeatures::Features &features)
 {
     GLuint tex;
     GLint bound_tex = 0;
@@ -192,17 +238,14 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
     info->format = GL_RGBA;
     info->type = GL_UNSIGNED_BYTE;
 
-    _eglCreateImageKHR_get_image_size(image, info);
+    _eglCreateImageKHR_get_image_size(image, info, features);
 
     _glGenTextures(1, &tex);
     _glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound_tex);
     _glBindTexture(GL_TEXTURE_2D, tex);
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
-    info->size = _glTexImage2D_size(info->format, info->type, info->width, info->height);
-    info->pixels = malloc(info->size);
-
-    get_texture_2d_image(info);
+    get_texture_2d_image(info, features);
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteTextures(1, &tex);
 
@@ -217,4 +260,3 @@ _EGLImageKHR_free_image_info(struct image_info *info)
 }
 
 #endif // !defined(_WIN32)
-
