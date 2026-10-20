@@ -88,7 +88,8 @@ class EglTracer(GlTracer):
             print('    }')
 
         if function.name == 'glEGLImageTargetTexture2DOES':
-            print('    image_info *info = _EGLImageKHR_get_image_info(target, image);')
+            print('    gltrace::Context *_ctx = gltrace::getContext();')
+            print('    image_info *info = _EGLImageKHR_get_image_info(target, image, _ctx->features);')
             print('    if (info) {')
             print('        GLint level = 0;')
             print('        GLint internalformat = info->internalformat;')
