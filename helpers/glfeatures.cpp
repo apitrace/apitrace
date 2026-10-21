@@ -384,17 +384,18 @@ Features::load(const Profile & profile, const Extensions & ext)
         pixel_buffer_object = profile.versionGreaterOrEqual(3, 0) ||
                               ext.has("GL_NV_pixel_buffer_object");
 
-        // GL_EXT_multiview_draw_buffers requires different entry points
-        // GL_NV_read_buffer requires different entry points
-        read_buffer = 0;
+        // GL_EXT_multiview_draw_buffers / GL_NV_read_buffer use different
+        // entry points on ES2. GLES 3.0 has glReadBuffer and separate
+        // DRAW/READ framebuffers in core.
+        read_buffer = profile.versionGreaterOrEqual(3, 0);
 
         // GL_OES_framebuffer_object requires different entry points
         framebuffer_object = profile.versionGreaterOrEqual(2, 0);
 
-        // GL_ANGLE_framebuffer_blit requires different entry points
-        // GL_APPLE_framebuffer_multisample requires different entry points
-        // GL_NV_framebuffer_blit requires different entry points
-        read_framebuffer_object = 0;
+        // GL_ANGLE_framebuffer_blit / GL_APPLE_framebuffer_multisample /
+        // GL_NV_framebuffer_blit use different entry points on ES2. GLES 3.0
+        // has GL_READ_FRAMEBUFFER / GL_DRAW_FRAMEBUFFER in core.
+        read_framebuffer_object = profile.versionGreaterOrEqual(3, 0);
 
         query_buffer_object = 0;
 
