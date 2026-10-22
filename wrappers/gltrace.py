@@ -1059,6 +1059,7 @@ class GlTracer(Tracer):
         'glEndList',
         'glNewList',
         'glPixelStorei',
+        'glPixelTransferf',
         'glScissor',
         'glStringMarkerGREMEDY',
         'glTexImage2D',

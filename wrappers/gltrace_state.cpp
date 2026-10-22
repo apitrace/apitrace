@@ -250,6 +250,9 @@ FakeUnpackScope::FakeUnpackScope(const Context *ctx)
             _fake_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
         }
     }
+
+    pixel_transfer.save(ctx->features);
+    pixel_transfer.reset(_fake_glPixelTransferf);
 }
 
 FakeUnpackScope::~FakeUnpackScope()
@@ -266,6 +269,8 @@ FakeUnpackScope::~FakeUnpackScope()
         _glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
         _fake_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
     }
+
+    pixel_transfer.restore(_fake_glPixelTransferf);
 }
 
 }
