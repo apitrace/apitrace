@@ -225,25 +225,97 @@ choose_image_format(const glfeatures::Profile &profile, image_info *info)
     } else if (red_type == GL_FLOAT) {
         info->internalformat = red_size > 16 ? GL_RGBA32F : GL_RGBA16F;
         info->type = GL_FLOAT;
-    } else if (internalformat == GL_RGB10_A2) {
+    } else if (red_type == GL_UNSIGNED_NORMALIZED && red_size == 10) {
         info->internalformat = GL_RGB10_A2;
         info->type = GL_UNSIGNED_INT_2_10_10_10_REV;
     } else if (red_type == GL_UNSIGNED_NORMALIZED && red_size == 16) {
         info->internalformat = GL_RGBA16;
         info->type = GL_UNSIGNED_SHORT;
+    } else if (red_type == GL_INT || red_type == GL_UNSIGNED_INT) {
+        bool sign = red_type == GL_INT;
+
+        info->format = GL_RGBA_INTEGER;
+        if (red_size == 8) {
+            info->internalformat = sign ? GL_RGBA8I : GL_RGBA8UI;
+            info->type = sign ? GL_BYTE : GL_UNSIGNED_BYTE;
+        } else if (red_size == 16) {
+            info->internalformat = sign ? GL_RGBA16I : GL_RGBA16UI;
+            info->type = sign ? GL_SHORT : GL_UNSIGNED_SHORT;
+        } else if (red_size == 10 && !sign) {
+            info->internalformat = GL_RGB10_A2UI;
+            info->type = GL_UNSIGNED_INT_2_10_10_10_REV;
+        } else {
+            info->internalformat = sign ? GL_RGBA32I : GL_RGBA32UI;
+            info->type = sign ? GL_INT : GL_UNSIGNED_INT;
+        }
     } else {
         info->internalformat = GL_RGBA8;
     }
 }
 
-/* sized for the current pack state */
+/* Narrow components read as 32-bit integers to info->type. */
 static void
-alloc_image(image_info *info, const glfeatures::Features &features)
+narrow_integers(image_info *info, const GLuint *wide)
 {
+    size_t count = (size_t)info->width * info->height * 4;
+
+    switch (info->type) {
+    case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
+        for (size_t i = 0; i < count; ++i)
+            ((GLubyte *)info->pixels)[i] = wide[i];
+        break;
+    case GL_SHORT:
+    case GL_UNSIGNED_SHORT:
+        for (size_t i = 0; i < count; ++i)
+            ((GLushort *)info->pixels)[i] = wide[i];
+        break;
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+        for (size_t i = 0; i < count; i += 4)
+            ((GLuint *)info->pixels)[i / 4] = (wide[i] & 0x3ff) |
+                                              (wide[i + 1] & 0x3ff) << 10 |
+                                              (wide[i + 2] & 0x3ff) << 20 |
+                                              wide[i + 3] << 30;
+        break;
+    }
+}
+
+/*
+ * Read the bound framebuffer into a tightly packed allocation, and whether
+ * that worked. GLES only guarantees reading integer images as 32-bit
+ * integers, so narrower ones are read that way and narrowed.
+ */
+static bool
+read_image(image_info *info, const glfeatures::Features &features)
+{
+    GLenum read_type = info->type;
+    if (info->format == GL_RGBA_INTEGER) {
+        bool sign = info->type == GL_BYTE || info->type == GL_SHORT || info->type == GL_INT;
+        read_type = sign ? GL_INT : GL_UNSIGNED_INT;
+    }
+
     free(info->pixels);
     info->size = _gl_pack_image_size(info->format, info->type, info->width,
                                      info->height, features.pack_subimage);
-    info->pixels = malloc(info->size);
+    /* zeroed, as reads that fail in KHR_no_error contexts leave it alone */
+    info->pixels = calloc(1, info->size);
+    if (!info->pixels)
+        return false;
+
+    if (read_type == info->type) {
+        _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+        return _glGetError() == GL_NO_ERROR;
+    }
+
+    GLuint *wide = (GLuint *)calloc((size_t)info->width * info->height * 4, sizeof *wide);
+    if (!wide)
+        return false;
+    _glReadPixels(0, 0, info->width, info->height, info->format, read_type, wide);
+    bool read = _glGetError() == GL_NO_ERROR;
+    if (read)
+        narrow_integers(info, wide);
+    free(wide);
+    return read;
 }
 
 static void
@@ -253,6 +325,7 @@ get_texture_2d_image(image_info *info, const glfeatures::Features &features)
     framebuffer_bindings prev_fbo;
     GLint texture;
     GLenum status;
+    bool read = false;
 
     _glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
     if (!texture)
@@ -264,24 +337,27 @@ get_texture_2d_image(image_info *info, const glfeatures::Features &features)
     _glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                             texture, 0);
     status = _glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        os::log("%s: error: %d\n", __func__, status);
-    {
+    if (status == GL_FRAMEBUFFER_COMPLETE) {
         PixelPackState pack(features);
-        alloc_image(info, features);
         /* Only the readback's own error should select the fallback. */
         (void)_glGetError();
-        _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
-        if (_glGetError() != GL_NO_ERROR && info->type != GL_UNSIGNED_BYTE) {
+        read = read_image(info, features);
+        if (!read && info->format == GL_RGBA && info->type != GL_UNSIGNED_BYTE) {
             /* The context can't read this format, fall back to RGBA8. */
             info->internalformat = GL_RGBA8;
             info->type = GL_UNSIGNED_BYTE;
-            alloc_image(info, features);
-            _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+            read = read_image(info, features);
         }
+    } else {
+        os::log("%s: error: %d\n", __func__, status);
     }
-    /* Don't leak errors to the traced application. */
-    (void)_glGetError();
+
+    if (!read) {
+        /* Rather no upload than one of pixels that weren't read. */
+        os::log("%s: can't read the image\n", __func__);
+        info->width = 0;
+        info->height = 0;
+    }
 
     restore_framebuffer(&prev_fbo);
     _glDeleteFramebuffers(1, &fbo);
@@ -314,11 +390,20 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
         _eglCreateImageKHR_get_image_size(image, info, features);
     }
 
-    choose_image_format(profile, info);
-    get_texture_2d_image(info, features);
+    if (info->width && info->height) {
+        choose_image_format(profile, info);
+        get_texture_2d_image(info, features);
+    }
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteTextures(1, &tex);
 
+    /* Don't leak errors to the traced application. */
+    (void)_glGetError();
+
+    if (!info->width || !info->height) {
+        _EGLImageKHR_free_image_info(info);
+        return NULL;
+    }
     return info;
 }
 
