@@ -1044,3 +1044,25 @@ glretrace::mapUniformBlockName(GLuint program,
         }
     }
 }
+
+
+static std::map<GLuint, std::map<GLuint, GLuint>> _storageBlock_map;
+
+void
+glretrace::mapStorageBlockIndex(GLuint program, GLenum programInterface,
+                                GLuint traced_index, const std::string &name) {
+    if (programInterface != GL_SHADER_STORAGE_BLOCK)
+        return;
+    GLuint index = glGetProgramResourceIndex(program, programInterface, name.c_str());
+    if (index != GL_INVALID_INDEX)
+        _storageBlock_map[program][traced_index] = index;
+}
+
+GLuint
+glretrace::getStorageBlockIndex(GLuint program, GLuint traced_index) {
+    auto prog = _storageBlock_map.find(program);
+    if (prog == _storageBlock_map.end())
+        return traced_index;
+    auto it = prog->second.find(traced_index);
+    return it == prog->second.end() ? traced_index : it->second;
+}

@@ -187,6 +187,16 @@ mapUniformBlockName(GLuint program,
                     const std::string &traced_name,
                     std::map<GLuint, retrace::map<GLuint>> &uniformBlock_map);
 
+/* Record the replay index of a shader storage block, keyed by the index
+ * the traced driver reported for the same name. */
+void
+mapStorageBlockIndex(GLuint program, GLenum programInterface,
+                     GLuint traced_index, const std::string &name);
+
+/* Translate a traced storage block index to the replay driver's index. */
+GLuint
+getStorageBlockIndex(GLuint program, GLuint traced_index);
+
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];
