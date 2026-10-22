@@ -181,6 +181,22 @@ _eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info,
 }
 
 /*
+ * The size of the image bound to GL_TEXTURE_2D, where the context can tell
+ * without the probes, which write to the image and rely on errors.
+ */
+static bool
+query_size(const glfeatures::Profile &profile, image_info *info)
+{
+    /* glGetTexLevelParameteriv needs GLES 3.1 */
+    if (profile.es() && !profile.versionGreaterOrEqual(3, 1))
+        return false;
+
+    _glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &info->width);
+    _glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &info->height);
+    return true;
+}
+
+/*
  * Pick a readback format and an internal format for the faked upload that keep
  * the image's precision and encoding, where the context can say what the image
  * holds.  Anything else is read as RGBA8.
@@ -280,19 +296,23 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
     GLint bound_tex = 0;
     struct image_info *info;
 
-    /* A pending error would fail the first size probe. */
-    (void)_glGetError();
-
     info = new image_info;
 
     memset(info, 0, sizeof *info);
-
-    _eglCreateImageKHR_get_image_size(image, info, features);
 
     _glGenTextures(1, &tex);
     _glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound_tex);
     _glBindTexture(GL_TEXTURE_2D, tex);
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+    if (!query_size(profile, info)) {
+        /*
+         * Only the probes are left, which need errors that KHR_no_error
+         * contexts don't raise. A pending error would fail the first one.
+         */
+        (void)_glGetError();
+        _eglCreateImageKHR_get_image_size(image, info, features);
+    }
 
     choose_image_format(profile, info);
     get_texture_2d_image(info, features);
