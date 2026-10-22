@@ -377,6 +377,13 @@ Features::load(const Profile & profile, const Extensions & ext)
 
         unpack_subimage = 1;
         pack_subimage = 1;
+
+        // glPixelTransfer is gone from forward-compatible and core contexts,
+        // and from 3.1 without GL_ARB_compatibility
+        pixel_transfer = !core && !profile.forwardCompatible &&
+                         (!(profile.major == 3 && profile.minor == 1) ||
+                          ext.has("GL_ARB_compatibility"));
+
         instanced_arrays = profile.versionGreaterOrEqual(3, 3) || ext.has("GL_ARB_instanced_arrays");
     } else {
         texture_3d = 1;

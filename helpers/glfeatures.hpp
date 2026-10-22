@@ -181,6 +181,7 @@ struct Features
     unsigned primitive_restart:1;
     unsigned unpack_subimage:1;
     unsigned pack_subimage:1;
+    unsigned pixel_transfer:1;
 
     Features(void);
 
