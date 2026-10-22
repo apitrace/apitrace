@@ -351,9 +351,12 @@ struct ImageState {
 typedef std::map<unsigned long long, ImageState> ImageMap;
 static ImageMap image_map;
 
-static bool image_pending = false;
-static unsigned image_pending_thread;
-static unsigned long long image_pending_handle;
+/*
+ * The image each thread bound last, until that thread's fake upload, as
+ * other threads may bind images in between.
+ */
+typedef std::map<unsigned, unsigned long long> PendingImageMap;
+static PendingImageMap image_pending;
 
 static void
 retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
@@ -366,9 +369,7 @@ retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
         return;
     }
 
-    image_pending = true;
-    image_pending_thread = call.thread_id;
-    image_pending_handle = call.arg(1).toUIntPtr();
+    image_pending[call.thread_id] = call.arg(1).toUIntPtr();
 }
 
 /*
@@ -410,10 +411,12 @@ updateImage(ImageState &state, Context *currentContext,
  */
 bool
 glretrace::retraceEGLImageUpload(trace::Call &call, Context *currentContext) {
-    if (!image_pending || call.thread_id != image_pending_thread) {
+    PendingImageMap::iterator pending = image_pending.find(call.thread_id);
+    if (pending == image_pending.end()) {
         return false;
     }
-    image_pending = false;
+    unsigned long long handle = pending->second;
+    image_pending.erase(pending);
 
     if (!(call.flags & trace::CALL_FLAG_FAKE) ||
         (GLenum)call.arg(0).toSInt() != GL_TEXTURE_EXTERNAL_OES ||
@@ -427,11 +430,11 @@ glretrace::retraceEGLImageUpload(trace::Call &call, Context *currentContext) {
     GLenum type = call.arg(7).toSInt();
     const void *pixels = call.arg(8).toPointer();
 
-    ImageState &state = image_map[image_pending_handle];
+    ImageState &state = image_map[handle];
     bool current = state.image && state.width == width && state.height == height;
     if ((!current || pixels) &&
         !updateImage(state, currentContext, width, height, format, type, pixels)) {
-        image_map.erase(image_pending_handle);
+        image_map.erase(handle);
         return false;
     }
 
