@@ -344,6 +344,7 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
 
 struct ImageState {
     glws::Image *image;
+    GLint internalformat;
     GLsizei width;
     GLsizei height;
 };
@@ -373,20 +374,26 @@ retrace_glEGLImageTargetTexture2DOES(trace::Call &call) {
 }
 
 /*
- * (Re)create the image if needed and upload pixels to it, if any.
+ * Recreate the image if asked and upload pixels to it, if any.
  */
 static bool
-updateImage(ImageState &state, Context *currentContext,
-            GLsizei width, GLsizei height, GLenum format, GLenum type,
-            const void *pixels) {
+updateImage(ImageState &state, Context *currentContext, bool recreate,
+            GLint internalformat, GLsizei width, GLsizei height,
+            GLenum format, GLenum type, const void *pixels) {
     glstate::TempId texture(GL_TEXTURE);
     glstate::TextureBinding binding(GL_TEXTURE_2D, texture.ID());
 
-    if (!state.image || state.width != width || state.height != height) {
+    if (recreate) {
         delete state.image;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, type, NULL);
+        /*
+         * Without mipmaps, and complete for formats that can't be filtered
+         * linearly.  Sampling the image uses the external texture's filters.
+         */
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, type, NULL);
         state.image = currentContext->wsContext->createImage(texture.ID());
+        state.internalformat = internalformat;
         state.width = width;
         state.height = height;
         if (!state.image) {
@@ -424,6 +431,7 @@ glretrace::retraceEGLImageUpload(trace::Call &call, Context *currentContext) {
         return false;
     }
 
+    GLint internalformat = call.arg(2).toSInt();
     GLsizei width = call.arg(3).toSInt();
     GLsizei height = call.arg(4).toSInt();
     GLenum format = call.arg(6).toSInt();
@@ -431,9 +439,11 @@ glretrace::retraceEGLImageUpload(trace::Call &call, Context *currentContext) {
     const void *pixels = call.arg(8).toPointer();
 
     ImageState &state = image_map[handle];
-    bool current = state.image && state.width == width && state.height == height;
+    bool current = state.image && state.internalformat == internalformat &&
+                   state.width == width && state.height == height;
     if ((!current || pixels) &&
-        !updateImage(state, currentContext, width, height, format, type, pixels)) {
+        !updateImage(state, currentContext, !current, internalformat, width,
+                     height, format, type, pixels)) {
         image_map.erase(handle);
         return false;
     }
