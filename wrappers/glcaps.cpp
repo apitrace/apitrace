@@ -39,6 +39,7 @@
 
 #include <string>
 #include <map>
+#include <mutex>
 
 #include "glproc.hpp"
 #include "gltrace.hpp"
@@ -51,8 +52,10 @@ namespace gltrace {
 
 typedef std::map<std::string, const char *> ExtensionsMap;
 
-// Cache of the translated extensions strings
+// Cache of the translated extensions strings, which threads with different
+// contexts may query at the same time
 static ExtensionsMap extensionsMap;
+static std::mutex extensionsMutex;
 
 
 // Additional extensions to be advertised
@@ -122,6 +125,7 @@ overrideExtensionsString(const char *extensions)
     const ExtensionsDesc *desc = getExtraExtensions(ctx);
     size_t i;
 
+    std::lock_guard<std::mutex> lock(extensionsMutex);
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
     if (it != extensionsMap.end()) {
         return it->second;
