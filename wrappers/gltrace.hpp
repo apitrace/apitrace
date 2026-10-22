@@ -29,6 +29,7 @@
 #include "glimports.hpp"
 
 #include "glfeatures.hpp"
+#include "glpack.hpp"
 
 #include "glmemshadow.hpp"
 
@@ -41,6 +42,7 @@
 void APIENTRY _fake_glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 void APIENTRY _fake_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 void APIENTRY _fake_glPixelStorei(GLenum pname, GLint param);
+void APIENTRY _fake_glPixelTransferf(GLenum pname, GLfloat param);
 void APIENTRY _fake_glBindBuffer(GLenum target, GLuint buffer);
 
 namespace gltrace {
@@ -101,7 +103,9 @@ getContext(void);
  * Tightly packed unpack state, outside any unpack buffer, for an upload of
  * client memory that the tracer fakes.  It is set in the context and recorded
  * in the trace, so the serialized size and the replay read the same layout,
- * and both are restored at the end of the scope.
+ * and both are restored at the end of the scope. Pixel transfer operations,
+ * which don't change the layout, are only reset in the trace, so that replay
+ * uploads the pixels unchanged.
  */
 class FakeUnpackScope {
 public:
@@ -118,6 +122,7 @@ private:
     Param params[8];
     unsigned count = 0;
     GLint buffer = 0;
+    PixelTransferState pixel_transfer;
 };
 
 const GLubyte *
