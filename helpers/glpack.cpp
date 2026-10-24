@@ -31,6 +31,70 @@
 #include "glpack.hpp"
 
 
+static const struct {
+    GLenum pname;
+    GLfloat identity;
+} pixelTransferParams[] = {
+    { GL_MAP_COLOR, GL_FALSE },
+    { GL_MAP_STENCIL, GL_FALSE },
+    { GL_INDEX_SHIFT, 0.0f },
+    { GL_INDEX_OFFSET, 0.0f },
+    { GL_RED_SCALE, 1.0f },
+    { GL_RED_BIAS, 0.0f },
+    { GL_GREEN_SCALE, 1.0f },
+    { GL_GREEN_BIAS, 0.0f },
+    { GL_BLUE_SCALE, 1.0f },
+    { GL_BLUE_BIAS, 0.0f },
+    { GL_ALPHA_SCALE, 1.0f },
+    { GL_ALPHA_BIAS, 0.0f },
+    { GL_DEPTH_SCALE, 1.0f },
+    { GL_DEPTH_BIAS, 0.0f },
+};
+
+
+void
+PixelTransferState::save(const glfeatures::Features &features)
+{
+    static_assert(sizeof pixelTransferParams / sizeof pixelTransferParams[0] == numParams,
+                  "one value per parameter");
+
+    enabled = features.pixel_transfer;
+    if (!enabled) {
+        return;
+    }
+    for (unsigned i = 0; i < numParams; ++i) {
+        values[i] = pixelTransferParams[i].identity;
+        _glGetFloatv(pixelTransferParams[i].pname, &values[i]);
+    }
+}
+
+void
+PixelTransferState::reset(Setter set) const
+{
+    if (!enabled) {
+        return;
+    }
+    for (unsigned i = 0; i < numParams; ++i) {
+        if (values[i] != pixelTransferParams[i].identity) {
+            set(pixelTransferParams[i].pname, pixelTransferParams[i].identity);
+        }
+    }
+}
+
+void
+PixelTransferState::restore(Setter set) const
+{
+    if (!enabled) {
+        return;
+    }
+    for (unsigned i = 0; i < numParams; ++i) {
+        if (values[i] != pixelTransferParams[i].identity) {
+            set(pixelTransferParams[i].pname, values[i]);
+        }
+    }
+}
+
+
 PixelPackState::PixelPackState(const glfeatures::Features &features)
 {
     desktop = !features.ES;
@@ -72,6 +136,7 @@ PixelPackState::PixelPackState(const glfeatures::Features &features)
     if (color_buffer_float) {
         _glGetIntegerv(GL_CLAMP_READ_COLOR, &clamp_read_color);
     }
+    pixel_transfer.save(features);
 
     // Reset state for compact images
     _glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -94,6 +159,7 @@ PixelPackState::PixelPackState(const glfeatures::Features &features)
     if (color_buffer_float) {
         _glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
     }
+    pixel_transfer.reset(_glPixelTransferf);
 }
 
 PixelPackState::~PixelPackState() {
@@ -117,4 +183,5 @@ PixelPackState::~PixelPackState() {
     if (color_buffer_float) {
         _glClampColor(GL_CLAMP_READ_COLOR, clamp_read_color);
     }
+    pixel_transfer.restore(_glPixelTransferf);
 }

@@ -181,6 +181,11 @@ struct Features
     unsigned primitive_restart:1;
     unsigned unpack_subimage:1;
     unsigned pack_subimage:1;
+    unsigned pixel_transfer:1;
+    unsigned draw_buffers_indexed:1;
+    unsigned OES_viewport_array:1;  /* ES only */
+    unsigned EXT_window_rectangles:1;
+    unsigned EXT_sRGB_write_control:1;  /* ES only */
 
     Features(void);
 

@@ -34,9 +34,32 @@
 
 
 /*
+ * The pixel transfer operations of compatibility profiles, which apply to
+ * pixel reads and texture uploads alike. save() records them, reset() sets
+ * the ones that change pixels to values that leave pixels unchanged, and
+ * restore() sets those back, both through the given setter.
+ */
+class PixelTransferState
+{
+public:
+    typedef void (APIENTRY *Setter)(GLenum pname, GLfloat param);
+
+    void save(const glfeatures::Features &features);
+    void reset(Setter set) const;
+    void restore(Setter set) const;
+
+private:
+    static const unsigned numParams = 14;
+
+    bool enabled = false;
+    GLfloat values[numParams];
+};
+
+
+/*
  * Tightly packed pack state, outside any pack buffer and without read color
- * clamping, for reading pixels back into client memory.  The previous state
- * is restored at the end of the scope.
+ * clamping or pixel transfer operations, for reading pixels back into client
+ * memory. The previous state is restored at the end of the scope.
  */
 class PixelPackState
 {
@@ -64,4 +87,6 @@ private:
     GLint pixel_pack_buffer_binding;
 
     GLint clamp_read_color;
+
+    PixelTransferState pixel_transfer;
 };
