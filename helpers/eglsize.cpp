@@ -33,6 +33,8 @@
 
 #include <string.h>
 
+#include <vector>
+
 #include "os_thread.hpp"
 #include "glimports.hpp"
 #include "glproc.hpp"
@@ -335,22 +337,18 @@ read_image(image_info *info, const glfeatures::Features &features,
 }
 
 /*
- * Read the texture bound to GL_TEXTURE_2D through a framebuffer, or with
+ * Read texture, bound to GL_TEXTURE_2D, through a framebuffer, or with
  * glGetTexImage where the context has it and can't render to the texture.
+ * Returns whether it read the image.
  */
-static void
+static bool
 get_texture_2d_image(const glfeatures::Profile &profile, image_info *info,
-                     const glfeatures::Features &features)
+                     const glfeatures::Features &features, GLuint texture)
 {
     GLuint fbo = 0;
     framebuffer_bindings prev_fbo;
-    GLint texture;
     GLenum status;
     bool read = false;
-
-    _glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-    if (!texture)
-        return;
 
     _glGenFramebuffers(1, &fbo);
     bind_framebuffer(features, fbo, &prev_fbo);
@@ -374,15 +372,333 @@ get_texture_2d_image(const glfeatures::Profile &profile, image_info *info,
         os::log("%s: error: %d\n", __func__, status);
     }
 
-    if (!read) {
-        /* Rather no upload than one of pixels that weren't read. */
-        os::log("%s: can't read the image\n", __func__);
-        info->width = 0;
-        info->height = 0;
+    restore_framebuffer(&prev_fbo);
+    _glDeleteFramebuffers(1, &fbo);
+    return read;
+}
+
+/*
+ * GLES state that a draw of viewport 0 to draw buffer 0 depends on, and that
+ * the conversion changes. Viewports and scissor tests are per viewport with
+ * GL_OES_viewport_array, and blending and color masks per draw buffer with
+ * GLES 3.2 or GL_OES_draw_buffers_indexed, so only index 0 is touched there.
+ */
+struct draw_state
+{
+    bool viewports;
+    bool buffers;
+    bool core;
+    bool rectangles;
+    bool srgb_control;
+    GLint program;
+    GLint vertex_array;
+    GLint array_buffer;
+    GLint active_texture;
+    GLint external_texture;
+    GLint sampler;
+    GLfloat viewport[4];
+    GLboolean scissor;
+    GLboolean blend;
+    GLboolean cull;
+    GLboolean discard;
+    GLboolean srgb;
+    GLint mask[4];
+    GLint rectangle_mode;
+    std::vector<GLint> rectangle_boxes;
+};
+
+/* indexed ones by the GLES 3.2 names, or else by the extensions' */
+static GLboolean
+get_enable(const draw_state *saved, GLenum cap, bool indexed)
+{
+    if (!indexed)
+        return _glIsEnabled(cap);
+    return saved->core ? _glIsEnabledi(cap, 0) : _glIsEnablediEXT(cap, 0);
+}
+
+static void
+set_enable(const draw_state *saved, GLenum cap, bool indexed, GLboolean enable)
+{
+    if (indexed && saved->core) {
+        if (enable)
+            _glEnablei(cap, 0);
+        else
+            _glDisablei(cap, 0);
+    } else if (indexed) {
+        if (enable)
+            _glEnableiEXT(cap, 0);
+        else
+            _glDisableiEXT(cap, 0);
+    } else if (enable) {
+        _glEnable(cap);
+    } else {
+        _glDisable(cap);
+    }
+}
+
+static void
+save_draw_state(const glfeatures::Profile &profile,
+                const glfeatures::Features &features, draw_state *saved)
+{
+    saved->viewports = features.OES_viewport_array;
+    saved->buffers = features.draw_buffers_indexed;
+    saved->core = profile.versionGreaterOrEqual(3, 2);
+    saved->rectangles = features.EXT_window_rectangles;
+    saved->srgb_control = features.EXT_sRGB_write_control;
+
+    _glGetIntegerv(GL_CURRENT_PROGRAM, &saved->program);
+    _glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &saved->vertex_array);
+    _glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &saved->array_buffer);
+    _glGetIntegerv(GL_ACTIVE_TEXTURE, &saved->active_texture);
+    _glActiveTexture(GL_TEXTURE0);
+    _glGetIntegerv(GL_TEXTURE_BINDING_EXTERNAL_OES, &saved->external_texture);
+    _glGetIntegerv(GL_SAMPLER_BINDING, &saved->sampler);
+    if (saved->viewports)
+        _glGetFloati_vOES(GL_VIEWPORT, 0, saved->viewport);
+    else
+        _glGetFloatv(GL_VIEWPORT, saved->viewport);
+    saved->scissor = get_enable(saved, GL_SCISSOR_TEST, saved->viewports);
+    saved->blend = get_enable(saved, GL_BLEND, saved->buffers);
+    saved->cull = _glIsEnabled(GL_CULL_FACE);
+    saved->discard = _glIsEnabled(GL_RASTERIZER_DISCARD);
+    if (saved->srgb_control)
+        saved->srgb = _glIsEnabled(GL_FRAMEBUFFER_SRGB_EXT);
+    /* glGetBooleani_v needs GLES 3.1, unlike GL_OES_draw_buffers_indexed */
+    if (saved->buffers)
+        _glGetIntegeri_v(GL_COLOR_WRITEMASK, 0, saved->mask);
+    else
+        _glGetIntegerv(GL_COLOR_WRITEMASK, saved->mask);
+    if (saved->rectangles) {
+        GLint count = 0;
+
+        _glGetIntegerv(GL_WINDOW_RECTANGLE_MODE_EXT, &saved->rectangle_mode);
+        _glGetIntegerv(GL_NUM_WINDOW_RECTANGLES_EXT, &count);
+        saved->rectangle_boxes.resize(4 * count);
+        for (GLint i = 0; i < count; ++i)
+            _glGetIntegeri_v(GL_WINDOW_RECTANGLE_EXT, i, &saved->rectangle_boxes[4 * i]);
+    }
+}
+
+static void
+set_viewport(const draw_state *saved, const GLfloat *viewport)
+{
+    if (saved->viewports)
+        _glViewportIndexedfOES(0, viewport[0], viewport[1], viewport[2], viewport[3]);
+    else
+        _glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+}
+
+static void
+set_color_mask(const draw_state *saved, const GLint *mask)
+{
+    if (saved->buffers && saved->core)
+        _glColorMaski(0, mask[0], mask[1], mask[2], mask[3]);
+    else if (saved->buffers)
+        _glColorMaskiEXT(0, mask[0], mask[1], mask[2], mask[3]);
+    else
+        _glColorMask(mask[0], mask[1], mask[2], mask[3]);
+}
+
+static void
+restore_draw_state(const draw_state *saved)
+{
+    _glUseProgram(saved->program);
+    _glBindVertexArray(saved->vertex_array);
+    _glBindBuffer(GL_ARRAY_BUFFER, saved->array_buffer);
+    _glBindTexture(GL_TEXTURE_EXTERNAL_OES, saved->external_texture);
+    _glBindSampler(0, saved->sampler);
+    _glActiveTexture(saved->active_texture);
+    set_viewport(saved, saved->viewport);
+    set_enable(saved, GL_SCISSOR_TEST, saved->viewports, saved->scissor);
+    set_enable(saved, GL_BLEND, saved->buffers, saved->blend);
+    set_enable(saved, GL_CULL_FACE, false, saved->cull);
+    set_enable(saved, GL_RASTERIZER_DISCARD, false, saved->discard);
+    if (saved->srgb_control)
+        set_enable(saved, GL_FRAMEBUFFER_SRGB_EXT, false, saved->srgb);
+    set_color_mask(saved, saved->mask);
+    if (saved->rectangles)
+        _glWindowRectanglesEXT(saved->rectangle_mode,
+                               (GLsizei)saved->rectangle_boxes.size() / 4,
+                               saved->rectangle_boxes.data());
+}
+
+static GLuint
+compile_shader(GLenum type, const char *source)
+{
+    GLuint shader = _glCreateShader(type);
+    GLint compiled = GL_FALSE;
+
+    _glShaderSource(shader, 1, &source, NULL);
+    _glCompileShader(shader);
+    _glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) {
+        _glDeleteShader(shader);
+        return 0;
+    }
+    return shader;
+}
+
+/* samples the external texture on unit 0 over the whole viewport */
+static GLuint
+external_program(void)
+{
+    static const char *vs =
+        "attribute vec2 position;\n"
+        "varying vec2 coord;\n"
+        "void main() {\n"
+        "    coord = position * 0.5 + 0.5;\n"
+        "    gl_Position = vec4(position, 0.0, 1.0);\n"
+        "}\n";
+    static const char *fs =
+        "#extension GL_OES_EGL_image_external : require\n"
+        "precision highp float;\n"
+        "uniform samplerExternalOES image;\n"
+        "varying vec2 coord;\n"
+        "void main() {\n"
+        "    gl_FragColor = texture2D(image, coord);\n"
+        "}\n";
+    GLuint vertex = compile_shader(GL_VERTEX_SHADER, vs);
+    GLuint fragment = compile_shader(GL_FRAGMENT_SHADER, fs);
+    GLuint program = 0;
+    GLint linked = GL_FALSE;
+
+    if (vertex && fragment) {
+        program = _glCreateProgram();
+        _glAttachShader(program, vertex);
+        _glAttachShader(program, fragment);
+        _glBindAttribLocation(program, 0, "position");
+        _glLinkProgram(program);
+        _glGetProgramiv(program, GL_LINK_STATUS, &linked);
+        if (!linked) {
+            _glDeleteProgram(program);
+            program = 0;
+        }
+    }
+    _glDeleteShader(vertex);
+    _glDeleteShader(fragment);
+    return program;
+}
+
+/*
+ * Whether a helper draw would change what the application sees: its program
+ * being flagged for deletion, which switching away from frees, or transform
+ * feedback or a query that would count the draw.
+ */
+static bool
+draw_visible(void)
+{
+    static const GLenum counting[] = {
+        GL_SAMPLES_PASSED,
+        GL_ANY_SAMPLES_PASSED,
+        GL_ANY_SAMPLES_PASSED_CONSERVATIVE,
+        GL_PRIMITIVES_GENERATED,
+    };
+    GLint program = 0;
+    GLint deleted = GL_FALSE;
+    GLint feedback = GL_FALSE;
+    GLint paused = GL_FALSE;
+    bool visible = false;
+
+    _glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    if (program)
+        _glGetProgramiv(program, GL_DELETE_STATUS, &deleted);
+    _glGetIntegerv(GL_TRANSFORM_FEEDBACK_ACTIVE, &feedback);
+    _glGetIntegerv(GL_TRANSFORM_FEEDBACK_PAUSED, &paused);
+    visible = deleted || (feedback && !paused);
+    for (GLenum target : counting) {
+        GLint query = 0;
+
+        /* targets the context lacks raise an error and leave it 0 */
+        _glGetQueryiv(target, GL_CURRENT_QUERY, &query);
+        visible = visible || query;
+    }
+    (void)_glGetError();
+    return visible;
+}
+
+/*
+ * Draw an image through an external sampler into a new texture of the chosen
+ * format, left bound to GL_TEXTURE_2D. Only sampling converts YUV to RGB, as
+ * reading the image would give its first plane, and it reads images that the
+ * context can't render to. Needs GLES 3.0, a format that isn't integer, and
+ * a draw that the application can't see. Returns the texture, or 0 if it
+ * can't draw.
+ */
+static GLuint
+convert_image(const glfeatures::Profile &profile,
+              const glfeatures::Features &features, EGLImageKHR image,
+              const image_info *info)
+{
+    GLuint texture = 0;
+
+    if (!profile.es() || !profile.versionGreaterOrEqual(3, 0) ||
+        info->format == GL_RGBA_INTEGER || draw_visible())
+        return 0;
+
+    _glGenTextures(1, &texture);
+    _glBindTexture(GL_TEXTURE_2D, texture);
+    _glTexStorage2D(GL_TEXTURE_2D, 1, info->internalformat, info->width, info->height);
+
+    draw_state saved;
+    save_draw_state(profile, features, &saved);
+
+    static const GLfloat triangle[] = {-1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f};
+    static const GLint all[4] = {GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE};
+    const GLfloat viewport[4] = {0.0f, 0.0f, (GLfloat)info->width, (GLfloat)info->height};
+    GLuint program = external_program();
+    GLuint external = 0, vertex_array = 0, buffer = 0, fbo = 0;
+    framebuffer_bindings prev_fbo;
+    bool drawn = false;
+
+    _glGenTextures(1, &external);
+    _glBindTexture(GL_TEXTURE_EXTERNAL_OES, external);
+    _glBindSampler(0, 0);
+    _glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+    /* one texel per pixel, with the chroma of its own block */
+    _glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    _glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    _glGenVertexArrays(1, &vertex_array);
+    _glBindVertexArray(vertex_array);
+    _glGenBuffers(1, &buffer);
+    _glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    _glBufferData(GL_ARRAY_BUFFER, sizeof triangle, triangle, GL_STATIC_DRAW);
+    _glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    _glEnableVertexAttribArray(0);
+
+    _glGenFramebuffers(1, &fbo);
+    bind_framebuffer(features, fbo, &prev_fbo);
+    _glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                            texture, 0);
+
+    if (program && _glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        _glUseProgram(program);
+        set_viewport(&saved, viewport);
+        set_enable(&saved, GL_SCISSOR_TEST, saved.viewports, GL_FALSE);
+        set_enable(&saved, GL_BLEND, saved.buffers, GL_FALSE);
+        set_enable(&saved, GL_CULL_FACE, false, GL_FALSE);
+        set_enable(&saved, GL_RASTERIZER_DISCARD, false, GL_FALSE);
+        /* sRGB images are decoded by the sampler, so encode them back */
+        if (saved.srgb_control)
+            set_enable(&saved, GL_FRAMEBUFFER_SRGB_EXT, false, GL_TRUE);
+        set_color_mask(&saved, all);
+        if (saved.rectangles)
+            _glWindowRectanglesEXT(GL_EXCLUSIVE_EXT, 0, NULL);
+        (void)_glGetError();
+        _glDrawArrays(GL_TRIANGLES, 0, 3);
+        drawn = _glGetError() == GL_NO_ERROR;
     }
 
     restore_framebuffer(&prev_fbo);
+    restore_draw_state(&saved);
     _glDeleteFramebuffers(1, &fbo);
+    _glDeleteBuffers(1, &buffer);
+    _glDeleteVertexArrays(1, &vertex_array);
+    _glDeleteTextures(1, &external);
+    _glDeleteProgram(program);
+    if (!drawn)
+        _glDeleteTextures(1, &texture);
+    return drawn ? texture : 0;
 }
 
 struct image_info *
@@ -414,7 +730,30 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
 
     if (info->width && info->height) {
         choose_image_format(profile, info);
-        get_texture_2d_image(profile, info, features);
+        bool read = get_texture_2d_image(profile, info, features, tex);
+        if (!read) {
+            GLuint converted = convert_image(profile, features, image, info);
+
+            /* into RGBA8 where the context can't render to the chosen format */
+            if (!converted && info->format != GL_RGBA_INTEGER &&
+                info->internalformat != GL_RGBA8 &&
+                info->internalformat != GL_SRGB8_ALPHA8) {
+                info->internalformat = GL_RGBA8;
+                info->format = GL_RGBA;
+                info->type = GL_UNSIGNED_BYTE;
+                converted = convert_image(profile, features, image, info);
+            }
+            if (converted) {
+                read = get_texture_2d_image(profile, info, features, converted);
+                _glDeleteTextures(1, &converted);
+            }
+        }
+        if (!read) {
+            /* Rather no upload than one of the first plane alone, or of pixels that weren't read. */
+            os::log("%s: can't read the image\n", __func__);
+            info->width = 0;
+            info->height = 0;
+        }
     }
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteTextures(1, &tex);

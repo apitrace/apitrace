@@ -346,8 +346,11 @@ Features::load(const Profile & profile, const Extensions & ext)
     ARB_shader_storage_buffer_object = ext.has("GL_ARB_shader_storage_buffer_object");
     ARB_program_interface_query = ext.has("GL_ARB_program_interface_query");
     OVR_multiview = ext.has("GL_OVR_multiview");
+    EXT_window_rectangles = ext.has("GL_EXT_window_rectangles");
 
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
+    EXT_sRGB_write_control = ES && ext.has("GL_EXT_sRGB_write_control");
+    OES_viewport_array = ES && ext.has("GL_OES_viewport_array");
 
     if (profile.desktop()) {
         ARB_color_buffer_float = profile.versionGreaterOrEqual(3, 0) ||
@@ -385,6 +388,8 @@ Features::load(const Profile & profile, const Extensions & ext)
                           ext.has("GL_ARB_compatibility"));
 
         instanced_arrays = profile.versionGreaterOrEqual(3, 3) || ext.has("GL_ARB_instanced_arrays");
+
+        draw_buffers_indexed = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_EXT_draw_buffers2");
     } else {
         texture_3d = 1;
 
@@ -411,6 +416,10 @@ Features::load(const Profile & profile, const Extensions & ext)
         pack_subimage = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_NV_pack_subimage");
 
         instanced_arrays = profile.versionGreaterOrEqual(3, 0) || ext.has("GL_EXT_instanced_arrays");
+
+        draw_buffers_indexed = profile.versionGreaterOrEqual(3, 2) ||
+                               ext.has("GL_OES_draw_buffers_indexed") ||
+                               ext.has("GL_EXT_draw_buffers_indexed");
     }
 }
 
