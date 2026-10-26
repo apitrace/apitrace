@@ -88,6 +88,7 @@ public:
     using const_iterator = std::unordered_set<PTraceCall, CallHash>::const_iterator;
 
     void insert(PTraceCall call);
+    void append(CallSet& set);
     void clear();
     bool empty() const;
     size_t size() const {return m_calls.size(); }
