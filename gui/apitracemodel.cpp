@@ -246,20 +246,20 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
     if (m_trace)
         disconnect(m_trace);
     m_trace = trace;
-    connect(m_trace, SIGNAL(invalidated()),
-            this, SLOT(invalidateFrames()));
-    connect(m_trace, SIGNAL(framesInvalidated()),
-            this, SLOT(invalidateFrames()));
-    connect(m_trace, SIGNAL(beginAddingFrames(int, int)),
-            this, SLOT(beginAddingFrames(int, int)));
-    connect(m_trace, SIGNAL(endAddingFrames()),
-            this, SLOT(endAddingFrames()));
-    connect(m_trace, SIGNAL(changed(ApiTraceEvent*)),
-            this, SLOT(changed(ApiTraceEvent*)));
-    connect(m_trace, SIGNAL(beginLoadingFrame(ApiTraceFrame*,int)),
-            this, SLOT(beginLoadingFrame(ApiTraceFrame*,int)));
-    connect(m_trace, SIGNAL(endLoadingFrame(ApiTraceFrame*)),
-            this, SLOT(endLoadingFrame(ApiTraceFrame*)));
+    connect(m_trace, &ApiTrace::invalidated,
+            this, &ApiTraceModel::invalidateFrames);
+    connect(m_trace, &ApiTrace::framesInvalidated,
+            this, &ApiTraceModel::invalidateFrames);
+    connect(m_trace, &ApiTrace::beginAddingFrames,
+            this, &ApiTraceModel::beginAddingFrames);
+    connect(m_trace, &ApiTrace::endAddingFrames,
+            this, &ApiTraceModel::endAddingFrames);
+    connect(m_trace, &ApiTrace::changed,
+            this, &ApiTraceModel::changed);
+    connect(m_trace, &ApiTrace::beginLoadingFrame,
+            this, &ApiTraceModel::beginLoadingFrame);
+    connect(m_trace, &ApiTrace::endLoadingFrame,
+            this, &ApiTraceModel::endLoadingFrame);
 
 }
 

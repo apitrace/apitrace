@@ -13,53 +13,49 @@ ApiTrace::ApiTrace()
 {
     m_loader = new TraceLoader();
 
-    connect(this, SIGNAL(loadTrace(QString)),
-            m_loader, SLOT(loadTrace(QString)));
-    connect(this, SIGNAL(requestFrame(ApiTraceFrame*)),
-            m_loader, SLOT(loadFrame(ApiTraceFrame*)));
-    connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
-            this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
-    connect(m_loader,
-            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>, QVector<ApiTraceCall*>,quint64)),
-            this,
-            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,QVector<ApiTraceCall*>,quint64)));
-    connect(m_loader, SIGNAL(guessedApi(int)),
-            this, SLOT(guessedApi(int)));
-    connect(this, SIGNAL(loaderSearch(ApiTrace::SearchRequest)),
-            m_loader, SLOT(search(ApiTrace::SearchRequest)));
-    connect(m_loader,
-            SIGNAL(searchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
-            this,
-            SLOT(loaderSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
-    connect(this, SIGNAL(loaderFindFrameStart(ApiTraceFrame*)),
-            m_loader, SLOT(findFrameStart(ApiTraceFrame*)));
-    connect(this, SIGNAL(loaderFindFrameEnd(ApiTraceFrame*)),
-            m_loader, SLOT(findFrameEnd(ApiTraceFrame*)));
-    connect(m_loader, SIGNAL(foundFrameStart(ApiTraceFrame*)),
-            this, SIGNAL(foundFrameStart(ApiTraceFrame*)));
-    connect(m_loader, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
-            this, SIGNAL(foundFrameEnd(ApiTraceFrame*)));
-    connect(this, SIGNAL(loaderFindCallIndex(int)),
-            m_loader, SLOT(findCallIndex(int)));
-    connect(m_loader, SIGNAL(foundCallIndex(ApiTraceCall*)),
-            this, SIGNAL(foundCallIndex(ApiTraceCall*)));
+    connect(this, &ApiTrace::loadTrace,
+            m_loader, &TraceLoader::loadTrace);
+    connect(this, &ApiTrace::requestFrame,
+            m_loader, &TraceLoader::loadFrame);
+    connect(m_loader, &TraceLoader::framesLoaded,
+            this, &ApiTrace::addFrames);
+    connect(m_loader, &TraceLoader::frameContentsLoaded,
+            this, &ApiTrace::loaderFrameLoaded);
+    connect(m_loader, &TraceLoader::guessedApi,
+            this, &ApiTrace::guessedApi);
+    connect(this, &ApiTrace::loaderSearch,
+            m_loader, &TraceLoader::search);
+    connect(m_loader, &TraceLoader::searchResult,
+            this, &ApiTrace::loaderSearchResult);
+    connect(this, &ApiTrace::loaderFindFrameStart,
+            m_loader, &TraceLoader::findFrameStart);
+    connect(this, &ApiTrace::loaderFindFrameEnd,
+            m_loader, &TraceLoader::findFrameEnd);
+    connect(m_loader, &TraceLoader::foundFrameStart,
+            this, &ApiTrace::foundFrameStart);
+    connect(m_loader, &TraceLoader::foundFrameEnd,
+            this, &ApiTrace::foundFrameEnd);
+    connect(this, &ApiTrace::loaderFindCallIndex,
+            m_loader, &TraceLoader::findCallIndex);
+    connect(m_loader, &TraceLoader::foundCallIndex,
+            this, &ApiTrace::foundCallIndex);
 
 
-    connect(m_loader, SIGNAL(parseProblem(const QString&)),
-            this, SIGNAL(problemLoadingTrace(const QString&)));
-    connect(m_loader, SIGNAL(startedParsing()),
-            this, SIGNAL(startedLoadingTrace()));
-    connect(m_loader, SIGNAL(parsed(int)),
-            this, SIGNAL(loaded(int)));
-    connect(m_loader, SIGNAL(finishedParsing()),
-            this, SIGNAL(finishedLoadingTrace()));
+    connect(m_loader, &TraceLoader::parseProblem,
+            this, &ApiTrace::problemLoadingTrace);
+    connect(m_loader, &TraceLoader::startedParsing,
+            this, &ApiTrace::startedLoadingTrace);
+    connect(m_loader, &TraceLoader::parsed,
+            this, &ApiTrace::loaded);
+    connect(m_loader, &TraceLoader::finishedParsing,
+            this, &ApiTrace::finishedLoadingTrace);
 
 
     m_saver = new SaverThread(this);
-    connect(m_saver, SIGNAL(traceSaved()),
-            this, SLOT(slotSaved()));
-    connect(m_saver, SIGNAL(traceSaved()),
-            this, SIGNAL(saved()));
+    connect(m_saver, &SaverThread::traceSaved,
+            this, &ApiTrace::slotSaved);
+    connect(m_saver, &SaverThread::traceSaved,
+            this, &ApiTrace::saved);
 
     m_loaderThread = new QThread();
     m_loader->moveToThread(m_loaderThread);

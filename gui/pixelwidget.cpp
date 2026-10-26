@@ -283,27 +283,27 @@ void PixelWidget::contextMenuEvent(QContextMenuEvent *e)
     // Grid size options
     QAction incrGrid(QLatin1String("Increase grid size"), &menu);
     incrGrid.setShortcut(QKeySequence(Qt::Key_PageUp));
-    connect(&incrGrid, SIGNAL(triggered()), this, SLOT(increaseGridSize()));
+    connect(&incrGrid, &QAction::triggered, this, &PixelWidget::increaseGridSize);
     QAction decrGrid(QLatin1String("Decrease grid size"), &menu);
     decrGrid.setShortcut(QKeySequence(Qt::Key_PageDown));
-    connect(&decrGrid, SIGNAL(triggered()), this, SLOT(decreaseGridSize()));
+    connect(&decrGrid, &QAction::triggered, this, &PixelWidget::decreaseGridSize);
 
     // Zoom options
     QAction incrZoom(QLatin1String("Zoom in"), &menu);
     incrZoom.setShortcut(QKeySequence(Qt::Key_Plus));
-    connect(&incrZoom, SIGNAL(triggered()), this, SLOT(increaseZoom()));
+    connect(&incrZoom, &QAction::triggered, this, &PixelWidget::zoomStepUp);
     QAction decrZoom(QLatin1String("Zoom out"), &menu);
     decrZoom.setShortcut(QKeySequence(Qt::Key_Minus));
-    connect(&decrZoom, SIGNAL(triggered()), this, SLOT(decreaseZoom()));
+    connect(&decrZoom, &QAction::triggered, this, &PixelWidget::zoomStepDown);
 
     // Copy to clipboard / save
     QAction save(QLatin1String("Save as image"), &menu);
     save.setShortcut(QKeySequence(QLatin1String("Ctrl+S")));
-    connect(&save, SIGNAL(triggered()), this, SLOT(saveToFile()));
+    connect(&save, &QAction::triggered, this, &PixelWidget::saveToFile);
 #ifndef QT_NO_CLIPBOARD
     QAction copy(QLatin1String("Copy to clipboard"), &menu);
     copy.setShortcut(QKeySequence(QLatin1String("Ctrl+C")));
-    connect(&copy, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
+    connect(&copy, &QAction::triggered, this, &PixelWidget::copyToClipboard);
 #endif
 
     menu.addAction(&title);

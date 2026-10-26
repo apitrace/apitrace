@@ -81,7 +81,8 @@ public:
     QSize sizeHint() const override;
 
 public slots:
-    void setZoom(double zoom, bool forceGrid = true);
+    void setZoom(double zoom, bool forceGrid);
+    void setZoom(double zoom) { setZoom(zoom, true); }
     void setGridSize(int gridSize);
     void toggleGrid();
     void copyToClipboard();
