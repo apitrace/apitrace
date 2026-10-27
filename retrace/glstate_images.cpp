@@ -1502,7 +1502,15 @@ static void
 setDrawBufferForReadback(Context &context, GLenum drawBuffer)
 {
     if (context.ES) {
-        glDrawBuffers(1, &drawBuffer);
+        if (drawBuffer == GL_NONE) {
+            glDrawBuffers(1, &drawBuffer);
+        } else {
+            assert(drawBuffer >= GL_COLOR_ATTACHMENT0);
+            unsigned index = drawBuffer - GL_COLOR_ATTACHMENT0;
+            std::vector<GLenum> drawBuffers(index + 1, GL_NONE);
+            drawBuffers[index] = drawBuffer;
+            glDrawBuffers(drawBuffers.size(), &drawBuffers[0]);
+        }
     } else {
         glDrawBuffer(drawBuffer);
     }
@@ -1520,6 +1528,10 @@ downsampledFramebuffer(Context &context,
     GLuint fbo;
 
     *numRbs = 0;
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+    GLint readBuffer = GL_NONE;
+    glGetIntegerv(GL_READ_BUFFER, &readBuffer);
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -1619,6 +1631,10 @@ downsampledFramebuffer(Context &context,
     if (scissor_test) {
         glEnable(GL_SCISSOR_TEST);
     }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+    glReadBuffer(readBuffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
 
     return fbo;
 }
