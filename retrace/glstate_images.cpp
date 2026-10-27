@@ -1517,17 +1517,28 @@ setDrawBufferForReadback(Context &context, GLenum drawBuffer)
 }
 
 
+static void
+createFramebufferRenderbuffer(GLenum attachment, const ImageDesc &desc,
+                              std::vector<GLuint> &rbs)
+{
+    GLuint rb = 0;
+    glGenRenderbuffers(1, &rb);
+    rbs.push_back(rb);
+    glBindRenderbuffer(GL_RENDERBUFFER, rb);
+    glRenderbufferStorage(GL_RENDERBUFFER, desc.internalFormat, desc.width, desc.height);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, attachment, GL_RENDERBUFFER, rb);
+}
+
+
 static inline GLuint
-downsampledFramebuffer(Context &context,
-                       GLuint oldFbo, GLint drawbuffer,
-                       const ImageDesc &colorDesc,
+downsampledFramebuffer(Context &context, GLuint oldFbo,
+                       const std::vector<GLenum> &drawBuffers,
+                       const std::vector<ImageDesc> &colorDescs,
                        const ImageDesc &depthDesc,
                        const ImageDesc &stencilDesc,
-                       GLuint *rbs, GLint *numRbs)
+                       std::vector<GLuint> &rbs)
 {
     GLuint fbo;
-
-    *numRbs = 0;
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
     GLint readBuffer = GL_NONE;
@@ -1541,90 +1552,42 @@ downsampledFramebuffer(Context &context,
         glDisable(GL_SCISSOR_TEST);
     }
 
-    {
-        // color buffer
-        GLint maxColorAtt = 0;
-        glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAtt);
-        std::vector<GLenum> drawbufs(maxColorAtt, GL_NONE);
-        for (int iColorAtt = 0; iColorAtt < maxColorAtt; ++iColorAtt) {
-            GLenum colorAtt = GL_COLOR_ATTACHMENT0 + iColorAtt;
-
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-            GLint objType = GL_NONE;
-            glGetFramebufferAttachmentParameteriv(GL_READ_FRAMEBUFFER, colorAtt,
-                                                  GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objType);
-            if (objType != GL_NONE) {
-               drawbufs[iColorAtt] = colorAtt;
-               glGenRenderbuffers(1, &rbs[*numRbs]);
-
-               glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-               glRenderbufferStorage(GL_RENDERBUFFER, colorDesc.internalFormat, colorDesc.width, colorDesc.height);
-               glFramebufferRenderbuffer(GL_FRAMEBUFFER, colorAtt,
-                                         GL_RENDERBUFFER, rbs[*numRbs]);
-
-               glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-               glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-               glReadBuffer(colorAtt);
-               setDrawBufferForReadback(context, colorAtt);
-
-               glBlitFramebuffer(0, 0, colorDesc.width, colorDesc.height, 0, 0, colorDesc.width, colorDesc.height,
-                                 GL_COLOR_BUFFER_BIT, GL_NEAREST);
-               glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-               ++*numRbs;
-            }
+    // Resolve each active color attachment using its own format and dimensions.
+    for (unsigned i = 0; i < colorDescs.size(); ++i) {
+        const ImageDesc &desc = colorDescs[i];
+        if (!desc.valid()) {
+            continue;
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glDrawBuffers(maxColorAtt, &drawbufs[0]);
+
+        GLenum attachment = GL_COLOR_ATTACHMENT0 + i;
+        createFramebufferRenderbuffer(attachment, desc, rbs);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+        glReadBuffer(attachment);
+        setDrawBufferForReadback(context, attachment);
+        glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height,
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+    glReadBuffer(readBuffer);
+    glDrawBuffers(drawBuffers.size(), &drawBuffers[0]);
 
     if (stencilDesc == depthDesc &&
         depthDesc.valid()) {
-        //combined depth and stencil buffer
-        glGenRenderbuffers(1, &rbs[*numRbs]);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-        glRenderbufferStorage(GL_RENDERBUFFER, depthDesc.internalFormat, depthDesc.width, depthDesc.height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, rbs[*numRbs]);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-        setDrawBufferForReadback(context, drawbuffer);
-        glReadBuffer(drawbuffer);
+        // Combined depth and stencil buffer.
+        createFramebufferRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, depthDesc, rbs);
         glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        ++*numRbs;
     } else {
         if (depthDesc.valid()) {
-            glGenRenderbuffers(1, &rbs[*numRbs]);
-            glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-            glRenderbufferStorage(GL_RENDERBUFFER, depthDesc.internalFormat, depthDesc.width, depthDesc.height);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                                      GL_DEPTH_ATTACHMENT,
-                                      GL_RENDERBUFFER, rbs[*numRbs]);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            setDrawBufferForReadback(context, drawbuffer);
-            glReadBuffer(drawbuffer);
+            createFramebufferRenderbuffer(GL_DEPTH_ATTACHMENT, depthDesc, rbs);
             glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                               GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-            ++*numRbs;
         }
         if (stencilDesc.valid()) {
-            glGenRenderbuffers(1, &rbs[*numRbs]);
-            glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-            glRenderbufferStorage(GL_RENDERBUFFER, stencilDesc.internalFormat, stencilDesc.width, stencilDesc.height);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                                      GL_STENCIL_ATTACHMENT,
-                                      GL_RENDERBUFFER, rbs[*numRbs]);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            setDrawBufferForReadback(context, drawbuffer);
-            glReadBuffer(drawbuffer);
+            createFramebufferRenderbuffer(GL_STENCIL_ATTACHMENT, stencilDesc, rbs);
             glBlitFramebuffer(0, 0, stencilDesc.width, stencilDesc.height, 0, 0, stencilDesc.width, stencilDesc.height,
                               GL_STENCIL_BUFFER_BIT, GL_NEAREST);
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-            ++*numRbs;
         }
     }
 
@@ -1632,9 +1595,15 @@ downsampledFramebuffer(Context &context,
         glEnable(GL_SCISSOR_TEST);
     }
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-    glReadBuffer(readBuffer);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    GLenum resolvedReadBuffer = GL_NONE;
+    for (auto drawBuffer : drawBuffers) {
+        if (drawBuffer != GL_NONE) {
+            resolvedReadBuffer = drawBuffer;
+            break;
+        }
+    }
+    glReadBuffer(resolvedReadBuffer);
 
     return fbo;
 }
@@ -1759,6 +1728,13 @@ dumpFramebufferAttachment(StateWriter &writer, Context &context, GLenum target, 
         assert(desc.internalFormat != GL_NONE);
         const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
         chooseReadBackFormat(formatDesc, format, type);
+    }
+
+    if (context.ES && format == GL_RGBA_INTEGER) {
+        std::cerr << "warning: skipping integer framebuffer attachment "
+                  << enumToString(attachment) << " (" << formatToString(desc.internalFormat)
+                  << "): GLES integer readback is not supported\n";
+        return;
     }
 
     GLint object_type = GL_NONE;
@@ -1891,20 +1867,29 @@ dumpFramebuffer(StateWriter &writer, Context &context)
     } else if (context.ES && !context.read_framebuffer_object) {
         dumpFramebufferAttachments(writer, context, GL_FRAMEBUFFER);
     } else {
-        GLint draw_buffer0 = GL_NONE;
-        glGetIntegerv(GL_DRAW_BUFFER0, &draw_buffer0);
         bool multisample = false;
 
         GLint boundRb = 0;
         glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundRb);
 
-        ImageDesc colorDesc;
-        /* If a draw buffer is not bound then we shouldn't query the attachment. */
-        if (draw_buffer0 != 0) {
-            if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, draw_buffer0, colorDesc)) {
-                if (colorDesc.samples) {
-                    multisample = true;
-                }
+        GLint maxDrawBuffers = 0;
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+        GLint maxColorAttachments = 0;
+        glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+        std::vector<GLenum> drawBuffers(maxDrawBuffers, GL_NONE);
+        std::vector<ImageDesc> colorDescs(maxColorAttachments);
+        for (GLint i = 0; i < maxDrawBuffers; ++i) {
+            GLint drawBuffer = GL_NONE;
+            glGetIntegerv(GL_DRAW_BUFFER0 + i, &drawBuffer);
+            if (drawBuffer < GL_COLOR_ATTACHMENT0 ||
+                drawBuffer >= GL_COLOR_ATTACHMENT0 + maxColorAttachments) {
+                continue;
+            }
+
+            ImageDesc &desc = colorDescs[drawBuffer - GL_COLOR_ATTACHMENT0];
+            if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, drawBuffer, desc)) {
+                drawBuffers[i] = drawBuffer;
+                multisample = multisample || desc.samples != 0;
             }
         }
 
@@ -1922,17 +1907,15 @@ dumpFramebuffer(StateWriter &writer, Context &context)
             }
         }
 
-        GLuint rbs[2 + 8];
-        GLint numRbs = 0;
+        std::vector<GLuint> rbs;
         GLuint fboCopy = 0;
 
         if (multisample) {
             // glReadPixels doesnt support multisampled buffers so we need
             // to blit the fbo to a temporary one
             fboCopy = downsampledFramebuffer(context,
-                                             boundDrawFbo, draw_buffer0,
-                                             colorDesc, depthDesc, stencilDesc,
-                                             rbs, &numRbs);
+                                             boundDrawFbo, drawBuffers,
+                                             colorDescs, depthDesc, stencilDesc, rbs);
         } else {
             glBindFramebuffer(GL_READ_FRAMEBUFFER, boundDrawFbo);
         }
@@ -1941,8 +1924,9 @@ dumpFramebuffer(StateWriter &writer, Context &context)
 
         if (multisample) {
             glBindRenderbuffer(GL_RENDERBUFFER, boundRb);
-            assert(numRbs < sizeof rbs / sizeof rbs[0]);
-            glDeleteRenderbuffers(numRbs, rbs);
+            if (!rbs.empty()) {
+                glDeleteRenderbuffers(rbs.size(), &rbs[0]);
+            }
             glDeleteFramebuffers(1, &fboCopy);
         }
 
