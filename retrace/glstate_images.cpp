@@ -1533,16 +1533,16 @@ downsampledFramebuffer(Context &context,
         // color buffer
         GLint maxColorAtt = 0;
         glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAtt);
-        std::vector<GLenum> drawbufs(maxColorAtt);
+        std::vector<GLenum> drawbufs(maxColorAtt, GL_NONE);
         for (int iColorAtt = 0; iColorAtt < maxColorAtt; ++iColorAtt) {
             GLenum colorAtt = GL_COLOR_ATTACHMENT0 + iColorAtt;
-            drawbufs[iColorAtt] = colorAtt;
 
             glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
             GLint objType = GL_NONE;
             glGetFramebufferAttachmentParameteriv(GL_READ_FRAMEBUFFER, colorAtt,
                                                   GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objType);
             if (objType != GL_NONE) {
+               drawbufs[iColorAtt] = colorAtt;
                glGenRenderbuffers(1, &rbs[*numRbs]);
 
                glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
