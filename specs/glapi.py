@@ -3508,6 +3508,16 @@ glapi.addFunctions([
     GlFunction(Void, "glGenVertexArraysOES", [(GLsizei, "n"), Out(Array(GLarray, "n"), "arrays")]),
     GlFunction(GLboolean, "glIsVertexArrayOES", [(GLarray, "array")], sideeffects=False),
 
+    # GL_OES_draw_buffers_indexed
+    GlFunction(Void, "glEnableiOES", [(GLenum, "target"), (GLuint, "index")]),
+    GlFunction(Void, "glDisableiOES", [(GLenum, "target"), (GLuint, "index")]),
+    GlFunction(Void, "glBlendEquationiOES", [(GLuint, "buf"), (GLenum, "mode")]),
+    GlFunction(Void, "glBlendEquationSeparateiOES", [(GLuint, "buf"), (GLenum, "modeRGB"), (GLenum, "modeAlpha")]),
+    GlFunction(Void, "glBlendFunciOES", [(GLuint, "buf"), (GLenum, "src"), (GLenum, "dst")]),
+    GlFunction(Void, "glBlendFuncSeparateiOES", [(GLuint, "buf"), (GLenum, "srcRGB"), (GLenum, "dstRGB"), (GLenum, "srcAlpha"), (GLenum, "dstAlpha")]),
+    GlFunction(Void, "glColorMaskiOES", [(GLuint, "index"), (GLboolean, "r"), (GLboolean, "g"), (GLboolean, "b"), (GLboolean, "a")]),
+    GlFunction(GLboolean, "glIsEnablediOES", [(GLenum, "target"), (GLuint, "index")], sideeffects=False),
+
     # GL_OES_viewport_array
     GlFunction(Void, "glViewportArrayvOES", [(GLuint, "first"), (GLsizei, "count"), (Array(Const(GLfloat), "count*4"), "v")]),
     GlFunction(Void, "glViewportIndexedfOES", [(GLuint, "index"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "w"), (GLfloat, "h")]),
