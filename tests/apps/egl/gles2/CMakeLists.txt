@@ -8,6 +8,7 @@ set (targets
     debug_marker
     tri_glsl
     map_buffer
+    msaa_fbo
 )
 
 foreach (target ${targets})
