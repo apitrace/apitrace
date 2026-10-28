@@ -231,6 +231,11 @@ choose_image_format(const glfeatures::Profile &profile, image_info *info)
     } else if (red_type == GL_UNSIGNED_NORMALIZED && red_size == 16) {
         info->internalformat = GL_RGBA16;
         info->type = GL_UNSIGNED_SHORT;
+    } else if (red_type == GL_SIGNED_NORMALIZED) {
+        bool wide = red_size > 8;
+
+        info->internalformat = wide ? GL_RGBA16_SNORM : GL_RGBA8_SNORM;
+        info->type = wide ? GL_SHORT : GL_BYTE;
     } else if (red_type == GL_INT || red_type == GL_UNSIGNED_INT) {
         bool sign = red_type == GL_INT;
 
