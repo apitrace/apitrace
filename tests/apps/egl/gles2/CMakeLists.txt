@@ -1,11 +1,13 @@
 include_directories(
     ${GLFW_INCLUDE_DIR}
+    ${EGL_INCLUDE_DIRS}
 )
 
 set (api egl_gles2)
 
 set (targets
     debug_marker
+    eglimage
     tri_glsl
     map_buffer
 )

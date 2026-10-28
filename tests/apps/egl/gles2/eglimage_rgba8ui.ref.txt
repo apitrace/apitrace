@@ -1,0 +1,8 @@
+//!eglimage rgba8ui
+glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGBA8UI, width = 4, height = 4, border = 0, format = GL_RGBA_INTEGER, type = GL_UNSIGNED_BYTE, pixels = blob(64))
+eglCreateImageKHR(dpy = <dpy>, ctx = <ctx>, target = EGL_GL_TEXTURE_2D, buffer = <>, attrib_list = <>) = <image>
+glEGLImageTargetTexture2DOES(target = GL_TEXTURE_2D, image = <image>)
+glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGBA8UI, width = 4, height = 4, border = 0, format = GL_RGBA_INTEGER, type = GL_UNSIGNED_BYTE, pixels = blob(64))
+<draw> glDrawArrays(mode = GL_TRIANGLE_STRIP, first = 0, count = 4)
+eglSwapBuffers(dpy = <dpy>, surface = <surface>) = EGL_TRUE
+eglDestroyImageKHR(dpy = <dpy>, image = <image>) = EGL_TRUE
