@@ -285,13 +285,24 @@ narrow_integers(image_info *info, const GLuint *wide)
     }
 }
 
+static void
+read_pixels(const image_info *info, bool framebuffer, GLenum type, void *pixels)
+{
+    if (framebuffer)
+        _glReadPixels(0, 0, info->width, info->height, info->format, type, pixels);
+    else
+        _glGetTexImage(GL_TEXTURE_2D, 0, info->format, type, pixels);
+}
+
 /*
- * Read the bound framebuffer into a tightly packed allocation, and whether
- * that worked. GLES only guarantees reading integer images as 32-bit
- * integers, so narrower ones are read that way and narrowed.
+ * Read the bound framebuffer, or else the texture bound to GL_TEXTURE_2D, into
+ * a tightly packed allocation, and whether that worked. GLES only guarantees
+ * reading integer images as 32-bit integers, so narrower ones are read that
+ * way and narrowed.
  */
 static bool
-read_image(image_info *info, const glfeatures::Features &features)
+read_image(image_info *info, const glfeatures::Features &features,
+           bool framebuffer)
 {
     GLenum read_type = info->type;
     if (info->format == GL_RGBA_INTEGER) {
@@ -308,14 +319,14 @@ read_image(image_info *info, const glfeatures::Features &features)
         return false;
 
     if (read_type == info->type) {
-        _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
+        read_pixels(info, framebuffer, info->type, info->pixels);
         return _glGetError() == GL_NO_ERROR;
     }
 
     GLuint *wide = (GLuint *)calloc((size_t)info->width * info->height * 4, sizeof *wide);
     if (!wide)
         return false;
-    _glReadPixels(0, 0, info->width, info->height, info->format, read_type, wide);
+    read_pixels(info, framebuffer, read_type, wide);
     bool read = _glGetError() == GL_NO_ERROR;
     if (read)
         narrow_integers(info, wide);
@@ -323,8 +334,13 @@ read_image(image_info *info, const glfeatures::Features &features)
     return read;
 }
 
+/*
+ * Read the texture bound to GL_TEXTURE_2D through a framebuffer, or with
+ * glGetTexImage where the context has it and can't render to the texture.
+ */
 static void
-get_texture_2d_image(image_info *info, const glfeatures::Features &features)
+get_texture_2d_image(const glfeatures::Profile &profile, image_info *info,
+                     const glfeatures::Features &features)
 {
     GLuint fbo = 0;
     framebuffer_bindings prev_fbo;
@@ -342,16 +358,17 @@ get_texture_2d_image(image_info *info, const glfeatures::Features &features)
     _glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                             texture, 0);
     status = _glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status == GL_FRAMEBUFFER_COMPLETE) {
+    if (status == GL_FRAMEBUFFER_COMPLETE || profile.desktop()) {
+        bool framebuffer = status == GL_FRAMEBUFFER_COMPLETE;
         PixelPackState pack(features);
         /* Only the readback's own error should select the fallback. */
         (void)_glGetError();
-        read = read_image(info, features);
+        read = read_image(info, features, framebuffer);
         if (!read && info->format == GL_RGBA && info->type != GL_UNSIGNED_BYTE) {
             /* The context can't read this format, fall back to RGBA8. */
             info->internalformat = GL_RGBA8;
             info->type = GL_UNSIGNED_BYTE;
-            read = read_image(info, features);
+            read = read_image(info, features, framebuffer);
         }
     } else {
         os::log("%s: error: %d\n", __func__, status);
@@ -397,7 +414,7 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image,
 
     if (info->width && info->height) {
         choose_image_format(profile, info);
-        get_texture_2d_image(info, features);
+        get_texture_2d_image(profile, info, features);
     }
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteTextures(1, &tex);
