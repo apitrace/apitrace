@@ -28,6 +28,11 @@ A detailed log will be written to `Testing/Temporary/LastTest.log`.
 
 # Tips #
 
+Framebuffer PNG references can select an attachment with a suffix, for example
+`example.ref.draw.GL_COLOR_ATTACHMENT1.png`. The `draw` label selects the call
+in `example.ref.txt`, and the suffix selects the image in the framebuffer dump.
+References without an attachment suffix keep selecting the default color image.
+
 Some tests will crash on purpose.  On Mac OS X you can [avoid the application
 quit unexpectedly](http://apple.stackexchange.com/a/105894) doing
 

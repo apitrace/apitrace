@@ -222,6 +222,10 @@ class AppDriver(Driver):
                     rest = fileName[len(prefix):]
                     paramName, ext = os.path.splitext(rest)
                     if ext in ('.json', '.png'):
+                        attachment = None
+                        if ext == '.png' and '.' in paramName:
+                            # Optional suffix selects an individual framebuffer attachment.
+                            paramName, attachment = paramName.rsplit('.', 1)
                         if paramName.isdigit():
                             callNo = int(paramName)
                         else:
@@ -231,7 +235,7 @@ class AppDriver(Driver):
                                 fail('could not find parameter %s for %s' % (paramName, fileName))
                         filePath = os.path.join(dirName, fileName)
                         if ext == '.png':
-                            images.append((callNo, filePath))
+                            images.append((callNo, filePath, attachment))
                         if ext == '.json':
                             states.append((callNo, filePath))
         p.wait()
@@ -244,12 +248,12 @@ class AppDriver(Driver):
         if self.api not in self.api_replay_map:
             return
 
-        for callNo, refImageFileName in images:
-            self.checkImage(callNo, refImageFileName)
+        for callNo, refImageFileName, attachment in images:
+            self.checkImage(callNo, refImageFileName, attachment)
         for callNo, refStateFileName in states:
             self.checkState(callNo, refStateFileName)
 
-    def checkImage(self, callNo, refImageFileName):
+    def checkImage(self, callNo, refImageFileName, attachment=None):
         sys.stderr.write('Comparing snapshot from call %u against %s...\n' % (callNo, refImageFileName))
         try:
             from PIL import Image
@@ -257,7 +261,7 @@ class AppDriver(Driver):
             sys.stderr.write('warning: PIL not found, skipping image comparison\n');
             return
 
-        srcImage = self.getImage(callNo)
+        srcImage = self.getImage(callNo, attachment)
         refImage = Image.open(refImageFileName)
 
         from snapdiff import Comparer
@@ -338,7 +342,7 @@ class AppDriver(Driver):
 
     unreliableReadPixels = False
 
-    def getImage(self, callNo):
+    def getImage(self, callNo, attachment=None):
         from PIL import Image
         state = self.getState(callNo)
         if sys.platform == 'linux':
@@ -351,7 +355,9 @@ class AppDriver(Driver):
                     # NVIDIA's glReadPixels is unreliable on Linux due to the
                     # fragment ownership test.
                     self.unreliableReadPixels = True
-        if self.doubleBuffer:
+        if attachment is not None:
+            attachments = [attachment]
+        elif self.doubleBuffer:
             attachments = ['GL_BACK', 'GL_BACK_LEFT', 'GL_BACK_RIGHT', 'GL_COLOR_ATTACHMENT0', 'RENDER_TARGET_0']
         else:
             attachments = ['GL_FRONT', 'GL_FRONT_LEFT', 'GL_FRONT_RIGHT', 'GL_COLOR_ATTACHMENT0', 'RENDER_TARGET_0']
