@@ -49,25 +49,9 @@ checkFramebuffer(void)
 }
 
 
-int
-main(int argc, char *argv[])
+static int
+runTest(void)
 {
-    if (!glfwInit()) {
-        return EXIT_SKIP;
-    }
-
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-
-    GLFWwindow *window = glfwCreateWindow(64, 64, argv[0], NULL, NULL);
-    if (!window) {
-        glfwTerminate();
-        return EXIT_SKIP;
-    }
-    glfwMakeContextCurrent(window);
-
     if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
         return EXIT_FAILURE;
     }
@@ -78,8 +62,6 @@ main(int argc, char *argv[])
     GLint maxSamples = 0;
     glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
     if (maxSamples < 4) {
-        glfwDestroyWindow(window);
-        glfwTerminate();
         return EXIT_SKIP;
     }
 
@@ -93,8 +75,6 @@ main(int argc, char *argv[])
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, &samples);
     if (samples != 4) {
         glDeleteRenderbuffers(2, renderbuffers);
-        glfwDestroyWindow(window);
-        glfwTerminate();
         return EXIT_SKIP;
     }
 
@@ -130,7 +110,31 @@ main(int argc, char *argv[])
 
     glDeleteFramebuffers(2, framebuffers);
     glDeleteRenderbuffers(2, renderbuffers);
+    return 0;
+}
+
+
+int
+main(int argc, char *argv[])
+{
+    if (!glfwInit()) {
+        return EXIT_SKIP;
+    }
+
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+
+    GLFWwindow *window = glfwCreateWindow(64, 64, argv[0], NULL, NULL);
+    if (!window) {
+        glfwTerminate();
+        return EXIT_SKIP;
+    }
+    glfwMakeContextCurrent(window);
+
+    int result = runTest();
     glfwDestroyWindow(window);
     glfwTerminate();
-    return 0;
+    return result;
 }
