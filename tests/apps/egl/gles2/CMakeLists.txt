@@ -10,6 +10,7 @@ set (targets
     eglimage
     tri_glsl
     map_buffer
+    msaa_fbo
 )
 
 foreach (target ${targets})
