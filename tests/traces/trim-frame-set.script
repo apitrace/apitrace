@@ -1,5 +1,5 @@
-trim --frames=0-5/draw,0-5/frame glxsimple.trace
-dump --verbose glxsimple-trim.trace
+trim -o trim-frame-set.src.trace --frames=0-5/draw,0-5/frame glxsimple.trace
+dump --verbose trim-frame-set.src.trace
 0 glClear(mask = GL_COLOR_BUFFER_BIT)
 1 glXSwapBuffers(dpy = 0x236a280, drawable = 41943041)
 
