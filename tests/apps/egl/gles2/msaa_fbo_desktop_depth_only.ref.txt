@@ -1,0 +1,11 @@
+//!msaa_fbo --desktop depth-only
+glGenRenderbuffers(n = 3, renderbuffers = {<color0>, <color1>, <depth_stencil>})
+glBindRenderbuffer(target = GL_RENDERBUFFER, renderbuffer = <depth_stencil>)
+glRenderbufferStorageMultisample(target = GL_RENDERBUFFER, samples = 4, internalformat = GL_DEPTH24_STENCIL8, width = 32, height = 32)
+glGenFramebuffers(n = 1, framebuffers = &<framebuffer>)
+glBindFramebuffer(target = GL_FRAMEBUFFER, framebuffer = <framebuffer>)
+glFramebufferRenderbuffer(target = GL_FRAMEBUFFER, attachment = GL_DEPTH_STENCIL_ATTACHMENT, renderbuffertarget = GL_RENDERBUFFER, renderbuffer = <depth_stencil>)
+glDrawBuffers(n = 2, bufs = {GL_ZERO, GL_ZERO})
+glReadBuffer(mode = GL_ZERO)
+glClearBufferfi(buffer = GL_DEPTH_STENCIL, drawbuffer = 0, depth = 0.25, stencil = 7)
+<dump> glFlush()

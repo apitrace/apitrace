@@ -1,0 +1,16 @@
+{
+  "parameters": {
+    "GL_SAMPLES": 4,
+    "GL_DRAW_BUFFER0": "GL_ZERO",
+    "GL_DRAW_BUFFER1": "GL_COLOR_ATTACHMENT1"
+  },
+  "framebuffer": {
+    "GL_COLOR_ATTACHMENT1": {
+      "__class__": "image",
+      "__width__": 32,
+      "__height__": 32,
+      "__depth__": 1,
+      "__format__": "GL_RGBA8"
+    }
+  }
+}
