@@ -22,6 +22,9 @@ foreach (target ${targets})
     )
 endforeach (target)
 
+# eglimage calls eglQueryString directly
+target_link_libraries (${api}_eglimage ${EGL_LIBRARIES})
+
 add_library (rtld_local_module MODULE rtld_local_module.cpp)
 target_link_libraries (rtld_local_module ${GLFW_LIBRARY} ${GLESV2_LIBRARIES} ${EGL_LIBRARIES})
 set_target_properties (rtld_local_module PROPERTIES OUTPUT_NAME rtld_local)
