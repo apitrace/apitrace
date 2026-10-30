@@ -122,7 +122,7 @@ if (!$buildRoot) {
     }
 }
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" }
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_TESTS=1 }
 
 if (!$Env:CTEST_PARALLEL_LEVEL) {
     $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount
