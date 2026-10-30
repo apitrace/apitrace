@@ -124,5 +124,20 @@ if (!$buildRoot) {
 Write-Host "Configuring onto $buildRoot ..."
 Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_TESTS=1 }
 
+# Tracing D3D shaders needs d3dcompiler_xx.dll to disassemble them, which is not
+# guaranteed to be on the system.  Use the redistributable copy from the Windows SDK.
+$d3dRedistArch = @{ 'x64' = 'x64'; 'Win32' = 'x86'; 'ARM64' = 'arm64'; 'ARM' = 'arm' }[$toolset]
+$d3dRedistPath = "${Env:ProgramFiles(x86)}\Windows Kits\10\Redist\D3D\$d3dRedistArch"
+
+Write-Host "Looking for d3dcompiler_47.dll ..."
+Get-ChildItem "$d3dRedistPath\d3dcompiler_*.dll", "$Env:SystemRoot\System32\d3dcompiler_*.dll", "$Env:SystemRoot\SysWOW64\d3dcompiler_*.dll" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+
+if (Test-Path "$d3dRedistPath\d3dcompiler_47.dll" -PathType Leaf) {
+    Write-Host "Adding $d3dRedistPath to environment path."
+    $Env:Path = "$d3dRedistPath;$Env:Path"
+} else {
+    Write-Host "warning: $d3dRedistPath\d3dcompiler_47.dll not found"
+}
+
 Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
