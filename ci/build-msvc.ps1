@@ -20,68 +20,68 @@ function Exec {
     }
 }
 
-$qtVersion = '5.15.2'
-$qtVersionDotless = $qtVersion -replace '\.'
+$qtVersion = '6.8.3'
+$qtToolchain = 'msvc2022_64'
+
+$qtToolchainPath = ''
+$gui = 'OFF'
 
 if ($arch -eq 'x86') {
     if ($target -eq 'win64') {
-        $qtToolchain = 'msvc2019_64'
-        $qtArch = 'X86_64'
         $toolset = 'x64'
+
+        $qtToolchainPath = "$qtRoot\$qtVersion\$qtToolchain"
+        if (!(Test-Path $qtToolchainPath -PathType Container)) {
+            $qtVersionDotless = $qtVersion -replace '\.'
+            $baseUrl = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_$qtVersionDotless/qt6_$qtVersionDotless"
+            $packageUrl = "$baseUrl/qt.qt6.$qtVersionDotless.win64_$qtToolchain"
+            $tag = "0-202503201308"
+            $suffix = "Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-X86_64"
+
+            # windeployqt is part of qtbase since Qt 6.5
+            $modules = @('qtbase')
+
+            foreach ($module in $modules) {
+                $archive = "$qtVersion-${tag}${module}-${suffix}.7z"
+                $archiveUrl = "$packageUrl/$archive"
+
+                if (!(Test-Path $archive -PathType Leaf)) {
+                    Write-Host "Downloading $archiveUrl ..."
+                    # https://github.com/PowerShell/PowerShell/issues/2896
+                    do {
+                        try {
+                            Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UserAgent NativeHost
+                            $retry = $false
+                        }
+                        catch {
+                            if (($_.Exception.GetType() -match "HttpResponseException") -and ($_.Exception -match "302")) {
+                                $archiveUrl = $_.Exception.Response.Headers.Location.AbsoluteUri
+                                Write-Host "Redirected to $archiveUrl ..."
+                                $retry = $true
+                            }
+                            else {
+                                throw $_
+                            }
+                        }
+                    } while ($retry)
+                }
+
+                # Unlike Qt5, Qt6 archives are relative to the toolchain directory
+                Write-Host "Extracting $archive to $qtToolchainPath ..."
+                Exec { 7z x -y "-o$qtToolchainPath" $archive | Out-Null }
+            }
+        }
+
+        $qtToolchainPath = (Resolve-Path $qtToolchainPath).ProviderPath
+        $qtBinPath = "$qtToolchainPath\bin"
+        Write-Host "Adding $qtBinPath to environment path."
+        $Env:Path = "$qtBinPath;$Env:Path"
+
+        $gui = 'ON'
     } else {
-        $qtToolchain = 'msvc2019'
-        $qtArch = 'X86'
+        # There are no official Qt6 binaries for 32-bit Windows
         $toolset = 'Win32'
     }
-
-    $baseUrl = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_$qtVersionDotless"
-
-    $packageUrl = "$baseUrl/qt.qt5.$qtVersionDotless.${target}_$qtToolchain"
-
-    $tag = "0-202011130602"
-
-    $suffix = "Windows-Windows_10-MSVC2019-Windows-Windows_10"
-
-    $modules = @('qtbase', 'qttools')
-
-    $qtToolchainPath = "$qtRoot\$qtVersion\$qtToolchain"
-    if (!(Test-Path $qtToolchainPath -PathType Container)) {
-
-        foreach ($module in $modules) {
-            $archive = "$qtVersion-${tag}${module}-${suffix}-$qtArch.7z"
-            $archiveUrl = "$packageUrl/$archive"
-
-            if (!(Test-Path $archive -PathType Leaf)) {
-                Write-Host "Downloading $archiveUrl ..."
-                # https://github.com/PowerShell/PowerShell/issues/2896
-                do {
-                    try {
-                        Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UserAgent NativeHost
-                        $retry = $false
-                    }
-                    catch {
-                        if (($_.Exception.GetType() -match "HttpResponseException") -and ($_.Exception -match "302")) {
-                            $archiveUrl = $_.Exception.Response.Headers.Location.AbsoluteUri
-                            Write-Host "Redirected to $archiveUrl ..."
-                            $retry = $true
-                        }
-                        else {
-                            throw $_
-                                                                                    }
-                    }
-                } while ($retry)
-            }
-
-            Write-Host "Extracting $archive to $qtToolchainPath ..."
-            Exec { 7z x -y "-o$qtRoot" $archive | Out-Null }
-        }
-    }
-
-    $qtBinPath = Resolve-Path "$qtToolchainPath\bin"
-    Write-Host "Adding $qtBinPath to environment path."
-    $Env:Path = "$qtBinPath;$Env:Path"
-
-    $gui = 'ON'
 } else {
     # $arch = 'arm'
     if ($target -eq 'win64') {
@@ -89,8 +89,6 @@ if ($arch -eq 'x86') {
     } else {
         $toolset = 'ARM'
     }
-    $qtToolchainPath = ''
-    $gui = 'OFF'
 }
 
 # https://github.com/microsoft/vswhere/wiki/Find-VC#powershell
@@ -122,7 +120,7 @@ if (!$buildRoot) {
     }
 }
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_TESTS=1 }
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_QT6=1  -DENABLE_TESTS=1}
 
 if (!$Env:CTEST_PARALLEL_LEVEL) {
     $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount

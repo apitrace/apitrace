@@ -19,7 +19,7 @@ jobs:
         sudo apt-get install -qq -y --no-install-recommends
         gcc g++ pkg-config python3 python3-pil ninja-build cmake
         libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libgtest-dev
-        qtbase5-dev qtdeclarative5-dev
+        qt6-base-dev
         libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
         libgl-dev libegl-dev libgles-dev
         libgl1-mesa-dri libglx-mesa0 libegl-mesa0
@@ -48,9 +48,9 @@ jobs:
     - name: apt-update
       run: sudo apt-get update
     - name: apt-install
-      run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev qtbase5-dev qtdeclarative5-dev python3 ninja-build cmake
+      run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev qt6-base-dev python3 ninja-build cmake
     - name: cmake
-      run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_GUI=1
+      run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_GUI=1 -DENABLE_QT6=1
     - name: build
       run: cmake --build build --use-stderr
     - name: check
@@ -125,12 +125,12 @@ jobs:
         submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
+      if: matrix.arch == 'x86' && matrix.target == 'win64'
       uses: actions/cache@v6
       with:
         path: |
           *qtbase-*.7z
-          *qttools-*.7z
-        key: ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-5.15.2-1
+        key: ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-6.8.3-1
     - name: Build
       run: .\ci\build-msvc.ps1 -arch:${{ matrix.arch }} -target:${{ matrix.target }} -buildRoot:build
     - name: Upload artifacts

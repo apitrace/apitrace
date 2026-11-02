@@ -12,7 +12,7 @@ build_dir=build/linux
 
 export CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL:-$(getconf _NPROCESSORS_ONLN)}
 
-test -f $build_dir/CMakeCache.txt || cmake -S. -B$build_dir -G Ninja -DENABLE_STATIC_SNAPPY=0 -DENABLE_GUI=1 -DENABLE_TESTS=1
+test -f $build_dir/CMakeCache.txt || cmake -S. -B$build_dir -G Ninja -DENABLE_STATIC_SNAPPY=0 -DENABLE_GUI=1 -DENABLE_QT6=1 -DENABLE_TESTS=1
 cmake --build $build_dir --use-stderr
 xwfb-run -n 8 -c weston -s \\-geometry -s 1024x768 -- cmake --build $build_dir --use-stderr --target check
 if [ "${PACKAGE:-false}" = true -o "${GITHUB_ACTIONS:-false}" = true ]
