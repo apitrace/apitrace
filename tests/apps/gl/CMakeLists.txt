@@ -1,3 +1,7 @@
+if (NOT OPENGL_GLU_FOUND)
+    message (SEND_ERROR "GLU library not found (e.g., install libglu1-mesa-dev)")
+endif ()
+
 add_definitions (-DGLFW_INCLUDE_GL)
 
 include_directories (

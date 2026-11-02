@@ -21,7 +21,7 @@ jobs:
         libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libgtest-dev
         qt6-base-dev
         libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
-        libgl-dev libegl-dev libgles-dev
+        libgl-dev libglu1-mesa-dev libegl-dev libgles-dev
         libgl1-mesa-dri libglx-mesa0 libegl-mesa0
         weston xwayland xwayland-run
     - name: build
