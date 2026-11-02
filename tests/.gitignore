@@ -1,6 +1,5 @@
 .*.sw?
 *.a
-*.diff.*
 *.o
 *.pyc
 *.so
@@ -9,6 +8,7 @@
 *.trace
 !*.json
 !*.png
+*.diff.*
 index.html
 CMakeCache.txt
 CMakeFiles
