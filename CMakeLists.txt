@@ -186,6 +186,14 @@ if (ENABLE_GUI)
     else ()
         find_package (Qt5 5.15 COMPONENTS Widgets ${REQUIRE_GUI})
     endif ()
+    if (MSVC AND (Qt6_FOUND OR Qt5_FOUND))
+        # Qt's DLLs use the shared CRT.  Qt templates allocate in the DLL but
+        # free() inline in the application, which trips the debug heap
+        # assertion (__acrt_first_block == header) when the application uses
+        # a different (static) debug CRT.  Release CRTs share the process
+        # heap so are unaffected, hence only override Debug.
+        set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:DebugDLL>")
+    endif ()
 endif ()
 
 if (WIN32)
