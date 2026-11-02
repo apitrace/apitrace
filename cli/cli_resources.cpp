@@ -27,6 +27,7 @@
 
 
 #include <iostream>
+#include <stdlib.h>
 
 #include "os_string.hpp"
 
@@ -158,6 +159,17 @@ findScript(const char *scriptFilename, bool verbose)
 
     os::String processDir = os::getProcessName();
     processDir.trimFilename();
+
+    // Try source directory specified via environment variable (e.g., by tests)
+    const char *sourceDir = getenv("APITRACE_SOURCE_DIR");
+    if (sourceDir && sourceDir[0]) {
+        scriptPath = sourceDir;
+        scriptPath.join("scripts");
+        scriptPath.join(scriptFilename);
+        if (tryPath(scriptPath, verbose)) {
+            return scriptPath;
+        }
+    }
 
     // Try relative build directory
     // XXX: Just make build and install directory layout match

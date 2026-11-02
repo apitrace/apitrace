@@ -11,5 +11,8 @@ if (APITRACE_EXECUTABLE AND APITRACE_SOURCE_DIR)
                 --apitrace-source ${APITRACE_SOURCE_DIR}
                 ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_SCRIPT}
         )
+        set_tests_properties (${TEST_NAME} PROPERTIES
+            ENVIRONMENT "APITRACE_SOURCE_DIR=${APITRACE_SOURCE_DIR}"
+        )
     endforeach ()
 endif ()
