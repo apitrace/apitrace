@@ -8,7 +8,7 @@ jobs:
   ubuntu64:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -30,7 +30,7 @@ jobs:
   ubuntu32:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -41,7 +41,7 @@ jobs:
   ubuntu64-clang:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -61,7 +61,7 @@ jobs:
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -69,7 +69,7 @@ jobs:
     - uses: crazy-max/ghaction-github-runtime@v4
     - run: ci/build-ubuntu-20.04.sh
     - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: apitrace-ubuntu-20.04
         path: build/docker-ubuntu-20.04/apitrace-*.tar.bz2
@@ -80,7 +80,7 @@ jobs:
     env:
       PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -88,7 +88,7 @@ jobs:
     - uses: crazy-max/ghaction-github-runtime@v4
     - run: ci/build-ubuntu-arm64-cross.sh
     - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: apitrace-ubuntu-arm64
         path: build/docker-ubuntu-arm64-cross/apitrace-*.tar.bz2
@@ -97,7 +97,7 @@ jobs:
   mingw32:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -117,13 +117,13 @@ jobs:
           - arch: arm
             target: win32
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
     - name: Cache Downloads
       id: cache-downloads
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           *qtbase-*.7z
@@ -132,7 +132,7 @@ jobs:
     - name: Build
       run: .\ci\build-msvc.ps1 -arch:${{ matrix.arch }} -target:${{ matrix.target }} -buildRoot:build
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: apitrace-${{ matrix.target }}-${{ matrix.arch }}
         path: build/apitrace-*.7z
@@ -141,7 +141,7 @@ jobs:
   mac64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
@@ -163,11 +163,11 @@ jobs:
     needs: [ubuntu-20_04, ubuntu-arm64-cross, msvc]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       id: download
       with:
         path: artifacts
