@@ -124,5 +124,9 @@ if (!$buildRoot) {
 Write-Host "Configuring onto $buildRoot ..."
 Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" }
 
+if (!$Env:CTEST_PARALLEL_LEVEL) {
+    $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount
+}
+
 Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
