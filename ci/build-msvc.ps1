@@ -41,9 +41,21 @@ if ($arch -eq 'x86') {
             # windeployqt is part of qtbase since Qt 6.5
             $modules = @('qtbase')
 
+            $archiveUrls = @()
             foreach ($module in $modules) {
-                $archive = "$qtVersion-${tag}${module}-${suffix}.7z"
-                $archiveUrl = "$packageUrl/$archive"
+                $archiveUrls += "$packageUrl/$qtVersion-${tag}${module}-${suffix}.7z"
+            }
+
+            # Debug symbols (PDBs) are only useful for local debugging, and big
+            if ($Env:GITHUB_ACTIONS -ne 'true') {
+                $debugPackageUrl = "$baseUrl/qt.qt6.$qtVersionDotless.debug_info.win64_$qtToolchain"
+                foreach ($module in $modules) {
+                    $archiveUrls += "$debugPackageUrl/$qtVersion-${tag}${module}-${suffix}-debug-symbols.7z"
+                }
+            }
+
+            foreach ($archiveUrl in $archiveUrls) {
+                $archive = $archiveUrl.Split('/')[-1]
 
                 if (!(Test-Path $archive -PathType Leaf)) {
                     Write-Host "Downloading $archiveUrl ..."
