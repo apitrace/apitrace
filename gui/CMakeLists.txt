@@ -9,6 +9,13 @@ endif ()
 
 add_definitions (-DQT_FORCE_ASSERTS -DQT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
+# Qt6 debug builds dynamic_cast QObjects that receive private slot calls
+# (QtPrivate::assertObjectType), which faults on objects whose vftables were
+# emitted without RTTI, so re-enable RTTI for the GUI.
+if (MSVC)
+    string (REPLACE "/GR-" "/GR" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif ()
+
 add_library (qubjson STATIC
     qubjson.cpp
 )
