@@ -108,6 +108,8 @@ jobs:
 
   msvc:
     runs-on: windows-2022
+    env:
+      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
     strategy:
       matrix:
         arch: [x86, arm]
@@ -132,6 +134,7 @@ jobs:
     - name: Build
       run: .\ci\build-msvc.ps1 -arch:${{ matrix.arch }} -target:${{ matrix.target }} -buildRoot:build
     - name: Upload artifacts
+      if: env.PACKAGE == 'true'
       uses: actions/upload-artifact@v7
       with:
         name: apitrace-${{ matrix.target }}-${{ matrix.arch }}

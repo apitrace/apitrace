@@ -128,5 +128,10 @@ if (!$Env:CTEST_PARALLEL_LEVEL) {
     $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount
 }
 
+$targets = @('--target', 'ALL_BUILD', '--target', 'check')
+if ($Env:PACKAGE -eq 'true' -Or $Env:GITHUB_ACTIONS -eq 'true') {
+    $targets += @('--target', 'package')
+}
+
 Write-Host "Building ..."
-Exec { cmake --build $buildRoot --config $config --target ALL_BUILD --target check --target package "--" /verbosity:minimal /maxcpucount }
+Exec { cmake --build $buildRoot --config $config @targets "--" /verbosity:minimal /maxcpucount }

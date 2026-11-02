@@ -59,7 +59,7 @@ else
     docker buildx build -t $docker_tag -f $source_dir/ci/docker/$distro.Dockerfile $source_dir/ci/docker
 fi
 
-if [ "$PACKAGE" = "true" ]
+if [ "${PACKAGE:-false}" = "true" ]
 then
     CMAKE_BUILD_TYPE=Release
 else
@@ -83,7 +83,7 @@ symbol_versions $build_dir/glretrace
 symbol_versions $build_dir/eglretrace
 symbol_versions $build_dir/wrappers/glxtrace.so
 
-if [ "$PACKAGE" = true ]
+if [ "${PACKAGE:-false}" = true -o "${GITHUB_ACTIONS:-false}" = true ]
 then
     docker_run cmake --build $build_dir --target package
 fi

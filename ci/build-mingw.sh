@@ -24,7 +24,7 @@ do
     fi
     cmake --build build/$target --use-stderr
     cmake --build build/$target --use-stderr --target check
-    if [ "${GITHUB_ACTIONS:-false}" = true ]
+    if [ "${PACKAGE:-false}" = true -o "${GITHUB_ACTIONS:-false}" = true ]
     then
         cmake --build build/$target --use-stderr --target package
     fi
