@@ -45,15 +45,59 @@ typedef HRESULT
 );
 
 
-HRESULT
-DisassembleShader(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly)
+/*
+ * Return the size in bytes of a D3D9 and earlier shader.
+ *
+ * Equivalent to _shaderSize in d3dcommonsize.hpp, which can't be used here as
+ * it depends on D3D headers.
+ */
+static SIZE_T
+shaderSize(const DWORD *tokens)
+{
+    const DWORD OPCODE_MASK = 0x0000ffff;
+    const DWORD OPCODE_COMMENT = 0xfffe;
+    const DWORD OPCODE_END = 0xffff;
+    const DWORD OPCODE_DEF = 0x51;
+    const DWORD INSTLENGTH_MASK = 0x0f000000;
+    const DWORD INSTLENGTH_SHIFT = 24;
+    const DWORD COMMENTSIZE_MASK = 0x7fff0000;
+    const DWORD COMMENTSIZE_SHIFT = 16;
+
+    DWORD version = tokens[0];
+    bool modern = ((version >> 8) & 0xff) >= 2;
+    SIZE_T length = 1;
+
+    while (true) {
+        DWORD token = tokens[length++];
+        if (!modern && (token & 0x80000000U)) {
+            // Destination/Source/Label tokens
+            continue;
+        }
+        DWORD opcode = token & OPCODE_MASK;
+        if (opcode == OPCODE_END) {
+            if (token == OPCODE_END) {
+                return length * sizeof *tokens;
+            }
+        } else if (opcode == OPCODE_COMMENT) {
+            length += (token & COMMENTSIZE_MASK) >> COMMENTSIZE_SHIFT;
+        } else if (modern) {
+            length += (token & INSTLENGTH_MASK) >> INSTLENGTH_SHIFT;
+        } else if (opcode == OPCODE_DEF) {
+            // Contains raw floating point so can't be advanced with the 31 bit test.
+            length += 5;
+        }
+    }
+}
+
+
+/*
+ * D3DXDisassembleShader from d3dx9_xx.dll, which is part of the DirectX
+ * End-User Runtime and therefore not necessarily installed.
+ */
+static HRESULT
+disassembleShaderD3DX(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly)
 {
     static BOOL firsttime = TRUE;
-
-    /*
-     * TODO: Consider using d3dcompile_xx.dll per
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
-     */
 
     static HMODULE hD3DXModule = NULL;
     static PD3DXDISASSEMBLESHADER pfnD3DXDisassembleShader = NULL;
@@ -90,6 +134,22 @@ found:
     if (pfnD3DXDisassembleShader) {
         hr = pfnD3DXDisassembleShader(tokens, FALSE, NULL,
                                       reinterpret_cast<ID3DXBuffer **>(ppDisassembly));
+    }
+    return hr;
+}
+
+
+HRESULT
+DisassembleShader(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly)
+{
+    /*
+     * Prefer d3dcompiler_xx.dll, which can also disassemble legacy shaders
+     * per http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
+     * and is more likely to be present than d3dx9_xx.dll.
+     */
+    HRESULT hr = DisassembleShader(tokens, shaderSize(tokens), ppDisassembly);
+    if (FAILED(hr)) {
+        hr = disassembleShaderD3DX(tokens, ppDisassembly);
     }
     return hr;
 }
