@@ -1,15 +1,14 @@
 add_definitions (-DGLFW_INCLUDE_GL)
 
 include_directories (
-    ${OPENGL_INCLUDE_PATH}
+    ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIR}
 )
 
 link_libraries (
     glad
     ${GLFW_LIBRARY}
-    ${OPENGL_glu_LIBRARY}
-    ${OPENGL_gl_LIBRARY}
+    ${OPENGL_LIBRARIES}
 )
 
 set (api gl)

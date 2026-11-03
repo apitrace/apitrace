@@ -66,7 +66,7 @@ macro (add_app_tests)
     endforeach ()
 endmacro ()
 
-if (OPENGL_FOUND)
+if (OpenGL_FOUND)
     add_subdirectory (gl)
 
     if (NOT APPLE)

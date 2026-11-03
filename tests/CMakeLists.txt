@@ -45,8 +45,6 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 include (CMakeParseArguments)
 
-# https://cmake.org/cmake/help/latest/policy/CMP0072.html
-set (OpenGL_GL_PREFERENCE LEGACY)
 find_package (OpenGL)
 
 if (WIN32)
@@ -165,6 +163,6 @@ add_subdirectory (traces)
 #   to make space for title bar, buttons, etc.
 # - The 64x64 resize is not effctive on some platforms (e.g., xvfb-run)
 #
-if (OPENGL_FOUND AND PIL_FOUND)
+if (OpenGL_FOUND AND PIL_FOUND)
     add_subdirectory (cli)
 endif ()
