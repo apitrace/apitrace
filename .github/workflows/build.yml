@@ -142,7 +142,7 @@ jobs:
         if-no-files-found: error
 
   mac64:
-    runs-on: macos-latest
+    runs-on: macos-26-intel
     steps:
     - uses: actions/checkout@v7
       with:
