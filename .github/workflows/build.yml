@@ -148,6 +148,12 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
+    - name: Cache Downloads
+      id: cache-downloads
+      uses: actions/cache@v6
+      with:
+        path: "qt/*qtbase-*.7z"
+        key: ${{ runner.os }}-6.8.3-1
     - name: cmake
       run: ci/build-macos.sh
 

@@ -182,6 +182,14 @@ if (ENABLE_GUI)
         set (REQUIRE_GUI REQUIRED)
     endif ()
     if (ENABLE_QT6)
+        if (APPLE)
+            # Qt6's FindWrapOpenGL.cmake unconditionally links against the AGL
+            # framework, which is deprecated and no longer linkable with recent
+            # macOS SDKs (even when a stub AGL.framework is present).  We have
+            # no use for it, so pre-seed its lookup result with a harmless
+            # (duplicate) framework.
+            set (WrapOpenGL_AGL "-framework OpenGL" CACHE STRING "Workaround for unlinkable AGL framework" FORCE)
+        endif ()
         find_package (Qt6 COMPONENTS Widgets ${REQUIRE_GUI})
     else ()
         find_package (Qt5 5.15 COMPONENTS Widgets ${REQUIRE_GUI})
