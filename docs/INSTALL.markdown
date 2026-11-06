@@ -25,14 +25,14 @@ Optional dependencies:
 
 The GUI also dependends on:
 
-* Qt version 5.15
+* Qt version 6 (Qt 5.15 is also supported, by passing `-DENABLE_QT6=FALSE` to CMake)
 
 Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
 if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
 If you have Qt in a non-standard directory, you'll need to set
-[`-DCMAKE_PREFIX_PATH`](https://doc.qt.io/qt-5/cmake-manual.html).
+[`-DCMAKE_PREFIX_PATH`](https://doc.qt.io/qt-6/cmake-manual.html).
 
 
 The code also depends on snappy libraries, but the bundled sources are always
@@ -77,11 +77,11 @@ differ depending on the actual Linux distribution.
 
 First install Qt through [Homebrew](https://brew.sh/) like
 
-    brew install qt5
+    brew install qt@6
 
 Then do:
 
-    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt5)
+    cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$(brew --prefix qt@6)
     make -C build
 
 
@@ -141,7 +141,7 @@ After you've successfully configured, you can start the build by invoking CMake 
 ### Deployment ###
 
 To run qapitrace, either ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc????\bin` is in the system path, or use
-[Qt's Windows deployment tool](https://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool)
+[Qt's Windows deployment tool](https://doc.qt.io/qt-6/windows-deployment.html#the-windows-deployment-tool)
 to copy all necessary DLLs, like:
 
     set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2019\bin;%Path%

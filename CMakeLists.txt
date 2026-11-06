@@ -22,7 +22,7 @@ if (NOT MINGW)
     set (CMAKE_INTERPROCEDURAL_OPTIMIZATION True)
 endif ()
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
-option (ENABLE_QT6 "Use Qt6 support." OFF)
+option (ENABLE_QT6 "Use Qt6 instead of Qt5 for the GUI." ON)
 
 option (ENABLE_CLI "Enable command Line interface." ON)
 
