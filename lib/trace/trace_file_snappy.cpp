@@ -224,6 +224,13 @@ void SnappyFile::flushReadCache(size_t skipLength)
         return;
     }
 
+    if (compressedLength > snappy::MaxCompressedLength(SNAPPY_CHUNK_SIZE)) {
+        std::cerr << "error: invalid compressed chunk length in trace\n";
+        m_stream.setstate(std::ios_base::failbit);
+        createCache(0);
+        return;
+    }
+
     m_stream.read((char*)m_compressedCache, compressedLength);
     if (m_stream.fail()) {
         std::cerr << "warning: unexpected end of file while reading trace\n";
