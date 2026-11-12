@@ -28,6 +28,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <utility>
+#include <vector>
 
 #include "image.hpp"
 #include "state_writer.hpp"
@@ -527,6 +529,7 @@ debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 
 void dumpCurrentContext(StateWriter &writer)
 {
+    Context context;
 
 #ifndef NDEBUG
     GLint old_bindings[NUM_BINDINGS];
@@ -534,9 +537,30 @@ void dumpCurrentContext(StateWriter &writer)
         old_bindings[i] = 0;
         glGetIntegerv(bindings[i], &old_bindings[i]);
     }
+    std::vector<std::pair<GLenum, GLint>> pixelStore;
+    auto savePixelStore = [&](GLenum pname) {
+        GLint value = 0;
+        glGetIntegerv(pname, &value);
+        pixelStore.emplace_back(pname, value);
+    };
+    savePixelStore(GL_ACTIVE_TEXTURE);
+    savePixelStore(GL_PACK_ALIGNMENT);
+    savePixelStore(GL_UNPACK_ALIGNMENT);
+    if (context.pack_subimage) {
+        savePixelStore(GL_PACK_ROW_LENGTH);
+        savePixelStore(GL_PACK_SKIP_ROWS);
+        savePixelStore(GL_PACK_SKIP_PIXELS);
+    }
+    if (context.unpack_subimage) {
+        savePixelStore(GL_UNPACK_ROW_LENGTH);
+        savePixelStore(GL_UNPACK_SKIP_ROWS);
+        savePixelStore(GL_UNPACK_SKIP_PIXELS);
+    }
+    if ((!context.ES && context.texture_3d) || context.read_framebuffer_object) {
+        savePixelStore(GL_UNPACK_IMAGE_HEIGHT);
+        savePixelStore(GL_UNPACK_SKIP_IMAGES);
+    }
 #endif
-
-    Context context;
 
     /* Temporarily disable messages, as dumpParameters blindlessly tries to
      * get state, regardless the respective extension is supported or not.
@@ -566,6 +590,13 @@ void dumpCurrentContext(StateWriter &writer)
         glGetIntegerv(bindings[i], &new_binding);
         if (new_binding != old_bindings[i]) {
             std::cerr << "warning: " << enumToString(bindings[i]) << " was clobbered\n";
+        }
+    }
+    for (const auto &param : pixelStore) {
+        GLint value = 0;
+        glGetIntegerv(param.first, &value);
+        if (value != param.second) {
+            std::cerr << "warning: " << enumToString(param.first) << " was clobbered\n";
         }
     }
 #endif
