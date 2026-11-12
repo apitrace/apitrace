@@ -139,6 +139,9 @@ endif ()
 
 enable_testing()
 
+add_test (NAME texture_state_checker
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/texture_state_test.py)
+
 add_definitions (-DEXIT_SKIP=125)
 
 include_directories (thirdparty/glad/include)

@@ -203,6 +203,7 @@ class AppDriver(Driver):
 
         images = []
         states = []
+        textures = []
 
         if self.ref_dump:
             refParser = tracematch.RefTraceParser(self.ref_dump)
@@ -223,6 +224,9 @@ class AppDriver(Driver):
                     paramName, ext = os.path.splitext(rest)
                     if ext in ('.json', '.png'):
                         attachment = None
+                        textureReference = ext == '.json' and paramName.endswith('.textures')
+                        if textureReference:
+                            paramName = paramName[:-len('.textures')]
                         if ext == '.png' and '.' in paramName:
                             # Optional suffix selects an individual framebuffer attachment.
                             paramName, attachment = paramName.rsplit('.', 1)
@@ -236,7 +240,9 @@ class AppDriver(Driver):
                         filePath = os.path.join(dirName, fileName)
                         if ext == '.png':
                             images.append((callNo, filePath, attachment))
-                        if ext == '.json':
+                        if textureReference:
+                            textures.append((callNo, filePath))
+                        elif ext == '.json':
                             states.append((callNo, filePath))
         p.wait()
         if p.returncode != 0:
@@ -252,6 +258,13 @@ class AppDriver(Driver):
             self.checkImage(callNo, refImageFileName, attachment)
         for callNo, refStateFileName in states:
             self.checkState(callNo, refStateFileName)
+        for callNo, filename in textures:
+            from texture_state import check_file
+            try:
+                check_file(self.getState(callNo), filename, self.stateStderr[callNo])
+                assert 'was clobbered' not in self.stateStderr[callNo], 'dump clobbered application state'
+            except (AssertionError, KeyError, ValueError) as error:
+                fail('%s: %s' % (filename, error))
 
     def checkImage(self, callNo, refImageFileName, attachment=None):
         sys.stderr.write('Comparing snapshot from call %u against %s...\n' % (callNo, refImageFileName))
@@ -386,11 +399,16 @@ class AppDriver(Driver):
         else:
             return state
 
-        p = self._replay(['-D', str(callNo)], stdout=subprocess.PIPE, universal_newlines=True)
-        state = json.load(p.stdout, strict=False)
-        p.wait()
+        p = self._replay(['-D', str(callNo)], stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, universal_newlines=True)
+        output, errors = p.communicate()
+        sys.stderr.write(errors)
+        if not hasattr(self, 'stateStderr'):
+            self.stateStderr = {}
+        self.stateStderr[callNo] = errors
         if p.returncode != 0:
             fail('replay returned code %i' % (p.returncode))
+        state = json.loads(output, strict=False)
 
         self.adjustSrcState(state)
 
@@ -456,7 +474,7 @@ class AppDriver(Driver):
         except KeyError:
             pass
 
-    def _replay(self, args = None, stdout=None, universal_newlines=False):
+    def _replay(self, args = None, stdout=None, universal_newlines=False, stderr=None):
         replay = self.api_replay_map[self.api]
         #cmd = [get_build_program(replay)]
         cmd = [options.apitrace, 'replay']
@@ -469,6 +487,7 @@ class AppDriver(Driver):
         return popen(
             cmd,
             stdout=stdout,
+            stderr=stderr,
             universal_newlines=universal_newlines
         )
 
