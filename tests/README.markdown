@@ -33,6 +33,20 @@ Framebuffer PNG references can select an attachment with a suffix, for example
 in `example.ref.txt`, and the suffix selects the image in the framebuffer dump.
 References without an attachment suffix keep selecting the default color image.
 
+Texture readback references use `example.ref.dump.textures.json`, where `dump`
+is a call label in the `.ref.txt` file. Each entry selects a texture key and
+checks width, height, depth, image type, and decoded pixels. `absent: true`
+asserts that a failed image was omitted; an optional `warning` checks stderr.
+Float images are compared as native float32 PNM/PX data, without PNG conversion.
+Rows follow the existing vertically flipped, stacked image representation.
+
+`apps/egl/gles2/texture_readback_refs.py` regenerates these references from CPU
+fixtures, independently of retrace output. Run the `es20`, `es30`, and `es31`
+groups with matching actual GLES versions to cover both probe and query paths.
+Debug EGL builds also register `texture_readback_fault_*`; these require GDB
+with Python support and inject errors inside the real helper, including a
+second-slice failure and a missing depth-readback capability.
+
 Some tests will crash on purpose.  On Mac OS X you can [avoid the application
 quit unexpectedly](http://apple.stackexchange.com/a/105894) doing
 

@@ -11,6 +11,7 @@ set (targets
     tri_glsl
     map_buffer
     msaa_fbo
+    texture_readback
 )
 
 foreach (target ${targets})
@@ -33,3 +34,23 @@ set_target_properties (${api}_rtld_local PROPERTIES OUTPUT_NAME rtld_local)
 target_link_libraries (${api}_rtld_local ${CMAKE_DL_LIBS})
 
 add_app_tests ()
+
+get_property (app_tests DIRECTORY PROPERTY TESTS)
+foreach (test ${app_tests})
+    if (test MATCHES "texture_readback")
+        set_tests_properties (${test} PROPERTIES TIMEOUT 60)
+    endif ()
+endforeach ()
+
+if (TARGET eglretrace AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    foreach (layer 0 1 -1)
+        add_test (NAME texture_readback_fault_${layer}
+            COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/texture_fault.py
+                --apitrace ${APITRACE_EXECUTABLE}
+                --retrace $<TARGET_FILE:eglretrace>
+                --app $<TARGET_FILE:${api}_texture_readback>
+                --layer ${layer})
+        set_tests_properties (texture_readback_fault_${layer} PROPERTIES
+            SKIP_RETURN_CODE 125 TIMEOUT 60)
+    endforeach ()
+endif ()
