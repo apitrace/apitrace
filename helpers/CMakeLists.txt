@@ -14,6 +14,12 @@ add_convenience_library (glhelpers
 )
 add_dependencies (glhelpers glproc)
 
+if (BUILD_TESTING)
+    add_gtest (glsize_test glsize_test.cpp)
+    add_dependencies (glsize_test glproc)
+    target_link_libraries (glsize_test os)
+endif ()
+
 
 if (WIN32)
     add_convenience_library (d3dhelpers

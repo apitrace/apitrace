@@ -56,6 +56,7 @@ _gl_type_size(GLenum type, GLint size = 1)
     case GL_UNSIGNED_SHORT:
     case GL_2_BYTES:
     case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
         return size * 2;
     case GL_3_BYTES:
         return size * 3;
@@ -618,6 +619,7 @@ _gl_format_size(GLenum format, GLenum type)
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
         return 16 * num_elements;
     case GL_INT:
     case GL_UNSIGNED_INT:
