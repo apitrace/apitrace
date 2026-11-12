@@ -29,6 +29,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
+#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -76,6 +78,8 @@ struct ImageDesc
     GLint depth;
     GLint samples;
     GLint internalFormat;
+    // Upload type discovered by the pre-GLES 3.1 probe, not an image output type.
+    GLenum type;
 
     inline
     ImageDesc() :
@@ -83,7 +87,8 @@ struct ImageDesc
         height(0),
         depth(0),
         samples(0),
-        internalFormat(GL_NONE)
+        internalFormat(GL_NONE),
+        type(GL_NONE)
     {}
 
     inline bool
@@ -107,12 +112,50 @@ getTextureTarget(Context &context, GLuint texture);
 
 
 /**
- * OpenGL ES does not support glGetTexLevelParameteriv, but it is possible to
- * probe whether a texture has a given size by crafting a dummy glTexSubImage()
- * call.
+ * Before GLES 3.1, probe level parameters with zero-sized uploads. Keep these
+ * independent of the application's unpack state and pixel unpack buffer.
  */
+class TextureProbeUnpackState
+{
+    const Context &context;
+    GLint alignment = 4;
+    GLint buffer = 0;
+    GLint values[5] = {};
+    unsigned count;
+    const GLenum params[5] = {GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS,
+                             GL_UNPACK_SKIP_PIXELS, GL_UNPACK_IMAGE_HEIGHT,
+                             GL_UNPACK_SKIP_IMAGES};
+public:
+    explicit TextureProbeUnpackState(const Context &context) : context(context)
+    {
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        count = context.read_framebuffer_object ? 5 : context.unpack_subimage ? 3 : 0;
+        for (unsigned i = 0; i < count; ++i) {
+            glGetIntegerv(params[i], &values[i]);
+            glPixelStorei(params[i], 0);
+        }
+        if (context.pixel_buffer_object) {
+            glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &buffer);
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        }
+    }
+
+    ~TextureProbeUnpackState()
+    {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+        for (unsigned i = 0; i < count; ++i) {
+            glPixelStorei(params[i], values[i]);
+        }
+        if (context.pixel_buffer_object) {
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
+        }
+    }
+};
+
+
 static bool
-probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3],
+probeTextureLevelSizeOES(Context &context, GLenum target, GLint level, const GLint size[3],
                          GLenum internalFormat, GLenum type)
 {
     flushErrors();
@@ -131,10 +174,13 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3],
         glTexSubImage2D(target, level, size[0], size[1], 0, 0, internalFormat, type, &dummy);
         break;
     case GL_TEXTURE_3D_OES:
-        glTexSubImage3DOES(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+        if (context.read_framebuffer_object) {
+            glTexSubImage3D(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+        } else {
+            glTexSubImage3DOES(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+        }
         break;
     default:
-        assert(0);
         return false;
     }
 
@@ -155,7 +201,7 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3],
 
 
 static bool
-probeTextureFormatOES(GLenum target, GLint level,
+probeTextureFormatOES(Context &context, GLenum target, GLint level,
                       GLenum *internalFormat, GLenum *type)
 {
     static const struct {
@@ -164,11 +210,31 @@ probeTextureFormatOES(GLenum target, GLint level,
     } info[] = {
         /* internalFormat */        /* type */
         { GL_RGBA,                  GL_UNSIGNED_BYTE },
+        { GL_RGBA,                  GL_HALF_FLOAT },
+        { GL_RGBA,                  GL_FLOAT },
         { GL_RGB,                   GL_UNSIGNED_BYTE },
+        { GL_RGB,                   GL_HALF_FLOAT },
+        { GL_RGB,                   GL_FLOAT },
+        { GL_RG,                    GL_UNSIGNED_BYTE },
+        { GL_RG,                    GL_HALF_FLOAT },
+        { GL_RG,                    GL_FLOAT },
+        { GL_RED,                   GL_UNSIGNED_BYTE },
+        { GL_RED,                   GL_HALF_FLOAT },
+        { GL_RED,                   GL_FLOAT },
+#define INTEGER_PROBES(format) \
+        { format, GL_UNSIGNED_BYTE }, { format, GL_BYTE }, \
+        { format, GL_UNSIGNED_SHORT }, { format, GL_SHORT }, \
+        { format, GL_UNSIGNED_INT }, { format, GL_INT }
+        INTEGER_PROBES(GL_RGBA_INTEGER),
+        INTEGER_PROBES(GL_RGB_INTEGER),
+        INTEGER_PROBES(GL_RG_INTEGER),
+        INTEGER_PROBES(GL_RED_INTEGER),
+#undef INTEGER_PROBES
         { GL_DEPTH_STENCIL,         GL_FLOAT_32_UNSIGNED_INT_24_8_REV },
         { GL_DEPTH_STENCIL,         GL_UNSIGNED_INT_24_8 },
         { GL_DEPTH_COMPONENT,       GL_FLOAT },
         { GL_DEPTH_COMPONENT,       GL_UNSIGNED_SHORT },
+        { GL_DEPTH_COMPONENT,       GL_UNSIGNED_INT },
         { GL_STENCIL_INDEX,         GL_UNSIGNED_BYTE },
         /* others? */
         { 0, 0 },
@@ -176,11 +242,14 @@ probeTextureFormatOES(GLenum target, GLint level,
     static const GLint size[3] = {1, 1, 1};
 
     for (int i = 0; info[i].internalFormat; i++) {
-        if (probeTextureLevelSizeOES(target, level, size,
-                                     info[i].internalFormat,
-                                     info[i].type)) {
+        GLenum probeType = info[i].type;
+        if (probeType == GL_HALF_FLOAT && !context.read_framebuffer_object) {
+            probeType = GL_HALF_FLOAT_OES;
+        }
+        if (probeTextureLevelSizeOES(context, target, level, size,
+                                     info[i].internalFormat, probeType)) {
             *internalFormat = info[i].internalFormat;
-            *type = info[i].type;
+            *type = probeType;
             return true;
         }
     }
@@ -195,7 +264,7 @@ probeTextureFormatOES(GLenum target, GLint level,
  * It is assumed that the texture exists.
  */
 static GLint
-bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max,
+bisectTextureLevelSizeOES(Context &context, GLenum target, GLint level, GLint axis, GLint max,
                           GLenum internalFormat, GLenum type)
 {
     GLint size[3] = {0, 0, 0};
@@ -204,20 +273,17 @@ bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max,
     assert(max >= 0);
 
     GLint min = 0;
-    while (true) {
-        GLint test = (min + max) / 2;
-        if (test == min) {
-            return min;
-        }
-
+    while (min < max) {
+        GLint test = min + (max - min + 1) / 2;
         size[axis] = test;
 
-        if (probeTextureLevelSizeOES(target, level, size, internalFormat, type)) {
+        if (probeTextureLevelSizeOES(context, target, level, size, internalFormat, type)) {
             min = test;
         } else {
-            max = test;
+            max = test - 1;
         }
     }
+    return min;
 }
 
 
@@ -228,24 +294,27 @@ bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max,
 static bool
 getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, ImageDesc &desc)
 {
-    if (target == GL_TEXTURE_1D) {
-        // OpenGL ES does not support 1D textures
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
+        !(target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        std::cerr << "warning: GLES texture readback does not support " << enumToString(target) << "\n";
         return false;
     }
+    TextureProbeUnpackState unpack(context);
     GLenum internalFormat, type;
 
-    if (!probeTextureFormatOES(target, level, &internalFormat, &type)) {
+    if (!probeTextureFormatOES(context, target, level, &internalFormat, &type)) {
         return false;
     }
 
     desc.internalFormat = internalFormat;
+    desc.type = type;
 
     GLint maxSize = 0;
     switch (target) {
     case GL_TEXTURE_2D:
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
-        desc.height = bisectTextureLevelSizeOES(target, level, 1, maxSize, internalFormat, type);
+        desc.width = bisectTextureLevelSizeOES(context, target, level, 0, maxSize, internalFormat, type);
+        desc.height = bisectTextureLevelSizeOES(context, target, level, 1, maxSize, internalFormat, type);
         desc.depth = 1;
         break;
     case GL_TEXTURE_CUBE_MAP:
@@ -256,15 +325,15 @@ getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, Image
     case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
+        desc.width = bisectTextureLevelSizeOES(context, target, level, 0, maxSize, internalFormat, type);
         desc.height = desc.width;
         desc.depth = 1;
         break;
     case GL_TEXTURE_3D_OES:
         glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE_OES, &maxSize);
-        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize, internalFormat, type);
-        desc.width = bisectTextureLevelSizeOES(target, level, 1, maxSize, internalFormat, type);
-        desc.depth = bisectTextureLevelSizeOES(target, level, 2, maxSize, internalFormat, type);
+        desc.width = bisectTextureLevelSizeOES(context, target, level, 0, maxSize, internalFormat, type);
+        desc.height = bisectTextureLevelSizeOES(context, target, level, 1, maxSize, internalFormat, type);
+        desc.depth = bisectTextureLevelSizeOES(context, target, level, 2, maxSize, internalFormat, type);
         break;
     default:
         return false;
@@ -287,8 +356,13 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 {
     assert(target != GL_TEXTURE_CUBE_MAP);
 
-    if (context.ES) {
+    if (context.ES && !glfeatures::getCurrentContextProfile().versionGreaterOrEqual(3, 1)) {
         return getActiveTextureLevelDescOES(context, target, level, desc);
+    }
+    if (context.ES && target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
+        !(target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        std::cerr << "warning: GLES texture readback does not support " << enumToString(target) << "\n";
+        return false;
     }
 
     if (target == GL_TEXTURE_BUFFER) {
@@ -352,7 +426,9 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
         }
     }
 
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_SAMPLES, &desc.samples);
+    if (!context.ES) {
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_SAMPLES, &desc.samples);
+    }
 
     return desc.valid();
 }
@@ -420,57 +496,214 @@ getTextureBinding(GLenum target)
  * OpenGL ES does not support glGetTexImage. Obtain the pixels by attaching the
  * texture to a framebuffer.
  */
-static inline void
-getTexImageOES(GLenum target, GLint level, GLenum format, GLenum type,
-               ImageDesc &desc, GLubyte *pixels)
+class TextureReadbackFramebuffer
 {
-    memset(pixels, 0x80, desc.height * desc.width * 4);
+    bool split;
+    GLint draw = 0;
+    GLint read = 0;
+    GLuint fbo = 0;
+public:
+    explicit TextureReadbackFramebuffer(const Context &context) : split(context.read_framebuffer_object)
+    {
+        glGetIntegerv(split ? GL_DRAW_FRAMEBUFFER_BINDING : GL_FRAMEBUFFER_BINDING, &draw);
+        if (split) {
+            glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read);
+        }
+        glGenFramebuffers(1, &fbo);
+        if (fbo) {
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        }
+    }
 
-    GLenum texture_binding = getTextureBinding(target);
-    if (texture_binding == GL_NONE) {
-        return;
+    bool valid() const { return fbo != 0; }
+
+    ~TextureReadbackFramebuffer()
+    {
+        if (split) {
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, read);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, draw);
+        }
+        glDeleteFramebuffers(1, &fbo);
+    }
+};
+
+
+static bool
+isIntegerFormat(GLenum format)
+{
+    return format == GL_RED_INTEGER || format == GL_RG_INTEGER ||
+           format == GL_RGB_INTEGER || format == GL_RGBA_INTEGER;
+}
+
+
+static GLenum
+readTexturePixelsOES(GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels)
+{
+    glReadPixels(0, 0, width, height, format, type, pixels);
+    return glGetError();
+}
+
+
+static image::Image *
+getTexImageOES(Context &context, GLenum target, GLint level, const ImageDesc &desc)
+{
+    const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+    GLenum attachment = GL_COLOR_ATTACHMENT0;
+    if (formatDesc.format == GL_DEPTH_COMPONENT) {
+        attachment = GL_DEPTH_ATTACHMENT;
+    } else if (formatDesc.format == GL_DEPTH_STENCIL) {
+        attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+    } else if (formatDesc.format == GL_STENCIL_INDEX) {
+        attachment = GL_STENCIL_ATTACHMENT;
     }
 
     GLint texture = 0;
-    glGetIntegerv(texture_binding, &texture);
-    if (!texture) {
-        return;
+    glGetIntegerv(getTextureBinding(target), &texture);
+    auto warn = [&](const char *reason, GLint layer) {
+        std::cerr << "warning: texture readback " << texture << " " << enumToString(target)
+                  << " level " << level << " layer " << layer << ": " << reason << "\n";
+    };
+    if (attachment != GL_COLOR_ATTACHMENT0 && !context.NV_read_depth_stencil) {
+        warn("depth/stencil readback is not supported", 0);
+        return NULL;
     }
 
-    GLint prev_fbo = 0;
-    GLuint fbo = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    bool queryComponentType = context.read_framebuffer_object;
+    if (!queryComponentType) {
+        glfeatures::Extensions extensions;
+        extensions.getCurrentContextExtensions(glfeatures::getCurrentContextProfile());
+        queryComponentType = extensions.has("GL_EXT_color_buffer_half_float");
+    }
 
-    GLenum status;
+    TextureReadbackFramebuffer framebuffer(context);
+    if (!framebuffer.valid()) {
+        warn("could not create readback framebuffer", 0);
+        flushErrors();
+        return NULL;
+    }
+    PixelPackState pack(context);
+    if (context.read_buffer) {
+        GLenum buffer = attachment == GL_COLOR_ATTACHMENT0 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+        glDrawBuffers(1, &buffer);
+        glReadBuffer(buffer);
+    }
 
-    switch (target) {
-    case GL_TEXTURE_2D:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
-        status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    std::unique_ptr<image::Image> image;
+    for (GLint layer = 0; layer < desc.depth; ++layer) {
+        flushErrors();
+        if (target == GL_TEXTURE_3D) {
+            if (context.read_framebuffer_object) {
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, texture, level, layer);
+            } else {
+                glFramebufferTexture3DOES(GL_FRAMEBUFFER, attachment, target, texture, level, layer);
+            }
+        } else {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, target, texture, level);
+        }
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            warn(enumToString(error), layer);
+            return NULL;
+        }
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            std::cerr << __FUNCTION__ << ": " << enumToString(status) << "\n";
+            warn(enumToString(status), layer);
+            return NULL;
         }
-        glReadPixels(0, 0, desc.width, desc.height, format, type, pixels);
-        break;
-    case GL_TEXTURE_3D_OES:
-        for (int i = 0; i < desc.depth; i++) {
-            glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, texture, level, i);
-            glReadPixels(0, 0, desc.width, desc.height, format, type, pixels + 4 * i * desc.width * desc.height);
+
+        GLint componentType = GL_NONE;
+        if (queryComponentType) {
+            GLenum queryAttachment = attachment == GL_DEPTH_STENCIL_ATTACHMENT ? GL_DEPTH_ATTACHMENT : attachment;
+            glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, queryAttachment,
+                                                  GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE, &componentType);
+            if (glGetError() != GL_NO_ERROR) {
+                componentType = GL_NONE;
+            }
         }
-        break;
+        GLenum sourceType = desc.type != GL_NONE ? desc.type : formatDesc.type;
+        bool integer = isIntegerFormat(formatDesc.format);
+        bool signedInteger = componentType == GL_INT || (componentType == GL_NONE &&
+                             (sourceType == GL_BYTE || sourceType == GL_SHORT || sourceType == GL_INT));
+        bool floating = !integer && (componentType == GL_FLOAT || sourceType == GL_FLOAT ||
+                        sourceType == GL_HALF_FLOAT || sourceType == GL_HALF_FLOAT_OES ||
+                        sourceType == GL_FLOAT_32_UNSIGNED_INT_24_8_REV);
+        bool depth = attachment == GL_DEPTH_ATTACHMENT || attachment == GL_DEPTH_STENCIL_ATTACHMENT;
+        unsigned channels = attachment == GL_COLOR_ATTACHMENT0 ? 4 : 1;
+        image::ChannelType channelType = floating || depth ? image::TYPE_FLOAT : image::TYPE_UNORM8;
+        unsigned pixelBytes = channels * (channelType == image::TYPE_FLOAT ? sizeof(float) : 1);
+        uint64_t height = uint64_t(desc.height) * desc.depth;
+        if (height > std::numeric_limits<unsigned>::max()) {
+            warn("image is too large", layer);
+            return NULL;
+        }
+        uint64_t pixels = uint64_t(desc.width) * height;
+        uint64_t guard = ((height + desc.width) * 4 + 32) * pixelBytes;
+        if (pixels > std::numeric_limits<unsigned>::max() / pixelBytes ||
+            guard > std::numeric_limits<unsigned>::max() - pixels * pixelBytes) {
+            warn("image is too large", layer);
+            return NULL;
+        }
+        if (!image) {
+            image.reset(new image::Image(desc.width, height, channels, true, channelType));
+            memset(image->pixels, 0, image->sizeInBytes());
+        }
+        size_t pixelCount = size_t(desc.width) * desc.height;
+        GLubyte *dest = image->pixels + size_t(layer) * pixelCount * image->bytesPerPixel;
+        if (integer) {
+            if (signedInteger) {
+                std::vector<GLint> scratch(pixelCount * 4);
+                error = readTexturePixelsOES(desc.width, desc.height, GL_RGBA_INTEGER, GL_INT, scratch.data());
+                if (error == GL_NO_ERROR) {
+                    for (size_t i = 0; i < scratch.size(); ++i) {
+                        dest[i] = std::max(0, std::min(255, scratch[i]));
+                    }
+                }
+            } else {
+                std::vector<GLuint> scratch(pixelCount * 4);
+                error = readTexturePixelsOES(desc.width, desc.height, GL_RGBA_INTEGER, GL_UNSIGNED_INT, scratch.data());
+                if (error == GL_NO_ERROR) {
+                    for (size_t i = 0; i < scratch.size(); ++i) {
+                        dest[i] = std::min(255u, scratch[i]);
+                    }
+                }
+            }
+        } else if (depth && !floating) {
+            GLint bits = sourceType == GL_UNSIGNED_SHORT ? 16 : 32;
+            if (context.read_framebuffer_object) {
+                glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                                      GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &bits);
+            }
+            float *values = reinterpret_cast<float *>(dest);
+            if (bits <= 16) {
+                std::vector<GLushort> scratch(pixelCount);
+                error = readTexturePixelsOES(desc.width, desc.height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, scratch.data());
+                if (error == GL_NO_ERROR) {
+                    for (size_t i = 0; i < pixelCount; ++i) {
+                        values[i] = scratch[i] / 65535.0f;
+                    }
+                }
+            } else {
+                std::vector<GLuint> scratch(pixelCount);
+                error = readTexturePixelsOES(desc.width, desc.height, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, scratch.data());
+                if (error == GL_NO_ERROR) {
+                    for (size_t i = 0; i < pixelCount; ++i) {
+                        values[i] = scratch[i] / 4294967295.0f;
+                    }
+                }
+            }
+        } else {
+            GLenum format = depth ? GL_DEPTH_COMPONENT : attachment == GL_STENCIL_ATTACHMENT ? GL_STENCIL_INDEX : GL_RGBA;
+            GLenum type = channelType == image::TYPE_FLOAT ? GL_FLOAT : GL_UNSIGNED_BYTE;
+            error = readTexturePixelsOES(desc.width, desc.height, format, type, dest);
+        }
+        if (error != GL_NO_ERROR) {
+            warn(enumToString(error), layer);
+            return NULL;
+        }
     }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
-
-    glDeleteFramebuffers(1, &fbo);
+    return image.release();
 }
 
 /**
@@ -706,8 +939,34 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
     }
-    if (layer < 0 || num_layers < 0 || layer + num_layers > desc.depth) {
+    if (layer < 0 || layer > desc.depth || num_layers < 0 || num_layers > desc.depth - layer) {
         std::cerr << "warning: invalid layer range\n";
+        return;
+    }
+
+    if (context.ES && !multiSample) {
+        std::unique_ptr<image::Image> image(getTexImageOES(context, target, level, desc));
+        if (!image) {
+            return;
+        }
+        if (num_layers > 0 && num_layers < desc.depth) {
+            std::unique_ptr<image::Image> subset(new image::Image(
+                desc.width, unsigned(desc.height) * num_layers, image->channels, true, image->channelType));
+            memcpy(subset->pixels,
+                   image->pixels + size_t(layer) * desc.width * desc.height * image->bytesPerPixel,
+                   subset->sizeInBytes());
+            image.swap(subset);
+            desc.depth = num_layers;
+        }
+        if (userLabel) {
+            image->label = userLabel;
+        }
+        StateWriter::ImageDesc imageDesc;
+        imageDesc.depth = desc.depth;
+        imageDesc.format = formatToString(desc.internalFormat);
+        writer.beginMember(label);
+        writer.writeImage(image.get(), imageDesc);
+        writer.endMember();
         return;
     }
 
@@ -790,15 +1049,8 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
         }
     }
     else {
-        if (context.ES) {
-            // Create a simple image single sample size. glReadPixel does not guarantee GL_RGB, so assume GL_RGBA.
-            image = new image::Image(desc.width, desc.height * desc.depth, 4, true, channelType);
-            getTexImageOES(target, level, GL_RGBA, type, desc, image->pixels);
-        } else {
-            // Create a simple image single sample size.
-            image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
-            glGetTexImage(target, level, format, type, image->pixels);
-        }
+        image = new image::Image(desc.width, desc.height * desc.depth, channels, true, channelType);
+        glGetTexImage(target, level, format, type, image->pixels);
 
         // If a strict subset of the texture's layers is requested, those layers
         // need extracting from image->pixels into a new replacement
