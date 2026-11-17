@@ -164,6 +164,7 @@ struct Features
     unsigned KHR_debug:1;
     unsigned EXT_debug_label:1;
     unsigned NV_read_depth_stencil:1;  /* ES only */
+    unsigned EXT_color_buffer_half_float:1;  /* ES only */
     unsigned ARB_shader_image_load_store:1;
     unsigned ARB_direct_state_access:1;
     unsigned ARB_shader_storage_buffer_object:1;
@@ -182,6 +183,7 @@ struct Features
     unsigned unpack_subimage:1;
     unsigned pack_subimage:1;
     unsigned pixel_transfer:1;
+    unsigned texture_level_parameters:1;  /* glGetTexLevelParameteriv */
 
     Features(void);
 

@@ -348,6 +348,10 @@ Features::load(const Profile & profile, const Extensions & ext)
     OVR_multiview = ext.has("GL_OVR_multiview");
 
     NV_read_depth_stencil = ES && ext.has("GL_NV_read_depth_stencil");
+    EXT_color_buffer_half_float = ES && ext.has("GL_EXT_color_buffer_half_float");
+
+    // Desktop GL always has it; ES only gained it in 3.1.
+    texture_level_parameters = !ES || profile.versionGreaterOrEqual(3, 1);
 
     if (profile.desktop()) {
         ARB_color_buffer_float = profile.versionGreaterOrEqual(3, 0) ||
