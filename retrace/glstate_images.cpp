@@ -356,7 +356,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 {
     assert(target != GL_TEXTURE_CUBE_MAP);
 
-    if (context.ES && !glfeatures::getCurrentContextProfile().versionGreaterOrEqual(3, 1)) {
+    if (!context.texture_level_parameters) {
         return getActiveTextureLevelDescOES(context, target, level, desc);
     }
     if (context.ES && target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
@@ -570,12 +570,8 @@ getTexImageOES(Context &context, GLenum target, GLint level, const ImageDesc &de
         return NULL;
     }
 
-    bool queryComponentType = context.read_framebuffer_object;
-    if (!queryComponentType) {
-        glfeatures::Extensions extensions;
-        extensions.getCurrentContextExtensions(glfeatures::getCurrentContextProfile());
-        queryComponentType = extensions.has("GL_EXT_color_buffer_half_float");
-    }
+    bool queryComponentType = context.read_framebuffer_object ||
+                              context.EXT_color_buffer_half_float;
 
     TextureReadbackFramebuffer framebuffer(context);
     if (!framebuffer.valid()) {
