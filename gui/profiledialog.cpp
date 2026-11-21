@@ -122,23 +122,23 @@ ProfileDialog::ProfileDialog(QWidget *parent)
 
 
     /* Synchronise selections */
-    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), m_cpuGraph, SLOT(setSelection(SelectionState)));
-    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), m_gpuGraph, SLOT(setSelection(SelectionState)));
+    connect(m_timeline, &GraphWidget::selectionChanged, m_cpuGraph, &GraphWidget::setSelection);
+    connect(m_timeline, &GraphWidget::selectionChanged, m_gpuGraph, &GraphWidget::setSelection);
 
-    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), m_timeline, SLOT(setSelection(SelectionState)));
-    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), m_gpuGraph, SLOT(setSelection(SelectionState)));
+    connect(m_cpuGraph, &GraphWidget::selectionChanged, m_timeline, &GraphWidget::setSelection);
+    connect(m_cpuGraph, &GraphWidget::selectionChanged, m_gpuGraph, &GraphWidget::setSelection);
 
-    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), m_timeline, SLOT(setSelection(SelectionState)));
-    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), m_cpuGraph, SLOT(setSelection(SelectionState)));
+    connect(m_gpuGraph, &GraphWidget::selectionChanged, m_timeline, &GraphWidget::setSelection);
+    connect(m_gpuGraph, &GraphWidget::selectionChanged, m_cpuGraph, &GraphWidget::setSelection);
 
-    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
-    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
-    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
+    connect(m_timeline, &GraphWidget::selectionChanged, this, &ProfileDialog::graphSelectionChanged);
+    connect(m_cpuGraph, &GraphWidget::selectionChanged, this, &ProfileDialog::graphSelectionChanged);
+    connect(m_gpuGraph, &GraphWidget::selectionChanged, this, &ProfileDialog::graphSelectionChanged);
 
 
     /* Synchronise views between cpuGraph and gpuGraph */
-    connect(m_cpuGraph, SIGNAL(horizontalViewChanged(qint64,qint64)), m_gpuGraph, SLOT(setHorizontalView(qint64,qint64)));
-    connect(m_gpuGraph, SIGNAL(horizontalViewChanged(qint64,qint64)), m_cpuGraph, SLOT(setHorizontalView(qint64,qint64)));
+    connect(m_cpuGraph, &GraphWidget::horizontalViewChanged, m_gpuGraph, &GraphWidget::setHorizontalView);
+    connect(m_gpuGraph, &GraphWidget::horizontalViewChanged, m_cpuGraph, &GraphWidget::setHorizontalView);
 }
 
 

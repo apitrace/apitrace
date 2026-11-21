@@ -141,12 +141,12 @@ void ArgumentsEditor::init()
 {
     m_ui.setupUi(this);
 
-    connect(m_ui.selectStringCB, SIGNAL(currentIndexChanged(int)),
-            SLOT(currentSourceChanged(int)));
-    connect(m_ui.glslEdit, SIGNAL(textChanged()),
-            SLOT(sourceChanged()));
-    connect(m_ui.revertButton, SIGNAL(clicked()),
-            SLOT(revert()));
+    connect(m_ui.selectStringCB, &QComboBox::currentIndexChanged,
+            this, &ArgumentsEditor::currentSourceChanged);
+    connect(m_ui.glslEdit, &QPlainTextEdit::textChanged,
+            this, &ArgumentsEditor::sourceChanged);
+    connect(m_ui.revertButton, &QAbstractButton::clicked,
+            this, &ArgumentsEditor::revert);
 
     setArgumentsItemEditorFactory ();
 
