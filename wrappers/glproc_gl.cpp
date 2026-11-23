@@ -53,13 +53,20 @@ _getPublicProcAddress(const char *procName)
 {
     if (!_libGlHandle) {
         char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
+
+        // Allow overriding the OpenGL implementation (e.g., with Mesa's
+        // llvmpipe), like glretrace does.
+        const char *szLibGl = getenv("TRACE_LIBGL");
+        if (szLibGl && *szLibGl) {
+            strncpy(szDll, szLibGl, MAX_PATH - 1);
+        } else {
+            if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
+                return NULL;
+            }
+
+            strcat(szDll, "\\opengl32.dll");
         }
-        
-        strcat(szDll, "\\opengl32.dll");
-        
+
         _libGlHandle = LoadLibraryA(szDll);
         if (!_libGlHandle) {
             os::log("apitrace: error: couldn't load %s\n", szDll);
