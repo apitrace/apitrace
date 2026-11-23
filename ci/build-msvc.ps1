@@ -103,6 +103,49 @@ if ($arch -eq 'x86') {
     }
 }
 
+# Use Mesa's llvmpipe software OpenGL implementation to run the OpenGL tests,
+# so that results don't depend on the machine's GPU (or lack thereof).  The
+# tracer and glretrace honor TRACE_LIBGL.
+#
+# Binaries from https://github.com/mmozeiko/build-mesa/releases (single-DLL
+# llvmpipe builds, statically linked, no extra DLL dependencies).
+#
+# It can also be installed system-wide as the software OpenGL ICD (MSOGL), see
+# https://docs.mesa3d.org/drivers/llvmpipe.html#windows
+if ($arch -eq 'x86' -and !$Env:TRACE_LIBGL) {
+    $mesaVersion = '26.3.1'
+    $mesaDigests = @{
+        x64 = '08145a3717e0c1be0d97b74b53070f14eb39cb2f7de22f84fe20d1a581299c12'
+        x86 = 'af82e5ec8d8b6e89ccc662bfafecc2f14587964d6ec56833af4ab22b2808b370'
+    }
+    $mesaArch = if ($target -eq 'win64') { 'x64' } else { 'x86' }
+    $mesaArchive = "mesa-llvmpipe-$mesaArch-$mesaVersion.7z"
+    $mesaArchivePath = "downloads\$mesaArchive"
+    $mesaDir = "downloads\mesa\$mesaArch"
+
+    if (!(Test-Path "$mesaDir\opengl32.dll" -PathType Leaf)) {
+        New-Item -ItemType Directory -Force downloads | Out-Null
+
+        if (!(Test-Path $mesaArchivePath -PathType Leaf)) {
+            $mesaUrl = "https://github.com/mmozeiko/build-mesa/releases/download/$mesaVersion/$mesaArchive"
+            Write-Host "Downloading $mesaUrl ..."
+            Invoke-WebRequest -Uri $mesaUrl -OutFile $mesaArchivePath
+        }
+
+        $mesaDigest = (Get-FileHash $mesaArchivePath -Algorithm SHA256).Hash.ToLower()
+        if ($mesaDigest -ne $mesaDigests[$mesaArch]) {
+            Remove-Item $mesaArchivePath
+            throw "SHA-256 mismatch for ${mesaArchive}: expected $($mesaDigests[$mesaArch]), got $mesaDigest"
+        }
+
+        Write-Host "Extracting $mesaArchive to $mesaDir ..."
+        Exec { 7z x -y "-o$mesaDir" $mesaArchivePath opengl32.dll | Out-Null }
+    }
+
+    $Env:TRACE_LIBGL = (Resolve-Path "$mesaDir\opengl32.dll").ProviderPath
+    Write-Host "Setting TRACE_LIBGL to $Env:TRACE_LIBGL."
+}
+
 # https://github.com/microsoft/vswhere/wiki/Find-VC#powershell
 $product = & "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json | Select-Object -First 1
 $productVersion = [System.Version]$product.installationVersion

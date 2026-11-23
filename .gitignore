@@ -59,5 +59,6 @@ trace_parser_flags_test
 Testing
 os_thread_test
 /build
+/downloads
 /Qt
 version.h
