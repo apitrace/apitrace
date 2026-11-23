@@ -77,28 +77,6 @@ class AppDriver(Driver):
         Driver.__init__(self)
         self.stateCache = {}
     
-    def runApp(self):
-        '''Run the application standalone, skipping this test if it fails by
-        some reason.'''
-
-        if not self.cmd:
-            return
-
-        sys.stderr.write('Run application...\n')
-
-        env = os.environ.copy()
-        env['DRY_RUN'] = 'yes'
-
-        p = popen(self.cmd, cwd=self.cwd, env=env)
-        p.wait()
-        if p.returncode == 125:
-            skip('application returned code %i' % p.returncode)
-        if p.returncode != 0:
-            fail('application returned code %i' % p.returncode)
-
-        sys.stdout.flush()
-        sys.stderr.write('\n')
-
     api_trace_map = {
         'gl': 'gl',
         'gles1': 'gl',
@@ -181,6 +159,9 @@ class AppDriver(Driver):
 
         p = popen(cmd, env=env, cwd=self.cwd)
         p.wait()
+        if p.returncode == 125:
+            # The application bailed out, e.g., a required feature is absent
+            skip('application returned code %i' % p.returncode)
         if p.returncode != 0:
             if self.getNamePrefix() != 'exception':
                 fail('`apitrace trace` returned code %i' % p.returncode)
@@ -525,7 +506,6 @@ class AppDriver(Driver):
         self.ref_dump = options.ref_dump
         self.results = options.results
 
-        self.runApp()
         self.traceApp()
         self.checkTrace()
         self.replay()

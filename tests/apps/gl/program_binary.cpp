@@ -42,7 +42,6 @@
 static GLFWwindow* window;
 
 
-static bool tracing;
 static GLuint fragShader, vertShader;
 static GLuint program = 0;
 
@@ -135,8 +134,7 @@ init(void)
 
     GLint numProgramBinaryFormats = 0;
     glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &numProgramBinaryFormats);
-    if ((tracing && numProgramBinaryFormats != 0) ||
-        numProgramBinaryFormats < 0) {
+    if (numProgramBinaryFormats < 0) {
         fprintf(stderr, "error: glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS) = %i\n", numProgramBinaryFormats);
         exit(EXIT_FAILURE);
     }
@@ -220,8 +218,6 @@ debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLs
 int
 main(int argc, char *argv[])
 {
-    tracing = !getenv("DRY_RUN");
-
     glfwInit();
 
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
@@ -252,8 +248,7 @@ main(int argc, char *argv[])
 
     GLint binaryLength = 0;
     glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
-    if ((tracing && binaryLength != 0) ||
-        binaryLength < 0) {
+    if (binaryLength < 0) {
         fprintf(stderr, "error: glGetProgramiv(GL_PROGRAM_BINARY_LENGTH) = %i\n", binaryLength);
         exit(EXIT_FAILURE);
     }
@@ -265,39 +260,17 @@ main(int argc, char *argv[])
     GLsizei length = 0;
     GLenum binaryFormat = GL_NONE;
     glGetProgramBinary(program, bufSize, &length, &binaryFormat, binary);
-    GLenum error = glGetError();
-    if (tracing && error == GL_NO_ERROR) {
-        fprintf(stderr, "error: glGetProgramiv(GL_PROGRAM_BINARY_LENGTH) = %i\n", binaryLength);
-        exit(EXIT_FAILURE);
-    }
 
-    FILE *fp;
-
-    if (!tracing) {
-        fp = fopen("program_binary.bin", "wb");
-        fwrite(&binaryFormat, sizeof binaryFormat, 1, fp);
-        fwrite(&binaryLength, sizeof binaryLength, 1, fp);
-        fwrite(binary, 1, binaryLength, fp);
-        fclose(fp);
-    }
-
-    free(binary);
-   
     glDeleteShader(fragShader);
     glDeleteShader(vertShader);
     glDeleteProgram(program);
 
     program = glCreateProgram();
 
-    fp = fopen("program_binary.bin", "rb");
-    fread(&binaryFormat, sizeof binaryFormat, 1, fp);
-    fread(&binaryLength, sizeof binaryLength, 1, fp);
-    binary = malloc(binaryLength);
-    fread(binary, 1, binaryLength, fp);
-    fclose(fp);
-
     glProgramBinary(program, binaryFormat, binary, binaryLength);
-    
+
+    free(binary);
+
     GLint status = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (!status) {
@@ -305,9 +278,6 @@ main(int argc, char *argv[])
         char log[1000];
         glGetProgramInfoLog(program, sizeof log, &len, log);
         fprintf(stderr, "warning: glProgramBinary failed -- %s\n", log);
-    }
-    if (tracing && status) {
-        exit(EXIT_FAILURE);
     }
 
     if (status) {

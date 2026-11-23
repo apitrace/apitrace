@@ -44,10 +44,6 @@ static GLFWwindow* window = NULL;
 static void
 init(void)
 {
-    if (getenv("DRY_RUN")) {
-        return;
-    }
-
     glGetIntegerv(GL_VIEWPORT, (GLint *)NULL);
 }
 
