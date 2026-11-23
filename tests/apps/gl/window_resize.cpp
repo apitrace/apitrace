@@ -71,7 +71,7 @@ main(int argc, char** argv)
 {
     glfwInit();
 
-    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(320, 240, argv[0], NULL, NULL);
     if (!window) {

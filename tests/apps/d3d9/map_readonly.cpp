@@ -78,8 +78,6 @@ main(int argc, char *argv[])
         return 1;
     }
 
-    ShowWindow(hWnd, SW_SHOW);
-
     ComPtr<IDirect3D9> pD3D;
     pD3D.Attach(Direct3DCreate9(D3D_SDK_VERSION));
     if (!pD3D) {
