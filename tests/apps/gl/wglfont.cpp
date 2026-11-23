@@ -102,9 +102,23 @@ main(int argc, char *argv[])
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    SelectObject(hdc, GetStockObject(SYSTEM_FONT));
+    // Use a TrueType font rather than a raster one like SYSTEM_FONT:
+    // wglUseFontBitmaps implementations based on GetGlyphOutline(GGO_BITMAP),
+    // such as Mesa's, fail with raster fonts, and apitrace only emits the
+    // glNewList/glBitmap/glEndList calls expected by this test when
+    // wglUseFontBitmaps succeeds.
+    HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                              DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS,
+                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                              DEFAULT_PITCH | FF_DONTCARE, "Arial");
+    if (!hFont) {
+        abort();
+    }
+    SelectObject(hdc, hFont);
 
-    wglUseFontBitmaps(hdc, 0, 256, 1000);
+    if (!wglUseFontBitmaps(hdc, 0, 256, 1000)) {
+        abort();
+    }
 
     glListBase(1000);
 
@@ -117,6 +131,8 @@ main(int argc, char *argv[])
     wglDeleteContext(hglrc);
 
     ReleaseDC(hwnd, hdc);
+
+    DeleteObject(hFont);
 
     DestroyWindow(hwnd);
 
