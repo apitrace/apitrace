@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
 
+# Cancel the previous run of this workflow for the same branch/tag/PR when a
+# new one is started.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ubuntu64:
     runs-on: ubuntu-24.04
