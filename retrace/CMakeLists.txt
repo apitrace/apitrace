@@ -9,23 +9,23 @@ add_compile_definitions (RETRACE)
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
     DEPENDS
         glretrace.py
         retrace.py
-        ${CMAKE_SOURCE_DIR}/specs/glapi.py
-        ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-        ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+        ${PROJECT_SOURCE_DIR}/specs/glapi.py
+        ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+        ${PROJECT_SOURCE_DIR}/specs/stdapi.py
 )
 
 add_custom_command (
     OUTPUT glstate_params.cpp
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
     DEPENDS
         glstate_params.py
-        ${CMAKE_SOURCE_DIR}/specs/glparams.py
-        ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-        ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+        ${PROJECT_SOURCE_DIR}/specs/glparams.py
+        ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+        ${PROJECT_SOURCE_DIR}/specs/stdapi.py
 )
 
 if (WIN32)
@@ -149,7 +149,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
             # gdb doesn't like when pthreads is loaded through dlopen (which happens
             # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
             # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
-            ${CMAKE_THREAD_LIBS_INIT}
+            Threads::Threads
             ${CMAKE_DL_LIBS}
         )
     endif ()
@@ -203,18 +203,18 @@ if (WIN32)
         list (APPEND D3DRETRACE_INCLUDE_DIRS ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3dretrace_ddraw.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
             DEPENDS
                 ddrawretrace.py
                 dllretrace.py
                 retrace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/ddraw.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dtypes.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dcaps.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/ddraw.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d.py
+                ${PROJECT_SOURCE_DIR}/specs/d3dtypes.py
+                ${PROJECT_SOURCE_DIR}/specs/d3dcaps.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d7state.cpp
@@ -236,17 +236,17 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d8.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
             retrace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d8.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d8types.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d8caps.py
-            ${CMAKE_SOURCE_DIR}/specs/winapi.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+            ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d8.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d8types.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d8caps.py
+            ${PROJECT_SOURCE_DIR}/specs/winapi.py
+            ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
 
     if (DirectX_D3D9_INCLUDE_FOUND)
@@ -257,18 +257,18 @@ if (WIN32)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
             d3d9retrace.py
             dllretrace.py
             retrace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d9.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
-            ${CMAKE_SOURCE_DIR}/specs/dxva2.py
-            ${CMAKE_SOURCE_DIR}/specs/winapi.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+            ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d9.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d9types.py
+            ${PROJECT_SOURCE_DIR}/specs/d3d9caps.py
+            ${PROJECT_SOURCE_DIR}/specs/dxva2.py
+            ${PROJECT_SOURCE_DIR}/specs/winapi.py
+            ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
 
     if (DirectX_D3D11_4_INCLUDE_FOUND)
@@ -287,34 +287,34 @@ if (WIN32)
         )
         add_custom_command (
             OUTPUT dxgistate_so.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
             DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
-                ${CMAKE_SOURCE_DIR}/specs/dcomp.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11.py
+                ${PROJECT_SOURCE_DIR}/specs/dcomp.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/dxgi.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_custom_command (
             OUTPUT d3dretrace_dxgi.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
             DEPENDS
                 dxgiretrace.py
                 dllretrace.py
                 retrace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
-                ${CMAKE_SOURCE_DIR}/specs/dcomp.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11.py
+                ${PROJECT_SOURCE_DIR}/specs/dcomp.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/dxgi.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
     endif ()
 

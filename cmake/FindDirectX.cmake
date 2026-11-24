@@ -104,7 +104,7 @@ if (WIN32)
     find_winsdk_header  (D3D     d3d.h)
 
     if (MSVC)
-        set (DirectX_D3D8_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/dxsdk_aug2007)
+        set (DirectX_D3D8_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/dxsdk_aug2007)
         set (DirectX_D3D8_INCLUDE_FOUND TRUE)
         mark_as_advanced (DirectX_D3D8_INCLUDE_FOUND)
     else ()

@@ -97,18 +97,18 @@ if (WIN32)
     if (DirectX_D3D_INCLUDE_FOUND)
         add_custom_command (
             OUTPUT ddrawtrace.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
             DEPENDS
                 ddrawtrace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dtypes.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dcaps.py
-                ${CMAKE_SOURCE_DIR}/specs/ddraw.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d.py
+                ${PROJECT_SOURCE_DIR}/specs/d3dtypes.py
+                ${PROJECT_SOURCE_DIR}/specs/d3dcaps.py
+                ${PROJECT_SOURCE_DIR}/specs/ddraw.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace PRIVATE
@@ -128,17 +128,17 @@ if (WIN32)
     if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_FOUND)
         add_custom_command (
             OUTPUT d3d8trace.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
             DEPENDS
                 d3d8trace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d8.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d8types.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d8caps.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d8.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d8types.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d8caps.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (d3d8trace MODULE
             d3d8.def
@@ -162,18 +162,18 @@ if (WIN32)
     if (DirectX_D3D9_INCLUDE_FOUND)
         add_custom_command (
             OUTPUT d3d9trace.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
             DEPENDS
                 d3d9trace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
-                ${CMAKE_SOURCE_DIR}/specs/dxva2.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d9.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d9types.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d9caps.py
+                ${PROJECT_SOURCE_DIR}/specs/dxva2.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (d3d9trace MODULE
             d3d9.def
@@ -197,23 +197,23 @@ if (WIN32)
     if (DirectX_D3D11_4_INCLUDE_FOUND)
         add_custom_command (
             OUTPUT dxgitrace.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
             DEPENDS
                 dxgitrace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d12.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d12sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
-                ${CMAKE_SOURCE_DIR}/specs/dcomp.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d12.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d12sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11.py
+                ${PROJECT_SOURCE_DIR}/specs/dcomp.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${PROJECT_SOURCE_DIR}/specs/dxgi.py
+                ${PROJECT_SOURCE_DIR}/specs/d3d9.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (dxgitrace SHARED
             dxgitrace.def
@@ -321,17 +321,17 @@ if (WIN32)
     if (DirectX_D2D1_1_INCLUDE_FOUND)
         add_custom_command (
             OUTPUT d2d1trace.cpp
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
             DEPENDS
                 d2d1trace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
-                ${CMAKE_SOURCE_DIR}/specs/dwrite.py
-                ${CMAKE_SOURCE_DIR}/specs/dcommon.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/specs/d2d1.py
+                ${PROJECT_SOURCE_DIR}/specs/dwrite.py
+                ${PROJECT_SOURCE_DIR}/specs/dcommon.py
+                ${PROJECT_SOURCE_DIR}/specs/dxgi.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace PRIVATE
@@ -348,20 +348,20 @@ if (WIN32)
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS
                 wgltrace.py
                 gltrace.py
                 dlltrace.py
                 trace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/wglapi.py
-                ${CMAKE_SOURCE_DIR}/specs/wglenum.py
-                ${CMAKE_SOURCE_DIR}/specs/glapi.py
-                ${CMAKE_SOURCE_DIR}/specs/glparams.py
-                ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+                ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+                ${PROJECT_SOURCE_DIR}/specs/wglapi.py
+                ${PROJECT_SOURCE_DIR}/specs/wglenum.py
+                ${PROJECT_SOURCE_DIR}/specs/glapi.py
+                ${PROJECT_SOURCE_DIR}/specs/glparams.py
+                ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+                ${PROJECT_SOURCE_DIR}/specs/winapi.py
+                ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
@@ -383,17 +383,17 @@ elseif (APPLE)
     # OpenGL framework
     add_custom_command (
         OUTPUT cgltrace.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
         DEPENDS
             cgltrace.py
             gltrace.py
             trace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/cglapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glparams.py
-            ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+            ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+            ${PROJECT_SOURCE_DIR}/specs/cglapi.py
+            ${PROJECT_SOURCE_DIR}/specs/glapi.py
+            ${PROJECT_SOURCE_DIR}/specs/glparams.py
+            ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+            ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
 
     add_library (cgltrace SHARED
@@ -431,17 +431,17 @@ elseif (X11_FOUND)
     # libGL.so
     add_custom_command (
         OUTPUT glxtrace.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
         DEPENDS
             glxtrace.py
             gltrace.py
             trace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/glxapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glparams.py
-            ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+            ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+            ${PROJECT_SOURCE_DIR}/specs/glxapi.py
+            ${PROJECT_SOURCE_DIR}/specs/glapi.py
+            ${PROJECT_SOURCE_DIR}/specs/glparams.py
+            ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+            ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
 
     add_library (glxtrace SHARED
@@ -473,18 +473,18 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     # libEGL.so/libGL.so
     add_custom_command (
         OUTPUT egltrace.cpp
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
         DEPENDS
             egltrace.py
             gltrace.py
             trace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/eglapi.py
-            ${CMAKE_SOURCE_DIR}/specs/eglenum.py
-            ${CMAKE_SOURCE_DIR}/specs/glapi.py
-            ${CMAKE_SOURCE_DIR}/specs/glparams.py
-            ${CMAKE_SOURCE_DIR}/specs/gltypes.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+            ${PROJECT_SOURCE_DIR}/dispatch/dispatch.py
+            ${PROJECT_SOURCE_DIR}/specs/eglapi.py
+            ${PROJECT_SOURCE_DIR}/specs/eglenum.py
+            ${PROJECT_SOURCE_DIR}/specs/glapi.py
+            ${PROJECT_SOURCE_DIR}/specs/glparams.py
+            ${PROJECT_SOURCE_DIR}/specs/gltypes.py
+            ${PROJECT_SOURCE_DIR}/specs/stdapi.py
     )
 
     add_library (egltrace SHARED

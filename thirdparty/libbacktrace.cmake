@@ -170,7 +170,7 @@ add_test (
     NAME libbacktrace_btest
     COMMAND
         # Workaround https://gitlab.kitware.com/cmake/cmake/-/issues/18863
-        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/support/libbacktrace/closefds.py
+        Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/support/libbacktrace/closefds.py
         $<TARGET_FILE:btest>
 )
 

@@ -1,6 +1,6 @@
 # CMake will throw a cryptic message if an user unwittingly invokes it from
 # this directory.
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     message (FATAL_ERROR
         "qapitrace must be built from the top source directory.\n"
         "Read docs/INSTALL.markdown for detailed build instructions."
@@ -124,7 +124,7 @@ target_link_libraries (qapitrace PRIVATE
     qubjson
     image
     common
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
 )
 
 if (WIN32 AND NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))

@@ -153,7 +153,7 @@ list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include (ConvenienceLibrary)
 include (InstallPDB)
 
-find_package (Python3 REQUIRED)
+find_package (Python3 REQUIRED COMPONENTS Interpreter)
 
 find_package (Threads)
 
@@ -496,7 +496,7 @@ endif ()
 
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 if (BUILD_TESTING)
     enable_testing ()
@@ -662,12 +662,12 @@ endif ()
 find_package (Git)
 add_custom_target (version
     BYPRODUCTS
-        ${CMAKE_BINARY_DIR}/version.h
+        ${PROJECT_BINARY_DIR}/version.h
     COMMAND
-        ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/version.h.in
-                         -D DST=${CMAKE_BINARY_DIR}/version.h
+        ${CMAKE_COMMAND} -D SRC=${PROJECT_SOURCE_DIR}/version.h.in
+                         -D DST=${PROJECT_BINARY_DIR}/version.h
                          -D GIT_EXECUTABLE="${GIT_EXECUTABLE}"
-                         -P ${CMAKE_SOURCE_DIR}/cmake/GenerateVersion.cmake
+                         -P ${PROJECT_SOURCE_DIR}/cmake/GenerateVersion.cmake
 )
 
 ##############################################################################
