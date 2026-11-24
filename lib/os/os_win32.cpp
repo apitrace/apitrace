@@ -294,6 +294,62 @@ breakpoint(void)
 static PVOID prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
+
+/*
+ * Log the module and offset of an address, so that it can be resolved
+ * afterwards against the matching PDB.
+ *
+ * This is purely informative, and must not fail or allocate memory.
+ */
+static void
+logAddress(const char *what, const void *addr)
+{
+    HMODULE hModule = NULL;
+    char szModule[MAX_PATH] = "";
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCSTR)addr,
+                           &hModule) &&
+        hModule &&
+        GetModuleFileNameA(hModule, szModule, sizeof szModule)) {
+        log("apitrace:   %s = %p (%s+0x%lx)\n",
+            what, addr, szModule,
+            (unsigned long)((const char *)addr - (const char *)hModule));
+    } else {
+        log("apitrace:   %s = %p (unknown module)\n", what, addr);
+    }
+}
+
+
+static void
+logException(PEXCEPTION_POINTERS pExceptionInfo)
+{
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+
+    log("apitrace:   thread id = %lu\n", GetCurrentThreadId());
+
+    logAddress("exception address", pExceptionRecord->ExceptionAddress);
+
+    if (pExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
+        pExceptionRecord->NumberParameters >= 2) {
+        // http://msdn.microsoft.com/en-us/library/windows/desktop/aa363082.aspx
+        ULONG_PTR op = pExceptionRecord->ExceptionInformation[0];
+        log("apitrace:   access violation %s address %p\n",
+            op == 0 ? "reading" : op == 1 ? "writing" : "executing",
+            (void *)pExceptionRecord->ExceptionInformation[1]);
+    }
+
+    PCONTEXT pContext = pExceptionInfo->ContextRecord;
+    if (pContext) {
+#if defined(_M_X64) || defined(__x86_64__)
+        log("apitrace:   stack pointer = %p\n", (const void *)pContext->Rsp);
+#elif defined(_M_IX86) || defined(__i386__)
+        log("apitrace:   stack pointer = %p\n", (const void *)pContext->Esp);
+#endif
+    }
+}
+
+
 static LONG CALLBACK
 unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
@@ -355,6 +411,11 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
     }
 
     log("apitrace: warning: caught exception 0x%08lx\n", pExceptionRecord->ExceptionCode);
+
+    // Don't risk overflowing the stack any further.
+    if (ExceptionCode != EXCEPTION_STACK_OVERFLOW) {
+        logException(pExceptionInfo);
+    }
 
     static int recursion_count = 0;
     if (recursion_count) {
