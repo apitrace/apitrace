@@ -3,3 +3,6 @@ glfw
 tri_glsl
 map_buffer
 rtld_local
+eglimage
+msaa_fbo
+texture_readback

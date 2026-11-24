@@ -147,8 +147,7 @@ install_pdb (qapitrace TYPE BIN)
 # - http://doc.qt.io/qt-5/windows-deployment.html
 #
 # XXX: windeployqt can fail if there's weird stuff in the Path env var, so we
-# invoke it with a sanitized Path, via `cmake -E env` that was introduced in
-# CMake 3.1.
+# invoke it with a sanitized Path, via `cmake -E env`.
 if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
     # http://stackoverflow.com/a/24676432
     if (TARGET Qt6::qmake)

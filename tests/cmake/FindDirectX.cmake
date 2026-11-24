@@ -124,18 +124,6 @@ if (WIN32)
     # MinGW lacks libd3d10.a and libd3d10_1.a
     if (MINGW)
 
-        # Find dlltool
-        if (CMAKE_VERSION VERSION_LESS 3.16)
-            get_filename_component (GCC_NAME ${CMAKE_C_COMPILER} NAME)
-            string (REGEX REPLACE [[gcc(-(posix|win32))?]] dlltool DLLTOOL_NAME ${GCC_NAME})
-            find_program (CMAKE_DLLTOOL NAMES ${DLLTOOL_NAME})
-            if (CMAKE_DLLTOOL)
-                message (STATUS "Found dlltool: ${CMAKE_DLLTOOL}")
-            else ()
-                message (SEND_ERROR "dlltool not found")
-            endif ()
-        endif ()
-
         macro (add_dxsdk_implib target def)
             set (MGWHELP_IMPLIB ${CMAKE_BINARY_DIR}/lib${target}.a)
             add_custom_command (
