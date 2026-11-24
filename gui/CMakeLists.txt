@@ -7,7 +7,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     )
 endif ()
 
-add_definitions (-DQT_FORCE_ASSERTS -DQT_DISABLE_DEPRECATED_BEFORE=0x050F00)
+add_compile_definitions (QT_FORCE_ASSERTS QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
 # Qt6 debug builds dynamic_cast QObjects that receive private slot calls
 # (QtPrivate::assertObjectType), which faults on objects whose vftables were
@@ -130,7 +130,7 @@ if (WIN32 AND NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     if (MSVC)
         # When the Windows subsystem is chosen by default MSVC expects WinMain()
         # entry point, but we rather use plain old main() everywhere.
-        set_target_properties (qapitrace PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
+        target_link_options (qapitrace PRIVATE /ENTRY:mainCRTStartup)
     endif ()
 endif ()
 

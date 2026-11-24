@@ -3,7 +3,7 @@
 
 
 if (ENABLE_STATIC_LIBGCC)
-    add_linker_flags (-static-libgcc)
+    add_link_options (-static-libgcc)
 endif ()
 if (ENABLE_STATIC_LIBSTDCXX)
     # Unfortunately for a long time static libstdcxx didn't built with -fPIC
@@ -21,7 +21,7 @@ if (ENABLE_STATIC_LIBSTDCXX)
     unset (CMAKE_REQUIRED_LIBRARIES)
     unset (CMAKE_REQUIRED_FLAGS)
     if (STATIC_LIBSTDCXX_PIC)
-        add_linker_flags (-static-libstdc++)
+        add_link_options (-static-libstdc++)
     endif ()
 endif ()
 
@@ -57,14 +57,12 @@ if (NOT WIN32 AND NOT APPLE)
     # Prevent symbol relocations internal to our wrapper library to be
     # overwritten by the application.  And fail if there are missing
     # symbols.
-    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic -Wl,-Bsymbolic-functions")
-    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-Bsymbolic -Wl,-Bsymbolic-functions")
+    add_link_options (-Wl,-Bsymbolic -Wl,-Bsymbolic-functions)
 
     # Fail if there are missing symbols, except when using Address Sanitizer
     # since libasan symbols are supposed to be preloaded.
     if (NOT ENABLE_ASAN)
-        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
-        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,defs")
+        add_link_options (-Wl,-z,defs)
     endif ()
 endif ()
 
@@ -101,8 +99,7 @@ target_link_libraries (gltrace_common
 if (WIN32)
     if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
         # Silence warnings about @nn suffix mismatch
-        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
-        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
+        add_link_options (-Wl,--enable-stdcall-fixup)
     endif ()
 
     # ddraw.dll
@@ -422,8 +419,6 @@ elseif (APPLE)
         OUTPUT_NAME "OpenGL"
         # Mac framework
         FRAMEWORK true
-        # Specificy the version and reexport GLU symbols
-        LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0 -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib"
     )
 
     target_link_libraries (cgltrace
@@ -508,7 +503,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         PREFIX ""
     )
 
-    target_compile_definitions (egltrace PRIVATE -DEGLTRACE=1)
+    target_compile_definitions (egltrace PRIVATE EGLTRACE=1)
 
     target_link_libraries (egltrace
         gltrace_common

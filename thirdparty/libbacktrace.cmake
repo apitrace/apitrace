@@ -50,14 +50,6 @@ endif ()
 
 include (CheckCCompilerFlag)
 check_c_compiler_flag ("-funwind-tables" FLAG_UNWIND_TABLES)
-if (FLAG_UNWIND_TABLES)
-    add_definitions ("-funwind-tables")
-endif ()
-
-# Adjust warnings
-if (NOT MSVC)
-    add_definitions ("-Wno-switch -Wno-enum-compare")
-endif ()
 
 check_c_source_compiles (
     "int i;
@@ -113,7 +105,6 @@ else ()
     set (BACKTRACE_USES_MALLOC 0)
 endif ()
 
-add_definitions (-D_GNU_SOURCE)
 set (CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS} -D_GNU_SOURCE)
 check_symbol_exists (dl_iterate_phdr link.h HAVE_DL_ITERATE_PHDR)
 
@@ -156,10 +147,22 @@ target_include_directories (backtrace
 )
 target_link_libraries (backtrace PUBLIC ZLIB::ZLIB ${CMAKE_DL_LIBS})
 
+# Settings for the library and its tests
+function (backtrace_target_settings target)
+    target_compile_definitions (${target} PRIVATE _GNU_SOURCE)
+    if (FLAG_UNWIND_TABLES)
+        target_compile_options (${target} PRIVATE -funwind-tables)
+    endif ()
+    # Adjust warnings
+    if (NOT MSVC)
+        target_compile_options (${target} PRIVATE -Wno-switch -Wno-enum-compare)
+    endif ()
+endfunction ()
+backtrace_target_settings (backtrace)
+
 add_executable (btest libbacktrace/btest.c)
-set_target_properties (btest PROPERTIES
-    COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}"
-    )
+backtrace_target_settings (btest)
+target_compile_options (btest PRIVATE -g)
 target_include_directories (btest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
 target_link_libraries (btest backtrace)
 add_dependencies (check btest)
@@ -172,9 +175,8 @@ add_test (
 )
 
 add_executable (stest libbacktrace/stest.c)
-set_target_properties (stest PROPERTIES
-    COMPILE_FLAGS "${CMAKE_C_FLAGS_DEBUG}"
-    )
+backtrace_target_settings (stest)
+target_compile_options (stest PRIVATE -g)
 target_include_directories (stest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
 target_link_libraries (stest backtrace)
 add_dependencies (check stest)

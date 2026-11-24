@@ -143,8 +143,10 @@ if (WIN32 OR APPLE OR X11_FOUND)
             )
 
             # Bundle Info.plist
+            target_link_options (glretrace PRIVATE
+                "SHELL:-sectcreate __TEXT __info_plist ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+            )
             set_target_properties (glretrace PROPERTIES
-                LINK_FLAGS "-sectcreate __TEXT __info_plist ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
                 LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
             )
         else ()
@@ -191,7 +193,7 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
         glproc_egl.cpp
     )
 
-    target_compile_definitions (eglretrace PRIVATE -DHAVE_WAFFLE)
+    target_compile_definitions (eglretrace PRIVATE HAVE_WAFFLE)
 
     add_dependencies (eglretrace glproc)
 

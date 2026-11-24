@@ -73,19 +73,6 @@ endif ()
 ##############################################################################
 # Set global build options
 
-macro (add_compiler_flags)
-    string (REPLACE ";" " " _FLAGS "${ARGV}")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_FLAGS}")
-endmacro ()
-
-macro (add_linker_flags)
-    string (REPLACE ";" " " _FLAGS "${ARGV}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${_FLAGS}")
-    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${_FLAGS}")
-    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
-endmacro ()
-
 # Use static runtime
 # https://cmake.org/cmake/help/v3.15/variable/CMAKE_MSVC_RUNTIME_LIBRARY.html
 if (MSVC)
@@ -97,20 +84,20 @@ if (ENABLE_ASAN)
     if (MSVC)
         # https://docs.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-160
         # https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
-        add_compiler_flags (/fsanitize=address)
+        add_compile_options (/fsanitize=address)
         # TODO: Replace /incremental with /incremental:no
     else ()
-        add_compiler_flags (-fsanitize=address)
-        add_linker_flags (-fsanitize=address)
+        add_compile_options (-fsanitize=address)
+        add_link_options (-fsanitize=address)
     endif ()
 endif ()
 
 # Enable stack protection
 if (ENABLE_SSP)
     if (MSVC)
-        add_compiler_flags (/GS)
+        add_compile_options (/GS)
     else ()
-        add_compiler_flags (-fstack-protector-all)
+        add_compile_options (-fstack-protector-all)
         # MinGW doesn't link against libssp automatically, and furthermore
         # we want static linking.
         if (MINGW)
@@ -118,7 +105,7 @@ if (ENABLE_SSP)
             set (CMAKE_C_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_C_STANDARD_LIBRARIES}")
             set (CMAKE_CXX_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_CXX_STANDARD_LIBRARIES}")
         else ()
-            add_linker_flags (-fstack-protector-all)
+            add_link_options (-fstack-protector-all)
         endif ()
     endif ()
 endif ()
@@ -173,7 +160,7 @@ find_package (Threads)
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ENABLE_STATIC_EXE)
     find_package (procps)
     if (PROCPS_FOUND)
-        add_definitions (-DHAVE_READPROC_H)
+        add_compile_definitions (HAVE_READPROC_H)
     endif ()
 endif ()
 
@@ -207,7 +194,7 @@ endif ()
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
     # Windows 8
-    add_definitions (-D_WIN32_WINNT=0x0602 -DWINVER=0x0602)
+    add_compile_definitions (_WIN32_WINNT=0x0602 WINVER=0x0602)
 
     find_package (DirectX)
 
@@ -243,7 +230,7 @@ if (WIN32)
     set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
-    add_definitions (-DGL_SILENCE_DEPRECATION)
+    add_compile_definitions (GL_SILENCE_DEPRECATION)
 elseif (ENABLE_X11)
     find_package (X11)
 
@@ -264,7 +251,7 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
 endif ()
 
 if (ENABLE_EGL AND NOT ENABLE_X11)
-    add_definitions (-DEGL_NO_X11)
+    add_compile_definitions (EGL_NO_X11)
 endif ()
 
 
@@ -272,87 +259,97 @@ endif ()
 # Set project build options
 
 set (CMAKE_C_STANDARD 99)
-set (CXX_STANDARD_REQUIRED ON)
+set (CMAKE_C_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_STANDARD 17)
-set (CXX_STANDARD_REQUIRED ON)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include (CheckCXXCompilerFlag)
 include (CheckIncludeFileCXX)
 
-add_definitions (
-    -D__STDC_LIMIT_MACROS
-    -D__STDC_FORMAT_MACROS
+# Project-wide compatibility headers
+add_library (compat INTERFACE)
+target_include_directories (compat INTERFACE ${PROJECT_SOURCE_DIR}/compat)
+
+add_compile_definitions (
+    __STDC_LIMIT_MACROS
+    __STDC_FORMAT_MACROS
 )
 
 if (NOT WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
-        add_compiler_flags (-fvisibility=hidden)
+        add_compile_options (-fvisibility=hidden)
     endif ()
 endif ()
 
 if (MSVC)
+    # NOTE: These two intentionally still edit CMAKE_CXX_FLAGS instead of using
+    # add_compile_options: CMake has no abstraction for RTTI/exceptions, and the
+    # defaults (/GR, /EHsc) can only be removed by editing the variable, as
+    # otherwise cl.exe warns about (D9025) overriding them.  gui/ also relies
+    # on being able to undo /GR- in CMAKE_CXX_FLAGS (Qt requires RTTI).
+    #
     # No RTTI required
     string (REGEX REPLACE "/GR *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
     # Disable C++ exceptions
-    add_definitions (-D_HAS_EXCEPTIONS=0)
+    add_compile_definitions (_HAS_EXCEPTIONS=0)
     string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
 
     # Avoid error LNK1322: cannot avoid potential ARM hazard
     if (NOT HAVE_X86)
-        add_compiler_flags (/Gy)
+        add_compile_options (/Gy)
     endif ()
 
     # Enable math constants defines
-    add_definitions (-D_USE_MATH_DEFINES)
+    add_compile_definitions (_USE_MATH_DEFINES)
 
     # No min/max macros
-    add_definitions (-DNOMINMAX)
+    add_compile_definitions (NOMINMAX)
 
     # Adjust warnings
-    add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
-    add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-    add_compiler_flags (-W3)
+    add_compile_definitions (_CRT_SECURE_NO_DEPRECATE _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
+    add_compile_definitions (_SCL_SECURE_NO_DEPRECATE _SCL_SECURE_NO_WARNINGS)
+    add_compile_options (-W3)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
-    add_compiler_flags (-wd4018) # signed/unsigned mismatch
-    add_compiler_flags (-wd4063) # not a valid value for switch of enum
-    add_compiler_flags (-wd4100) # unreferenced formal parameter
-    add_compiler_flags (-wd4127) # conditional expression is constant
-    add_compiler_flags (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
-    add_compiler_flags (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
-    add_compiler_flags (-wd4505) # unreferenced local function has been removed
-    add_compiler_flags (-wd4512) # assignment operator could not be generated
-    add_compiler_flags (-wd4577) # 'noexcept' used with no exception handling mode specified
-    add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
+    add_compile_options (-wd4018) # signed/unsigned mismatch
+    add_compile_options (-wd4063) # not a valid value for switch of enum
+    add_compile_options (-wd4100) # unreferenced formal parameter
+    add_compile_options (-wd4127) # conditional expression is constant
+    add_compile_options (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
+    add_compile_options (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
+    add_compile_options (-wd4505) # unreferenced local function has been removed
+    add_compile_options (-wd4512) # assignment operator could not be generated
+    add_compile_options (-wd4577) # 'noexcept' used with no exception handling mode specified
+    add_compile_options (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
 else ()
     # Adjust warnings
-    add_compiler_flags (-Wall)
+    add_compile_options (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
-    add_compiler_flags (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
-    add_compiler_flags (-Wno-address) # the address of ‘struct::member’ will never be NULL
+    add_compile_options (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+    add_compile_options (-Wno-address) # the address of ‘struct::member’ will never be NULL
 
     # Disable strict aliasing assumptions.  We generate a lot of C++ code, and
     # it's not always easy to guarantee or spot when strict aliasing
     # assumptions are violated.  Above all, the benefit is not worth the risk.
-    add_compiler_flags (-fno-strict-aliasing)
+    add_compile_options (-fno-strict-aliasing)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-        add_compiler_flags (-Wno-pointer-bool-conversion)
+        add_compile_options (-Wno-pointer-bool-conversion)
     endif ()
 
     # No RTTI required
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 
     # Disable C++ exceptions
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+    add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
     if (HAVE_X86)
         # Enable SSE2 intrinsics on x86
         if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-            add_compiler_flags (-msse2 -mfpmath=sse)
+            add_compile_options (-msse2 -mfpmath=sse)
 
             # And tell GCC to assume 4 bytes alignment, many Linux/Windows
             # applications only guarantee that, but not on systems where ABI
@@ -360,22 +357,22 @@ else ()
             #
             # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
             if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-                add_compiler_flags (-mstackrealign)
+                add_compile_options (-mstackrealign)
             else ()
-                add_compiler_flags (-mincoming-stack-boundary=2)
+                add_compile_options (-mincoming-stack-boundary=2)
             endif ()
         endif ()
 
         if (ENABLE_SSE42)
             if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-                add_compiler_flags (-msse4.2)
+                add_compile_options (-msse4.2)
             endif ()
-            add_definitions (-DHAVE_SSE42)
+            add_compile_definitions (HAVE_SSE42)
         endif ()
     endif ()
 
     # Be nice to Eclipse
-    add_compiler_flags (-fmessage-length=0)
+    add_compile_options (-fmessage-length=0)
 endif ()
 
 if (APPLE)
@@ -414,24 +411,18 @@ if (MINGW)
 
     # Avoid depending on MinGW runtime DLLs
     if (NOT ENABLE_ASAN)
-        add_linker_flags (-static -static-libgcc -static-libstdc++)
+        add_link_options (-static -static-libgcc -static-libstdc++)
     endif ()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         if (ENABLE_LLVM_PDB)
             # https://github.com/mstorsjo/llvm-mingw#pdb-support
-            set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gcodeview")
-            set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gcodeview")
-            set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gcodeview")
-            set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gcodeview")
-            add_linker_flags (-Wl,-pdb=)
+            add_compile_options ($<$<CONFIG:Debug,RelWithDebInfo>:-gcodeview>)
+            add_link_options (-Wl,-pdb=)
         else ()
             # Generate DWARF aranges debugging information.
             # https://github.com/jrfonseca/drmingw/issues/42
-            set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-aranges")
-            set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
-            set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-aranges")
-            set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gdwarf-aranges")
+            add_compile_options ($<$<CONFIG:Debug,RelWithDebInfo>:-gdwarf-aranges>)
         endif ()
     endif ()
 
@@ -439,31 +430,34 @@ if (MINGW)
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wrl)
 
 elseif (ENABLE_STATIC_EXE)
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    # Executables only: the wrappers (shared libraries) decide on their own
+    # whether linking libstdc++ statically is safe.  See wrappers/CMakeLists.txt
+    add_link_options ($<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:-static-libgcc>
+                      $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:-static-libstdc++>)
 endif ()
 
 if (ENABLE_FRAME_POINTER)
     # disable frame pointer omission
     if (MSVC)
-        add_compiler_flags (/Oy-)
+        add_compile_options (/Oy-)
     else ()
-        add_compiler_flags (-fno-omit-frame-pointer)
+        add_compile_options (-fno-omit-frame-pointer)
     endif ()
 endif ()
 
 if (WIN32)
     # Increase number of sections in obj files
     if (MSVC)
-        add_compiler_flags (-bigobj)
+        add_compile_options (-bigobj)
     elseif (NOT CMAKE_CXX_COMPILER_ID MATCHES Clang)
-        add_compiler_flags (-Wa,-mbig-obj)
+        add_compile_options (-Wa,-mbig-obj)
     endif ()
 
     # Enable Data Execution Prevention and Address Space Layout Randomization
     if (MSVC)
-        add_linker_flags (/NXCOMPAT /DYNAMICBASE)
+        add_link_options (/NXCOMPAT /DYNAMICBASE)
     else ()
-        add_linker_flags (-Wl,--nxcompat)
+        add_link_options (-Wl,--nxcompat)
 
         # `--dynamicbase` causes ld segmentation fault with Ubuntu 20.04 MinGW
         # cross compilation toolchain, unless it's paired with
@@ -472,7 +466,7 @@ if (WIN32)
         check_cxx_source_compiles("int main() { return 0; }" HAVE_DYNAMICBASE)
         unset (CMAKE_REQUIRED_LINK_OPTIONS)
         if (HAVE_DYNAMICBASE)
-            add_linker_flags (-Wl,--dynamicbase)
+            add_link_options (-Wl,--dynamicbase)
         endif ()
     endif ()
 
@@ -480,22 +474,22 @@ if (WIN32)
     # where available (3GB on 32-bits Windows with 4GT, 4GB on 64-bits Windows)
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         if (MSVC)
-            add_linker_flags (/LARGEADDRESSAWARE)
+            add_link_options (/LARGEADDRESSAWARE)
         else ()
-            add_linker_flags (-Wl,--large-address-aware)
+            add_link_options (-Wl,--large-address-aware)
         endif ()
     endif ()
 endif ()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # For RTLD_DEFAULT and RTLD_NEXT
-    add_definitions (-D_GNU_SOURCE)
+    add_compile_definitions (_GNU_SOURCE)
 endif ()
 
 include (TestBigEndian)
 test_big_endian (HAVE_BIGENDIAN)
 if (HAVE_BIGENDIAN)
-    add_definitions (-DHAVE_BIGENDIAN)
+    add_compile_definitions (HAVE_BIGENDIAN)
 endif ()
 
 # Put all executables into the same top level build directory, regardless of
