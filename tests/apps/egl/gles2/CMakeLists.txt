@@ -51,6 +51,7 @@ if (TARGET eglretrace AND CMAKE_BUILD_TYPE STREQUAL "Debug")
                 --app $<TARGET_FILE:${api}_texture_readback>
                 --layer ${layer})
         set_tests_properties (texture_readback_fault_${layer} PROPERTIES
-            SKIP_RETURN_CODE 125 TIMEOUT 60)
+            SKIP_RETURN_CODE 125 TIMEOUT 60
+            ENVIRONMENT "${TEST_ENVIRONMENT}")
     endforeach ()
 endif ()

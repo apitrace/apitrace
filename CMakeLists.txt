@@ -9,6 +9,12 @@ endif ()
 
 project (apitrace)
 
+# Needed for the ENVIRONMENT_MODIFICATION test property, used to make Qt DLLs
+# findable by the tests.
+if (WIN32 AND CMAKE_VERSION VERSION_LESS 3.22)
+    message (FATAL_ERROR "CMake 3.22 or later required on Windows")
+endif ()
+
 include(GNUInstallDirs)
 
 ##############################################################################

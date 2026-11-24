@@ -11,7 +11,7 @@ Requirements common for all platforms:
 
   * Python Image Library
 
-* CMake version 3.15 or newer
+* CMake version 3.15 or newer (3.22 or newer on Windows)
 
 Optional dependencies:
 

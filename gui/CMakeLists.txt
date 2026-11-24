@@ -24,6 +24,22 @@ target_link_libraries (qubjson Qt::Widgets)
 if (BUILD_TESTING)
     add_gtest (qubjson_test qubjson_test.cpp)
     target_link_libraries (qubjson_test qubjson)
+
+    if (WIN32)
+        # Make the Qt DLLs findable when running the test directly via ctest,
+        # without requiring the user to tweak Path beforehand.
+        if (TARGET Qt6::qmake)
+            get_target_property (_qmake Qt6::qmake IMPORTED_LOCATION)
+        else ()
+            get_target_property (_qmake Qt5::qmake IMPORTED_LOCATION)
+        endif ()
+        if (_qmake)
+            get_filename_component (_qt_bin_dir "${_qmake}" DIRECTORY)
+            set_tests_properties (qubjson_test PROPERTIES
+                ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${_qt_bin_dir}"
+            )
+        endif ()
+    endif ()
 endif ()
 
 set(qapitrace_SRCS

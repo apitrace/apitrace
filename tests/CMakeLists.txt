@@ -27,6 +27,16 @@ endif ()
 
 list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
+# Optional OpenGL implementation to be used by the tracer and glretrace
+# instead of the system's one (e.g., Mesa's llvmpipe opengl32.dll on Windows).
+set (TRACE_LIBGL "" CACHE FILEPATH "OpenGL library to use when tracing/retracing (sets TRACE_LIBGL for tests)")
+
+# Environment variables to be set on every test that traces/retraces.
+set (TEST_ENVIRONMENT)
+if (TRACE_LIBGL)
+    list (APPEND TEST_ENVIRONMENT "TRACE_LIBGL=${TRACE_LIBGL}")
+endif ()
+
 find_package (Python3 REQUIRED)
 
 if (WIN32)

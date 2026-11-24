@@ -86,8 +86,6 @@ if ($arch -eq 'x86') {
 
         $qtToolchainPath = (Resolve-Path $qtToolchainPath).ProviderPath
         $qtBinPath = "$qtToolchainPath\bin"
-        Write-Host "Adding $qtBinPath to environment path."
-        $Env:Path = "$qtBinPath;$Env:Path"
 
         $gui = 'ON'
     } else {
@@ -112,7 +110,8 @@ if ($arch -eq 'x86') {
 #
 # It can also be installed system-wide as the software OpenGL ICD (MSOGL), see
 # https://docs.mesa3d.org/drivers/llvmpipe.html#windows
-if ($arch -eq 'x86' -and !$Env:TRACE_LIBGL) {
+$traceLibGl = $Env:TRACE_LIBGL
+if ($arch -eq 'x86' -and !$traceLibGl) {
     $mesaVersion = '26.3.1'
     $mesaDigests = @{
         x64 = '08145a3717e0c1be0d97b74b53070f14eb39cb2f7de22f84fe20d1a581299c12'
@@ -142,8 +141,14 @@ if ($arch -eq 'x86' -and !$Env:TRACE_LIBGL) {
         Exec { 7z x -y "-o$mesaDir" $mesaArchivePath opengl32.dll | Out-Null }
     }
 
-    $Env:TRACE_LIBGL = (Resolve-Path "$mesaDir\opengl32.dll").ProviderPath
-    Write-Host "Setting TRACE_LIBGL to $Env:TRACE_LIBGL."
+    $traceLibGl = (Resolve-Path "$mesaDir\opengl32.dll").ProviderPath
+}
+$traceLibGlArgs = @()
+if ($traceLibGl) {
+    # Passed to CMake, which propagates it to the tests' environment, so that
+    # ctest can also be run directly.
+    Write-Host "Using TRACE_LIBGL=$traceLibGl."
+    $traceLibGlArgs += "-DTRACE_LIBGL=$traceLibGl"
 }
 
 # https://github.com/microsoft/vswhere/wiki/Find-VC#powershell
@@ -175,7 +180,7 @@ if (!$buildRoot) {
     }
 }
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_QT6=1  -DENABLE_TESTS=1}
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_QT6=1  -DENABLE_TESTS=1 @traceLibGlArgs}
 
 if (!$Env:CTEST_PARALLEL_LEVEL) {
     $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount
