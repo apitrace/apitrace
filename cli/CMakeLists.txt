@@ -3,22 +3,16 @@
 # TODO: Use the same directory layout, for both build and install directories,
 # so that binaries can find each other using just relative paths.
 #
-add_definitions(
-    -DAPITRACE_PROGRAMS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/bin"
-    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
-    -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
+set (APITRACE_DEFINITIONS
+    APITRACE_PROGRAMS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/bin"
+    APITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
+    APITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
 if (WIN32)
-    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="python")
+    list (APPEND APITRACE_DEFINITIONS APITRACE_PYTHON_EXECUTABLE="python")
 else ()
-    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
+    list (APPEND APITRACE_DEFINITIONS APITRACE_PYTHON_EXECUTABLE="${Python3_EXECUTABLE}")
 endif ()
-
-include_directories (
-    ${CMAKE_SOURCE_DIR}/lib/highlight
-    ${CMAKE_SOURCE_DIR}/thirdparty
-    ${CMAKE_BINARY_DIR}
-)
 
 add_executable (apitrace
     cli_main.cpp
@@ -40,7 +34,14 @@ add_executable (apitrace
     cli_resources.cpp
 )
 
-target_link_libraries (apitrace
+target_compile_definitions (apitrace PRIVATE ${APITRACE_DEFINITIONS})
+
+target_include_directories (apitrace PRIVATE
+    ${PROJECT_SOURCE_DIR}/thirdparty
+    ${PROJECT_BINARY_DIR} # for version.h
+)
+
+target_link_libraries (apitrace PRIVATE
     common
     PkgConfig::BROTLIDEC
     PkgConfig::BROTLIENC
@@ -52,9 +53,8 @@ add_dependencies(apitrace version)
 
 if (NOT CMAKE_CROSSCOMPILING)
     # On debug builds tell where the source is so that scripts can be found
-    # http://www.cmake.org/cmake/help/v3.0/policy/CMP0043.html
-    set_target_properties (apitrace PROPERTIES
-        COMPILE_DEFINITIONS $<$<CONFIG:Debug>:APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}">
+    target_compile_definitions (apitrace PRIVATE
+        $<$<CONFIG:Debug>:APITRACE_SOURCE_DIR="${PROJECT_SOURCE_DIR}">
     )
 endif ()
 

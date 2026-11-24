@@ -7,7 +7,11 @@ add_library (image STATIC
     image_md5.cpp
 )
 
-target_link_libraries (image
+target_include_directories (image
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries (image PUBLIC
     md5
     PNG::PNG
 )

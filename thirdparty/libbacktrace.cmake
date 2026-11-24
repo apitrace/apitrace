@@ -164,7 +164,7 @@ add_executable (btest libbacktrace/btest.c)
 backtrace_target_settings (btest)
 target_compile_options (btest PRIVATE -g)
 target_include_directories (btest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
-target_link_libraries (btest backtrace)
+target_link_libraries (btest PRIVATE backtrace)
 add_dependencies (check btest)
 add_test (
     NAME libbacktrace_btest
@@ -178,7 +178,7 @@ add_executable (stest libbacktrace/stest.c)
 backtrace_target_settings (stest)
 target_compile_options (stest PRIVATE -g)
 target_include_directories (stest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/support/libbacktrace)
-target_link_libraries (stest backtrace)
+target_link_libraries (stest PRIVATE backtrace)
 add_dependencies (check stest)
 add_test (NAME libbacktrace_stest COMMAND stest)
 

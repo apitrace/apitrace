@@ -1,17 +1,3 @@
-include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/cli
-    ${CMAKE_SOURCE_DIR}/lib/highlight
-    ${CMAKE_SOURCE_DIR}/helpers
-    ${CMAKE_SOURCE_DIR}/retrace
-    ${CMAKE_BINARY_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/lib/image
-    ${CMAKE_SOURCE_DIR}/lib/ubjson
-    ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
-    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
-)
-
 add_executable(gltrim
    ft_dependecyobject.cpp
    ft_frametrimmer.cpp
@@ -20,10 +6,15 @@ add_executable(gltrim
    ft_opengl.cpp
    ft_tracecall.cpp)
 
-target_link_libraries (gltrim
+target_include_directories (gltrim PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/cli
+)
+
+target_link_libraries (gltrim PRIVATE
     retrace_common
     glretrace_common
-    )
+)
 
 install (TARGETS gltrim)
 

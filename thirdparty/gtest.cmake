@@ -9,6 +9,6 @@ target_include_directories (gtest
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gtest/googletest
 )
 
-target_link_libraries (gtest PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (gtest PUBLIC Threads::Threads)
 
 add_library (GTest::GTest ALIAS gtest)

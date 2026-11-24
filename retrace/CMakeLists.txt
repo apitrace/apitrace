@@ -1,20 +1,11 @@
 ##############################################################################
 # API retracers
 
-include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_BINARY_DIR} # for version.h
-    ${CMAKE_SOURCE_DIR}/lib/highlight
-    ${CMAKE_SOURCE_DIR}/helpers
-    ${CMAKE_BINARY_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/lib/image
-    ${CMAKE_SOURCE_DIR}/lib/ubjson
-    ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
-    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
-)
-
-add_definitions (-DRETRACE)
+# XXX: This is deliberately directory-scoped rather than PUBLIC on
+# retrace_common: dispatch/glproc.hpp changes its contents with it, and
+# frametrim/ (which links retrace_common, but is not a retracer) must keep
+# seeing the non-RETRACE one.
+add_compile_definitions (RETRACE)
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp
@@ -55,18 +46,23 @@ add_library (retrace_common STATIC
     ws.cpp
     ${ws_os}
 )
-target_link_libraries (retrace_common
+target_include_directories (retrace_common PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/lib/ubjson
+    ${PROJECT_BINARY_DIR} # for version.h
+)
+target_link_libraries (retrace_common PUBLIC
     image
     common
     getopt
 )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_libraries (retrace_common rt)
+    target_link_libraries (retrace_common PUBLIC rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr winmm psapi)
+    target_link_libraries (retrace_common PUBLIC dxerr winmm psapi)
     if (HAVE_DETOURS)
-        target_link_libraries (retrace_common detours)
+        target_link_libraries (retrace_common PUBLIC detours)
     endif ()
 endif ()
 add_dependencies (retrace_common version)
@@ -95,20 +91,18 @@ add_library (glretrace_common STATIC
     metric_backend_intel_perfquery.cpp
     metric_backend_opengl.cpp
 )
-add_dependencies (glretrace_common glproc)
-target_link_libraries (glretrace_common
+target_link_libraries (glretrace_common PUBLIC
     retrace_common
+    glhelpers
 )
 if (PROCPS_FOUND)
-    target_link_libraries (glretrace_common ${PROCPS_LIBRARY})
+    target_link_libraries (glretrace_common PUBLIC procps::procps)
 endif ()
 
 
 if (WIN32)
     set (glws_os glws_wgl.cpp)
-    target_link_libraries (glretrace_common
-        gdi32
-    )
+    target_link_libraries (glretrace_common PUBLIC gdi32)
 else ()
     if (APPLE)
         set (glws_os glws_cocoa.mm)
@@ -124,9 +118,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
         glproc_gl.cpp
     )
 
-    add_dependencies (glretrace glproc)
-
-    target_link_libraries (glretrace
+    target_link_libraries (glretrace PRIVATE
         retrace_common
         glretrace_common
         glhelpers
@@ -136,7 +128,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
     if (WIN32)
     else ()
         if (APPLE)
-            target_link_libraries (glretrace
+            target_link_libraries (glretrace PRIVATE
                 "-framework Cocoa"
                 "-framework ApplicationServices" # CGS*
                 #"-framework OpenGL" # CGL*
@@ -150,10 +142,10 @@ if (WIN32 OR APPLE OR X11_FOUND)
                 LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
             )
         else ()
-            target_link_libraries (glretrace ${X11_X11_LIB})
+            target_link_libraries (glretrace PRIVATE X11::X11)
         endif ()
 
-        target_link_libraries (glretrace
+        target_link_libraries (glretrace PRIVATE
             # gdb doesn't like when pthreads is loaded through dlopen (which happens
             # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
             # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
@@ -173,15 +165,13 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         glproc_egl.cpp
     )
 
-    add_dependencies (eglretrace glproc)
-
-    target_link_libraries (eglretrace
+    target_link_libraries (eglretrace PRIVATE
         retrace_common
         glretrace_common
         glhelpers
         glproc
-        ${X11_X11_LIB}
-        ${CMAKE_THREAD_LIBS_INIT}
+        X11::X11
+        Threads::Threads
         ${CMAKE_DL_LIBS}
     )
     install (TARGETS eglretrace)
@@ -195,16 +185,14 @@ if (ENABLE_EGL AND ENABLE_WAFFLE)
 
     target_compile_definitions (eglretrace PRIVATE HAVE_WAFFLE)
 
-    add_dependencies (eglretrace glproc)
-
-    target_link_libraries (eglretrace
+    target_link_libraries (eglretrace PRIVATE
         retrace_common
         glretrace_common
         glhelpers
         glproc
         PkgConfig::WAFFLE
-        ${X11_X11_LIB}
-        ${CMAKE_THREAD_LIBS_INIT}
+        X11::X11
+        Threads::Threads
         ${CMAKE_DL_LIBS}
     )
     install (TARGETS eglretrace)
@@ -212,7 +200,7 @@ endif ()
 
 if (WIN32)
     if (DirectX_D3D_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
+        list (APPEND D3DRETRACE_INCLUDE_DIRS ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3dretrace_ddraw.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
@@ -237,7 +225,7 @@ if (WIN32)
     endif ()
 
     if (DirectX_D3D8_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
+        list (APPEND D3DRETRACE_INCLUDE_DIRS ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d8state.cpp
@@ -262,7 +250,7 @@ if (WIN32)
     )
 
     if (DirectX_D3D9_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
+        list (APPEND D3DRETRACE_INCLUDE_DIRS ${DirectX_D3D9_INCLUDE_DIR})
         set (HAVE_D3D9 1)
     else ()
         set (HAVE_D3D9 0)
@@ -284,11 +272,7 @@ if (WIN32)
     )
 
     if (DirectX_D3D11_4_INCLUDE_FOUND)
-        add_definitions (-DHAVE_DXGI)
-        include_directories (BEFORE SYSTEM
-            ${DirectX_D3D11_4_INCLUDE_DIR}
-            ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
-        )
+        list (APPEND D3DRETRACE_INCLUDE_DIRS ${DirectX_D3D11_4_INCLUDE_DIR})
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             dxgistate.cpp
             dxgistate_so.cpp
@@ -347,13 +331,15 @@ if (WIN32)
         d3d9state_images.cpp
         ${D3DSTATE_SOURCES}
     )
-    target_link_libraries (d3dretrace
+    target_include_directories (d3dretrace SYSTEM BEFORE PRIVATE ${D3DRETRACE_INCLUDE_DIRS})
+    target_link_libraries (d3dretrace PRIVATE
         retrace_common
         d3dhelpers
         ole32
     )
     if (DirectX_D3D11_4_INCLUDE_FOUND)
-        target_link_libraries (d3dretrace directxtex)
+        target_compile_definitions (d3dretrace PRIVATE HAVE_DXGI)
+        target_link_libraries (d3dretrace PRIVATE directxtex)
     endif ()
 
     install (TARGETS d3dretrace)

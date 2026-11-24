@@ -25,33 +25,18 @@ if (ENABLE_STATIC_LIBSTDCXX)
     endif ()
 endif ()
 
-macro (target_linker_version_script target version_script)
+function (target_linker_version_script target version_script)
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         # https://sourceware.org/binutils/docs/ld/VERSION.html
-        set_property (
-            TARGET ${target}
-            APPEND_STRING
-            PROPERTY LINK_FLAGS " -Wl,--version-script=${version_script}"
+        target_link_options (${target} PRIVATE
+            LINKER:--version-script=${version_script}
         )
-        # XXX: Unfortunately LINK_DEPENDS is ignored in non-Makefile generators
-        # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
         set_property (
             TARGET ${target}
-            PROPERTY LINK_DEPENDS ${version_script}
+            APPEND PROPERTY LINK_DEPENDS ${version_script}
         )
     endif ()
-endmacro ()
-
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
-
-include_directories (
-    ${CMAKE_SOURCE_DIR}/helpers
-    ${CMAKE_BINARY_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/dispatch
-    ${CMAKE_SOURCE_DIR}/lib/guids
-    ${CMAKE_SOURCE_DIR}/thirdparty/crc32c
-    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
-)
+endfunction ()
 
 if (NOT WIN32 AND NOT APPLE)
     # Prevent symbol relocations internal to our wrapper library to be
@@ -73,7 +58,14 @@ add_convenience_library (trace
     memtrace.hpp
     memtrace.cpp
 )
-target_link_libraries (trace
+# The generated sources include headers from both the source and binary
+# directories (what CMAKE_INCLUDE_CURRENT_DIR used to provide).
+target_include_directories (trace PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${PROJECT_SOURCE_DIR}/dispatch
+)
+target_link_libraries (trace PUBLIC
     common
     guids
     crc32c
@@ -90,8 +82,7 @@ add_convenience_library (gltrace_common
     gltrace_unpack_compressed.hpp
     gltrace_unpack_compressed.cpp
 )
-add_dependencies (gltrace_common glproc)
-target_link_libraries (gltrace_common
+target_link_libraries (gltrace_common PUBLIC
     glhelpers
     trace
 )
@@ -104,7 +95,6 @@ if (WIN32)
 
     # ddraw.dll
     if (DirectX_D3D_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
@@ -121,9 +111,11 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
-        target_link_libraries (ddrawtrace
+        target_link_libraries (ddrawtrace PRIVATE
+            d3dhelpers
             trace
         )
+        target_include_directories (ddrawtrace SYSTEM BEFORE PRIVATE ${DirectX_D3D_INCLUDE_DIR})
         set_target_properties (ddrawtrace PROPERTIES
             PREFIX ""
             OUTPUT_NAME ddraw
@@ -134,7 +126,6 @@ if (WIN32)
 
     # d3d8.dll
     if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
@@ -154,10 +145,11 @@ if (WIN32)
             d3d8trace.cpp
             d3d9shader.cpp
         )
-        target_link_libraries (d3d8trace
+        target_link_libraries (d3d8trace PRIVATE
             d3dhelpers
             trace
         )
+        target_include_directories (d3d8trace SYSTEM BEFORE PRIVATE ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         set_target_properties (d3d8trace PROPERTIES
             PREFIX ""
             OUTPUT_NAME d3d8
@@ -168,7 +160,6 @@ if (WIN32)
 
     # d3d9.dll
     if (DirectX_D3D9_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
@@ -189,10 +180,11 @@ if (WIN32)
             d3d9trace.cpp
             d3d9shader.cpp
         )
-        target_link_libraries (d3d9trace
+        target_link_libraries (d3d9trace PRIVATE
             d3dhelpers
             trace
         )
+        target_include_directories (d3d9trace SYSTEM BEFORE PRIVATE ${DirectX_D3D9_INCLUDE_DIR})
         set_target_properties (d3d9trace PROPERTIES
             PREFIX ""
             OUTPUT_NAME d3d9
@@ -203,8 +195,6 @@ if (WIN32)
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
     if (DirectX_D3D11_4_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D11_4_INCLUDE_DIR})
-
         add_custom_command (
             OUTPUT dxgitrace.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
@@ -230,12 +220,13 @@ if (WIN32)
             dxgitrace.cpp
             d3dcommonshader.cpp
         )
-        target_link_libraries (dxgitrace
+        target_link_libraries (dxgitrace PRIVATE
             d3dhelpers
             trace
         )
+        target_include_directories (dxgitrace SYSTEM BEFORE PRIVATE ${DirectX_D3D11_4_INCLUDE_DIR})
         if (HAVE_DETOURS)
-            target_link_libraries (dxgitrace detours)
+            target_link_libraries (dxgitrace PRIVATE detours)
         endif ()
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
@@ -264,7 +255,7 @@ if (WIN32)
             dxgi.def
             stub.cpp
         )
-        target_link_libraries (dxgistub
+        target_link_libraries (dxgistub PRIVATE
             ${DXGITRACE}
         )
         set_target_properties (dxgistub PROPERTIES
@@ -277,7 +268,7 @@ if (WIN32)
             d3d10.def
             stub.cpp
         )
-        target_link_libraries (d3d10stub
+        target_link_libraries (d3d10stub PRIVATE
             ${DXGITRACE}
         )
         set_target_properties (d3d10stub PROPERTIES
@@ -290,7 +281,7 @@ if (WIN32)
             d3d10_1.def
             stub.cpp
         )
-        target_link_libraries (d3d10_1stub
+        target_link_libraries (d3d10_1stub PRIVATE
             ${DXGITRACE}
         )
         set_target_properties (d3d10_1stub PROPERTIES
@@ -303,7 +294,7 @@ if (WIN32)
             d3d11.def
             stub.cpp
         )
-        target_link_libraries (d3d11stub
+        target_link_libraries (d3d11stub PRIVATE
             ${DXGITRACE}
         )
         set_target_properties (d3d11stub PROPERTIES
@@ -316,7 +307,7 @@ if (WIN32)
             d3d12.def
             stub.cpp
         )
-        target_link_libraries (d3d12stub
+        target_link_libraries (d3d12stub PRIVATE
             ${DXGITRACE}
         )
         set_target_properties (d3d12stub PROPERTIES
@@ -328,8 +319,6 @@ if (WIN32)
 
     # d2d1.dll, dwrite.dll
     if (DirectX_D2D1_1_INCLUDE_FOUND)
-        include_directories (BEFORE SYSTEM ${DirectX_D2D1_1_INCLUDE_DIR})
-
         add_custom_command (
             OUTPUT d2d1trace.cpp
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
@@ -345,9 +334,10 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
-        target_link_libraries (d2d1trace
+        target_link_libraries (d2d1trace PRIVATE
             trace
         )
+        target_include_directories (d2d1trace SYSTEM BEFORE PRIVATE ${DirectX_D2D1_1_INCLUDE_DIR})
         set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
         )
@@ -377,8 +367,7 @@ if (WIN32)
         wgltrace.cpp
         glproc_gl.cpp
     )
-    add_dependencies (wgltrace glproc)
-    target_link_libraries (wgltrace
+    target_link_libraries (wgltrace PRIVATE
         gltrace_common
         glproc
         gdi32
@@ -412,7 +401,6 @@ elseif (APPLE)
         glproc_gl.cpp
     )
 
-    add_dependencies (cgltrace glproc)
 
     set_target_properties (cgltrace PROPERTIES
         # OpenGL framework name
@@ -421,7 +409,17 @@ elseif (APPLE)
         FRAMEWORK true
     )
 
-    target_link_libraries (cgltrace
+    # Specificy the version and reexport GLU symbols
+    #
+    # SHELL: keeps each option and its argument together, as otherwise
+    # target_link_options would de-duplicate/reorder them independently.
+    target_link_options (cgltrace PRIVATE
+        "SHELL:-compatibility_version 1"
+        "SHELL:-current_version 1.0.0"
+        -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib
+    )
+
+    target_link_libraries (cgltrace PRIVATE
         gltrace_common
         glproc
         ${CMAKE_THREAD_LIBS_INIT}
@@ -452,14 +450,13 @@ elseif (X11_FOUND)
         glproc_gl.cpp
     )
 
-    add_dependencies (glxtrace glproc)
 
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
     )
 
-    target_link_libraries (glxtrace
+    target_link_libraries (glxtrace PRIVATE
         gltrace_common
         glproc
         ${CMAKE_THREAD_LIBS_INIT}
@@ -496,7 +493,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         glproc_egl.cpp
     )
 
-    add_dependencies (egltrace glproc)
 
     set_target_properties (egltrace PROPERTIES
         # avoid the default "lib" prefix
@@ -505,7 +501,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     target_compile_definitions (egltrace PRIVATE EGLTRACE=1)
 
-    target_link_libraries (egltrace
+    target_link_libraries (egltrace PRIVATE
         gltrace_common
         glproc
         ${CMAKE_THREAD_LIBS_INIT}

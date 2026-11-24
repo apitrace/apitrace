@@ -235,8 +235,7 @@ elseif (ENABLE_X11)
     find_package (X11)
 
     if (X11_FOUND)
-        include_directories (${X11_INCLUDE_DIR})
-        add_definitions (-DHAVE_X11)
+        add_compile_definitions (HAVE_X11)
     else ()
         # Print a clear message when X11 is not found
         include (FindPackageMessage)
@@ -404,7 +403,7 @@ if (MINGW)
                 ERROR_QUIET
             )
             if (STATUS_GTHREADS EQUAL 0)
-                include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat/cxx11-threads)
+                target_include_directories (compat INTERFACE ${PROJECT_SOURCE_DIR}/compat/cxx11-threads)
             endif ()
         endif ()
     endif ()
@@ -427,7 +426,10 @@ if (MINGW)
     endif ()
 
     # Avoid https://sourceforge.net/p/mingw-w64/bugs/892/
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wrl)
+    #
+    # XXX: This one is deliberately still directory-scoped: tests/ (a project in
+    # its own right, built as a subdirectory) relies on inheriting it.
+    include_directories (${PROJECT_SOURCE_DIR}/thirdparty/wrl)
 
 elseif (ENABLE_STATIC_EXE)
     # Executables only: the wrappers (shared libraries) decide on their own
@@ -558,8 +560,6 @@ set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers CACHE PATH "")
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/compat)
-
 if (NOT WIN32 AND NOT ENABLE_STATIC_EXE)
 
     if (NOT ENABLE_STATIC_SNAPPY)
@@ -594,25 +594,25 @@ add_subdirectory (thirdparty)
 # OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
 # are so intertwined that conditional compilation extremely difficult. This
 # also avoids missing/inconsistent declarations in system headers.
-include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
+#
+# XXX: This is deliberately still a directory-scoped include_directories(BEFORE):
+# (a) it must precede system headers (e.g., Mesa's or the Windows SDK's) for
+# every target that includes GL/EGL headers, however indirectly (Qt, X11,
+# ...), and a per-target version can only guarantee ordering relative to the
+# other dirs of the same target; and (b) tests/ inherits it.
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/thirdparty/khronos)
 
 # Convenience macro for adding unit tests
-macro (add_gtest)
-    add_executable (${ARGV})
-    target_link_libraries (${ARGV0} GTest::GTest)
-    add_dependencies (check ${ARGV0})
-    add_test (NAME ${ARGV0} COMMAND ${ARGV0})
-endmacro ()
+function (add_gtest name)
+    add_executable (${name} ${ARGN})
+    target_link_libraries (${name} PRIVATE GTest::GTest)
+    add_dependencies (check ${name})
+    add_test (NAME ${name} COMMAND ${name})
+endfunction ()
 
 
 ##############################################################################
 # Common libraries / utilities
-
-include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/trace
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/os
-    ${CMAKE_CURRENT_SOURCE_DIR}/compat
-)
 
 add_subdirectory (lib)
 add_subdirectory (dispatch)

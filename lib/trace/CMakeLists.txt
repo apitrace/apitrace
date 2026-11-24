@@ -1,9 +1,3 @@
-include_directories (
-    ${CMAKE_SOURCE_DIR}/lib/guids
-    ${CMAKE_SOURCE_DIR}/lib/highlight
-    ${CMAKE_SOURCE_DIR}/thirdparty
-)
-
 add_convenience_library (common
     trace_callset.cpp
     trace_dump.cpp
@@ -30,7 +24,12 @@ add_convenience_library (common
     trace_ostream_zstd.cpp
 )
 
-target_link_libraries(common
+target_include_directories (common
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty
+)
+
+target_link_libraries (common PUBLIC
     guids
     highlight
     os
@@ -43,5 +42,5 @@ target_link_libraries(common
 
 if (BUILD_TESTING)
     add_gtest (trace_parser_flags_test trace_parser_flags_test.cpp)
-    target_link_libraries (trace_parser_flags_test common)
+    target_link_libraries (trace_parser_flags_test PRIVATE common)
 endif ()

@@ -1,14 +1,9 @@
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
-include_directories (
-    ${CMAKE_SOURCE_DIR}/thirdparty/devcon
-    ${CMAKE_SOURCE_DIR}/thirdparty/detours/src
-)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 add_library (injectee_iat MODULE
     injectee_iat.cpp
 )
-target_link_libraries (injectee_iat
+target_link_libraries (injectee_iat PRIVATE
     advapi32
 )
 set_target_properties (injectee_iat PROPERTIES
@@ -42,7 +37,8 @@ if (HAVE_DETOURS)
             target_link_options (injectee_detours PRIVATE "-Wl,--entry=DllMainStartup")
         endif ()
     endif ()
-    target_link_libraries (injectee_detours
+    target_link_libraries (injectee_detours PRIVATE
+        os
         advapi32
         detours
     )
@@ -56,7 +52,8 @@ add_executable (injector
 set_target_properties (injector PROPERTIES
     OUTPUT_NAME inject
 )
-target_link_libraries (injector
+target_link_libraries (injector PRIVATE
+    os
     getopt
     devcon
     psapi

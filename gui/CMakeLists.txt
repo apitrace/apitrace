@@ -19,11 +19,12 @@ endif ()
 add_library (qubjson STATIC
     qubjson.cpp
 )
-target_link_libraries (qubjson Qt::Widgets)
+target_include_directories (qubjson PUBLIC ${PROJECT_SOURCE_DIR}/lib/ubjson)
+target_link_libraries (qubjson PUBLIC Qt::Widgets)
 
 if (BUILD_TESTING)
     add_gtest (qubjson_test qubjson_test.cpp)
-    target_link_libraries (qubjson_test qubjson)
+    target_link_libraries (qubjson_test PRIVATE qubjson)
 
     if (WIN32)
         # Make the Qt DLLs findable when running the test directly via ctest,
@@ -102,21 +103,23 @@ set (CMAKE_AUTOMOC ON)
 set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
 
 QT_WRAP_UI (qapitrace_UIS_H ${qapitrace_UIS})
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
-include_directories (
-    ${CMAKE_SOURCE_DIR}/lib/image
-    ${CMAKE_SOURCE_DIR}/lib/guids
-    ${CMAKE_SOURCE_DIR}/lib/ubjson
-    ${CMAKE_BINARY_DIR}
-)
-
-add_dependencies(apitrace version)
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries (qapitrace
+# Both the uic generated headers and the sources (what CMAKE_INCLUDE_CURRENT_DIR
+# used to provide), and version.h.  The binary directory goes first so generated
+# headers win over any stale copy in the source directory.
+target_include_directories (qapitrace PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}
+)
+
+add_dependencies (qapitrace version)
+
+target_link_libraries (qapitrace PRIVATE
     Qt::Widgets
     qubjson
     image
