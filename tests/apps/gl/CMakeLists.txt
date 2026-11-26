@@ -26,6 +26,7 @@ set (targets
     debug
     default
     dlopen
+    draw_range_elements
     tri
     tri_glsl
     tri_glsl_core
@@ -37,6 +38,7 @@ set (targets
     msaa4
     program_binary
     exception
+    unpack_alignment
     window_resize
 )
 

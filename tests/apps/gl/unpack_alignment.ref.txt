@@ -1,0 +1,6 @@
+//!unpack_alignment
+glGenTextures(n = 1, textures = &1)
+glBindTexture(target = GL_TEXTURE_2D, texture = 1)
+glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(14))
+glTexImage2D(target = GL_TEXTURE_2D, level = 1, internalformat = GL_RGB8, width = 1, height = 32, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(127))
+glDeleteTextures(n = 1, textures = &1)
