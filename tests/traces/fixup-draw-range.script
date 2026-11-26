@@ -1,0 +1,16 @@
+fixup -q -o fixup-draw-range.src.trace fixup-draw-range.trace
+dump --verbose fixup-draw-range.src.trace
+1 glFinish()
+0 glFlush()
+2 glGetIntegerv(pname = GL_MAX_TEXTURE_SIZE, params = &4096)
+3 glVertexAttribPointer(index = 0, size = 3, type = GL_FLOAT, normalized = false, stride = 0, pointer = blob(48)) // fake
+4 glDrawRangeElements(mode = GL_TRIANGLES, start = 0, end = 3, count = 3, type = GL_UNSIGNED_INT, indices = blob(12))
+5 glVertexAttribPointer(index = 0, size = 3, type = GL_FLOAT, normalized = false, stride = 0, pointer = blob(48)) // fake
+6 glDrawRangeElements(mode = GL_TRIANGLES, start = 0, end = 3, count = 3, type = GL_UNSIGNED_INT, indices = blob(12))
+7 glVertexAttribPointer(index = 0, size = 3, type = GL_FLOAT, normalized = false, stride = 0, pointer = blob(36)) // fake
+8 glDrawRangeElements(mode = GL_TRIANGLES, start = 0, end = 4294967295, count = 3, type = GL_UNSIGNED_INT, indices = blob(12))
+9 glVertexAttribPointer(index = 0, size = 3, type = GL_FLOAT, normalized = false, stride = 0, pointer = blob(36)) // fake
+10 glDrawElements(mode = GL_TRIANGLES, count = 3, type = GL_UNSIGNED_INT, indices = blob(12))
+11 glVertexAttribPointer(index = 0, size = 3, type = GL_FLOAT, normalized = false, stride = 0, pointer = blob(48)) // fake
+12 glFlush()
+13 glDrawRangeElements(mode = GL_TRIANGLES, start = 0, end = 3, count = 3, type = GL_UNSIGNED_INT, indices = blob(12))

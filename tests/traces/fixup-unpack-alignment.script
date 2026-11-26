@@ -1,0 +1,9 @@
+fixup -q -o fixup-unpack-alignment.src.trace fixup-unpack-alignment.trace
+dump --verbose fixup-unpack-alignment.src.trace
+0 glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(14))
+1 glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(14))
+2 glPixelStorei(pname = GL_UNPACK_ALIGNMENT, param = 1)
+3 glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(12))
+4 glPixelStorei(pname = GL_UNPACK_ALIGNMENT, param = 8)
+5 glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(14))
+6 glTexImage2D(target = GL_TEXTURE_2D, level = 0, internalformat = GL_RGB8, width = 2, height = 2, border = 0, format = GL_RGB, type = GL_UNSIGNED_BYTE, pixels = blob(13))

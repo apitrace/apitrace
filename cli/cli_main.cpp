@@ -99,6 +99,7 @@ static const Command * commands[] = {
     &retrace_command,
     &trace_command,
     &trim_command,
+    &fixup_command,
     &info_command,
     &version_command,
     &help_command
