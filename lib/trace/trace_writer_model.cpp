@@ -112,8 +112,7 @@ public:
         writer.endRepr();
     }
 
-    void visit(Call *call) {
-        unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+    void visitFlagsAndBacktrace(Call *call) {
         if (call->flags & CALL_FLAG_FAKE) {
             writer.writeFlags(FLAG_FAKE);
         }
@@ -124,6 +123,9 @@ public:
             }
             writer.endBacktrace();
         }
+    }
+
+    void visitArgs(Call *call) {
         for (unsigned i = 0; i < call->args.size(); ++i) {
             if (call->args[i].value) {
                 writer.beginArg(i);
@@ -131,13 +133,36 @@ public:
                 writer.endArg();
             }
         }
-        writer.endEnter();
-        writer.beginLeave(call_no);
+    }
+
+    void visitReturn(Call *call) {
         if (call->ret) {
             writer.beginReturn();
             _visit(call->ret);
             writer.endReturn();
         }
+    }
+
+    unsigned visitEnter(Call *call) {
+        unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+        visitFlagsAndBacktrace(call);
+        visitArgs(call);
+        writer.endEnter();
+        return call_no;
+    }
+
+    void visit(Call *call) {
+        unsigned call_no = visitEnter(call);
+        writer.beginLeave(call_no);
+        visitReturn(call);
+        writer.endLeave();
+    }
+
+    void visitLeave(Call *call, unsigned call_no) {
+        writer.beginLeave(call_no);
+        visitFlagsAndBacktrace(call);
+        visitArgs(call);
+        visitReturn(call);
         writer.endLeave();
     }
 };
@@ -146,6 +171,18 @@ public:
 void Writer::writeCall(Call *call) {
     ModelWriter visitor(*this);
     visitor.visit(call);
+}
+
+
+unsigned Writer::writeEnter(Call *call) {
+    ModelWriter visitor(*this);
+    return visitor.visitEnter(call);
+}
+
+
+void Writer::writeLeave(Call *call, unsigned call_no) {
+    ModelWriter visitor(*this);
+    visitor.visitLeave(call, call_no);
 }
 
 

@@ -104,7 +104,16 @@ namespace trace {
         void writeNull(void);
         void writePointer(unsigned long long addr);
 
+        // Writes the enter and leave events of a whole call (as returned by
+        // Parser) back to back, all arguments in the enter event.
         void writeCall(Call *call);
+
+        // Write the enter and leave events separately, as given by
+        // SimpleParser::handleEnter() and SimpleParser::handleLeave().
+        // writeEnter() returns the number of the call, to be passed to
+        // writeLeave().
+        unsigned writeEnter(Call *call);
+        void writeLeave(Call *call, unsigned call_no);
 
     private:
         inline void beginProperties(void) {}
