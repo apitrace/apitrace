@@ -493,7 +493,7 @@ callFlagTable[] = {
  * Lookup call flags by name.
  */
 CallFlags
-Parser::lookupCallFlags(const char *name)
+SimpleParser::lookupCallFlags(const char *name)
 {
     using namespace std;
 

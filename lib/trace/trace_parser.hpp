@@ -62,7 +62,14 @@ public:
 };
 
 
-class Parser: public AbstractParser
+/**
+ * Parses the events of a trace file, in file order.
+ *
+ * Unlike Parser, it doesn't join the enter and leave events of each call
+ * together.  Instead each event is parsed into its own Call object, and passed
+ * to handleEnter() or handleLeave(), which subclasses must implement.
+ */
+class SimpleParser
 {
 protected:
     File *file = nullptr;
@@ -74,9 +81,6 @@ protected:
     };
 
     Properties properties;
-
-    typedef std::list<Call *> CallList;
-    CallList calls;
 
     struct FunctionSigFlags : public FunctionSig {
         CallFlags flags;
@@ -122,16 +126,21 @@ protected:
 public:
     API api = API_UNKNOWN;
 
-    Parser();
+    SimpleParser();
 
-    ~Parser();
+    virtual ~SimpleParser();
 
-    bool open(const char *filename) override;
+    bool open(const char *filename);
 
-    void close(void) override;
+    void close(void);
 
-    Call *parse_call(void) override {
-        return parse_call(FULL);
+    /**
+     * Parses the next event, and passes it to handleEnter() or handleLeave().
+     *
+     * Returns false at the end of the file.
+     */
+    bool parse_event(void) {
+        return parse_event(FULL);
     }
 
     bool supportsOffsets() const
@@ -139,15 +148,15 @@ public:
         return file->supportsOffsets();
     }
 
-    void getBookmark(ParseBookmark &bookmark) override;
+    void getBookmark(ParseBookmark &bookmark);
 
-    void setBookmark(const ParseBookmark &bookmark) override;
+    void setBookmark(const ParseBookmark &bookmark);
 
-    unsigned long long getVersion(void) const override {
+    unsigned long long getVersion(void) const {
         return semanticVersion;
     }
 
-    const Properties & getProperties(void) const override {
+    const Properties & getProperties(void) const {
         return properties;
     }
 
@@ -172,12 +181,31 @@ public:
         return file->containerType();
     }
 
-    Call *scan_call() {
-        return parse_call(SCAN);
-    }
-
 protected:
-    Call *parse_call(Mode mode);
+    /**
+     * Called for every enter event, with a new Call object holding the
+     * function signature, thread, call number, and the arguments in the event
+     * (i.e., the input arguments).  Ownership of the call is transferred.
+     *
+     * If the end of the file was reached in the middle of the event, the call
+     * has CALL_FLAG_INCOMPLETE set.
+     */
+    virtual void handleEnter(Call *call) = 0;
+
+    /**
+     * Called for every leave event, with a new Call object holding the call
+     * number of the call being left, and the arguments (i.e., the output
+     * arguments), return value, and flags in the event.  Its signature is a
+     * placeholder (without name nor arguments), and its thread is 0, so it must
+     * be paired with its enter event by the call number.  Ownership of the call
+     * is transferred.
+     *
+     * If the end of the file was reached in the middle of the event, the call
+     * has CALL_FLAG_INCOMPLETE set.
+     */
+    virtual void handleLeave(Call *call) = 0;
+
+    bool parse_event(Mode mode);
 
     FunctionSigFlags *parse_function_sig(void);
     StructSig *parse_struct_sig();
@@ -192,18 +220,14 @@ public:
 protected:
     void parseProperties(void);
 
-    Call *parse_Call(Mode mode);
-
     void parse_enter(Mode mode);
 
-    Call *parse_leave(Mode mode);
+    void parse_leave(Mode mode);
 
     bool parse_call_details(Call *call, Mode mode);
 
     bool parse_call_backtrace(Call *call, Mode mode);
     StackFrame * parse_backtrace_frame(Mode mode);
-
-    void adjust_call_flags(Call *call);
 
     void parse_arg(Call *call, Mode mode);
 
@@ -268,6 +292,69 @@ protected:
 
     inline int read_byte(void);
     inline void skip_byte(void);
+};
+
+
+/**
+ * Parses the calls of a trace file, joining the enter and leave events of each
+ * call together.
+ *
+ * Calls are returned when they are left, i.e., not necessarily in call number
+ * order.  Calls not left by the end of the file are returned last, with
+ * CALL_FLAG_INCOMPLETE set.
+ */
+class Parser: public AbstractParser, public SimpleParser
+{
+protected:
+    typedef std::list<Call *> CallList;
+
+    // Calls entered but not left yet
+    CallList calls;
+
+    // Call that was just left, to be returned by parse_call()
+    Call *completed = nullptr;
+
+public:
+    Parser();
+
+    ~Parser();
+
+    bool open(const char *filename) override {
+        return SimpleParser::open(filename);
+    }
+
+    void close(void) override;
+
+    Call *parse_call(void) override {
+        return parse_call(FULL);
+    }
+
+    void getBookmark(ParseBookmark &bookmark) override {
+        SimpleParser::getBookmark(bookmark);
+    }
+
+    void setBookmark(const ParseBookmark &bookmark) override;
+
+    unsigned long long getVersion(void) const override {
+        return SimpleParser::getVersion();
+    }
+
+    const Properties & getProperties(void) const override {
+        return SimpleParser::getProperties();
+    }
+
+    Call *scan_call() {
+        return parse_call(SCAN);
+    }
+
+protected:
+    Call *parse_call(Mode mode);
+
+    void handleEnter(Call *call) override;
+
+    void handleLeave(Call *call) override;
+
+    void adjust_call_flags(Call *call);
 };
 
 

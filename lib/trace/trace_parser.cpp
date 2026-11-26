@@ -42,16 +42,16 @@
 namespace trace {
 
 
-Parser::Parser() {
+SimpleParser::SimpleParser() {
 }
 
 
-Parser::~Parser() {
+SimpleParser::~SimpleParser() {
     close();
 }
 
 
-bool Parser::open(const char *filename) {
+bool SimpleParser::open(const char *filename) {
     assert(!file);
     file = File::createForRead(filename);
     if (!file) {
@@ -99,7 +99,7 @@ deleteAll(Container &c)
     c.clear();
 }
 
-void Parser::close(void) {
+void SimpleParser::close(void) {
     if (file) {
         file->close();
         delete file;
@@ -107,8 +107,6 @@ void Parser::close(void) {
     }
 
     properties.clear();
-
-    deleteAll(calls);
 
     // Delete all signature data.  Signatures are mere structures which don't
     // own their own memory, so we need to destroy all data we created here.
@@ -163,21 +161,18 @@ void Parser::close(void) {
 }
 
 
-void Parser::getBookmark(ParseBookmark &bookmark) {
+void SimpleParser::getBookmark(ParseBookmark &bookmark) {
     bookmark.offset = file->currentOffset();
     bookmark.next_call_no = next_call_no;
 }
 
 
-void Parser::setBookmark(const ParseBookmark &bookmark) {
+void SimpleParser::setBookmark(const ParseBookmark &bookmark) {
     file->setCurrentOffset(bookmark.offset);
     next_call_no = bookmark.next_call_no;
-    
-    // Simply ignore all pending calls
-    deleteAll(calls);
 }
 
-void Parser::parseProperties(void)
+void SimpleParser::parseProperties(void)
 {
     if (TRACE_VERBOSE) {
         std::cerr << "\tPROPERTIES\n";
@@ -192,41 +187,27 @@ void Parser::parseProperties(void)
     }
 }
 
-Call *Parser::parse_call(Mode mode) {
-    do {
-        Call *call;
-        int c = read_byte();
-        switch (c) {
-        case trace::EVENT_ENTER:
-            if (TRACE_VERBOSE) {
-                std::cerr << "\tENTER\n";
-            }
-            parse_enter(mode);
-            break;
-        case trace::EVENT_LEAVE:
-            if (TRACE_VERBOSE) {
-                std::cerr << "\tLEAVE\n";
-            }
-            call = parse_leave(mode);
-            if (call) {
-                adjust_call_flags(call);
-                return call;
-            }
-            break;
-        default:
-            std::cerr << "error: unknown event " << c << "\n";
-            exit(1);
-        case -1:
-            if (!calls.empty()) {
-                call = calls.front();
-                call->flags |= CALL_FLAG_INCOMPLETE;
-                calls.pop_front();
-                adjust_call_flags(call);
-                return call;
-            }
-            return NULL;
+bool SimpleParser::parse_event(Mode mode) {
+    int c = read_byte();
+    switch (c) {
+    case trace::EVENT_ENTER:
+        if (TRACE_VERBOSE) {
+            std::cerr << "\tENTER\n";
         }
-    } while(true);
+        parse_enter(mode);
+        return true;
+    case trace::EVENT_LEAVE:
+        if (TRACE_VERBOSE) {
+            std::cerr << "\tLEAVE\n";
+        }
+        parse_leave(mode);
+        return true;
+    default:
+        std::cerr << "error: unknown event " << c << "\n";
+        exit(1);
+    case -1:
+        return false;
+    }
 }
 
 
@@ -244,8 +225,8 @@ T *lookup(std::vector<T *> &map, size_t index) {
 }
 
 
-Parser::FunctionSigFlags *
-Parser::parse_function_sig(void) {
+SimpleParser::FunctionSigFlags *
+SimpleParser::parse_function_sig(void) {
     size_t id = read_uint();
 
     FunctionSigState *sig = lookup(functions, id);
@@ -314,7 +295,7 @@ Parser::parse_function_sig(void) {
 }
 
 
-StructSig *Parser::parse_struct_sig() {
+StructSig *SimpleParser::parse_struct_sig() {
     size_t id = read_uint();
 
     StructSigState *sig = lookup(structs, id);
@@ -352,7 +333,7 @@ StructSig *Parser::parse_struct_sig() {
  *   enum_sig = id name value
  *            | id
  */
-EnumSig *Parser::parse_old_enum_sig() {
+EnumSig *SimpleParser::parse_old_enum_sig() {
     size_t id = read_uint();
 
     EnumSigState *sig = lookup(enums, id);
@@ -379,7 +360,7 @@ EnumSig *Parser::parse_old_enum_sig() {
 }
 
 
-EnumSig *Parser::parse_enum_sig() {
+EnumSig *SimpleParser::parse_enum_sig() {
     size_t id = read_uint();
 
     EnumSigState *sig = lookup(enums, id);
@@ -411,7 +392,7 @@ EnumSig *Parser::parse_enum_sig() {
 }
 
 
-BitmaskSig *Parser::parse_bitmask_sig() {
+BitmaskSig *SimpleParser::parse_bitmask_sig() {
     size_t id = read_uint();
 
     BitmaskSigState *sig = lookup(bitmasks, id);
@@ -446,7 +427,7 @@ BitmaskSig *Parser::parse_bitmask_sig() {
 }
 
 
-void Parser::parse_enter(Mode mode) {
+void SimpleParser::parse_enter(Mode mode) {
     unsigned thread_id;
 
     if (version >= 4) {
@@ -461,46 +442,34 @@ void Parser::parse_enter(Mode mode) {
 
     call->no = next_call_no++;
 
-    if (parse_call_details(call, mode)) {
-        calls.push_back(call);
-    } else {
-        delete call;
+    if (!parse_call_details(call, mode)) {
+        call->flags |= CALL_FLAG_INCOMPLETE;
     }
+
+    handleEnter(call);
 }
 
 
-Call *Parser::parse_leave(Mode mode) {
+// Signature of the calls passed to handleLeave()
+static const FunctionSig leaveSig = {0, NULL, 0, NULL};
+
+
+void SimpleParser::parse_leave(Mode mode) {
     unsigned call_no = read_uint();
-    Call *call = NULL;
-    for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
-        if ((*it)->no == call_no) {
-            call = *it;
-            calls.erase(it);
-            break;
-        }
-    }
-    if (!call) {
-        /* This might happen on random access, when an asynchronous call is stranded
-         * between two frames.  We won't return this call, but we still need to skip 
-         * over its data.
-         */
-        const FunctionSig sig = {0, NULL, 0, NULL};
-        call = new Call(&sig, 0, 0);
-        parse_call_details(call, SCAN);
-        delete call;
-        return NULL;
+
+    Call *call = new Call(&leaveSig, 0, 0);
+
+    call->no = call_no;
+
+    if (!parse_call_details(call, mode)) {
+        call->flags |= CALL_FLAG_INCOMPLETE;
     }
 
-    if (parse_call_details(call, mode)) {
-        return call;
-    } else {
-        delete call;
-        return NULL;
-    }
+    handleLeave(call);
 }
 
 
-bool Parser::parse_call_details(Call *call, Mode mode) {
+bool SimpleParser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
         switch (c) {
@@ -548,7 +517,7 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
     } while(true);
 }
 
-bool Parser::parse_call_backtrace(Call *call, Mode mode) {
+bool SimpleParser::parse_call_backtrace(Call *call, Mode mode) {
     unsigned num_frames = read_uint();
     Backtrace* backtrace = new Backtrace(num_frames);
     for (unsigned i = 0; i < num_frames; ++i) {
@@ -558,7 +527,7 @@ bool Parser::parse_call_backtrace(Call *call, Mode mode) {
     return true;
 }
 
-StackFrame * Parser::parse_backtrace_frame(Mode mode) {
+StackFrame * SimpleParser::parse_backtrace_frame(Mode mode) {
     size_t id = read_uint();
 
     StackFrameState *frame = lookup(frames, id);
@@ -626,22 +595,7 @@ StackFrame * Parser::parse_backtrace_frame(Mode mode) {
     return frame;
 }
 
-/**
- * Make adjustments to this particular call flags.
- *
- * NOTE: This is called per-call so no string comparisons should be done here.
- * All name comparisons should be done when the signature is parsed instead.
- */
-void Parser::adjust_call_flags(Call *call) {
-    // Mark glGetError() = GL_NO_ERROR as verbose
-    if (call->sig == glGetErrorSig &&
-        call->ret &&
-        call->ret->toSInt() == 0) {
-        call->flags |= CALL_FLAG_VERBOSE;
-    }
-}
-
-void Parser::parse_arg(Call *call, Mode mode) {
+void SimpleParser::parse_arg(Call *call, Mode mode) {
     size_t index = (size_t)read_uint();
     Value *value = parse_value(mode);
     if (value) {
@@ -653,7 +607,7 @@ void Parser::parse_arg(Call *call, Mode mode) {
 }
 
 
-Value *Parser::parse_value(void) {
+Value *SimpleParser::parse_value(void) {
     int c;
     Value *value;
     c = read_byte();
@@ -724,7 +678,7 @@ Value *Parser::parse_value(void) {
 }
 
 
-void Parser::scan_value(void) {
+void SimpleParser::scan_value(void) {
     int c = read_byte();
     switch (c) {
     case trace::TYPE_NULL:
@@ -779,61 +733,61 @@ void Parser::scan_value(void) {
 }
 
 
-Value *Parser::parse_sint() {
+Value *SimpleParser::parse_sint() {
     return new SInt(-(signed long long)read_uint());
 }
 
 
-void Parser::scan_sint() {
+void SimpleParser::scan_sint() {
     skip_uint();
 }
 
 
-Value *Parser::parse_uint() {
+Value *SimpleParser::parse_uint() {
     return new UInt(read_uint());
 }
 
 
-void Parser::scan_uint() {
+void SimpleParser::scan_uint() {
     skip_uint();
 }
 
 
-Value *Parser::parse_float() {
+Value *SimpleParser::parse_float() {
     float value;
     file->read(&value, sizeof value);
     return new Float(value);
 }
 
 
-void Parser::scan_float() {
+void SimpleParser::scan_float() {
     file->skip(sizeof(float));
 }
 
 
-Value *Parser::parse_double() {
+Value *SimpleParser::parse_double() {
     double value;
     file->read(&value, sizeof value);
     return new Double(value);
 }
 
 
-void Parser::scan_double() {
+void SimpleParser::scan_double() {
     file->skip(sizeof(double));
 }
 
 
-Value *Parser::parse_string() {
+Value *SimpleParser::parse_string() {
     return new String(read_string());
 }
 
 
-void Parser::scan_string() {
+void SimpleParser::scan_string() {
     skip_string();
 }
 
 
-Value *Parser::parse_enum() {
+Value *SimpleParser::parse_enum() {
     EnumSig *sig;
     signed long long value;
     if (version >= 3) {
@@ -848,7 +802,7 @@ Value *Parser::parse_enum() {
 }
 
 
-void Parser::scan_enum() {
+void SimpleParser::scan_enum() {
     if (version >= 3) {
         parse_enum_sig();
         skip_sint();
@@ -858,7 +812,7 @@ void Parser::scan_enum() {
 }
 
 
-Value *Parser::parse_bitmask() {
+Value *SimpleParser::parse_bitmask() {
     BitmaskSig *sig = parse_bitmask_sig();
 
     unsigned long long value = read_uint();
@@ -867,13 +821,13 @@ Value *Parser::parse_bitmask() {
 }
 
 
-void Parser::scan_bitmask() {
+void SimpleParser::scan_bitmask() {
     parse_bitmask_sig();
     skip_uint(); /* value */
 }
 
 
-Value *Parser::parse_array(void) {
+Value *SimpleParser::parse_array(void) {
     size_t len = read_uint();
     Array *array = new Array(len);
     for (size_t i = 0; i < len; ++i) {
@@ -883,7 +837,7 @@ Value *Parser::parse_array(void) {
 }
 
 
-void Parser::scan_array(void) {
+void SimpleParser::scan_array(void) {
     size_t len = read_uint();
     for (size_t i = 0; i < len; ++i) {
         scan_value();
@@ -891,7 +845,7 @@ void Parser::scan_array(void) {
 }
 
 
-Value *Parser::parse_blob(void) {
+Value *SimpleParser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
     if (size) {
@@ -901,7 +855,7 @@ Value *Parser::parse_blob(void) {
 }
 
 
-void Parser::scan_blob(void) {
+void SimpleParser::scan_blob(void) {
     size_t size = read_uint();
     if (size) {
         file->skip(size);
@@ -909,7 +863,7 @@ void Parser::scan_blob(void) {
 }
 
 
-Value *Parser::parse_struct() {
+Value *SimpleParser::parse_struct() {
     StructSig *sig = parse_struct_sig();
     Struct *value = new Struct(sig);
 
@@ -921,7 +875,7 @@ Value *Parser::parse_struct() {
 }
 
 
-void Parser::scan_struct() {
+void SimpleParser::scan_struct() {
     StructSig *sig = parse_struct_sig();
     for (size_t i = 0; i < sig->num_members; ++i) {
         scan_value();
@@ -929,32 +883,32 @@ void Parser::scan_struct() {
 }
 
 
-Value *Parser::parse_opaque() {
+Value *SimpleParser::parse_opaque() {
     unsigned long long addr;
     addr = read_uint();
     return new Pointer(addr);
 }
 
 
-void Parser::scan_opaque() {
+void SimpleParser::scan_opaque() {
     skip_uint();
 }
 
 
-Value *Parser::parse_repr() {
+Value *SimpleParser::parse_repr() {
     Value *humanValue = parse_value();
     Value *machineValue = parse_value();
     return new Repr(humanValue, machineValue);
 }
 
 
-void Parser::scan_repr() {
+void SimpleParser::scan_repr() {
     scan_value();
     scan_value();
 }
 
 
-Value *Parser::parse_wstring() {
+Value *SimpleParser::parse_wstring() {
     size_t len = std::min(read_uint(), (long long unsigned int)PTRDIFF_MAX);
     wchar_t * value = new wchar_t[len + 1];
     for (size_t i = 0; i < len; ++i) {
@@ -968,7 +922,7 @@ Value *Parser::parse_wstring() {
 }
 
 
-void Parser::scan_wstring() {
+void SimpleParser::scan_wstring() {
     size_t len = read_uint();
     for (size_t i = 0; i < len; ++i) {
         skip_uint();
@@ -976,7 +930,7 @@ void Parser::scan_wstring() {
 }
 
 
-char * Parser::read_string(void) {
+char * SimpleParser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {
@@ -990,7 +944,7 @@ char * Parser::read_string(void) {
 }
 
 
-void Parser::skip_string(void) {
+void SimpleParser::skip_string(void) {
     size_t len = read_uint();
     file->skip(len);
 }
@@ -1001,7 +955,7 @@ void Parser::skip_string(void) {
  * it without the extra baggage of the Value class.
  */
 signed long long
-Parser::read_sint(void) {
+SimpleParser::read_sint(void) {
     int c;
     c = read_byte();
     switch (c) {
@@ -1018,12 +972,12 @@ Parser::read_sint(void) {
 }
 
 void
-Parser::skip_sint(void) {
+SimpleParser::skip_sint(void) {
     skip_byte();
     skip_uint();
 }
 
-unsigned long long Parser::read_uint(void) {
+unsigned long long SimpleParser::read_uint(void) {
     unsigned long long value = 0;
     int c;
     unsigned shift = 0;
@@ -1042,7 +996,7 @@ unsigned long long Parser::read_uint(void) {
 }
 
 
-void Parser::skip_uint(void) {
+void SimpleParser::skip_uint(void) {
     int c;
     do {
         c = file->getc();
@@ -1053,7 +1007,7 @@ void Parser::skip_uint(void) {
 }
 
 
-inline int Parser::read_byte(void) {
+inline int SimpleParser::read_byte(void) {
     int c = file->getc();
     if (TRACE_VERBOSE) {
         if (c < 0)
@@ -1065,8 +1019,138 @@ inline int Parser::read_byte(void) {
 }
 
 
-inline void Parser::skip_byte(void) {
+inline void SimpleParser::skip_byte(void) {
     file->skip(1);
+}
+
+
+Parser::Parser() {
+}
+
+
+Parser::~Parser() {
+    close();
+}
+
+
+void Parser::close(void) {
+    deleteAll(calls);
+
+    delete completed;
+    completed = nullptr;
+
+    SimpleParser::close();
+}
+
+
+void Parser::setBookmark(const ParseBookmark &bookmark) {
+    SimpleParser::setBookmark(bookmark);
+
+    // Simply ignore all pending calls
+    deleteAll(calls);
+}
+
+
+Call *Parser::parse_call(Mode mode) {
+    while (parse_event(mode)) {
+        if (completed) {
+            Call *call = completed;
+            completed = nullptr;
+            return call;
+        }
+    }
+
+    if (!calls.empty()) {
+        Call *call = calls.front();
+        call->flags |= CALL_FLAG_INCOMPLETE;
+        calls.pop_front();
+        adjust_call_flags(call);
+        return call;
+    }
+
+    return NULL;
+}
+
+
+void Parser::handleEnter(Call *call) {
+    if (call->flags & CALL_FLAG_INCOMPLETE) {
+        delete call;
+        return;
+    }
+
+    calls.push_back(call);
+}
+
+
+void Parser::handleLeave(Call *leave) {
+    Call *call = NULL;
+    for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
+        if ((*it)->no == leave->no) {
+            call = *it;
+            calls.erase(it);
+            break;
+        }
+    }
+
+    if (!call) {
+        /* This might happen on random access, when an asynchronous call is stranded
+         * between two frames.  We won't return this call.
+         */
+        delete leave;
+        return;
+    }
+
+    if (leave->flags & CALL_FLAG_INCOMPLETE) {
+        delete leave;
+        delete call;
+        return;
+    }
+
+    // Move the details of the leave event into the call
+    for (size_t index = 0; index < leave->args.size(); ++index) {
+        Value *value = leave->args[index].value;
+        if (value) {
+            if (index >= call->args.size()) {
+                call->args.resize(index + 1);
+            }
+            delete call->args[index].value;
+            call->args[index].value = value;
+            leave->args[index].value = nullptr;
+        }
+    }
+    if (leave->ret) {
+        delete call->ret;
+        call->ret = leave->ret;
+        leave->ret = nullptr;
+    }
+    if (leave->backtrace) {
+        call->backtrace = leave->backtrace;
+        leave->backtrace = nullptr;
+    }
+    call->flags |= leave->flags;
+
+    delete leave;
+
+    adjust_call_flags(call);
+
+    assert(!completed);
+    completed = call;
+}
+
+
+/**
+ * Make adjustments to this particular call flags.
+ *
+ * NOTE: This is called per-call so no string comparisons should be done here.
+ * All name comparisons should be done when the signature is parsed instead.
+ */
+void Parser::adjust_call_flags(Call *call) {
+    // Mark glGetError() = GL_NO_ERROR as verbose
+    if (call->sig == glGetErrorSig &&
+        call->ret &&
+        call->ret->toSInt() == 0) {
+        call->flags |= CALL_FLAG_VERBOSE;
+    }
 }
 
 
