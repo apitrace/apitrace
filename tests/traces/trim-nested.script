@@ -1,0 +1,5 @@
+trim -o trim-nested.src.trace --calls=0-2 fixup-draw-range.trace
+dump --verbose trim-nested.src.trace
+1 glFinish()
+0 glFlush()
+2 glGetIntegerv(pname = GL_MAX_TEXTURE_SIZE, params = &4096)

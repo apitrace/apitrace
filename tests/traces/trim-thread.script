@@ -88,4 +88,4 @@ dump --verbose --thread-ids --call-nos=no trim-thread.src.trace
 @1 glMatrixMode(mode = GL_MODELVIEW)
 @1 glLoadIdentity()
 @1 glTranslatef(x = 0, y = 0, z = -2.5)
-@1 glClear(mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+@1 glClear(mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT) // incomplete

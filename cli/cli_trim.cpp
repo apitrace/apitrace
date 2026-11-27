@@ -24,6 +24,8 @@
  *
  **************************************************************************/
 
+#include <map>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <string.h>
@@ -94,11 +96,116 @@ struct trim_options {
     std::set<unsigned> threadIds;
 };
 
+/*
+ * Trims the trace event by event, so that the original order of the enter and
+ * leave events of the calls kept is preserved.
+ *
+ * Whether a call is kept is decided on its enter event, as all the criteria
+ * (call number, thread, and signature flags) are known by then.  Frames end on
+ * the leave event of the calls that end them, so calls made while those are
+ * still executing (e.g., nested calls) belong to the frame they end.
+ */
+class Trimmer : public trace::SimpleParser
+{
+public:
+    Trimmer(struct trim_options *_options) :
+        options(_options)
+    {}
+
+    void setWriter(trace::Writer *_writer) {
+        writer = _writer;
+    }
+
+    // Whether no more calls will be entered, and all calls kept have left.
+    bool isDone(void) const {
+        return done && kept.empty();
+    }
+
+protected:
+    void handleEnter(trace::Call *call) override;
+    void handleLeave(trace::Call *call) override;
+
+private:
+    struct trim_options *options;
+    trace::Writer *writer = nullptr;
+
+    unsigned frame = 0;
+
+    // Past the last call and frame requested.
+    bool done = false;
+
+    // Calls kept which haven't left yet, with the number given by the writer,
+    // by their original number.
+    std::map<unsigned, unsigned> kept;
+
+    // Calls that end a frame which haven't left yet.
+    std::set<unsigned> endingFrame;
+};
+
+
+void
+Trimmer::handleEnter(trace::Call *call)
+{
+    std::unique_ptr<trace::Call> holder(call);
+
+    if (done || (call->flags & trace::CALL_FLAG_INCOMPLETE)) {
+        return;
+    }
+
+    /* There's no use doing any work past the last call and frame
+     * requested by the user. */
+    if ((options->calls.empty() || call->no > options->calls.getLast()) &&
+        (options->frames.empty() || frame > options->frames.getLast())) {
+        done = true;
+        return;
+    }
+
+    if (call->flags & trace::CALL_FLAG_END_FRAME) {
+        endingFrame.insert(call->no);
+    }
+
+    /* If requested, ignore all calls not belonging to the specified thread. */
+    if (!options->threadIds.empty() &&
+        options->threadIds.find(call->thread_id) == options->threadIds.end()) {
+        return;
+    }
+
+    /* If this call is included in the user-specified call set,
+     * then require it (and all dependencies) in the trimmed
+     * output. */
+    if (options->calls.contains(*call) ||
+        options->frames.contains(frame, call->flags)) {
+
+        kept[call->no] = writer->writeEnter(call);
+    }
+}
+
+
+void
+Trimmer::handleLeave(trace::Call *call)
+{
+    std::unique_ptr<trace::Call> holder(call);
+
+    if (call->flags & trace::CALL_FLAG_INCOMPLETE) {
+        return;
+    }
+
+    auto it = kept.find(call->no);
+    if (it != kept.end()) {
+        writer->writeLeave(call, it->second);
+        kept.erase(it);
+    }
+
+    if (endingFrame.erase(call->no)) {
+        frame++;
+    }
+}
+
+
 static int
 trim_trace(const char *filename, struct trim_options *options)
 {
-    trace::Parser p;
-    unsigned frame;
+    Trimmer p(options);
 
     if (!p.open(filename)) {
         std::cerr << "error: failed to open " << filename << "\n";
@@ -120,40 +227,9 @@ trim_trace(const char *filename, struct trim_options *options)
     }
 
 
-    frame = 0;
-    trace::Call *call;
-    while ((call = p.parse_call())) {
+    p.setWriter(&writer);
 
-        /* There's no use doing any work past the last call and frame
-         * requested by the user. */
-        if ((options->calls.empty() || call->no > options->calls.getLast()) &&
-            (options->frames.empty() || frame > options->frames.getLast())) {
-
-            delete call;
-            break;
-        }
-
-        /* If requested, ignore all calls not belonging to the specified thread. */
-        if (!options->threadIds.empty() &&
-            options->threadIds.find(call->thread_id) == options->threadIds.end()) {
-            goto NEXT;
-        }
-
-        /* If this call is included in the user-specified call set,
-         * then require it (and all dependencies) in the trimmed
-         * output. */
-        if (options->calls.contains(*call) ||
-            options->frames.contains(frame, call->flags)) {
-
-            writer.writeCall(call);
-        }
-
-    NEXT:
-        if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            frame++;
-        }
-
-        delete call;
+    while (!p.isDone() && p.parse_event()) {
     }
 
     std::cerr << "Trimmed trace is available as " << options->output << "\n";
