@@ -249,11 +249,7 @@ class AppDriver(Driver):
 
     def checkImage(self, callNo, refImageFileName, attachment=None):
         sys.stderr.write('Comparing snapshot from call %u against %s...\n' % (callNo, refImageFileName))
-        try:
-            from PIL import Image
-        except ImportError:
-            sys.stderr.write('warning: PIL not found, skipping image comparison\n');
-            return
+        from PIL import Image
 
         srcImage = self.getImage(callNo, attachment)
         refImage = Image.open(refImageFileName)

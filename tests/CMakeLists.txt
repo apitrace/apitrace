@@ -64,17 +64,15 @@ elseif (PKG_CONFIG_FOUND)
     pkg_check_modules (GLESV2 glesv2)
 endif ()
 
-# Check for the presence of several python packages, which are needed to build
-# generated tests.
+# The tests compare snapshots against reference images, which requires PIL.
+# Fail early, instead of silently skipping image comparisons.
 execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import PIL"
     OUTPUT_QUIET
     ERROR_QUIET
     RESULT_VARIABLE IMPORT_PIL_RESULT)
-if (IMPORT_PIL_RESULT EQUAL 0)
-    set (PIL_FOUND 1)
-else ()
-    message (STATUS "python PIL module not found")
+if (NOT IMPORT_PIL_RESULT EQUAL 0)
+    message (FATAL_ERROR "python PIL module not found for ${Python3_EXECUTABLE} (needed by tests; try `python3 -m pip install pillow` or the python3-pil package)")
 endif ()
 
 include (CheckCXXCompilerFlag)
@@ -176,6 +174,6 @@ add_subdirectory (traces)
 #   to make space for title bar, buttons, etc.
 # - The 64x64 resize is not effctive on some platforms (e.g., xvfb-run)
 #
-if (OpenGL_FOUND AND PIL_FOUND)
+if (OpenGL_FOUND)
     add_subdirectory (cli)
 endif ()

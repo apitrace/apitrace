@@ -143,13 +143,24 @@ if ($arch -eq 'x86' -and !$traceLibGl) {
 
     $traceLibGl = (Resolve-Path "$mesaDir\opengl32.dll").ProviderPath
 }
-$traceLibGlArgs = @()
+$extraCmakeArgs = @()
 if ($traceLibGl) {
     # Passed to CMake, which propagates it to the tests' environment, so that
     # ctest can also be run directly.
     Write-Host "Using TRACE_LIBGL=$traceLibGl."
-    $traceLibGlArgs += "-DTRACE_LIBGL=$traceLibGl"
+    $extraCmakeArgs += "-DTRACE_LIBGL=$traceLibGl"
 }
+
+# The tests need PIL (a.k.a. pillow) to compare snapshots against reference
+# images.  Make sure CMake uses the very same interpreter we install it into, as
+# there can be several Pythons around (e.g., on GitHub runners).
+$python = (Get-Command python).Source
+& $python -c "import PIL" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Installing pillow into $python ..."
+    Exec { & $python -m pip install --disable-pip-version-check pillow }
+}
+$extraCmakeArgs += "-DPython3_EXECUTABLE=$python"
 
 # https://github.com/microsoft/vswhere/wiki/Find-VC#powershell
 $product = & "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json | Select-Object -First 1
@@ -180,7 +191,7 @@ if (!$buildRoot) {
     }
 }
 Write-Host "Configuring onto $buildRoot ..."
-Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_QT6=1  -DENABLE_TESTS=1 @traceLibGlArgs}
+Exec { cmake "-S." "-B$buildRoot" -G $generator -A $toolset "-DCMAKE_SYSTEM_VERSION=10.0.19041.0" "-DCMAKE_PREFIX_PATH=$qtToolchainPath" "-DENABLE_GUI=$gui" -DENABLE_QT6=1  -DENABLE_TESTS=1 @extraCmakeArgs}
 
 if (!$Env:CTEST_PARALLEL_LEVEL) {
     $Env:CTEST_PARALLEL_LEVEL = [Environment]::ProcessorCount

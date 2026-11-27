@@ -14,6 +14,7 @@ RUN \
   libwaffle-dev \
   pkg-config \
   python3 \
+  python3-pil \
   ninja-build \
   cmake \
   git && \
