@@ -210,28 +210,6 @@ Write-Host "Building ..."
 Exec { cmake --build $buildRoot --config $config @targets "--" /verbosity:minimal /maxcpucount }
 
 if ($Env:STRESS_ITERATIONS) {
-    $iterations = [int]$Env:STRESS_ITERATIONS
-    $failures = @{}
-    $failedIterations = 0
-    $ErrorActionPreference = "Continue"
-    for ($i = 1; $i -le $iterations; $i++) {
-        Write-Host "::group::iteration $i"
-        $out = & ctest --test-dir $buildRoot -C $config -R $Env:STRESS_REGEX -j 2 --output-on-failure 2>&1 | ForEach-Object { "$_" }
-        $code = $LASTEXITCODE
-        $out | Write-Host
-        Write-Host "::endgroup::"
-        if ($code -ne 0) {
-            $failedIterations++
-            Write-Host "iteration $i FAILED (ctest exit code $code)"
-            foreach ($m in ($out | Select-String -Pattern 'Test +#\d+: (\S+) \.+\*\*\*(\w+)')) {
-                $key = "$($m.Matches[0].Groups[1].Value) ($($m.Matches[0].Groups[2].Value))"
-                $failures[$key] = 1 + [int]$failures[$key]
-            }
-        }
-    }
-    Write-Host "==== $failedIterations of $iterations iterations failed ===="
-    $failures.GetEnumerator() | Sort-Object Name | ForEach-Object { Write-Host "$($_.Name): $($_.Value)" }
-    if ($failedIterations -ne 0) {
-        exit 1
-    }
+    # Repeat each selected test up to N times (until it fails), in parallel.
+    Exec { ctest --test-dir $buildRoot -C $config -R $Env:STRESS_REGEX -j 2 --repeat "until-fail:$Env:STRESS_ITERATIONS" --output-on-failure }
 }
