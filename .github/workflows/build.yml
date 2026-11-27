@@ -1,196 +1,24 @@
 name: build
 
+# Throwaway branch: hunt flaky tests by repeating them many times.
 on:
   push:
-  pull_request:
-
-# Cancel the previous run of this workflow for the same branch/tag/PR when a
-# new one is started.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  ubuntu64:
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - name: apt-update
-      run: sudo apt-get update
-    - name: apt-install
-      run: >
-        sudo apt-get install -qq -y --no-install-recommends
-        gcc g++ pkg-config python3 python3-pil ninja-build cmake
-        libsnappy-dev zlib1g-dev libpng-dev libbrotli-dev libdwarf-dev libgtest-dev
-        qt6-base-dev
-        libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
-        libgl-dev libglu1-mesa-dev libegl-dev libgles-dev
-        libgl1-mesa-dri libglx-mesa0 libegl-mesa0
-        weston xwayland xwayland-run
-    - name: build
-      run: ci/build-linux.sh
-
-  ubuntu32:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - uses: docker/setup-buildx-action@v4
-    - uses: crazy-max/ghaction-github-runtime@v4
-    - run: ci/build-ubuntu32.sh
-
-  ubuntu64-clang:
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - name: apt-update
-      run: sudo apt-get update
-    - name: apt-install
-      run: sudo apt-get install -qq -y --no-install-recommends clang libc++-dev libc++abi-dev zlib1g-dev libdwarf-dev qt6-base-dev python3 ninja-build cmake
-    - name: cmake
-      run: cmake -S. -Bbuild -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DENABLE_GUI=1 -DENABLE_QT6=1
-    - name: build
-      run: cmake --build build --use-stderr
-    - name: check
-      run: cmake --build build --use-stderr --target check
-
-  ubuntu-22_04:
-    runs-on: ubuntu-24.04
-    env:
-      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - uses: docker/setup-buildx-action@v4
-    - uses: crazy-max/ghaction-github-runtime@v4
-    - run: ci/build-ubuntu-22.04.sh
-    - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v7
-      with:
-        name: apitrace-ubuntu-22.04
-        path: build/docker-ubuntu-22.04/apitrace-*.tar.bz2
-        if-no-files-found: error
-
-  ubuntu-arm64-cross:
-    runs-on: ubuntu-24.04
-    env:
-      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - uses: docker/setup-buildx-action@v4
-    - uses: crazy-max/ghaction-github-runtime@v4
-    - run: ci/build-ubuntu-arm64-cross.sh
-    - if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v7
-      with:
-        name: apitrace-ubuntu-arm64
-        path: build/docker-ubuntu-arm64-cross/apitrace-*.tar.bz2
-        if-no-files-found: error
-
-  mingw32:
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - run: sudo apt-get update
-    - run: sudo apt-get install -qq -y --no-install-recommends g++-mingw-w64-i686 ninja-build cmake
-    - run: mkdir dxsdk && wget -q -O - https://github.com/apitrace/dxsdk/archive/master.tar.gz | tar -xz --strip-components=1 -C dxsdk
-    - run: ci/build-mingw.sh mingw32
-
-  msvc:
+  stress:
     runs-on: windows-2022
+    timeout-minutes: 120
     env:
-      PACKAGE: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) }}
+      STRESS_ITERATIONS: 256
+      STRESS_REGEX: ^app_gl_(default|tri_glsl)$
     strategy:
+      fail-fast: false
       matrix:
-        arch: [x86, arm]
         target: [win32, win64]
-        exclude:
-          # https://learn.microsoft.com/en-us/windows/arm/arm32-to-arm64
-          - arch: arm
-            target: win32
     steps:
     - uses: actions/checkout@v7
       with:
         fetch-depth: 1
         submodules: recursive
-    - name: Cache Downloads
-      id: cache-downloads
-      if: matrix.arch == 'x86' && matrix.target == 'win64'
-      uses: actions/cache@v6
-      with:
-        path: |
-          *qtbase-*.7z
-        key: ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-6.8.3-1
-    - name: Build
-      run: .\ci\build-msvc.ps1 -arch:${{ matrix.arch }} -target:${{ matrix.target }} -buildRoot:build
-    - name: Upload artifacts
-      if: env.PACKAGE == 'true'
-      uses: actions/upload-artifact@v7
-      with:
-        name: apitrace-${{ matrix.target }}-${{ matrix.arch }}
-        path: build/apitrace-*.7z
-        if-no-files-found: error
-
-  mac64:
-    runs-on: macos-26-intel
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - name: Cache Downloads
-      id: cache-downloads
-      uses: actions/cache@v6
-      with:
-        path: "qt/*qtbase-*.7z"
-        key: ${{ runner.os }}-6.8.3-1
-    - name: cmake
-      run: ci/build-macos.sh
-
-  # Update https://apitrace.github.io/#download binaries
-  downloads:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-    needs: [ubuntu-22_04, ubuntu-arm64-cross, msvc]
-    runs-on: ubuntu-latest
-    steps:
-    - env:
-        GH_TOKEN: ${{ secrets.GH_WORKFLOW_PAT }}
-      run: gh workflow run --repo apitrace/apitrace.github.io --ref master static.yml
-
-  release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [ubuntu-22_04, ubuntu-arm64-cross, msvc]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 1
-        submodules: recursive
-    - uses: actions/download-artifact@v8
-      id: download
-      with:
-        path: artifacts
-    - run: ls -lR ${{ steps.download.outputs.download-path }}
-    - name: Create Release
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: >
-        gh release create --draft --title "${{ github.ref_name }}" --generate-notes "${{ github.ref_name }}"
-        ${{ steps.download.outputs.download-path }}/*/apitrace-*.tar.bz2
-        ${{ steps.download.outputs.download-path }}/*/apitrace-*.7z
+    - name: Build and stress
+      run: .\ci\build-msvc.ps1 -arch:x86 -target:${{ matrix.target }} -buildRoot:build
